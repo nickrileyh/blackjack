@@ -26,6 +26,9 @@ Commit the source change and the rebuilt `index.html` together. `build.sh` never
 
 - Phone: bottom tab bar; desktop (1024px+): sidebar. Train has Strategy / Drills tabs. On Train and Live play the table comes first and stats sit below it.
 - The compact top bar (`TopBar`) appears on scroll and shows only the page title and rules pill. Section chips in it were tried and removed at Nick's request (he wants the app kept clean) — don't add extra navigation rows. The "Ramp ↓ · Your numbers ↓ …" jump pills at the top of Bet spread were removed for the same reason.
+- Desktop layout (1180px+): every page is up to 1120px wide and uses two columns through `.dgrid` / `.dcol` wrappers, which are `display: contents` below that width — so the phone order is simply the source order. `.dgrid.wl` is a wide-left split (table or main content left, stats and reference right); `.narrow` and `.segw` keep single cards and switches from stretching. `.deskonly` / `.notdesk` show or hide an element on wide screens.
+- Jump-to palette (`CommandPalette`, opened with ⌘K / Ctrl K, `/`, or the sidebar button): lists every page, drill, action and theme. When adding a page or drill, add it to `cmdItems` in `App`.
+- `go(tab, options)` also fires a `bj-nav` event when the target page is already open; pages read it with `useNav` (train mode/view, drill, log sheet). A theme change made outside Settings fires `bj-theme`.
 - `Seg` (segmented control) has a pill that slides to the selected option when its options sit in one row.
 - Keep motion small and purposeful, and add anything new to the `prefers-reduced-motion` rule.
 
@@ -35,7 +38,7 @@ Playing cards are drawn at fixed pixel sizes (`.pc`, `.pc.sm`, `.pc.big`) and sc
 
 ## The table felt
 
-`.felt` is the green table surface used by live play, the strategy table and the drills. `FeltPrint` draws the printing on it (payout and dealer rule, read from the app's rules through `RulesCtx`) behind the cards; it is used on live play and the strategy table only. In the light theme the felt is deep blue and `:root[data-theme="light"] .felt` re-points the text and accent variables to light-on-dark, so anything placed inside a felt should use the theme variables rather than fixed colors. The sidebar logo (`.sn-tile`) is the app icon's spade and chip in theme colors.
+`.felt` is the green table surface used by live play, the strategy table and the drills. `FeltPrint` draws the printing on it (payout and dealer rule, read from the app's rules through `RulesCtx`) behind the cards; it is used on live play and the strategy table only. In the light theme the felt is deep blue and `:root[data-theme="light"] .felt` re-points the text and accent variables to light-on-dark, so anything placed inside a felt should use the theme variables rather than fixed colors. Outside a felt, use `var(--recess)` for sunken boxes (not `rgba(var(--sh),…)`, which is white in the light theme) and `rgba(var(--fg),…)` for faint tracks and tints. The sidebar logo (`.sn-tile`) is the app icon's spade and chip in theme colors.
 
 ## Splash screen and icons
 

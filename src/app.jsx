@@ -218,12 +218,12 @@ function compute({ bankroll, handsPerHour, bets, cal, spotsMap = {} }) {
 // ---------- UI ----------
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');/*FONTIMPORT*/
-:root{--ease:cubic-bezier(.4,0,.2,1);--bg:#07090A;--bg2:#0B0E10;--velvet:#0D1114;--velvet-l:#142024;--fg:236,241,238;--ivory:#ECF1EE;--ivory-d:#B3BDB9;--brass:#34D399;--brass-d:#18986A;--acc:52,211,153;--acc-hi:#7BEBC1;--rose:#FB7161;--neg:251,113,97;--neg-l:#FDB3AA;--muted:#7D8985;--ink:#03150E;--sh:1,4,4;--bgrgb:7,9,10;--felt1:#11261E;--felt2:#0B1914;--felt3:#060F0C;--sheet1:#121B1C;--sheet2:#090E10;--back1:#7A2232;--back2:#521623;--seg-hi:#F4F8F6;--seg-lo:#DCE6E1;--line:rgba(236,241,238,.11)}
+:root{--recess:rgba(var(--sh),.55);--ease:cubic-bezier(.4,0,.2,1);--bg:#07090A;--bg2:#0B0E10;--velvet:#0D1114;--velvet-l:#142024;--fg:236,241,238;--ivory:#ECF1EE;--ivory-d:#B3BDB9;--brass:#34D399;--brass-d:#18986A;--acc:52,211,153;--acc-hi:#7BEBC1;--rose:#FB7161;--neg:251,113,97;--neg-l:#FDB3AA;--muted:#7D8985;--ink:#03150E;--sh:1,4,4;--bgrgb:7,9,10;--felt1:#11261E;--felt2:#0B1914;--felt3:#060F0C;--sheet1:#121B1C;--sheet2:#090E10;--back1:#7A2232;--back2:#521623;--seg-hi:#F4F8F6;--seg-lo:#DCE6E1;--line:rgba(236,241,238,.11)}
 :root[data-theme="gold"]{--bg:#05070B;--bg2:#090E16;--velvet:#0C1422;--velvet-l:#111B2E;--fg:246,239,226;--ivory:#F6EFE2;--ivory-d:#C9CDD6;--brass:#D9B56A;--brass-d:#A8863E;--acc:217,181,106;--acc-hi:#E6C57E;--rose:#E0574B;--neg:224,87,75;--neg-l:#F2B8AC;--muted:#98A0B0;--ink:#17110F;--sh:3,6,12;--bgrgb:5,7,11;--felt1:#111B2E;--felt2:#0B111D;--felt3:#070C14;--sheet1:#121A29;--sheet2:#0A0F18;--back1:#24466E;--back2:#18314F;--seg-hi:#FBF6EA;--seg-lo:#EDE5D2;--line:rgba(246,239,226,.12)}
 :root[data-theme="sapphire"]{--bg:#06070D;--bg2:#0A0C15;--velvet:#0D1020;--velvet-l:#161B36;--fg:234,237,247;--ivory:#EAEDF7;--ivory-d:#B6BCD0;--brass:#7AA2FF;--brass-d:#4A6FD6;--acc:122,162,255;--acc-hi:#A9C2FF;--rose:#FF6E7A;--neg:255,110,122;--neg-l:#FFB6BD;--muted:#7F87A0;--ink:#060A1C;--sh:2,3,9;--bgrgb:6,7,13;--felt1:#14193A;--felt2:#0D1128;--felt3:#080A18;--sheet1:#141831;--sheet2:#0A0C18;--back1:#3B2A6E;--back2:#271C4D;--seg-hi:#F3F5FC;--seg-lo:#DDE2F2;--line:rgba(234,237,247,.11)}
 html,body{background:var(--bg)}
 :root{color-scheme:dark;--sbar:transparent;--bg-end:#020304;--scrim:rgba(2,3,6,.62)}
-:root[data-theme="light"]{color-scheme:light;--bg-end:#E4EAF3;--scrim:rgba(14,26,58,.38);--bg:#EEF2F8;--bg2:#FFFFFF;--velvet:#F3F6FB;--velvet-l:#FFFFFF;--fg:15,27,61;--ivory:#0E1A3A;--ivory-d:#34405E;--brass:#1E3FA8;--brass-d:#16307F;--acc:30,63,168;--acc-hi:#3459CF;--rose:#D02E2E;--neg:208,46,46;--neg-l:#B42323;--muted:#66718C;--ink:#FFFFFF;--sh:255,255,255;--bgrgb:242,245,250;--felt1:#2C4797;--felt2:#1F3478;--felt3:#17285F;--sheet1:#FFFFFF;--sheet2:#F5F7FB;--back1:#1E3FA8;--back2:#142D7A;--seg-hi:#2A4CC0;--seg-lo:#1E3FA8;--line:rgba(15,27,61,.1);--sbar:#0E1A3A}
+:root[data-theme="light"]{color-scheme:light;--recess:rgba(15,27,61,.065);--bg-end:#E4EAF3;--scrim:rgba(14,26,58,.38);--bg:#EEF2F8;--bg2:#FFFFFF;--velvet:#F3F6FB;--velvet-l:#FFFFFF;--fg:15,27,61;--ivory:#0E1A3A;--ivory-d:#34405E;--brass:#1E3FA8;--brass-d:#16307F;--acc:30,63,168;--acc-hi:#3459CF;--rose:#D02E2E;--neg:208,46,46;--neg-l:#B42323;--muted:#66718C;--ink:#FFFFFF;--sh:255,255,255;--bgrgb:242,245,250;--felt1:#2C4797;--felt2:#1F3478;--felt3:#17285F;--sheet1:#FFFFFF;--sheet2:#F5F7FB;--back1:#1E3FA8;--back2:#142D7A;--seg-hi:#2A4CC0;--seg-lo:#1E3FA8;--line:rgba(15,27,61,.1);--sbar:#0E1A3A}
 :root[data-theme="light"] .card{background:#FFFFFF;border:1px solid rgba(15,27,61,.08);box-shadow:0 1px 2px rgba(15,27,61,.06),0 10px 28px -16px rgba(15,27,61,.22)}
 :root[data-theme="light"] .chipseg{background:rgba(15,27,61,.06);box-shadow:inset 0 1px 2px rgba(15,27,61,.08)}
 :root[data-theme="light"] .chipseg button.on,:root[data-theme="light"] .chipseg.slide .thumb{box-shadow:0 2px 6px -2px rgba(30,63,168,.55)}
@@ -288,6 +288,20 @@ html,body{background:var(--bg)}
 .syncpill{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;top:calc(env(safe-area-inset-top) + 10px);z-index:90;max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:9px 16px;border-radius:999px;font-size:13px;font-weight:500;color:var(--ivory);background:rgba(var(--bgrgb),.92);border:1px solid rgba(var(--acc),.35);box-shadow:0 12px 30px -12px rgba(0,0,0,.7);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:rise .3s var(--ease) both}
 .syncpill b{color:var(--brass)}
 .dgrid,.dcol{display:contents}
+.deskonly{display:none}
+.cmdk-wrap{position:fixed;inset:0;z-index:95;display:flex;justify-content:center;align-items:flex-start;padding:14vh 16px 0;background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:spfade .15s ease both}
+.cmdk{width:100%;max-width:560px;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));border:1px solid rgba(var(--acc),.22);box-shadow:0 40px 90px -20px rgba(0,0,0,.8);animation:cmdkin .2s cubic-bezier(.2,.8,.2,1) both}
+@keyframes cmdkin{from{transform:translateY(-8px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+.cmdk-in{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);color:var(--muted)}
+.cmdk-in input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--ivory);font-size:16px}
+.cmdk-list{max-height:min(52vh,430px);overflow-y:auto;padding:6px;scrollbar-width:thin}
+.cmdk-g{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}
+.cmdk-it{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:9px 10px;border-radius:10px;font-size:14px;font-weight:500;color:var(--ivory-d)}
+.cmdk-it[data-on="1"]{background:rgba(var(--acc),.14);color:var(--ivory)}
+.cmdk-it small{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cmdk-empty{padding:22px 12px;text-align:center;font-size:13px;color:var(--muted)}
+.cmdk-foot{display:flex;gap:18px;padding:9px 16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.bj kbd{font:600 10.5px Inter,system-ui,sans-serif;padding:2px 6px;border-radius:6px;background:rgba(var(--fg),.08);border:1px solid rgba(var(--fg),.12);color:var(--ivory-d)}
 .dcol>section{animation:rise .42s var(--ease) both}
 .dcol>section:nth-of-type(2){animation-delay:.05s}.dcol>section:nth-of-type(3){animation-delay:.1s}.dcol>section:nth-of-type(n+4){animation-delay:.15s}
 .dcol.o2>section:nth-of-type(1){animation-delay:.1s}.dcol.o2>section:nth-of-type(2){animation-delay:.15s}.dcol.o2>section:nth-of-type(n+3){animation-delay:.2s}
@@ -297,10 +311,15 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 .bottom-nav,.hdrgear,.shell>header .rulespill{display:none!important}
 .shell{--W:800px;--SN:248px;max-width:var(--W)!important;margin-left:calc(var(--SN) + max(40px,(100% - var(--SN) - var(--W))/2))!important;margin-right:40px!important;padding-left:0!important;padding-right:0!important;padding-top:44px!important;padding-bottom:56px!important}
 .shell>header h1{font-size:34px}
+.shell::before{content:"";position:fixed;top:-300px;right:-220px;width:780px;height:780px;border-radius:50%;background:radial-gradient(closest-side,rgba(var(--acc),.085),transparent 72%);pointer-events:none;z-index:-1}
 .topbar{left:248px;padding-left:40px;padding-right:40px}
 .topbar>div{max-width:var(--W)!important}
 .sidenav{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:248px;z-index:46;padding:28px 14px 18px;background:rgba(var(--bgrgb),.6);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-right:1px solid rgba(var(--fg),.07);overflow-y:auto}
-.sn-brand{display:flex;align-items:center;gap:12px;padding:0 10px 30px}
+.sn-brand{display:flex;align-items:center;gap:12px;padding:0 10px 22px}
+.sn-search{display:flex;align-items:center;gap:10px;width:100%;height:38px;padding:0 9px 0 12px;margin-bottom:20px;border-radius:11px;background:rgba(var(--fg),.04);border:1px solid rgba(var(--fg),.08);font-size:13px;font-weight:500;color:var(--muted);transition:background .15s,border-color .15s,color .15s}
+.sn-search:hover{background:rgba(var(--fg),.07);border-color:rgba(var(--acc),.3);color:var(--ivory-d)}
+.sn-search span{flex:1;text-align:left}
+.sn-search:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .sn-tile{position:relative;flex:none;width:38px;height:38px;border-radius:11px;overflow:hidden;background:radial-gradient(120% 110% at 50% 10%,var(--b1),var(--b3));box-shadow:0 0 0 1.25px rgba(var(--acc),.5) inset,0 6px 16px -6px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
 .sn-tile svg{position:absolute;inset:0;width:100%;height:100%}
 .sn-name{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--ivory);line-height:1.1}
@@ -323,7 +342,15 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 @media (hover:hover){.card button.chippress:hover,.rulespill:hover,.iconbtn:hover{filter:brightness(1.12)}}
 }
 @media (min-width:1180px){
-.shell[data-page="calc"],.shell[data-page="sessions"],.shell[data-page="settings"]{--W:1120px}
+.shell{--W:1120px}
+.dgrid.wl{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+.dcol.stick{position:sticky;top:24px}
+.dcol.flipd{display:flex;flex-direction:column-reverse;justify-content:flex-end}
+.segw{max-width:460px}
+.narrow{max-width:720px}
+.deskonly{display:block}.notdesk{display:none}
+.homesess{display:block}
+.homechart{width:100%;height:120px;margin-top:18px}
 .dgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px;align-items:start}
 .dgrid.solo{display:block}
 .dcol{display:block;min-width:0}
@@ -483,7 +510,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .burst i{position:absolute;left:50%;top:45%;width:5px;height:5px;border-radius:50%;background:var(--brass);opacity:0;animation:fly var(--t) ease-out forwards;animation-delay:var(--dl)}
 .burst i:nth-child(3n){background:var(--acc-hi)}.burst i:nth-child(4n){width:3px;height:3px}
 @keyframes fly{0%{opacity:1;transform:rotate(var(--a)) translateY(-6px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(-6px - var(--d))) scale(.3)}}
-@media (prefers-reduced-motion:reduce){.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.cmdk,.cmdk-wrap{animation:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -836,7 +863,7 @@ function Odds({ c, picked, R }) {
       <div className="eyebrow mb-3">The math behind it</div>
       <div className="grid grid-cols-3 gap-2 mb-4 text-center">
         {[["Dealer busts", P(o.dealerBust)], ["You bust if you hit", o.soft && o.t <= 21 ? "0%" : P(o.bust)], ["Win if you stand", P(o.stand.win)]].map(([k, v]) => (
-          <div key={k} className="rounded-xl py-2 px-1" style={{ background: "rgba(var(--sh),.5)" }}>
+          <div key={k} className="rounded-xl py-2 px-1" style={{ background: "var(--recess)" }}>
             <div className="eyebrow" style={{ fontSize: 9 }}>{k}</div>
             <div className="mono text-lg mt-0.5" style={{ color: "var(--brass)" }}>{v}</div>
           </div>
@@ -850,7 +877,7 @@ function Odds({ c, picked, R }) {
           return (
             <div key={r.a} className="grid items-center gap-2" style={{ gridTemplateColumns: "74px 1fr 58px" }}>
               <span className="text-xs" style={{ color: isBest ? "var(--brass)" : isPick ? "var(--neg-l)" : "var(--ivory-d)" }}>{names[r.a]}{isPick && !isBest ? " ←" : ""}</span>
-              <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(var(--sh),.6)" }}>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--recess)" }}>
                 <div className="h-full rounded-full bar" style={{ width: `${Math.max(3, w)}%`, background: isBest ? "var(--brass)" : isPick ? "var(--rose)" : "rgba(var(--fg),.3)" }} />
               </div>
               <span className="mono text-xs text-right" style={{ color: r.ev >= 0 ? "var(--ivory)" : "var(--neg-l)" }}>{r.ev >= 0 ? "+" : "−"}${Math.abs(r.ev * 100).toFixed(1)}</span>
@@ -883,7 +910,7 @@ const ANAME = { H: "Hit", S: "Stand", D: "Double", P: "Split", R: "Surrender" };
 function Cell({ a, diff, other }) {
   return (
     <div className="relative flex items-center justify-center rounded-md font-semibold" title={diff ? `${ANAME[a]} (${ANAME[other]} under the other soft-17 rule)` : ANAME[a]}
-      style={{ height: 30, background: ACOL[a], color: a === "D" ? "var(--ink)" : "#FFF8EC", fontSize: 12, boxShadow: diff ? "0 0 0 2px var(--ivory) inset" : "0 1px 0 rgba(255,255,255,.12) inset" }}>
+      style={{ height: 30, background: ACOL[a], color: a === "D" ? "#1B1407" : "#FFF8EC", fontSize: 12, boxShadow: diff ? "0 0 0 2px var(--ivory) inset" : "0 1px 0 rgba(255,255,255,.12) inset" }}>
       {a}
       {diff && <span className="absolute" style={{ top: 3, right: 4, width: 6, height: 6, borderRadius: 3, background: "var(--ivory)" }} />}
     </div>
@@ -917,7 +944,8 @@ function Charts({ R, devs }) {
   const diffs = [];
   [...hard.map((r) => ["Hard " + r[0], r[1]]), ...soft.map((r) => [r[0], r[1]]), ...pairs.map((r) => [r[0], r[1]])].forEach(([n, fn]) => UP.forEach((u) => { const a = fn(u, R), o = fn(u, alt); if (a !== o) diffs.push(`${n} vs ${upLabel(u)}: ${ANAME[a]} (${ANAME[o]} if dealer ${R.h17 ? "stands" : "hits"})`); }));
   return (
-    <div className="rise">
+    <div className="rise dgrid">
+      <div className="dcol">
       <section className="card p-5 mb-4">
         <div className="flex items-baseline justify-between mb-1">
           <div className="disp text-2xl font-semibold">Basic strategy</div>
@@ -926,7 +954,7 @@ function Charts({ R, devs }) {
         <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>Find your hand on the left, the dealer's up-card on top.</p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-5 text-xs" style={{ color: "var(--ivory-d)" }}>
           {Object.entries({ H: "Hit", S: "Stand", D: "Double, else hit", P: "Split", R: "Surrender, else hit" }).filter(([k]) => R.surrender || k !== "R").map(([k, v]) => (
-            <span key={k} className="flex items-center gap-1.5"><span className="inline-flex items-center justify-center w-5 h-5 rounded font-semibold mono" style={{ background: ACOL[k], color: k === "D" ? "var(--ink)" : "#fff", fontSize: 10 }}>{k}</span>{v}</span>
+            <span key={k} className="flex items-center gap-1.5"><span className="inline-flex items-center justify-center w-5 h-5 rounded font-semibold mono" style={{ background: ACOL[k], color: k === "D" ? "#1B1407" : "#fff", fontSize: 10 }}>{k}</span>{v}</span>
           ))}
           <span className="flex items-center gap-1.5"><span className="inline-block w-5 h-5 rounded" style={{ boxShadow: "0 0 0 2px var(--ivory) inset" }} />Changes under {R.h17 ? "S17" : "H17"}</span>
         </div>
@@ -934,12 +962,13 @@ function Charts({ R, devs }) {
         <Grid title="Soft totals" rows={soft} R={R} alt={alt} />
         <Grid title="Pairs" rows={pairs} R={R} alt={alt} />
         {diffs.length > 0 && (
-          <div className="rounded-xl p-3" style={{ background: "rgba(var(--sh),.5)" }}>
+          <div className="rounded-xl p-3" style={{ background: "var(--recess)" }}>
             <div className="eyebrow mb-2" style={{ fontSize: 10 }}>{R.h17 ? "H17" : "S17"} vs {R.h17 ? "S17" : "H17"} — {diffs.length} cells differ</div>
             <ul className="text-xs space-y-1" style={{ color: "var(--ivory-d)" }}>{diffs.map((d) => <li key={d}>{d}</li>)}</ul>
           </div>
         )}
       </section>
+      </div><div className="dcol o2">
 
       <section className="card p-5">
         <div className="flex items-baseline justify-between mb-1">
@@ -954,10 +983,10 @@ function Charts({ R, devs }) {
                 <div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{d.name}</div>
                 {d.above === "R" && <div className="text-[10px]" style={{ color: "var(--muted)" }}>surrender</div>}
               </div>
-              <span className="text-[11px] px-2 py-1 rounded-md text-center" style={{ background: ACOL[d.below] || "rgba(var(--fg),.08)", color: d.below === "D" ? "var(--ink)" : "var(--ivory)", opacity: .75 }}>{(ANAME[d.below] || d.below).replace("No insurance","Skip")}</span>
+              <span className="text-[11px] px-2 py-1 rounded-md text-center" style={{ background: ACOL[d.below] || "rgba(var(--fg),.08)", color: d.below === "D" ? "#1B1407" : "var(--ivory)", opacity: .75 }}>{(ANAME[d.below] || d.below).replace("No insurance","Skip")}</span>
               <div className="flex items-center gap-1">
                 <div className="h-px flex-1" style={{ background: "rgba(var(--fg),.2)" }} />
-                <span className="mono text-sm font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(var(--sh),.6)", color: "var(--brass)" }}>{fmtTC(d.idx)}</span>
+                <span className="mono text-sm font-semibold px-1.5 py-0.5 rounded" style={{ background: "var(--recess)", color: "var(--brass)" }}>{fmtTC(d.idx)}</span>
                 <div className="h-px flex-1" style={{ background: "rgba(var(--fg),.2)" }} />
               </div>
               <span className="text-[11px] px-2 py-1 rounded-md font-semibold text-center" style={{ background: ACOL[d.above] || "var(--brass)", color: d.above === "D" || !ACOL[d.above] ? "var(--ink)" : "#fff" }}>{(ANAME[d.above] || d.above).replace("Take insurance","Insure")}</span>
@@ -966,6 +995,7 @@ function Charts({ R, devs }) {
         </div>
         <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Negative indices: you hit below the number even though basic strategy says stand.</p>
       </section>
+      </div>
     </div>
   );
 }
@@ -988,25 +1018,25 @@ function FillChart({ R, devs }) {
   const reset = () => { setFill({}); setDev({}); setChecked(false); };
   const cellStyle = (k, ans) => {
     const v = fill[k];
-    if (!checked) return { background: v ? ACOL[v] : "rgba(var(--sh),.5)", color: v === "D" ? "var(--ink)" : v ? "#FFF8EC" : "transparent" };
-    if (v === ans) return { background: ACOL[v], color: v === "D" ? "var(--ink)" : "#FFF8EC", opacity: .85 };
+    if (!checked) return { background: v ? ACOL[v] : "var(--recess)", color: v === "D" ? "#1B1407" : v ? "#FFF8EC" : "transparent" };
+    if (v === ans) return { background: ACOL[v], color: v === "D" ? "#1B1407" : "#FFF8EC", opacity: .85 };
     return { background: "rgba(var(--neg),.25)", color: "var(--neg-l)", boxShadow: "0 0 0 1.5px var(--rose) inset" };
   };
   return (
-    <div className="rise">
+    <div className="rise narrow">
       <Seg value={section} options={[["basic", "Basic strategy"], ["dev", "Deviations"]]} onChange={setSection} style={{ marginBottom: 12 }} />
 
       {section === "basic" ? (
         <section className="card p-5 mb-4">
           <div className="flex items-baseline justify-between mb-1">
             <div className="disp text-2xl font-semibold">Fill in the chart</div>
-            <div className="text-xs mono px-2 py-1 rounded-md" style={{ background: "rgba(var(--sh),.55)", color: "var(--brass)" }}>{checked ? `${score} / ${all.length}` : `${Object.values(fill).filter(Boolean).length} / ${all.length}`}</div>
+            <div className="text-xs mono px-2 py-1 rounded-md" style={{ background: "var(--recess)", color: "var(--brass)" }}>{checked ? `${score} / ${all.length}` : `${Object.values(fill).filter(Boolean).length} / ${all.length}`}</div>
           </div>
           <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>Pick a play, then tap the cells. Tap a filled cell with the same play to clear it.</p>
           <div className="sticky z-10 mb-4" style={{ top: "calc(env(safe-area-inset-top) + 8px)" }}>
             <div className="chipseg" style={{ gridTemplateColumns: `repeat(${brushes.length}, 1fr)` }}>
               {brushes.map((b) => (
-                <button key={b} onClick={() => setBrush(b)} className={brush === b ? "on" : ""} style={{ height: 40, background: brush === b ? ACOL[b] : undefined, color: brush === b ? (b === "D" ? "var(--ink)" : "#fff") : undefined, fontWeight: 600 }}>{ANAME[b]}</button>
+                <button key={b} onClick={() => setBrush(b)} className={brush === b ? "on" : ""} style={{ height: 40, background: brush === b ? ACOL[b] : undefined, color: brush === b ? (b === "D" ? "#1B1407" : "#fff") : undefined, fontWeight: 600 }}>{ANAME[b]}</button>
               ))}
             </div>
           </div>
@@ -1043,7 +1073,7 @@ function FillChart({ R, devs }) {
         <section className="card p-5 mb-4">
           <div className="flex items-baseline justify-between mb-1">
             <div className="disp text-2xl font-semibold">Fill in the indices</div>
-            <div className="text-xs mono px-2 py-1 rounded-md" style={{ background: "rgba(var(--sh),.55)", color: "var(--brass)" }}>{checked ? `${devScore} / ${devs.length}` : `${Object.keys(dev).length} / ${devs.length}`}</div>
+            <div className="text-xs mono px-2 py-1 rounded-md" style={{ background: "var(--recess)", color: "var(--brass)" }}>{checked ? `${devScore} / ${devs.length}` : `${Object.keys(dev).length} / ${devs.length}`}</div>
           </div>
           <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>For each hand, enter the true count index and the play you make at or above it.</p>
           <div className="space-y-2">
@@ -1061,7 +1091,7 @@ function FillChart({ R, devs }) {
                   {d.id !== "ins" && (
                     <div className="flex gap-1 mt-2">
                       {["H", "S", "D", "P", "R"].filter((a) => a !== "R" || R.surrender).map((a) => (
-                        <button key={a} disabled={checked} onClick={() => setDev({ ...dev, [d.id]: { ...v, act: a } })} className="flex-1 rounded-md py-1.5 text-xs font-semibold" style={{ background: v.act === a ? ACOL[a] : "rgba(var(--sh),.5)", color: v.act === a ? (a === "D" ? "var(--ink)" : "#fff") : "var(--muted)", boxShadow: checked && v.act === a ? `0 0 0 1.5px ${actOk ? "var(--brass)" : "var(--rose)"} inset` : "none" }}>{a}</button>
+                        <button key={a} disabled={checked} onClick={() => setDev({ ...dev, [d.id]: { ...v, act: a } })} className="flex-1 rounded-md py-1.5 text-xs font-semibold" style={{ background: v.act === a ? ACOL[a] : "var(--recess)", color: v.act === a ? (a === "D" ? "#1B1407" : "#fff") : "var(--muted)", boxShadow: checked && v.act === a ? `0 0 0 1.5px ${actOk ? "var(--brass)" : "var(--rose)"} inset` : "none" }}>{a}</button>
                       ))}
                     </div>
                   )}
@@ -1092,11 +1122,15 @@ function Seg({ value, options, onChange, cols, style, small }) {
   );
 }
 
-let _trainMode = "basic";
+let _trainMode = "basic", _trainView = "drill";
+// go(tab, options) on a page that's already open can't remount it, so the page listens for the options instead
+const useNav = (fn) => useEffect(() => { const h = (e) => fn(e.detail || {}); window.addEventListener("bj-nav", h); return () => window.removeEventListener("bj-nav", h); });
 function Trainer({ rules, setRules }) {
   const [mode, setMode] = useState(_trainMode); // basic | dev | mixed
   useEffect(() => { _trainMode = mode; }, [mode]);
-  const [view, setView] = useState("drill"); // drill | charts
+  const [view, setView] = useState(_trainView); // drill | fill | charts
+  useEffect(() => { _trainView = view; }, [view]);
+  useNav((o) => { if (o.trainView) setView(o.trainView); if (o.trainMode && o.trainMode !== mode) { setMode(o.trainMode); setCur(null); setResult(null); } });
   const [prog, setProg] = useState({}); // id → {box, seen, wrong}
   const [qn, setQn] = useState(0);
   const [cur, setCur] = useState(null);
@@ -1267,11 +1301,25 @@ function Trainer({ rules, setRules }) {
     return "Too low to double, can't bust. Hit.";
   };
 
+  const masteryCard = (
+      <section className="card p-5 mb-4">
+        <div className="flex items-baseline justify-between">
+          <div className="eyebrow">Mastery</div>
+          <div className="text-xs mono" style={{ color: "var(--muted)" }}>{mastered}/{pool.length} locked in ({pool.length ? Math.round((mastered / pool.length) * 100) : 0}%) · {seen} seen · {pool.filter((c) => prog[c.id]?.due <= qn).length} due</div>
+        </div>
+        <div className="h-2 rounded-full mt-3 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}>
+          <div className="h-full rounded-full bar shimmer" style={{ width: `${(mastered / Math.max(1, pool.length)) * 100}%`, background: "var(--brass)" }} />
+        </div>
+      </section>
+  );
   return (
     <div>
-      <Seg value={view} options={[["drill", "Practice"], ["fill", "Fill chart"], ["charts", "Charts"]]} onChange={setView} style={{ marginBottom: 12 }} />
+      <div className="segw"><Seg value={view} options={[["drill", "Practice"], ["fill", "Fill chart"], ["charts", "Charts"]]} onChange={setView} style={{ marginBottom: 12 }} /></div>
 
-      {view === "charts" ? <Charts R={rules} devs={DEVS} /> : view === "fill" ? <FillChart R={rules} devs={DEVS} /> : <>
+      {view === "charts" ? <Charts R={rules} devs={DEVS} /> : view === "fill" ? <FillChart R={rules} devs={DEVS} /> : null}
+      <div className="dgrid wl"><div className="dcol">
+      {view !== "drill" && masteryCard}
+      {view === "drill" && <>
       {/* mode */}
       <Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(null); setResult(null); }} style={{ marginBottom: 12 }} />
 
@@ -1331,6 +1379,9 @@ function Trainer({ rules, setRules }) {
           </div>
         </section>
       )}
+      </>}
+      </div><div className="dcol o2 stick">
+      {view === "drill" && <>
 
       {/* weak spots */}
       {weakest.length > 0 && (
@@ -1345,18 +1396,9 @@ function Trainer({ rules, setRules }) {
         </section>
       )}
 
+      {masteryCard}
       </>}
 
-      {/* progress — below the table, so the hand and its buttons are the first thing on screen */}
-      <section className="card p-5 mb-4">
-        <div className="flex items-baseline justify-between">
-          <div className="eyebrow">Mastery</div>
-          <div className="text-xs mono" style={{ color: "var(--muted)" }}>{mastered}/{pool.length} locked in ({pool.length ? Math.round((mastered / pool.length) * 100) : 0}%) · {seen} seen · {pool.filter((c) => prog[c.id]?.due <= qn).length} due</div>
-        </div>
-        <div className="h-2 rounded-full mt-3 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}>
-          <div className="h-full rounded-full bar shimmer" style={{ width: `${(mastered / Math.max(1, pool.length)) * 100}%`, background: "var(--brass)" }} />
-        </div>
-      </section>
 
       <section className="card p-5">
         <div className="eyebrow mb-2">How it works</div>
@@ -1366,6 +1408,7 @@ function Trainer({ rules, setRules }) {
           <ConfirmLink label="Reset progress" confirm="Tap again — wipes trainer mastery" onConfirm={reset} />
         </div>
       </section>
+      </div></div>
     </div>
   );
 }
@@ -1386,7 +1429,7 @@ const SPEEDS = [[2, "Slow"], [1.2, "Easy"], [0.8, "Casino"], [0.5, "Fast"], [0.3
 
 function Stepper({ value, onChange, min = -40, max = 40 }) {
   return (
-    <div className="flex items-stretch rounded-xl overflow-hidden" style={{ border: "1px solid rgba(var(--fg),.16)", background: "rgba(var(--sh),.5)" }}>
+    <div className="flex items-stretch rounded-xl overflow-hidden" style={{ border: "1px solid rgba(var(--fg),.16)", background: "var(--recess)" }}>
       <button className="px-7 text-2xl" style={{ minHeight: 54, color: "var(--ivory-d)" }} onClick={() => onChange(Math.max(min, value - 1))} aria-label="Minus one">−</button>
       <input className="mono text-center text-2xl font-semibold flex-1 bg-transparent outline-none" style={{ color: "var(--ivory)", minWidth: 0 }} type="number" inputMode="numeric" value={value} onChange={(e) => onChange(e.target.value === "" || e.target.value === "-" ? 0 : Math.max(min, Math.min(max, Number(e.target.value))))} />
       <button className="px-7 text-2xl" style={{ minHeight: 54, color: "var(--ivory-d)" }} onClick={() => onChange(Math.min(max, value + 1))} aria-label="Plus one">+</button>
@@ -1489,6 +1532,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
 
   return (
     <div>
+      <div className="dgrid wl"><div className="dcol">
       {phase === "setup" && (
         <section className="card p-5 mb-4 rise">
           <div className="eyebrow mb-3">Drill</div>
@@ -1632,6 +1676,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
           )}
         </section>
       )}
+      </div><div className="dcol o2 stick">
 
       <section className="card p-5">
         <div className="eyebrow mb-2">Hi-Lo</div>
@@ -1657,6 +1702,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
           ))}
         </div>
       </section>
+      </div></div>
     </div>
   );
 }
@@ -2197,6 +2243,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
   return (
     <div>
 
+      <div className="dgrid wl"><div className="dcol">
       <section className="card p-5 mb-4">
         <div className="flex items-center justify-between mb-3">
           <div className="mono text-xs" style={{ color: "var(--muted)" }}>{dl.toFixed(1)} decks left · card {shoe.pos}/{shoe.cut}</div>
@@ -2257,6 +2304,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
           </div>
         )}
       </section>
+      </div><div className="dcol o2 stick">
 
       {/* bankroll and results — below the table, so the hand and its buttons fit on one screen */}
       <section className="card p-4 mb-4">
@@ -2295,6 +2343,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
           <ConfirmLink label="New session" confirm="Tap again to restart" onConfirm={reset} className="ml-3 whitespace-nowrap" />
         </div>
       </section>
+      </div></div>
     </div>
   );
 }
@@ -2663,10 +2712,17 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
               const lo = Math.min(...cum), hi = Math.max(...cum), rng = Math.max(1, hi - lo);
               const spark = cum.map((v, i) => `${i ? "L" : "M"}${(i / (cum.length - 1)) * 72},${(18 - ((v - lo) / rng) * 16).toFixed(1)}`).join("");
               return (
-              <div className="flex items-end justify-between gap-3">
+              <div className="homesess flex items-end justify-between gap-3">
                 <div className="min-w-0"><div className="disp mono text-3xl" style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}${Math.abs(netAnim).toLocaleString()}</div>
                 <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{fmtH(totH)} played · expected {exp >= 0 ? "+" : "−"}${Math.abs(exp).toLocaleString()}</div></div>
-                {cum.length > 2 && <svg width="72" height="20" viewBox="0 0 72 20" aria-hidden="true"><path d={spark} fill="none" stroke={totR >= 0 ? "var(--brass)" : "var(--rose)"} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" opacity=".8" /></svg>}
+                {cum.length > 2 && <svg className="notdesk" width="72" height="20" viewBox="0 0 72 20" aria-hidden="true"><path d={spark} fill="none" stroke={totR >= 0 ? "var(--brass)" : "var(--rose)"} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" opacity=".8" /></svg>}
+                {cum.length > 2 && (() => { const X = (i) => (i / (cum.length - 1)) * 300, Y = (v) => 66 - ((v - lo) / rng) * 60; const line = cum.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(""); const col = totR >= 0 ? "var(--brass)" : "var(--rose)"; return (
+                  <svg className="deskonly homechart" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true">
+                    <defs><linearGradient id="hc-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={col} stopOpacity=".28" /><stop offset="1" stopColor={col} stopOpacity="0" /></linearGradient></defs>
+                    {lo < 0 && hi > 0 && <line x1="0" x2="300" y1={Y(0)} y2={Y(0)} stroke="rgba(var(--fg),.16)" strokeDasharray="3 4" vectorEffect="non-scaling-stroke" />}
+                    <path d={`${line}L300,70L0,70Z`} fill="url(#hc-g)" />
+                    <path d={line} fill="none" stroke={col} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                  </svg>); })()}
               </div>); })() : (
               <div className="text-sm" style={{ color: "var(--muted)" }}>Track wins and losses against expectation.</div>
             )}
@@ -2981,7 +3037,7 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go }) {
   const z = sd ? (totR - expEV) / sd : 0;
   const refreshLog = async () => { _logCache = null; setLog(await loadLog()); };
   return (
-    <div>
+    <div className="dgrid wl"><div className="dcol">
       {go && (
         <div className="grid grid-cols-4 gap-2 mb-4">
           {[["Log session", () => go("sessions", { log: true }), <><path d="M12 5v14M5 12h14" /></>],
@@ -2993,8 +3049,9 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go }) {
       )}
       <FocusCard log={log} go={go} />
       <SkillsCard log={log} go={go} />
+      </div><div className="dcol o2 flipd">
       <LevelPanel rules={rules} bets={bets} log={log} refreshLog={refreshLog} go={go} evHour={evHour} openSessions={() => go && go("sessions")} />
-    </div>
+    </div></div>
   );
 }
 const SKILL_GO = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], pairs: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }], totals: ["count", { drill: "totals" }], ramp: ["count", { drill: "ramp" }], play: ["play", {}] };
@@ -3109,7 +3166,7 @@ function SpreadSheet({ cfg0, current, legacy, session, others = 0, onUse, onUseA
   return (
     <Sheet title={edit ? "Edit spread & rules" : "Spread & rules for this session"} onClose={onClose}>
       <p className="text-sm -mt-1 mb-3" style={{ color: "var(--ivory-d)" }}>{legacy && edit ? "This session was logged before the app saved spreads with each session. It's filled in with today's spread — set what you actually played and save, and it stays with this session." : edit ? "Set what you actually played. Saved with this session only — changing the app's rules or spread later won't touch it." : `Use ${current ? "the app's current" : "this"} spread and rules for ${session?.where || "this session"}${h ? ` (${fmtH(h)})` : ""}? This sets its expected line on the chart.`}</p>
-      <div className="rounded-2xl p-4 mb-3" style={{ background: "rgba(var(--sh),.45)", border: "1px solid rgba(var(--acc),.14)" }}>
+      <div className="rounded-2xl p-4 mb-3" style={{ background: "var(--recess)", border: "1px solid rgba(var(--acc),.14)" }}>
         <div className="mono text-xs mb-3" style={{ color: "var(--ivory-d)" }}>{cfgLabel(cfg)} · {Math.round(snap.hph)} rounds/hr</div>
         <div className="flex items-end gap-1" style={{ height: 54 }} aria-label="Bet ramp">
           {ramp.map((x) => (
@@ -3346,6 +3403,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
   const [showAll, setShowAll] = useState(false);
   const [exportMsg, setExportMsg] = useState(null);
   useEffect(() => { if (_openLog) { _openLog = false; setSheet("new"); } }, []);
+  useNav((o) => { if (o.log) setSheet("new"); });
   useEffect(() => { (async () => { try { const r = await window.storage.get(SESS_KEY, false); if (r?.value) { const L = JSON.parse(r.value); setSessions(L.map((x, i) => (x.id ? x : { ...x, id: 1e12 + i }))); } } catch (_) {} setLoaded(true); })(); }, []);
   const saveSessions = (list) => { const sorted = list.slice().sort((a, b) => a.date.localeCompare(b.date) || (a.id || 0) - (b.id || 0)); setSessions(sorted); try { window.storage.set(SESS_KEY, JSON.stringify(sorted), false); } catch (_) {} };
   // Every session carries the game it was played under (s.snap, with its spread and rules in s.snap.cfg), so its
@@ -3657,16 +3715,19 @@ let _drillOpts = false; // drill options panel open/closed, remembered while the
 function DrillHub({ rules, bets, minBet }) {
   const [drill, setDrill] = useState(_lastDrill);
   useEffect(() => { _lastDrill = drill; }, [drill]);
+  useNav((o) => { if (o.drill && o.drill !== drill) { setDrill(o.drill); setTest(null); setTestResult(null); } });
   const [test, setTest] = useState(null); // id
   const [testResult, setTestResult] = useState(null);
   return (
     <div>
       <div className="mb-4"><ChipRow value={drill} options={[["count", "Running count"], ["tc", "True count"], ["totals", "Hand totals"], ["ramp", "Bet ramp"], ["tests", "Tests"]]} onChange={(d) => { setDrill(d); setTest(null); setTestResult(null); }} /></div>
       {drill === "count" && <Counter decks0={rules.decks} pen0={rules.pen} />}
+      <div className="narrow">
       {drill === "tc" && <TCDrill decks={rules.decks} />}
             {drill === "totals" && <HandTotals />}
       {drill === "ramp" && <RampDrill bets={bets} minBet={minBet} />}
       {drill === "tests" && (testResult ? <TestResult r={testResult} id={test} onBack={() => { setTestResult(null); setTest(null); }} /> : test ? <TestRunner id={test} rules={rules} onDone={(r) => { if (r) setTestResult(r); else setTest(null); }} /> : <Tests rules={rules} onRun={setTest} />)}
+      </div>
     </div>
   );
 }
@@ -3934,6 +3995,45 @@ const NAV_ITEMS = [
   ["calc", "Spread", <path d="M4 20h16M7 16.5v-4M12 16.5V8M17 16.5V4.5" />],
   ["sessions", "Sessions", <><path d="M4 18.5 9.2 12.8l3.6 3.2 7.2-8.5" /><path d="M15.5 7.5H20V12" /></>],
 ];
+// Jump-to palette (⌘K / Ctrl K / "/"): type a few letters, arrow to a row, Enter. Every page, drill and setting is in it.
+function CommandPalette({ items, onClose }) {
+  const [q, setQ] = useState(""); const [at, setAt] = useState(0); const list = useRef(null);
+  // a match in the name beats a match in the hidden keywords, so "log" finds "Log a session" before "Sessions"
+  const shown = useMemo(() => {
+    const w = q.trim().toLowerCase().split(/\s+/).filter(Boolean); if (!w.length) return items;
+    const rank = (it) => { const l = it.label.toLowerCase(), all = l + " " + it.group.toLowerCase() + " " + (it.more || ""); if (!w.every((x) => all.includes(x))) return -1; return l.startsWith(w[0]) ? 0 : w.every((x) => l.includes(x)) ? 1 : 2; };
+    return items.map((it, i) => [rank(it), i, it]).filter((x) => x[0] >= 0).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map((x) => x[2]);
+  }, [q, items]);
+  useEffect(() => { setAt(0); }, [q]);
+  useEffect(() => { const el = list.current && list.current.querySelector('[data-on="1"]'); if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" }); }, [at, shown]);
+  const run = (it) => { onClose(); it.run(); };
+  const onKey = (e) => {
+    if (e.key === "ArrowDown") { e.preventDefault(); setAt((x) => Math.min(shown.length - 1, x + 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setAt((x) => Math.max(0, x - 1)); }
+    else if (e.key === "Enter") { e.preventDefault(); if (shown[at]) run(shown[at]); }
+    else if (e.key === "Escape") { e.preventDefault(); onClose(); }
+  };
+  return (
+    <div className="cmdk-wrap" onClick={onClose} role="dialog" aria-label="Jump to">
+      <div className="cmdk" onClick={(e) => e.stopPropagation()}>
+        <div className="cmdk-in">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKey} placeholder="Jump to a page, drill or setting" aria-label="Jump to" autoComplete="off" spellCheck={false} />
+          <kbd>esc</kbd>
+        </div>
+        <div className="cmdk-list" ref={list}>
+          {shown.length ? shown.map((it, i) => (
+            <Fragment key={it.group + it.label}>
+              {(i === 0 || shown[i - 1].group !== it.group) && <div className="cmdk-g">{it.group}</div>}
+              <button className="cmdk-it" data-on={i === at ? "1" : "0"} onMouseMove={() => setAt(i)} onClick={() => run(it)}><span>{it.label}</span>{it.note && <small>{it.note}</small>}</button>
+            </Fragment>
+          )) : <div className="cmdk-empty">Nothing matches “{q}”.</div>}
+        </div>
+        <div className="cmdk-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span></div>
+      </div>
+    </div>
+  );
+}
 function TopBar({ title, children }) {
   const [show, setShow] = useState(false);
   useEffect(() => { const f = () => setShow(window.scrollY > 64); f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
@@ -3953,6 +4053,7 @@ const applyTheme = (t) => { try { if (t && t !== "emerald") document.documentEle
 function ThemePicker() {
   const [t, setT] = useState(() => { try { return localStorage.getItem("bj:" + THEME_KEY) || "emerald"; } catch (_) { return "emerald"; } });
   useEffect(() => { applyTheme(t); try { window.storage.set(THEME_KEY, t, false); } catch (_) {} }, [t]);
+  useEffect(() => { const h = (e) => setT(e.detail); window.addEventListener("bj-theme", h); return () => window.removeEventListener("bj-theme", h); }, []);
   return (
     <div className="grid grid-cols-2 gap-2.5">
       {THEME_LIST.map(([k, l, acc, bg, card]) => { const on = t === k, lightT = k === "light"; return (
@@ -4446,13 +4547,46 @@ function BetSpreadCalculator() {
   const maxBar = Math.max(1, ...r.rows.map((x) => x.bet));
   const [trainSub, setTrainSub] = useState("train");
   useEffect(() => { if (tab === "train" || tab === "count") setTrainSub(tab); }, [tab]);
-  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.log) _openLog = true; const same = t === tab; setTab(t); try { window.scrollTo({ top: 0, behavior: same ? "smooth" : "auto" }); } catch (_) {} };
+  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; const same = t === tab; setTab(t); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } try { window.scrollTo({ top: 0, behavior: same ? "smooth" : "auto" }); } catch (_) {} };
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
+  const [cmd, setCmd] = useState(false);
+  useEffect(() => {
+    const k = (e) => {
+      if (firstRun) return;
+      const tag = (e.target?.tagName || "").toLowerCase(), typing = tag === "input" || tag === "textarea" || tag === "select";
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === "k") { e.preventDefault(); setCmd((v) => !v); }
+      else if (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); setCmd(true); }
+    };
+    window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
+  }, [firstRun]);
+  const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
+  const setTheme = (t) => { applyTheme(t); try { window.storage.set(THEME_KEY, t, false); window.dispatchEvent(new CustomEvent("bj-theme", { detail: t })); } catch (_) {} };
+  const cmdItems = !cmd ? [] : [
+    ["Pages", "Today", () => go("progress")],
+    ["Pages", "Live play", () => go("play"), "table simulation"],
+    ["Pages", "Bet spread", () => go("calc"), "calculator optimizer risk of ruin bankroll"],
+    ["Pages", "Sessions", () => go("sessions"), "casino log chart results"],
+    ["Pages", "Settings", () => go("settings"), "sync backup reset"],
+    ["Train", "Strategy practice", () => go("train", { trainView: "drill", trainMode: "basic" }), "basic"],
+    ["Train", "Deviations practice", () => go("train", { trainView: "drill", trainMode: "dev" }), "index illustrious"],
+    ["Train", "Mixed practice", () => go("train", { trainView: "drill", trainMode: "mixed" })],
+    ["Train", "Strategy charts", () => go("train", { trainView: "charts" }), "basic deviations reference"],
+    ["Train", "Fill in the chart", () => go("train", { trainView: "fill" })],
+    ["Drills", "Running count", () => go("count", { drill: "count" }), "counting hi-lo"],
+    ["Drills", "True count", () => go("count", { drill: "tc" }), "conversion"],
+    ["Drills", "Hand totals", () => go("count", { drill: "totals" })],
+    ["Drills", "Bet ramp", () => go("count", { drill: "ramp" })],
+    ["Drills", "Casino-ready tests", () => go("count", { drill: "tests" })],
+    ["Actions", "Log a session", () => go("sessions", { log: true }), "add new result"],
+    ["Actions", "Change game rules", () => setSetupOpen(true), "decks h17 s17 surrender penetration", rulesShort(rules)],
+    ...THEME_LIST.map(([k, l]) => ["Appearance", `${l} theme`, () => setTheme(k), "color look dark light"]),
+  ].map(([group, label, run, more, note]) => ({ group, label, run, more, note }));
 
   return (
     <RulesCtx.Provider value={rules}><div className="bj">
       <style>{css}</style>
       {setupOpen && <RulesModal rules={rules} onSave={saveRules} first={firstRun} />}
+      {cmd && <CommandPalette items={cmdItems} onClose={() => setCmd(false)} />}
       <div className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
         <header className="mb-5 flex items-end justify-between gap-3">
@@ -4729,6 +4863,10 @@ function BetSpreadCalculator() {
           <span className="sn-tile" aria-hidden="true"><svg viewBox="0 0 512 512"><path d="M240 92C206 136 108 204 108 288C108 332 140 362 178 362C204 362 224 350 234 332C232 368 216 396 190 414H290C264 396 248 368 246 332C256 350 276 362 302 362C340 362 372 332 372 288C372 204 274 136 240 92Z" style={{ fill: "var(--ivory)" }} /><circle cx="338" cy="346" r="100" style={{ fill: "var(--b2)" }} /><circle cx="338" cy="346" r="80" style={{ fill: "var(--brass)" }} /></svg></span>
           <span className="min-w-0"><span className="sn-name block">Blackjack</span><span className="sn-tag block">Count · Play · Win</span></span>
         </div>
+        <button className="sn-search" onClick={() => setCmd(true)} aria-label="Jump to a page, drill or setting">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+          <span>Jump to…</span><kbd>{isMac ? "⌘K" : "Ctrl K"}</kbd>
+        </button>
         <div className="sn-label">Menu</div>
         {NAV_ITEMS.map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
           <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"sn-item" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
@@ -4736,6 +4874,10 @@ function BetSpreadCalculator() {
             <span>{l}</span>
           </button>); })}
         <div className="sn-foot">
+          {spreadLoaded && <button onClick={() => go("calc")} className="sn-rules" aria-label="Your spread. Open the calculator">
+            <span className="block text-[10px] font-semibold uppercase" style={{ letterSpacing: ".16em", color: "var(--muted)" }}>Your spread</span>
+            <span className="flex items-baseline justify-between gap-2 mt-1"><span className="mono text-[13px] font-semibold" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span><span className="mono text-[11px] font-semibold" style={{ color: rorTone }}>{pct(r.ror, 1)} risk</span></span>
+          </button>}
           <button onClick={() => setSetupOpen(true)} className="sn-rules" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
             <span className="block text-[10px] font-semibold uppercase" style={{ letterSpacing: ".16em", color: "var(--muted)" }}>Game rules</span>
             <span className="flex items-center justify-between gap-2 mt-1"><span className="mono text-[13px] font-semibold" style={{ color: "var(--ivory)" }}>{rulesShort(rules)}</span><span className="text-[11px] font-semibold" style={{ color: "var(--brass)" }}>Change</span></span>
