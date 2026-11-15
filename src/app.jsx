@@ -2830,12 +2830,18 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
           <div className="text-xs mt-0.5 truncate" style={{ color: "var(--ivory-d)" }}>
             {picked && sp?.s ? <>{dateOf(sp.s)}{sp.s.where ? ` · ${sp.s.where}` : ""} · {fmtH(sp.s.hours)}</> : <>{n} session{n === 1 ? "" : "s"} · {fmtH(last.h)} · {zs(z(last))} vs expected</>}
           </div>
-          {picked && sp?.s && <div className="text-[11px] mt-0.5 mono" style={{ color: "var(--muted)" }}>{view === "bars" ? `running ${sgnMoney(sp.act)}` : `this session ${sgnMoney(sp.s.result)}`} · exp {sgnMoney(view === "bars" ? sessEv(sp.s, evHour) * (+sp.s.hours || 0) : sp.exp)} · {zs(z(sp))}{sp.s.notes ? ` · ${sp.s.notes}` : ""}</div>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {picked && <button onClick={() => setSel(null)} className="text-xs font-semibold" style={{ color: "var(--brass)" }}>Latest</button>}
           <button onClick={onClose} aria-label="Close" className="rounded-full flex items-center justify-center" style={{ width: 34, height: 34, background: "rgba(var(--fg),.08)", color: "var(--ivory-d)", fontSize: 18 }}>×</button>
         </div>
+      </div>
+      {/* always two lines tall, so the chart doesn't jump while you drag */}
+      <div className="text-[11px] mt-1 mono" style={{ color: "var(--muted)", minHeight: 32, lineHeight: "16px" }}>
+        {picked && sp?.s ? (() => { const sh = +sp.s.hours || 0, se = sessEv(sp.s, evHour), sdv = sessSd(sp.s, sdHour), c = sp.s.snap && sp.s.snap.cfg; return (<>
+          <div className="truncate">{view === "bars" ? <>expected <span style={{ color: "var(--ivory-d)" }}>{sgnMoney(se * sh)}</span> ± {shortMoney(sdv * Math.sqrt(sh))} · running {sgnMoney(sp.act)}</> : <>session <span style={{ color: sp.s.result >= 0 ? "var(--brass)" : "var(--neg-l)" }}>{sgnMoney(sp.s.result)}</span> · expected <span style={{ color: "var(--ivory-d)" }}>{sgnMoney(se * sh)}</span></>} · {zs(z(sp))} overall</div>
+          <div className="truncate"><span style={{ color: "var(--ivory-d)" }}>{sgnMoney(se)}/hr ± {shortMoney(sdv)}</span>{c ? ` · ${rulesShort(c.rules)} · ${c.seats} player${c.seats === 1 ? "" : "s"}` : ""}{sp.s.notes ? ` · ${sp.s.notes}` : ""}</div>
+        </>); })() : n ? <div className="truncate" style={{ fontFamily: "inherit" }}>Drag across the chart to inspect a session.</div> : null}
       </div>
       {/* one primary control + options */}
       <div className="flex items-center justify-between mt-3">
@@ -2856,7 +2862,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
             <linearGradient id="pnlArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={`rgba(${colRaw},.26)`} /><stop offset="100%" stopColor={`rgba(${colRaw},0)`} /></linearGradient>
           </defs>
           {yT.map((v) => <g key={"y" + v}><line x1={P.l} x2={W - P.r} y1={y(v)} y2={y(v)} stroke={v === 0 ? "rgba(var(--fg),.22)" : "rgba(var(--fg),.05)"} strokeWidth="1" /><text x={W - P.r + 6} y={y(v) + 3} fill="var(--muted)" style={{ font: "500 10px Inter" }}>{shortMoney(v)}</text></g>)}
-          {xT.map((v) => { const xx = P.l + (v / xMax) * cw; return <text key={"x" + v} x={xx} y={H - 6} textAnchor="middle" fill="var(--muted)" style={{ font: "500 10px Inter" }}>{useH ? fmtH(v) : `${v}`}</text>; })}
+          {xT.map((v) => { const xx = P.l + (v / xMax) * cw; const edge = xx < P.l + 12; return <text key={"x" + v} x={edge ? P.l : xx} y={H - 6} textAnchor={edge ? "start" : "middle"} fill="var(--muted)" style={{ font: "500 10px Inter" }}>{useH ? fmtH(v) : `${v}`}</text>; })}
           {view === "cum" ? (<>
             {band >= 2 && <path d={bandPath(2)} fill="rgba(var(--fg),.035)" />}
             {band >= 1 && <path d={bandPath(1)} fill="rgba(var(--fg),.06)" />}
@@ -3038,7 +3044,7 @@ function snapFromCfg(cfg) {
 const cfgLabel = (c) => `${rulesShort(c.rules)}${maxHandsOf(c.rules) !== 4 ? ` · split ${maxHandsOf(c.rules)}` : ""}${c.rules.rsa ? " · RSA" : ""}${c.rules.insurance === false ? " · no ins" : ""} · ${c.seats} player${c.seats === 1 ? "" : "s"}`;
 const snapMatches = (a, b) => !!a && !!b && Math.abs((a.ev || 0) - (b.ev || 0)) < 0.5 && Math.abs((a.sd || 0) - (b.sd || 0)) < 1;
 
-function SpreadSheet({ cfg0, current, legacy, session, onUse, onClose }) {
+function SpreadSheet({ cfg0, current, legacy, session, others = 0, onUse, onUseAll, onClose }) {
   const [edit, setEdit] = useState(!!legacy);
   const [adv, setAdv] = useState(false);
   const [cfg, setCfg] = useState(() => JSON.parse(JSON.stringify(cfg0)));
@@ -3110,6 +3116,10 @@ function SpreadSheet({ cfg0, current, legacy, session, onUse, onClose }) {
       )}
       <button className="btn" onClick={() => onUse(snap)}>{edit ? "Save for this session" : "Yes, use these"}</button>
       {!edit && <button className="btn ghost mt-2" onClick={() => setEdit(true)}>Edit for this session</button>}
+      {edit && others > 0 && onUseAll && (<>
+        <button className="btn ghost mt-2" onClick={() => onUseAll(snap)}>Save for all {others + 1} sessions at {session?.where}</button>
+        <p className="text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Sets this spread and these rules on every session logged at {session?.where}. Each one keeps its own hours and players at the table.</p>
+      </>)}
       {edit && <button className="w-full text-xs font-semibold mt-3" style={{ color: "var(--muted)" }} onClick={() => { setCfg(JSON.parse(JSON.stringify(cfg0))); setEdit(false); }}>Reset</button>}
     </Sheet>
   );
@@ -3288,17 +3298,24 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
   // Every session carries the game it was played under (s.snap, with its spread and rules in s.snap.cfg), so its
   // expected line never follows later changes to the app's rules or spread. Sessions from older versions get one:
   // no snapshot at all → today's spread, once; a snapshot without its spread → filled in only when it provably matches.
+  // Either way the session's own "players at the table" is used, not the app's current setting — and sessions an
+  // earlier version filled in with the wrong table size are re-priced once (s.seats and s.snap.cfg.seats always
+  // agree otherwise: every other path that sets one sets the other).
   useEffect(() => {
     if (!ready || !loaded || !sessions.length || !mix || !mix.length) return;
-    if (sessions.every((x) => x.snap && x.snap.cfg)) return;
-    let now = null, changed = false;
-    const cur = () => now || (now = snapFromCfg(cfgNow));
+    const okSeats = (x) => (x.seats >= 1 && x.seats <= 7 ? x.seats : null);
+    if (sessions.every((x) => x.snap && (x.snap.cfg ? !okSeats(x) || x.snap.cfg.seats === x.seats : x.snap.noCfg))) return;
+    const memo = {}, changedIds = [];
+    const cur = (x) => { const k = okSeats(x) || cfgNow.seats; return memo[k] || (memo[k] = snapFromCfg({ ...cfgNow, seats: k })); };
     const next = sessions.map((x) => {
-      if (!x.snap) { changed = true; return { ...x, snap: cur() }; }
-      if (!x.snap.cfg && !x.snap.noCfg) { changed = true; return { ...x, snap: snapMatches(x.snap, cur()) ? { ...x.snap, cfg: cur().cfg } : { ...x.snap, noCfg: true } }; }
-      return x;
+      let nx = x;
+      if (!x.snap) nx = { ...x, snap: cur(x) };
+      else if (!x.snap.cfg && !x.snap.noCfg) nx = { ...x, snap: snapMatches(x.snap, cur(x)) ? { ...x.snap, cfg: cur(x).cfg } : { ...x.snap, noCfg: true } };
+      else if (x.snap.cfg && okSeats(x) && x.snap.cfg.seats !== x.seats) nx = { ...x, snap: snapFromCfg({ ...x.snap.cfg, seats: x.seats }) };
+      if (nx !== x) changedIds.push(x.id);
+      return nx;
     });
-    if (changed) saveSessions(next);
+    if (changedIds.length) saveSessions(next);
   }, [ready, loaded, sessions, mix]); // eslint-disable-line
 
   const casinos = useMemo(() => {
@@ -3517,8 +3534,19 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
           }));
           setSheet(null);
         }} />}
-      {spreadFor && <SpreadSheet cfg0={spreadFor.cfg} current={spreadFor.current} session={sessions.find((x) => x.id === spreadFor.id)} onClose={() => setSpreadFor(null)}
-        legacy={spreadFor.legacy} onUse={(snap) => { saveSessions(sessions.map((x) => (x.id === spreadFor.id ? { ...x, snap, seats: snap.cfg.seats } : x))); setSpreadFor(null); }} />}
+      {spreadFor && (() => {
+        const cur = sessions.find((x) => x.id === spreadFor.id);
+        const ck = cur ? casinoKey(cur) : "—";
+        const others = ck === "—" ? 0 : sessions.filter((x) => x.id !== spreadFor.id && casinoKey(x) === ck).length;
+        return <SpreadSheet cfg0={spreadFor.cfg} current={spreadFor.current} session={cur} others={others} onClose={() => setSpreadFor(null)} legacy={spreadFor.legacy}
+          onUse={(snap) => { saveSessions(sessions.map((x) => (x.id === spreadFor.id ? { ...x, snap, seats: snap.cfg.seats } : x))); setSpreadFor(null); }}
+          onUseAll={(snap) => {
+            // same spread and rules for the whole casino; each session is priced at its own table size
+            const memo = {}; const at = (k) => memo[k] || (memo[k] = k === snap.cfg.seats ? snap : snapFromCfg({ ...snap.cfg, seats: k }));
+            saveSessions(sessions.map((x) => (x.id === spreadFor.id ? { ...x, snap, seats: snap.cfg.seats } : casinoKey(x) === ck ? { ...x, snap: at(x.seats >= 1 && x.seats <= 7 ? x.seats : snap.cfg.seats) } : x)));
+            setSpreadFor(null);
+          }} />;
+      })()}
     </div>
   );
 }
