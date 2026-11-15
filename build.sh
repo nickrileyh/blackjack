@@ -15,10 +15,9 @@ s = open('src/app.jsx').read()
 s = re.sub(r"@import url\([^)]*\);/\*FONTIMPORT\*/", "\n/*FONTIMPORT*/", s)
 open('.build/app.jsx', 'w').write(s)
 PY
-cp src/entry.jsx "$OUT/entry.jsx"
-# the Casinos page and its map data live in their own files
-cp src/casinos.jsx src/casino-map.js src/casino-data.js "$OUT/"
-echo 'module.exports = { content: ["./.build/app.jsx", "./.build/casinos.jsx"], theme: { extend: {} }, plugins: [] };' > "$OUT/tailwind.config.js"
+# every other source file sits next to it (entry.jsx, the Casinos page and its map data, the Ask tab and its calculator)
+for f in src/*.js src/*.jsx; do [ "$f" = src/app.jsx ] || cp "$f" "$OUT/"; done
+echo 'module.exports = { content: ["./src/*.jsx"], theme: { extend: {} }, plugins: [] };' > "$OUT/tailwind.config.js"
 
 npx tailwindcss -c "$OUT/tailwind.config.js" -i src/input.css -o "$OUT/tw.css" --minify 2>/dev/null
 npx esbuild "$OUT/entry.jsx" --bundle --minify --jsx=automatic --define:process.env.NODE_ENV='"production"' --outfile="$OUT/bundle.js" --log-level=warning
