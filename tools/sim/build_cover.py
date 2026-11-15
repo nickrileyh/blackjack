@@ -1,33 +1,69 @@
-# cv/*.json (cover plays, paired) + ce/*.json (count errors) -> src/coverdata.js
+# g/*.json (per-penetration, three table sizes) -> src/coverdata.js (format 2)
+#   count plays: one reference row each (3 players, 75% dealt) + a scale grid per group (skip / always-high / always-low)
+#                by table size x penetration x true count, because count plays gain value as more cards are seen
+#   everything else (insurance, habits, slips): reference row + how it moves with penetration (below / above 75%)
+#                and with table size (heads-up / full table)
+#   counting methods and missed cards: change in the mix of counts and in the edge, same penetration terms
 import json, glob, base64, struct, sys, os
+G = 'g/'
+q = lambda x, sc: max(-32767, min(32767, int(round(x * sc))))
+def load(mode, key, o):
+    f = f'{G}{mode}_{key}_{o}.json'
+    return json.load(open(f)) if os.path.exists(f) and os.path.getsize(f) > 0 else None
+def slopes(vals, w):  # vals[p][b] for 9 pens, weights w[p][b] -> (ref, lo, hi) with e(x) = ref + lo*x (x=(pen-75)/25 in [-1,0]) or + hi*x (x=(pen-75)/15 in (0,1])
+    ref = vals[5]; lo = []; hi = []
+    for b in range(10):
+        sxy = sxx = 0
+        for p in range(5): x = (50 + 5 * p - 75) / 25; sxy += w[p][b] * x * (vals[p][b] - ref[b]); sxx += w[p][b] * x * x
+        lo.append(-(sxy / sxx) if sxx > 0 else 0)   # stored as the value at pen 50 minus ref
+        sxy = sxx = 0
+        for p in (6, 7, 8): x = (50 + 5 * p - 75) / 15; sxy += w[p][b] * x * (vals[p][b] - ref[b]); sxx += w[p][b] * x * x
+        hi.append(sxy / sxx if sxx > 0 else 0)      # value at pen 90 minus ref
+    return ref, lo, hi
 out = {}; clip = 0
-q = lambda x, sc: max(-32767, min(32767, round(x * sc)))
-for f in sorted(glob.glob('/home/claude/sim3/cv/*.json')):
-    d = json.load(open(f)); key = f"{d['decks']}_{d['h17']}_{d['sur']}"
-    f2 = f.replace('/cv/', '/cv2/')
-    if os.path.exists(f2): d['v'].update(json.load(open(f2))['v'])
-    names = sorted(d['v'].keys(), key=lambda s: (s[0], [int(t) if t.isdigit() else 0 for t in s[1:].replace('_', ' ').split()] if s != 'slip' else [0]))
-    vals = []
-    for nm in names:
-        v = d['v'][nm]
-        for a, sc in ((v['e'], 4e5), (v['m2'], 1e5), (v['c12'], 1e5)):
-            for x in a:
-                if abs(x * sc) > 32767: clip += 1
-                vals.append(q(x, sc))
-    rec = {"v": names, "b": base64.b64encode(struct.pack(f'<{len(vals)}h', *vals)).decode()}
-    cf = f.replace('/cv/', '/ce/')
-    if os.path.exists(cf):
-        c = json.load(open(cf)); nb = c['n']; cv = []
-        srcs = [(c, nm) for nm in ("miss2", "miss5", "tcfull", "tcexact", "tcfloor")]
-        cf2 = f.replace('/cv/', '/ce2/')
-        if os.path.exists(cf2): srcs.append((json.load(open(cf2)), "tcround"))
-        for c, nm in srcs:
-            v = c['v'][nm]; nb = c['n']
-            for b in range(10): cv.append(q(v['n'][b] / nb[b] if nb[b] else 1, 1e4))
-            for k, sc in (('e', 4e5), ('m2', 1e5), ('c12', 1e5)):
-                for b in range(10): cv.append(q(v[k][b] - c[k][b], sc))
-        rec["c"] = base64.b64encode(struct.pack(f'<{len(cv)}h', *cv)).decode()
+for f in sorted(glob.glob(G + 'cdelta_*_2.json')):
+    key = os.path.basename(f)[7:-7]; decks = int(key.split('_')[0]); hio = 4 if decks <= 2 else 6
+    R = load('cdelta', key, 2); O0 = load('cdelta', key, 0); OH = load('cdelta', key, hio)
+    if not (R and O0 and OH): continue
+    names = sorted(R['v'].keys(), key=lambda s: (s[0], [int(t) for t in s[1:].replace('_', ' ').split()] if s != 'slip' else [0]))
+    devs = [n for n in names if n[0] == 'd']; rest = [n for n in names if n[0] != 'd']
+    buf = []
+    def put(a, sc):
+        global clip
+        for x in a:
+            if abs(x * sc) > 32767: clip += 1
+            buf.append(q(x, sc))
+    for nm in devs:
+        v = R['v'][nm]; put(v['e'][5], 2.5e5); put(v['m2'], 5e4); put(v['c12'], 5e4)
+    # scale grid for count plays: group g (mode 1,2,3), table size (0, 2, hio), 9 pens, 10 counts
+    for g in '123':
+        mem = [n for n in devs if n.endswith('_' + g)]
+        den = [sum(R['v'][n]['e'][5][b] for n in mem) for b in range(10)]
+        for D in (O0, R, OH):
+            for p in range(9):
+                for b in range(10):
+                    num = sum(D['v'][n]['e'][p][b] for n in mem if n in D['v'])
+                    r = num / den[b] if abs(den[b]) > 3e-5 and D['n'][p][b] > 2e5 else 1.0
+                    buf.append(q(max(0.2, min(5.0, r)), 1000))
+    for nm in rest:
+        v = R['v'][nm]; ref, lo, hi = slopes(v['e'], R['n'])
+        put(ref, 2.5e5); put(lo, 2.5e5); put(hi, 2.5e5)
+        for D in (O0, OH): put([(D['v'][nm]['e'][5][b] - ref[b]) if nm in D['v'] and D['n'][5][b] > 2e5 else 0 for b in range(10)], 2.5e5)
+        put(v['m2'], 5e4); put(v['c12'], 5e4)
+    rec = {"d": devs, "r": rest, "hi": hio, "b": base64.b64encode(struct.pack(f'<{len(buf)}h', *buf)).decode()}
+    C = load('cerr', key, 2)
+    if C:
+        cb = []; cn = []
+        for nm in ("miss2", "miss5", "tcfull", "tcexact", "tcfloor", "tcround"):
+            if nm not in C['v']: continue
+            v = C['v'][nm]; cn.append(nm); w = C['n']
+            fr = [[(v['n'][p][b] / C['n'][p][b] - 1) if C['n'][p][b] > 0 else 0 for b in range(10)] for p in range(9)]
+            for vals, sc in ((fr, 1e4), ([[v['e'][p][b] - C['e'][p][b] for b in range(10)] for p in range(9)], 2.5e5), ([[v['m2'][p][b] - C['m2'][p][b] for b in range(10)] for p in range(9)], 5e4), ([[v['c12'][p][b] - C['c12'][p][b] for b in range(10)] for p in range(9)], 5e4)):
+                ref, lo, hi = slopes(vals, w)
+                for a in (ref, lo, hi):
+                    for x in a: cb.append(q(x, sc))
+        rec["cn"] = cn; rec["c"] = base64.b64encode(struct.pack(f'<{len(cb)}h', *cb)).decode()
     out[key] = rec
-dst = sys.argv[1] if len(sys.argv) > 1 else '/home/claude/blackjack/src/coverdata.js'
-open(dst, 'w').write('// Generated by the simulator (see CLAUDE.md, "Ask AI"). Per-count cost of each cover play: Int16 rows of edge (÷400000),\n// second moment and two-hand covariance (÷100000) for every deck count, H17/S17 and surrender on/off.\nexport const CALV = ' + json.dumps(out, separators=(',', ':')) + ';\n')
+dst = sys.argv[1] if len(sys.argv) > 1 else '../../src/coverdata.js'
+open(dst, 'w').write('// Generated by tools/sim (see its README) — do not edit. Format 2: per-count cost of each cover play for every deck\n// count, H17/S17 and surrender on/off, with how it changes by penetration and table size.\nexport const CALV_FORMAT = 2;\nexport const CALV = ' + json.dumps(out, separators=(',', ':')) + ';\n')
 print(len(out), 'configs', os.path.getsize(dst), 'bytes', 'clipped', clip)

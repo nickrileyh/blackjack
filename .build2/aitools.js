@@ -3,7 +3,7 @@
 // from the same calibrated model the Spread page uses.
 import { COUNTS, calFor, compute, autoRph, roundFreqs, spotsAt, momentAt, optimizeSpread, optimizeForProfit, correctPlay, rulesLabel, pDip, PhiN, DEFAULT_RULES, DEFAULT_BETS, SKILLS, sessEv, sessSd, loadLog, sessionDrawdown, sessionCash } from "./app.jsx";
 import { coverCal, coverAvail, deviationCatalog, HABITS } from "./cover.js";
-import { runPolicies } from "./sim.js";
+import { runPolicies, countShift } from "./sim.js";
 
 const r0 = (x) => Math.round(x), r1 = (x) => Math.round(x * 10) / 10, r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000;
 const getJ = async (k, d) => { try { const r = await window.storage.get(k, false); return r && r.value ? JSON.parse(r.value) : d; } catch (_) { return d; } };
@@ -26,6 +26,8 @@ function resolve(base, ch = {}) {
   if (ch.rules && ch.rules.split_to_hands) R.maxHands = ch.rules.split_to_hands;
   if (ch.rules && ch.rules.resplit_aces != null) R.rsa = !!ch.rules.resplit_aces;
   if (ch.rules && ch.rules.double_after_split != null) R.das = !!ch.rules.double_after_split;
+  const asMap = (v, f) => (Array.isArray(v) ? Object.fromEntries(v.filter((x) => x && x.true_count != null).map((x) => [String(Math.round(+x.true_count)), +x[f]])) : v);
+  if (ch.bets) ch = { ...ch, bets: asMap(ch.bets, "bet") }; if (ch.hands) ch = { ...ch, hands: asMap(ch.hands, "hands") };
   const bets = { ...base.bets }; let spotsMap = { ...base.spotsMap };
   if (ch.bets) { if (ch.replace_bets) COUNTS.forEach((c) => (bets[c] = 0)); Object.keys(ch.bets).forEach((k) => { const c = Math.max(-3, Math.min(6, Math.round(+k))); bets[c] = Math.max(0, +ch.bets[k] || 0); }); }
   if (ch.bet_multiplier > 0) COUNTS.forEach((c) => (bets[c] = bets[c] * ch.bet_multiplier));
@@ -44,7 +46,11 @@ const toPolicy = (p) => { const o = {}; Object.keys(p || {}).forEach((k) => { if
 export function evalScenario(base, ch = {}, opts = {}) {
   const sc = resolve(base, ch), notes = [];
   let cal = calFor(sc.R, sc.seats);
-  const cc = coverCal(cal, sc.R, sc.cover); cal = cc.cal;
+  // counting differently changes how often you land on each count: deal this exact spread both ways to measure it
+  const TCM = { full_deck: 1, exact: 2, floor: 3, round_nearest: 4 }, cm = TCM[sc.cover.count_method] || 0, miss = Math.max(0, Math.min(8, +sc.cover.missed_cards_pct || 0));
+  let shift = null;
+  if ((cm || miss > 0) && COUNTS.some((c) => sc.bets[c] > 0)) shift = countShift({ R: sc.R, seats: sc.seats, spots: COUNTS.map((c) => spotsAt(c, sc.bets, sc.spotsMap, cal)), opts: { tcm: cm, miss: miss / 100 }, rounds: opts.rounds || 400000 });
+  const cc = coverCal(cal, sc.R, sc.cover, shift); cal = cc.cal;
   if (cc.skipped.length) notes.push("Not applied: " + cc.skipped.join("; "));
   (cc.approx || []).forEach((t) => notes.push(t));
   const rph = sc.rph || autoRph(roundFreqs(sc.bets, sc.spotsMap, cal), sc.bets, sc.spotsMap, cal);
@@ -178,13 +184,15 @@ async function trainingStats(base, a) {
   return out;
 }
 
-const makeScen = (av) => ({
+const makeScen = (av, flat) => ({
   type: "object", description: "Changes from the user's current setup. Leave a field out to keep what they have now. An empty object is their current game.",
   properties: {
     name: { type: "string", description: "Short label for this scenario" },
-    bets: { type: "object", description: "Dollar bet per hand at true counts, keys \"-3\"…\"6\" (-3 means -3 or lower, 6 means +6 or higher). 0 = sit out (heads-up: leave the table). Only the counts you list change.", additionalProperties: { type: "number" } },
+    bets: flat ? { type: "array", description: "Dollar bet per hand at true counts -3…6 (-3 means -3 or lower, 6 means +6 or higher). 0 = sit out (heads-up: leave the table). Only the counts you list change.", items: { type: "object", properties: { true_count: { type: "number" }, bet: { type: "number" } }, required: ["true_count", "bet"] } }
+      : { type: "object", description: "Dollar bet per hand at true counts, keys \"-3\"…\"6\" (-3 means -3 or lower, 6 means +6 or higher). 0 = sit out (heads-up: leave the table). Only the counts you list change.", additionalProperties: { type: "number" } },
     replace_bets: { type: "boolean", description: "true = counts not listed in bets become 0 (use when giving a whole new spread)" },
-    hands: { type: "object", description: "Hands played at a count: 1 or 2, same keys as bets", additionalProperties: { type: "number" } },
+    hands: flat ? { type: "array", description: "Hands played at a true count: 1 or 2", items: { type: "object", properties: { true_count: { type: "number" }, hands: { type: "number" } }, required: ["true_count", "hands"] } }
+      : { type: "object", description: "Hands played at a count: 1 or 2, same keys as bets", additionalProperties: { type: "number" } },
     bet_multiplier: { type: "number", description: "Scale every bet (0.5 = half stakes)" }, max_bet: { type: "number" }, min_bet: { type: "number" }, round_bets_to: { type: "number", description: "Round bets to a chip size, e.g. 25" },
     bankroll: { type: "number" }, players_at_table: { type: "number", description: "1–7, the user included" }, rounds_per_hour: { type: "number", description: "Leave out to use the typical speed for the table size" },
     missed_raise_pct: { type: "number", description: "Percent of rounds where the user fails to put out the spread's bet and bets their smallest bet instead (distraction, or holding back while watched)" },
@@ -210,15 +218,15 @@ const makeScen = (av) => ({
 });
 
 // The tools offered to the model, limited to what has been measured for the user's rules.
-export function toolsFor(R) {
-  const av = coverAvail(R || DEFAULT_RULES), SCEN = makeScen(av), REF = { type: "object", description: "One scenario, with exactly the same fields as a scenario in the calculate tool (bets, hands, rules, cover, bet_policy, bankroll…). Leave it out for the user's current game." };
+export function toolsFor(R, flat) {
+  const av = coverAvail(R || DEFAULT_RULES), SCEN = makeScen(av, flat), REF = flat ? SCEN : { type: "object", description: "One scenario, with exactly the same fields as a scenario in the calculate tool (bets, hands, rules, cover, bet_policy, bankroll…). Leave it out for the user's current game." };
   return [
   { name: "calculate", description: "Run the app's calibrated blackjack model on one or more scenarios and get win per hour, swing, risk of ruin, hours to the long run and the per-count table. Pass several scenarios to compare them side by side (always include an empty scenario {} named \"current\" when the user asks what a change would do). This is the ONLY source for these numbers — never estimate them yourself.", input_schema: { type: "object", properties: { scenarios: { type: "array", minItems: 1, maxItems: 6, items: SCEN } }, required: ["scenarios"] } },
   { name: "risk_over_time", description: "For one scenario: expected result, chance of being behind, result percentiles, and the chance of ever being down (or finishing down/up) given amounts, after given numbers of hours. Use for trip bankrolls, losing streaks and 'how long until I'm ahead' questions.", input_schema: { type: "object", properties: { scenario: REF, hours: { type: "array", items: { type: "number" } }, loss_amounts: { type: "array", items: { type: "number" } }, win_amounts: { type: "array", items: { type: "number" } }, session_hours: { type: "number", description: "Length of one session; adds the chance a session loses and of losing/winning several in a row" } } } },
   { name: "bankroll_needed", description: "Bankroll required to hold a scenario's risk of ruin to given levels, plus the full-Kelly bankroll. Optionally: cash to bring for a trip of trip_hours, and the chance and time to grow the bankroll to grow_to.", input_schema: { type: "object", properties: { scenario: REF, risk_of_ruin_pcts: { type: "array", items: { type: "number" } }, trip_hours: { type: "number" }, grow_to: { type: "number" } } } },
   { name: "stop_loss_and_win_goal", description: "What a per-session stop-loss and/or win goal does: which one is hit first and how often, how long a session lasts on average, and the chance each is hit within max_hours.", input_schema: { type: "object", properties: { scenario: REF, stop_loss: { type: "number" }, win_goal: { type: "number" }, max_hours: { type: "number" } } } },
   { name: "optimize_spread", description: "Find the best bets at each count: either the most profit under a risk-of-ruin cap, or the least risk that reaches a profit goal. Exact (same optimizer as the Spread page).", input_schema: { type: "object", properties: { scenario: REF, risk_of_ruin_cap_pct: { type: "number" }, profit_goal_per_hour: { type: "number" }, min_bet: { type: "number" }, max_bet: { type: "number" }, play_from_true_count: { type: "number", description: "Lowest count that gets a real bet" }, below_that: { type: "string", enum: ["sit_out", "min_bet"] } } } },
-  { name: "correct_play", description: "The correct play for a hand against a dealer upcard under the user's rules (BJA basic strategy with the Illustrious 18 and Fab 4), at one true count or across all counts.", input_schema: { type: "object", properties: { cards: { type: "array", items: { type: "string" }, description: "Player cards, e.g. [\"A\",\"7\"] or [\"10\",\"6\"]" }, dealer_upcard: { type: "string" }, true_count: { type: "number" }, after_split: { type: "boolean" }, rules: { type: "object" } }, required: ["cards", "dealer_upcard"] } },
+  { name: "correct_play", description: "The correct play for a hand against a dealer upcard under the user's rules (BJA basic strategy with the Illustrious 18 and Fab 4), at one true count or across all counts.", input_schema: { type: "object", properties: { cards: { type: "array", items: { type: "string" }, description: "Player cards, e.g. [\"A\",\"7\"] or [\"10\",\"6\"]" }, dealer_upcard: { type: "string" }, true_count: { type: "number" }, after_split: { type: "boolean" } }, required: ["cards", "dealer_upcard"] } },
   { name: "session_results", description: "The user's logged casino sessions: totals, actual vs expected, luck, by place and by month, biggest swings, recent sessions. Optional filters.", input_schema: { type: "object", properties: { from: { type: "string", description: "YYYY-MM-DD" }, to: { type: "string" }, where: { type: "string" }, list_recent: { type: "number" } } } },
   { name: "training_stats", description: "The user's practice record in the app: accuracy and speed by skill (basic strategy, deviations, running count, true count…), test results and live-play record.", input_schema: { type: "object", properties: { days: { type: "number", description: "Look-back window, default 30" } } } },
 ];
@@ -244,5 +252,5 @@ export async function setupBrief() {
   const base = await loadSetup(), cur = strip(evalScenario(base, { name: "current" }));
   const sess = await getJ("bj-sessions-v1", []);
   const av = coverAvail(base.rules);
-  return { base, tools: toolsFor(base.rules), text: JSON.stringify({ ...(av.countMethods.length ? {} : { not_measured_yet_for_these_rules: "counting shortcuts and missed cards" }), current_game: cur, table_limits_saved: { min: base.minBet, max: base.maxBet }, sessions_logged: sess.length, count_plays_for_these_rules: deviationCatalog(base.rules), }) };
+  return { base, tools: toolsFor(base.rules), toolsFlat: toolsFor(base.rules, true), text: JSON.stringify({ ...(av.countMethods.length ? {} : { not_measured_yet_for_these_rules: "counting shortcuts and missed cards" }), current_game: cur, table_limits_saved: { min: base.minBet, max: base.maxBet }, sessions_logged: sess.length, count_plays_for_these_rules: deviationCatalog(base.rules), }) };
 }

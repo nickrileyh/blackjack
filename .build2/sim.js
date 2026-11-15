@@ -18,19 +18,28 @@ export const DEV_DEFS = [
 ];
 const bucket = (tc) => (tc < -3 ? 0 : tc > 6 ? 9 : tc + 3);
 
-export function makeGame(R, seats, seed = 12345) {
+// opts (all optional): tcm — how the counter figures the true count (0 half-deck truncated, 1 full-deck, 2 exact,
+// 3 half-deck floored, 4 half-deck rounded to nearest); miss — share of cards the counter fails to count;
+// perShoe — reseed every shoe from its number, so two runs with different settings see the same shoes.
+export function makeGame(R, seats, seed = 12345, opts = {}) {
   const DECKS = [1, 2, 4, 6, 8].includes(+R.decks) ? +R.decks : 6, H17 = !!R.h17, SUR = !!R.surrender, INS = R.insurance !== false;
   const DAS = R.das !== false, DBL = R.dbl === "9-11" ? 1 : R.dbl === "10-11" ? 2 : 0, RSA = !!R.rsa, MAXH = +R.maxHands === 2 || +R.maxHands === 3 ? +R.maxHands : 4, BJP = R.bj65 ? 1.2 : 1.5;
   const NOTH = Math.min(6, Math.max(0, Math.round(+seats || 1) - 1));
   const N = 52 * DECKS, shoe = new Int8Array(N), cut = Math.floor((Math.min(90, Math.max(50, +R.pen || 75)) / 100) * N);
   { let k = 0; for (let d = 0; d < DECKS; d++) for (let s = 0; s < 4; s++) { for (let r = 2; r <= 9; r++) shoe[k++] = r; for (let t = 0; t < 4; t++) shoe[k++] = 10; shoe[k++] = 11; } }
   let st = (seed >>> 0) || 1; const rnd = (n) => { st ^= st << 13; st >>>= 0; st ^= st >>> 17; st ^= st << 5; st >>>= 0; return Math.floor((st / 4294967296) * n); };
+  const TCM = opts.tcm | 0, MISS = +opts.miss > 0 ? +opts.miss : 0; let ms = 0x9e3779b9, shoeNo = 0;
+  const missed = () => { ms ^= ms << 13; ms >>>= 0; ms ^= ms >>> 17; ms ^= ms << 5; ms >>>= 0; return ms / 4294967296 < MISS; };
   let pos = 0, lim = N, rc = 0, rstart = 0, force = false;
   const fy = (n) => { for (let i = n - 1; i > 0; i--) { const j = rnd(i + 1), t = shoe[i]; shoe[i] = shoe[j]; shoe[j] = t; } };
-  const shuffle = () => { fy(N); pos = 0; lim = N; rc = 0; force = false; rstart = 0; };
+  const shuffle = () => {
+    if (opts.perShoe) { shoeNo++; let h = (Math.imul(shoeNo, 2654435761) ^ (seed >>> 0)) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13; st = h || 1; ms = (h ^ 0x9e3779b9) >>> 0 || 1; }
+    fy(N); pos = 0; lim = N; rc = 0; force = false; rstart = 0;
+  };
   const draw = () => { if (pos >= lim) { fy(rstart); lim = rstart; pos = 0; rc = 0; force = true; } return shoe[pos++]; };
-  const see = (c) => { rc += c <= 6 ? 1 : c >= 10 ? -1 : 0; };
-  const tcNow = () => { let r = Math.floor(((lim - pos) / 52) * 2 + 0.5) / 2; if (r < 0.5) r = 0.5; return Math.trunc(rc / r); };
+  const see = MISS ? (c) => { if (!missed()) rc += c <= 6 ? 1 : c >= 10 ? -1 : 0; } : (c) => { rc += c <= 6 ? 1 : c >= 10 ? -1 : 0; };
+  const tcNow = TCM === 0 ? () => { let r = Math.floor(((lim - pos) / 52) * 2 + 0.5) / 2; if (r < 0.5) r = 0.5; return Math.trunc(rc / r); }
+    : () => { const rem = (lim - pos) / 52; let r; if (TCM === 1) { r = Math.floor(rem + 0.5); if (r < 1) r = 1; } else if (TCM === 2) { r = rem; if (r < 0.25) r = 0.25; } else { r = Math.floor(rem * 2 + 0.5) / 2; if (r < 0.5) r = 0.5; } const t = rc / r; return TCM === 3 ? Math.floor(t) : TCM === 4 ? Math.floor(t + 0.5) : Math.trunc(t); };
   // deviations for these rules: dev[sur?1:0][up][key]
   const dev = [{}, {}];
   DEV_DEFS.forEach(([up, key, s17, h17, below, above, ls]) => { const idx = H17 ? h17 : s17; if (idx === NIL) return; for (let e = 0; e < 2; e++) { if (ls !== -1 && ls !== e) continue; dev[e][up * 256 + key] = [idx, above, below]; } });
@@ -176,4 +185,13 @@ export function runPolicies({ R, seats, spots, bets, edge, m1, m2, policies, rou
     }
   }
   return { rounds: total, played, freq: Array.from(freq, (x) => x / total), out: P.map((q) => ({ ev: q.ev / total, ex2: q.ex2 / total, avgBet: played ? q.act / played : 0, real: q.real / total, top: q.top, changedShare: played ? q.changed / played : 0, hist: q.hist })) };
+}
+
+// How a different way of counting changes the mix of true counts you THINK you're at, for this exact spread pattern
+// (sitting out, two hands, table size, penetration): the same shoes are dealt to the normal counter and to the
+// variant, and the ratio of how often each lands on every count is returned.
+export function countShift({ R, seats, spots, opts, rounds = 400000, seed = 4242 }) {
+  const run = (o) => { const g = makeGame(R, seats, seed, { ...o, perShoe: true }), f = new Float64Array(10), sf = (b) => spots[b]; for (let t = 0; t < rounds; t++) f[g.next(sf).b]++; return f; };
+  const a = run({}), b = run(opts);
+  return Array.from(a, (x, i) => (x > rounds * 2e-5 ? b[i] / x : 1));
 }

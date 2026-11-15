@@ -3,7 +3,7 @@
 // from the same calibrated model the Spread page uses.
 import { COUNTS, calFor, compute, autoRph, roundFreqs, spotsAt, momentAt, optimizeSpread, optimizeForProfit, correctPlay, rulesLabel, pDip, PhiN, DEFAULT_RULES, DEFAULT_BETS, SKILLS, sessEv, sessSd, loadLog, sessionDrawdown, sessionCash } from "./app.jsx";
 import { coverCal, coverAvail, deviationCatalog, HABITS } from "./cover.js";
-import { runPolicies } from "./sim.js";
+import { runPolicies, countShift } from "./sim.js";
 
 const r0 = (x) => Math.round(x), r1 = (x) => Math.round(x * 10) / 10, r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000;
 const getJ = async (k, d) => { try { const r = await window.storage.get(k, false); return r && r.value ? JSON.parse(r.value) : d; } catch (_) { return d; } };
@@ -46,7 +46,12 @@ const toPolicy = (p) => { const o = {}; Object.keys(p || {}).forEach((k) => { if
 export function evalScenario(base, ch = {}, opts = {}) {
   const sc = resolve(base, ch), notes = [];
   let cal = calFor(sc.R, sc.seats);
-  const cc = coverCal(cal, sc.R, sc.cover); cal = cc.cal;
+  // counting differently changes how often you land on each count: deal this exact spread both ways to measure it
+  const TCM = { full_deck: 1, exact: 2, floor: 3, round_nearest: 4 }, cm = TCM[sc.cover.count_method] || 0, miss = Math.max(0, Math.min(8, +sc.cover.missed_cards_pct || 0));
+  let shift = null;
+  const pat = COUNTS.map((c) => spotsAt(c, sc.bets, sc.spotsMap, cal));
+  if ((cm || miss > 0) && pat.some((x) => x > 0) && pat.some((x) => x !== pat[0])) shift = countShift({ R: sc.R, seats: sc.seats, spots: COUNTS.map((c) => spotsAt(c, sc.bets, sc.spotsMap, cal)), opts: { tcm: cm, miss: miss / 100 }, rounds: opts.rounds || 400000 });
+  const cc = coverCal(cal, sc.R, sc.cover, shift); cal = cc.cal;
   if (cc.skipped.length) notes.push("Not applied: " + cc.skipped.join("; "));
   (cc.approx || []).forEach((t) => notes.push(t));
   const rph = sc.rph || autoRph(roundFreqs(sc.bets, sc.spotsMap, cal), sc.bets, sc.spotsMap, cal);

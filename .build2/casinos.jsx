@@ -299,12 +299,13 @@ function CasinoMap({ map, pins, focus, sel, placing, miles, regionWord, onRegion
 // ---------- rows and sheets ----------
 function CasinoRow({ c, place, onOpen }) {
   const st = statusOf(c), m = c.mark || {}, g = (m.games || [])[0];
-  const sub = [place, g && g.rules ? rulesShort(g.rules) : null, m.heat ? `${HEATS[m.heat - 1][1].toLowerCase()} heat` : null].filter(Boolean).join(" · ");
+  const it = c.intel, quick = !g && it ? [it.tablesN ? `${it.tablesN} tables` : null, it.min ? `from $${it.min}` : null].filter(Boolean) : [];
+  const sub = [place, g && g.rules ? rulesShort(g.rules) : null, ...quick, m.heat ? `${HEATS[m.heat - 1][1].toLowerCase()} heat` : null].filter(Boolean).join(" · ");
   return (
     <button className="crow" onClick={() => onOpen(c)}>
       <span className={"cdot" + (st === "backed" ? " x" : st === "been" ? " b" : "")} aria-hidden="true" />
       <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{sub}</span></span>
-      <span className="flex items-center gap-2">{st === "backed" ? <span className="ctag x">backed off</span> : st === "been" ? <span className="ctag b">been</span> : c.hasIntel ? <span className="ctag n">report</span> : null}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)" }}><path d="M9 6l6 6-6 6" /></svg></span>
+      <span className="flex items-center gap-2">{st === "backed" ? <span className="ctag x">backed off</span> : st === "been" ? <span className="ctag b">been</span> : c.intel ? <span className="ctag n">report</span> : null}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)" }}><path d="M9 6l6 6-6 6" /></svg></span>
     </button>
   );
 }
@@ -363,19 +364,27 @@ function GameEditor({ g, set, onRemove, onUse, used }) {
     </div>
   );
 }
-function IntelBlock({ intel }) {
-  const rows = [["Tables", intel.tables], ["Blackjack", intel.games], ["High limit", intel.hl], ["Heat", intel.heat], ["Good to know", intel.note]].filter((r) => r[1] && (!Array.isArray(r[1]) || r[1].length));
+// the best game a report describes, in the app's short rule style — only the parts the source actually gave
+const bestLine = (b) => [b.decks ? `${b.decks}D` : null, b.h17 === true ? "H17" : b.h17 === false ? "S17" : null, b.das === true ? "DAS" : b.das === false ? "NDAS" : null, b.ls ? "LS" : null, b.rsa ? "RSA" : null, b.bj65 ? "6:5" : null, b.pen ? `${b.pen}%` : null].filter(Boolean).join(" · ");
+const intelFacts = (intel) => [intel.tablesN ? [String(intel.tablesN), "table games"] : null, intel.min ? [`$${intel.min}`, "lowest 3:2 minimum"] : null, intel.best && bestLine(intel.best) ? [bestLine(intel.best), intel.best.where || "best game reported"] : null].filter(Boolean);
+function IntelBlock({ intel, onCopy, copied }) {
+  const rows = [["Tables", intel.tables], ["Blackjack", intel.games], ["Penetration", intel.pen], ["High limit", intel.hl], ["Heat", intel.heat], ["Other games", intel.other], ["Good to know", intel.note]].filter((r) => r[1] && (!Array.isArray(r[1]) || r[1].length));
+  const facts = intelFacts(intel);
+  const [open, setOpen] = useState(rows.length <= 2);
   return (
     <div className="cbox mb-4">
-      <div className="flex items-baseline justify-between gap-3 mb-2"><span className="eyebrow">Scouting report</span>{intel.asOf && <span className="text-[11px]" style={{ color: "var(--muted)" }}>as of {intel.asOf}</span>}</div>
-      <div className="space-y-2.5">
+      <div className="flex items-baseline justify-between gap-3"><span className="eyebrow">Scouting report</span>{intel.asOf && <span className="text-[11px]" style={{ color: "var(--muted)" }}>as of {intel.asOf}</span>}</div>
+      {facts.length > 0 && <div className="grid gap-2 mt-2.5" style={{ gridTemplateColumns: `repeat(${facts.length}, minmax(0,1fr))` }}>{facts.map(([v, k]) => (
+        <div key={k} className="rounded-xl px-2.5 py-2" style={{ background: "rgba(var(--fg),.04)" }}><div className="mono text-[13px] font-semibold leading-tight" style={{ color: "var(--ivory)" }}>{v}</div><div className="text-[10.5px] leading-tight mt-0.5" style={{ color: "var(--muted)" }}>{k}</div></div>))}</div>}
+      {open ? <div className="space-y-2.5 mt-3 rise">
         {rows.map(([k, v]) => (
           <div key={k}><div className="text-[11px] font-semibold" style={{ color: "var(--muted)" }}>{k}</div>
             {Array.isArray(v) ? <ul className="text-[13px] leading-snug" style={{ color: "var(--ivory-d)" }}>{v.map((x, i) => <li key={i} className="flex gap-2 mt-1"><span aria-hidden="true" style={{ color: "var(--brass)" }}>·</span><span>{x}</span></li>)}</ul> : <div className="text-[13px] leading-snug mt-0.5" style={{ color: "var(--ivory-d)" }}>{v}</div>}
           </div>))}
-      </div>
-      {intel.src && intel.src.length > 0 && <div className="text-[11px] mt-3 pt-2.5" style={{ borderTop: "1px solid var(--line)", color: "var(--muted)" }}>Sources: {intel.src.map(([l, u], i) => <span key={u}>{i ? " · " : ""}<a className="clink" href={u} target="_blank" rel="noopener noreferrer">{l}</a></span>)}</div>}
-      <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Gathered from public reports. Casinos change rules, limits and table counts often — trust what you see on the floor.</p>
+        {intel.best && intel.best.decks && onCopy && <button type="button" className="btn ghost" style={{ fontSize: 14, padding: "10px 12px" }} onClick={onCopy} disabled={copied}>{copied ? "Added to your games ✓" : "Add the reported game to mine"}</button>}
+        {intel.src && intel.src.length > 0 && <div className="text-[11px] pt-2.5" style={{ borderTop: "1px solid var(--line)", color: "var(--muted)" }}>Sources: {intel.src.map(([l, u], i) => <span key={u + i}>{i ? " · " : ""}<a className="clink" href={u} target="_blank" rel="noopener noreferrer">{l}</a></span>)}</div>}
+        <p className="text-[11px]" style={{ color: "var(--muted)" }}>Gathered from public reports. Casinos change rules, limits and table counts often — trust what you see on the floor.</p>
+      </div> : <button type="button" onClick={() => setOpen(true)} className="text-xs font-semibold mt-3" style={{ color: "var(--brass)" }} aria-expanded={false}>Read the full report ▾</button>}
     </div>
   );
 }
@@ -383,7 +392,7 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
   const m0 = c.mark || {};
   const [d, setD] = useState(() => ({ status: m0.status || "none", backedOn: m0.backedOn || "", heat: m0.heat || 0, games: (m0.games || []).map((g) => ({ ...g })), notes: m0.notes || "", name: c.name, city: c.city || "" }));
   const [edit, setEdit] = useState(null); // id of the game being edited
-  const [usedId, setUsedId] = useState(null);
+  const [usedId, setUsedId] = useState(null), [copied, setCopied] = useState(false);
   const dirty = useRef(false), dr = useRef(d); dr.current = d;
   const set = (patch) => { dirty.current = true; setD((o) => ({ ...o, ...patch })); };
   const sess = c.sess, fromLog = !!(sess && sess.backed);
@@ -397,6 +406,12 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
     onClose();
   };
   const game = edit && d.games.find((g) => g.id === edit);
+  // copy the game a scouting report describes into your own list, to correct against what you see at the table
+  const copyReported = () => {
+    const b = intel.best, pen = b.pen ? Math.min(90, Math.max(50, Math.round(b.pen / 5) * 5)) : appRules.pen;
+    const rules = { ...appRules, decks: [1, 2, 4, 6, 8].includes(b.decks) ? b.decks : appRules.decks, pen, ...(b.h17 != null ? { h17: !!b.h17 } : {}), ...(b.das != null ? { das: !!b.das } : {}), surrender: !!b.ls, rsa: !!b.rsa, bj65: !!b.bj65 }; // a rule the report doesn't mention is taken as not offered
+    set({ games: [...d.games, { id: "g" + Date.now().toString(36), label: b.where || "Reported game", rules, min: b.min || "", max: b.max || "", tables: "", note: `From the scouting report${intel.asOf ? ", " + intel.asOf : ""} — check it at the table` }] }); setCopied(true);
+  };
   const addGame = () => { const id = "g" + Date.now().toString(36); set({ games: [...d.games, { id, label: d.games.length ? "" : "Main floor", rules: { ...appRules }, min: "", max: "", tables: "", note: "" }] }); setEdit(id); };
   if (game) return (
     <Sheet title={game.label || "Game"} onClose={close}>
@@ -419,6 +434,7 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
         <div className="min-w-0">{sess && sess.n ? <><div className="text-sm font-semibold mono" style={{ color: sess.net >= 0 ? "var(--brass)" : "var(--neg-l)" }}>{sgnMoney(sess.net)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.n} session{sess.n === 1 ? "" : "s"} · {fmtH(sess.h)} · last {dateShort(sess.last)}</div></> : <div className="text-xs" style={{ color: "var(--muted)" }}>No sessions logged here yet.</div>}</div>
         <button type="button" onClick={() => { close(); onLog(d.name); }} className="text-xs font-semibold rounded-full px-3 shrink-0 chippress" style={{ height: 30, background: "rgba(var(--acc),.14)", color: "var(--brass)" }}>Log a session</button>
       </div>
+      {intel && <IntelBlock intel={intel} onCopy={copyReported} copied={copied} />}
       <span className="eyebrow block mb-1.5">Status</span>
       {fromLog ? <div className="cbox mb-4 text-xs" style={{ color: "var(--ivory-d)", borderColor: "rgba(var(--neg),.35)" }}><b style={{ color: "var(--neg-l)" }}>Backed off</b> on {dateShort(sess.backed)} — from your session log. Change the heat on that session to undo it.</div>
         : <>
@@ -436,7 +452,6 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
         </button>))}</div>
         : <button type="button" onClick={addGame} className="w-full text-left rounded-xl px-3.5 py-3 mb-4" style={{ background: "rgba(var(--fg),.04)", border: "1px dashed rgba(var(--acc),.3)" }}><span className="block text-sm font-semibold" style={{ color: "var(--brass)" }}>+ Add a game you found</span><span className="block text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>Decks, rules, penetration, limits, how many tables — one entry per pit or room.</span></button>}
       <label className="block mb-4"><span className="eyebrow block mb-1.5">Notes</span><textarea className="in" rows={3} placeholder="Which pits, shift changes, who to avoid, what's in the high-limit room…" value={d.notes} onChange={(e) => set({ notes: e.target.value })} style={{ fontSize: 15, lineHeight: 1.45, resize: "vertical" }} /></label>
-      {intel && <IntelBlock intel={intel} />}
       <button className="btn" onClick={close}>Done</button>
       <div className="flex items-center justify-center gap-5 mt-3">
         {c.custom && <button type="button" onClick={() => { close(); onMove(); }} className="text-xs underline underline-offset-2" style={{ color: "var(--muted)", fontSize: 13 }}>Move the pin</button>}
@@ -530,7 +545,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
   const everything = useMemo(() => {
     if (!data) return null;
     const base = baseData(), marks = new Map(data.marks.map((m) => [m.id, m]));
-    const all = base.list.map((b) => ({ ...b, mark: marks.get(b.id), hasIntel: !!base.intel[b.id] }));
+    const all = base.list.map((b) => ({ ...b, mark: marks.get(b.id), intel: base.intel[b.id] || null }));
     data.marks.forEach((m) => { if (m.custom) all.push({ id: m.id, name: m.name || "Casino", city: m.city || "", st: m.st || "", cc: m.cc || "USA", lat: m.lat, lon: m.lon, custom: true, mark: m }); });
     const { by, loose } = linkSessions(sessions, all);
     all.forEach((c) => { c.sess = by.get(c.id) || null; });
@@ -538,12 +553,12 @@ export default function CasinosPage({ rules, onUseRules, go }) {
   }, [data, sessions]);
   const here = useMemo(() => (everything ? everything.all.filter((c) => c.cc === cc) : []), [everything, cc]);
   const visible = useMemo(() => here.filter((c) => showHidden || !(c.mark && c.mark.hidden)), [here, showHidden]);
-  const counts = useMemo(() => { const o = { all: visible.length, been: 0, backed: 0 }; visible.forEach((c) => { const s = statusOf(c); if (s !== "none") o.been++; if (s === "backed") o.backed++; }); return o; }, [visible]);
+  const counts = useMemo(() => { const o = { all: visible.length, been: 0, backed: 0, intel: 0 }; visible.forEach((c) => { const s = statusOf(c); if (s !== "none") o.been++; if (s === "backed") o.backed++; if (c.intel) o.intel++; }); return o; }, [visible]);
   const hiddenN = here.length - here.filter((c) => !(c.mark && c.mark.hidden)).length;
   const pins = useMemo(() => {
     const out = [];
     visible.forEach((c) => {
-      const s = statusOf(c); if ((filter === "been" && s === "none") || (filter === "backed" && s !== "backed")) return;
+      const s = statusOf(c); if ((filter === "been" && s === "none") || (filter === "backed" && s !== "backed") || (filter === "intel" && !c.intel)) return;
       if (!isFinite(c.lat + c.lon)) return; const p = map.proj.fwd(c.lon, c.lat, cc === "USA" ? c.st || undefined : undefined); if (!p) return;
       out.push({ id: c.id, x: p[0], y: p[1], kind: s === "backed" ? "backed" : s === "been" ? "been" : "other", name: c.name });
     });
@@ -556,14 +571,14 @@ export default function CasinosPage({ rules, onUseRules, go }) {
   const words = tokens(q), searching = q.trim().length > 0;
   const list = useMemo(() => {
     const rank = { backed: 0, been: 1, none: 2 }, sort = (L) => L.slice().sort((a, b) => rank[statusOf(a)] - rank[statusOf(b)] || a.name.localeCompare(b.name));
-    const byFilter = (c) => { const s = statusOf(c); return filter === "all" || (filter === "been" ? s !== "none" : s === "backed"); };
+    const byFilter = (c) => { const s = statusOf(c); return filter === "all" || (filter === "intel" ? !!c.intel : filter === "been" ? s !== "none" : s === "backed"); };
     if (searching) { const raw = q.trim().toLowerCase(); return sort(visible.filter((c) => { const hay = (c.name + " " + c.city + " " + c.st + " " + (map.names[c.st] || "")).toLowerCase(); if (hay.includes(raw)) return true; const t = tokens(hay); return words.length > 0 && words.every((x) => t.some((y) => y.startsWith(x))); })); }
     if (focus) return sort(visible.filter((c) => c.st === focus && byFilter(c)));
     if (filter !== "all") return sort(visible.filter(byFilter));
     return sort(visible.filter((c) => c.custom || statusOf(c) !== "none" || hasNotes(c.mark)));
   }, [visible, q, focus, filter, map]); // eslint-disable-line
   useEffect(() => { setMore(false); }, [q, focus, filter, cc]);
-  const title = searching ? `${list.length} match${list.length === 1 ? "" : "es"}` : focus ? `${map.names[focus] || focus}${filter === "backed" ? " · backed off" : filter === "been" ? " · been" : ""}` : filter === "backed" ? "Backed off" : filter === "been" ? "Where you've been" : "Your casinos";
+  const title = searching ? `${list.length} match${list.length === 1 ? "" : "es"}` : focus ? `${map.names[focus] || focus}${filter === "backed" ? " · backed off" : filter === "been" ? " · been" : filter === "intel" ? " · reports" : ""}` : filter === "backed" ? "Backed off" : filter === "been" ? "Where you've been" : filter === "intel" ? "Scouting reports" : "Your casinos";
   const regionCounts = useMemo(() => { const o = {}; visible.forEach((c) => { if (c.st) o[c.st] = (o[c.st] || 0) + 1; }); return o; }, [visible]);
 
   const toMap = () => { try { const el = mapCard.current; if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start", behavior: reduceMotion() ? "auto" : "smooth" }); } catch (_) {} };
@@ -598,7 +613,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
             onRegion={(id) => { setFocus(id); if (id) setQ(""); }} onPins={(L) => { if (L.length === 1) setOpen(L[0].id); else setPick(L.map((p) => p.id)); }}
             onPlace={placed} onCancelPlace={() => { const was = placing; setPlacing(null); if (was && was !== "add") setOpen(was); }} />
           <div className="px-4 py-3">
-            <ChipRow small value={filter} onChange={setFilter} options={[["all", `All ${counts.all}`], ["been", <span key="b" className="flex items-center gap-1.5"><span className="cdot b" />Been {counts.been}</span>], ["backed", <span key="x" className="flex items-center gap-1.5"><span className="cdot x" style={{ boxShadow: "none" }} />Backed off {counts.backed}</span>]]} />
+            <ChipRow small value={filter} onChange={setFilter} options={[["all", `All ${counts.all}`], ["been", <span key="b" className="flex items-center gap-1.5"><span className="cdot b" />Been {counts.been}</span>], ["backed", <span key="x" className="flex items-center gap-1.5"><span className="cdot x" style={{ boxShadow: "none" }} />Backed off {counts.backed}</span>], ...(counts.intel ? [["intel", `Reports ${counts.intel}`]] : [])]} />
           </div>
         </section>
       </div><div className="dcol o2">
@@ -618,7 +633,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
           {list.length > shown.length && <button onClick={() => setMore(true)} className="w-full text-xs font-semibold py-2.5" style={{ color: "var(--brass)" }}>Show all {list.length}</button>}
           {!list.length && (emptyAll
             ? <div className="text-center py-6"><div className="text-sm font-semibold">{counts.all ? "Mark where you've played" : `No casinos listed for ${cname} yet`}</div><p className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{counts.all ? `${map.hasRegions ? (cc === "USA" ? "Tap a state on the map" : "Tap a province on the map") : "Tap a pin on the map"} or search by name. Casinos you've been to, been backed off from or written notes on collect here.` : "Add the ones you play with “+ Add casino”, then tap the map where each one is."}</p></div>
-            : <p className="text-sm text-center py-6" style={{ color: "var(--muted)" }}>{searching ? `Nothing in ${cname} matches “${q.trim()}”.` : focus ? (filter === "all" ? `No casinos with blackjack tables listed in ${map.names[focus] || focus}.` : `None in ${map.names[focus] || focus} yet.`) : filter === "backed" ? "You haven't been backed off anywhere. Long may it last." : "Nowhere marked yet."}</p>)}
+            : <p className="text-sm text-center py-6" style={{ color: "var(--muted)" }}>{searching ? `Nothing in ${cname} matches “${q.trim()}”.` : focus ? (filter === "all" ? `No casinos with blackjack tables listed in ${map.names[focus] || focus}.` : filter === "intel" ? `No scouting reports for ${map.names[focus] || focus} yet.` : `None in ${map.names[focus] || focus} yet.`) : filter === "backed" ? "You haven't been backed off anywhere. Long may it last." : filter === "intel" ? "No scouting reports here yet." : "Nowhere marked yet."}</p>)}
           {(searching || focus) && !list.length && <div className="text-center -mt-2 mb-1"><button className="text-xs font-semibold" style={{ color: "var(--brass)" }} onClick={() => startAdd(searching ? q.trim() : "")}>+ Add {searching ? `“${q.trim()}”` : "a casino here"}</button></div>}
           {hiddenN > 0 && !searching && <div className="text-center mt-2"><button className="text-xs underline underline-offset-2" style={{ color: "var(--muted)" }} onClick={() => setShowHidden(!showHidden)}>{showHidden ? "Stop showing hidden casinos" : `${hiddenN} hidden — show`}</button></div>}
         </section>

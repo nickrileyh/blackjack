@@ -46,7 +46,7 @@ static inline int draw(void){
 static inline void see(int c){rc+=tagv[c];if(MISS_ON){for(int i=0;i<2;i++)if(xr(&MR[i])>=MISSP[i])rc_pv[i]+=tagv[c];}}
 static inline int tc_now(void){double rem=(double)(lim-pos)/52.0,r;int c=USEP?rc_pv[USEP-1]:rc;
  if(V_TCM==1){r=floor(rem+0.5);if(r<1)r=1;}else if(V_TCM==2){r=rem;if(r<0.25)r=0.25;}else{r=floor(rem*2.0+0.5)/2.0;if(r<0.5)r=0.5;}
- double t=(double)c/r;return V_TCM==3?(int)floor(t):(int)t;}
+ double t=(double)c/r;return V_TCM==3?(int)floor(t):V_TCM==4?(int)floor(t+0.5):(int)t;}
 
 typedef struct{int8_t c[16];int n,hard,aces,tot,soft;double bet;int sa,fs,bj,sur,bust;}Hand;
 static inline void hadd(Hand*h,int c){h->c[h->n++]=c;h->hard+=(c==11)?1:c;if(c==11)h->aces++;if(h->aces&&h->hard+10<=21){h->tot=h->hard+10;h->soft=1;}else{h->tot=h->hard;h->soft=0;}if(h->tot>21)h->bust=1;}
@@ -104,6 +104,13 @@ static char decide(const Hand*h,int up,int tc,int canD,int canP,int canS,int use
   if(act=='P'&&h->c[0]!=11&&h->c[0]!=8){f_flag|=1<<4;if(V_FLAG==4)return decide(h,up,tc,canD,0,canS,usedev);}
   if(soft&&tot==18&&act=='H'){f_flag|=1<<5;if(V_FLAG==5)act='S';}
   if(!soft&&tot>=12&&act=='H'){f_flag|=1<<6;if(V_FLAG==6)act='S';}
+  if(act=='P'&&h->c[0]==8&&up>=9){f_flag|=1<<7;if(V_FLAG==7)return decide(h,up,tc,canD,0,canS,usedev);}
+  if(act=='P'&&h->c[0]==9){f_flag|=1<<8;if(V_FLAG==8)act='S';}
+  if(act=='D'&&!soft&&tot==9){f_flag|=1<<9;if(V_FLAG==9)act='H';}
+  if(act=='D'&&!soft&&(tot==10||tot==11)&&up>=10){f_flag|=1<<10;if(V_FLAG==10)act='H';}
+  if(act=='D'){f_flag|=1<<11;if(V_FLAG==11)act=(soft&&tot>=18)?'S':'H';}
+  if(soft&&tot==17&&act!='S'){f_flag|=1<<12;if(V_FLAG==12)act='S';}
+  {char mim=(tot<17||(tot==17&&soft&&H17))?'H':'S';if(act!=mim){f_flag|=1<<13;if(V_FLAG==13)return mim;}}
   // close-call slips: forget a double / split / surrender, swap hit and stand on a stiff or soft 18, double a 9-11 that should be hit
   char alt=0;
   if(act=='D')alt=(soft&&tot>=18)?'S':'H';
@@ -317,73 +324,76 @@ static int run_rdelta(int argc,char**argv){
 // ---------------- cover plays: per-count cost of each one, measured on the same shoes as the normal game ----------------
 // A round is first played normally; a cover play is replayed from the same cards only when the situation it changes came up.
 #define NDEF 28
-#define NVAR (NDEF*3+7+6+1)
+#define NVAR (NDEF*3+7+13+1)
+#define NQ 9
+static int g_cuts[NQ];static int g_s0;
 typedef struct{int8_t shoe[MAXN];int pos,lim,rc,fs,rstart,rp[2];long mid;u64 S[4],MR[2],SR;}Snap;
 static void snap_save(Snap*z){memcpy(z->shoe,shoe,N);z->pos=pos;z->lim=lim;z->rc=rc;z->fs=force_shuffle;z->rstart=rstart;z->rp[0]=rc_pv[0];z->rp[1]=rc_pv[1];z->mid=g_midshuffles;memcpy(z->S,S,sizeof S);z->MR[0]=MR[0];z->MR[1]=MR[1];z->SR=SR;}
 static void snap_load(const Snap*z){memcpy(shoe,z->shoe,N);pos=z->pos;lim=z->lim;rc=z->rc;force_shuffle=z->fs;rstart=z->rstart;rc_pv[0]=z->rp[0];rc_pv[1]=z->rp[1];g_midshuffles=z->mid;memcpy(S,z->S,sizeof S);MR[0]=z->MR[0];MR[1]=z->MR[1];SR=z->SR;}
-static double A_e[NVAR][10],A_m2[NVAR][10],A_m2n[NVAR][10],A_c12[NVAR][10],A_c12n[NVAR][10],A_fire[NVAR];
+static double A_e[NVAR][NQ][10],A_m2[NVAR][10],A_m2n[NVAR][10],A_c12[NVAR][10],A_c12n[NVAR][10],A_fire[NVAR];
 static inline void accum(int v,int b,const double*rv,const double*iv,const double*rb,const double*ib){
  double xv1=rv[0]+iv[0],xv2=rv[1]+iv[1],xb1=rb[0]+ib[0],xb2=rb[1]+ib[1];
- A_e[v][b]+=0.5*((xv1-xb1)+(xv2-xb2));A_m2[v][b]+=0.5*((xv1*xv1-xb1*xb1)+(xv2*xv2-xb2*xb2));
- A_m2n[v][b]+=0.5*((rv[0]*rv[0]-rb[0]*rb[0])+(rv[1]*rv[1]-rb[1]*rb[1]));A_c12[v][b]+=xv1*xv2-xb1*xb2;A_c12n[v][b]+=rv[0]*rv[1]-rb[0]*rb[1];A_fire[v]+=1;}
+ double de=0.5*((xv1-xb1)+(xv2-xb2));for(int p=0;p<NQ;p++)if(g_s0<g_cuts[p])A_e[v][p][b]+=de;
+ if(g_s0<g_cuts[5]){A_m2[v][b]+=0.5*((xv1*xv1-xb1*xb1)+(xv2*xv2-xb2*xb2));
+ A_m2n[v][b]+=0.5*((rv[0]*rv[0]-rb[0]*rb[0])+(rv[1]*rv[1]-rb[1]*rb[1]));A_c12[v][b]+=xv1*xv2-xb1*xb2;A_c12n[v][b]+=rv[0]*rv[1]-rb[0]*rb[1];}A_fire[v]+=1;}
 static int run_cdelta(int argc,char**argv){
- DECKS=atoi(argv[2]);H17=atoi(argv[3]);SUR=atoi(argv[4]);NOTH=atoi(argv[5]);long NR=atol(argv[6]);seedrng(atoll(argv[7]));INS=1;double PEN=argc>8?atof(argv[8]):0.75;
- devinit();initshoe();cutpos=(int)(PEN*N);
- static double n[10],eb[10];Snap pre,post;long replays=0;
+ DECKS=atoi(argv[2]);H17=atoi(argv[3]);SUR=atoi(argv[4]);NOTH=atoi(argv[5]);long NR=atol(argv[6]);seedrng(atoll(argv[7]));INS=1;
+ devinit();initshoe();for(int p=0;p<NQ;p++)g_cuts[p]=(int)((0.50+0.05*p)*N);cutpos=g_cuts[NQ-1];
+ static double n[NQ][10],eb[NQ][10];Snap pre,post;long replays=0;
  static const int insv[7]={1,2,3,4,5,7,8};
  for(long r=0;r<NR;r++){
   if(pos>=cutpos||force_shuffle)shuffle();
-  rstart=pos;int b=bucket(tc_now());
+  rstart=pos;g_s0=pos;int b=bucket(tc_now());
   snap_save(&pre);
   double rb[2],ib[2],rv[2],iv[2];int uc[2];
   f_base=f_above=f_below=0;f_flag=0;f_slip=0;
   play_round(2,rb,ib,uc);
-  n[b]+=1;eb[b]+=0.5*(rb[0]+ib[0]+rb[1]+ib[1]);
+  for(int p=0;p<NQ;p++)if(g_s0<g_cuts[p]){n[p][b]+=1;eb[p][b]+=0.5*(rb[0]+ib[0]+rb[1]+ib[1]);}
   u64 fb=f_base,fa=f_above,fl=f_below;int ff=f_flag,fsl=f_slip;
-  // insurance cover changes no cards: its result follows directly
   if(g_iace){for(int q=0;q<7;q++){int any=0;for(int k=0;k<2;k++){int t=ins_take(insv[q],g_itc,g_itot[k]);iv[k]=t?(g_dbj?1:-0.5):0;if(iv[k]!=ib[k])any=1;}if(any)accum(NDEF*3+q,b,rb,iv,rb,ib);}}
   if(fb|fa|fl|(u64)ff|(u64)fsl){
    snap_save(&post);
    for(int id=0;id<NDEF;id++){u64 bit=1ULL<<id;for(int m=1;m<=3;m++){if(!((m==1?fb:m==2?fa:fl)&bit))continue;
      snap_load(&pre);V_DEVID=id;V_DEVMODE=m;play_round(2,rv,iv,uc);V_DEVID=-1;V_DEVMODE=0;replays++;accum(id*3+m-1,b,rv,iv,rb,ib);}}
-   for(int f=1;f<=6;f++)if(ff&(1<<f)){snap_load(&pre);V_FLAG=f;play_round(2,rv,iv,uc);V_FLAG=0;replays++;accum(NDEF*3+7+f-1,b,rv,iv,rb,ib);}
-   if(fsl){snap_load(&pre);V_SLIP=1;play_round(2,rv,iv,uc);V_SLIP=0;replays++;accum(NDEF*3+13,b,rv,iv,rb,ib);}
+   for(int f=1;f<=13;f++)if(ff&(1<<f)){snap_load(&pre);V_FLAG=f;play_round(2,rv,iv,uc);V_FLAG=0;replays++;accum(NDEF*3+7+f-1,b,rv,iv,rb,ib);}
+   if(fsl){snap_load(&pre);V_SLIP=1;play_round(2,rv,iv,uc);V_SLIP=0;replays++;accum(NDEF*3+20,b,rv,iv,rb,ib);}
    snap_load(&post);}
  }
  printf("{\"decks\":%d,\"h17\":%d,\"sur\":%d,\"others\":%d,\"rounds\":%ld,\"replays\":%ld,\"n\":[",DECKS,H17,SUR,NOTH,NR,replays);
- for(int b=0;b<10;b++)printf("%s%.0f",b?",":"",n[b]);printf("],\"base\":[");for(int b=0;b<10;b++)printf("%s%.9g",b?",":"",n[b]?eb[b]/n[b]:0);printf("],\"v\":{");
+ for(int p=0;p<NQ;p++){printf("%s[",p?",":"");for(int b=0;b<10;b++)printf("%s%.0f",b?",":"",n[p][b]);printf("]");}
+ printf("],\"v\":{");
  int first=1;for(int v=0;v<NVAR;v++){if(A_fire[v]==0)continue;char nm[24];
-  if(v<NDEF*3)sprintf(nm,"d%d_%d",v/3,v%3+1);else if(v<NDEF*3+7)sprintf(nm,"i%d",insv[v-NDEF*3]);else if(v<NDEF*3+13)sprintf(nm,"f%d",v-NDEF*3-7+1);else sprintf(nm,"slip");
-  printf("%s\"%s\":{\"fire\":%.0f",first?"":",",nm,A_fire[v]);first=0;
-  const char*q[]={"e","m2","m2n","c12","c12n"};double(*arr[])[10]={A_e,A_m2,A_m2n,A_c12,A_c12n};
-  for(int k=0;k<5;k++){printf(",\"%s\":[",q[k]);for(int bb=0;bb<10;bb++)printf("%s%.9g",bb?",":"",n[bb]?arr[k][v][bb]/n[bb]:0);printf("]");}printf("}");}
+  if(v<NDEF*3)sprintf(nm,"d%d_%d",v/3,v%3+1);else if(v<NDEF*3+7)sprintf(nm,"i%d",insv[v-NDEF*3]);else if(v<NDEF*3+20)sprintf(nm,"f%d",v-NDEF*3-7+1);else sprintf(nm,"slip");
+  printf("%s\"%s\":{\"e\":[",first?"":",",nm);first=0;
+  for(int p=0;p<NQ;p++){printf("%s[",p?",":"");for(int bb=0;bb<10;bb++)printf("%s%.8g",bb?",":"",n[p][bb]?A_e[v][p][bb]/n[p][bb]:0);printf("]");}printf("]");
+  const char*q[]={"m2","m2n","c12","c12n"};double(*arr[])[10]={A_m2,A_m2n,A_c12,A_c12n};
+  for(int k=0;k<4;k++){printf(",\"%s\":[",q[k]);for(int bb=0;bb<10;bb++)printf("%s%.8g",bb?",":"",n[5][bb]?arr[k][v][bb]/n[5][bb]:0);printf("]");}printf("}");}
  printf("}}\n");return 0;}
 // ---------------- counting shortcuts and errors: these move which count you think you're at, so both the mix of counts and
 // the edge at each one change. Each round is played by the normal counter and by each variant from the same cards.
-#define NCE 5
+#define NCE 6
 static int run_cerr(int argc,char**argv){
- DECKS=atoi(argv[2]);H17=atoi(argv[3]);SUR=atoi(argv[4]);NOTH=atoi(argv[5]);long NR=atol(argv[6]);seedrng(atoll(argv[7]));INS=1;double PEN=argc>8?atof(argv[8]):0.75;
- devinit();initshoe();cutpos=(int)(PEN*N);MISS_ON=1;
- static double nb[10],sb[4][10],nv[NCE][10],sv[NCE][4][10],joint[NCE][10][10];Snap pre;
+ DECKS=atoi(argv[2]);H17=atoi(argv[3]);SUR=atoi(argv[4]);NOTH=atoi(argv[5]);long NR=atol(argv[6]);seedrng(atoll(argv[7]));INS=1;
+ devinit();initshoe();for(int p=0;p<NQ;p++)g_cuts[p]=(int)((0.50+0.05*p)*N);cutpos=g_cuts[NQ-1];MISS_ON=1;
+ static double nb[NQ][10],sb[NQ][3][10],nv[NCE][NQ][10],sv[NCE][NQ][3][10];Snap pre;
  for(long r=0;r<NR;r++){
   if(pos>=cutpos||force_shuffle)shuffle();
-  rstart=pos;int b=bucket(tc_now());
+  rstart=pos;int s0=pos;int b=bucket(tc_now());
   snap_save(&pre);double rr[2],ii[2];int uc[2];
   for(int v=0;v<NCE;v++){
    if(v<2){USEP=v+1;V_TCM=0;}else{USEP=0;V_TCM=v-1;}
    int bv=bucket(tc_now());play_round(2,rr,ii,uc);
-   double x1=rr[0]+ii[0],x2=rr[1]+ii[1];nv[v][bv]+=1;sv[v][0][bv]+=0.5*(x1+x2);sv[v][1][bv]+=0.5*(x1*x1+x2*x2);sv[v][2][bv]+=x1*x2;sv[v][3][bv]+=0.5*(rr[0]*rr[0]+rr[1]*rr[1]);joint[v][b][bv]+=1;
+   double x1=rr[0]+ii[0],x2=rr[1]+ii[1];
+   for(int p=0;p<NQ;p++)if(s0<g_cuts[p]){nv[v][p][bv]+=1;sv[v][p][0][bv]+=0.5*(x1+x2);sv[v][p][1][bv]+=0.5*(x1*x1+x2*x2);sv[v][p][2][bv]+=x1*x2;}
    snap_load(&pre);}
   USEP=0;V_TCM=0;play_round(2,rr,ii,uc);
-  {double x1=rr[0]+ii[0],x2=rr[1]+ii[1];nb[b]+=1;sb[0][b]+=0.5*(x1+x2);sb[1][b]+=0.5*(x1*x1+x2*x2);sb[2][b]+=x1*x2;sb[3][b]+=0.5*(rr[0]*rr[0]+rr[1]*rr[1]);}
+  {double x1=rr[0]+ii[0],x2=rr[1]+ii[1];for(int p=0;p<NQ;p++)if(s0<g_cuts[p]){nb[p][b]+=1;sb[p][0][b]+=0.5*(x1+x2);sb[p][1][b]+=0.5*(x1*x1+x2*x2);sb[p][2][b]+=x1*x2;}}
  }
- const char*vn[NCE]={"miss2","miss5","tcfull","tcexact","tcfloor"};
- printf("{\"decks\":%d,\"h17\":%d,\"sur\":%d,\"rounds\":%ld,\"n\":[",DECKS,H17,SUR,NR);for(int b=0;b<10;b++)printf("%s%.0f",b?",":"",nb[b]);printf("]");
- const char*q[]={"e","m2","c12","m2n"};for(int k=0;k<4;k++){printf(",\"%s\":[",q[k]);for(int b=0;b<10;b++)printf("%s%.9g",b?",":"",nb[b]?sb[k][b]/nb[b]:0);printf("]");}
- printf(",\"v\":{");for(int v=0;v<NCE;v++){printf("%s\"%s\":{\"n\":[",v?",":"",vn[v]);for(int b=0;b<10;b++)printf("%s%.0f",b?",":"",nv[v][b]);printf("]");
-  for(int k=0;k<4;k++){printf(",\"%s\":[",q[k]);for(int b=0;b<10;b++)printf("%s%.9g",b?",":"",nv[v][b]?sv[v][k][b]/nv[v][b]:0);printf("]");}
-  printf(",\"sum\":[");for(int k=0;k<4;k++){printf("%s[",k?",":"");for(int b=0;b<10;b++)printf("%s%.6f",b?",":"",sv[v][k][b]-0);printf("]");}printf("]}");}
- printf("},\"bsum\":[");for(int k=0;k<4;k++){printf("%s[",k?",":"");for(int b=0;b<10;b++)printf("%s%.6f",b?",":"",sb[k][b]);printf("]");}printf("]}\n");return 0;}
+ const char*vn[NCE]={"miss2","miss5","tcfull","tcexact","tcfloor","tcround"};const char*q[]={"e","m2","c12"};
+ #define PR3(NN,SS) {printf("\"n\":[");for(int p=0;p<NQ;p++){printf("%s[",p?",":"");for(int b=0;b<10;b++)printf("%s%.0f",b?",":"",NN[p][b]);printf("]");}printf("]");for(int k=0;k<3;k++){printf(",\"%s\":[",q[k]);for(int p=0;p<NQ;p++){printf("%s[",p?",":"");for(int b=0;b<10;b++)printf("%s%.8g",b?",":"",NN[p][b]?SS[p][k][b]/NN[p][b]:0);printf("]");}printf("]");}}
+ printf("{\"decks\":%d,\"h17\":%d,\"sur\":%d,\"others\":%d,\"rounds\":%ld,",DECKS,H17,SUR,NOTH,NR);PR3(nb,sb);
+ printf(",\"v\":{");for(int v=0;v<NCE;v++){printf("%s\"%s\":{",v?",":"",vn[v]);PR3(nv[v],sv[v]);printf("}");}
+ printf("}}\n");return 0;}
 int main(int argc,char**argv){
  rules_env(getenv("RULES"));
  if(argc<2){fprintf(stderr,"mode?\n");return 1;}

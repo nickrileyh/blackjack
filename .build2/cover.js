@@ -90,7 +90,7 @@ export function deviationCatalog(R) {
 }
 
 // cal: from calFor(R, seats). cover: see the shape in aitools.js. Returns { cal, applied, skipped, approx }.
-export function coverCal(cal, R, cover) {
+export function coverCal(cal, R, cover, shift) {
   const applied = [], skipped = [], approx = [];
   if (!cover || !Object.keys(cover).length) return { cal, applied, skipped, approx };
   const T = tablesFor(R, cal.seats);
@@ -133,7 +133,8 @@ export function coverCal(cal, R, cover) {
     else if (p <= 2) useC(a, p / 2, `misses ${p}% of cards`);
     else { const w = (p - 2) / 3, mix = (k) => a[k].map((x, i) => x + w * (b[k][i] - x)); useC({ f: mix("f"), e: mix("e"), m2: mix("m2"), c12: mix("c12") }, 1, `misses ${p}% of cards`); }
   }
-  if (fm.some((x) => Math.abs(x - 1) > 1e-9)) { out.fmul = fm; approx.push("A different way of counting changes which true count you think you're at, so it also shifts how often you bet big or sit out. That part is modeled approximately: good to a few percent of the win rate, a little less exact for spreads that sit out or leave at low counts."); }
+  // `shift` (when given) is that change in the mix of counts measured by dealing this exact spread; the table's is the fallback
+  if (fm.some((x) => Math.abs(x - 1) > 1e-9)) { out.fmul = shift && shift.length === 10 ? shift : fm; approx.push(shift ? "A different way of counting changes which true count you think you're at. How often you'd land on each count was measured by dealing this exact spread 400,000 rounds both ways; the edge at each count comes from the measured tables. Good to a couple of percent of the win rate." : "A different way of counting changes which true count you think you're at; that shift is approximate here."); }
   if ((R.das === false || +R.maxHands < 4 || R.rsa) && (cover.habits || []).some((h) => /split/.test(h))) approx.push("Split habits were measured with double-after-split and splitting to four hands; with this table's split rules the cost differs slightly.");
   return { cal: out, applied, skipped, approx };
 }

@@ -45,12 +45,11 @@ add('E 1D slips',Ec,B3,S1,'slip:1',{'slip_rate_pct':5})
 add('F noDAS D9-11: no count plays + no soft dbl',A,B1,S1,'nodev;flag:1',{'skip_all_deviations':True,'habits':['no_soft_doubles']},'0,1,0,4,1.5',{'double_after_split':False,'double_on':'9-11'})
 import os
 if os.environ.get('ONLY')=='grid':
-    C=[]
-    for oth in (0,2,4,6):
-        for pen in (0.60,0.75,0.85):
-            if oth!=2 and pen!=0.75: continue
-            for env,cov,lab in (('nodev',{'skip_all_deviations':True},'no count plays'),('ins:1',{'insurance':'always'},'insure always'),('flag:3',{'habits':['stand_15_16']},'stand 15/16')):
-                add(f'6D S17 oth{oth} pen{pen} {lab}',(6,0,0,oth,pen),B1,S1,env,cov)
+    C=[]; GC=tuple(int(x) for x in os.environ.get('GC','6,0,0').split(','))
+    for t in os.environ.get('GRID','0:0.75,2:0.6,2:0.75,2:0.85,4:0.75,6:0.75').split(','):
+        oth=int(t.split(':')[0]); pen=float(t.split(':')[1])
+        for env,cov,lab in (('nodev',{'skip_all_deviations':True},'no count plays'),('ins:1',{'insurance':'always'},'insure always'),('flag:3',{'habits':['stand_15_16']},'stand 15/16'),('slip:1',{'slip_rate_pct':5},'slips')):
+            add(f'{GC} oth{oth} pen{pen} {lab}',GC+(oth,pen),B3 if oth==0 else B1,S1,env,cov)
 if os.environ.get('ONLY')=='play': C=[c for c in C if not any(t in c[8] for t in ('tcm','miss'))]
 if os.environ.get('ONLY')=='v1': C=[c for c in C if c[0].startswith('F ') or (c[0].startswith('A ') and any(t in c[8] for t in ('tcm','miss')))]
 if os.environ.get('ONLY')=='count': C=[c for c in C if any(t in c[8] for t in ('tcm','miss'))]
@@ -65,7 +64,7 @@ def sim(c):
     o=json.loads(subprocess.check_output(['/home/claude/sim3/sim4v','sdelta',str(d),str(h),str(s),str(oth),str(NR),'31',str(pen),','.join(map(str,bets)),','.join(map(str,spots))],env=e))
     return o
 js="""const store={};global.localStorage={getItem:()=>null,setItem(){},removeItem(){}};global.window={storage:{get:async()=>{throw 0},set:async()=>{}},addEventListener(){},dispatchEvent(){}};global.document={addEventListener(){}};global.atob=(s)=>Buffer.from(s,'base64').toString('binary');
-const A=require('/home/claude/cmp/aitools.cjs');(async()=>{const cases=JSON.parse(require('fs').readFileSync(0,'utf8'));const out=[];for(const sc of cases){const r=await A.runTool('calculate',{scenarios:sc});out.push([r.results[0].win_per_100_rounds/100,r.results[1].win_per_100_rounds/100,r.results[0].swing_per_hour_1sd/10,r.results[1].swing_per_hour_1sd/10,(r.results[1].notes||[]).join(' ')]);}console.log(JSON.stringify(out));})();"""
+const A=require(process.env.AI||'/home/claude/cmp/aitools.cjs');(async()=>{const cases=JSON.parse(require('fs').readFileSync(0,'utf8'));const out=[];for(const sc of cases){const r=await A.runTool('calculate',{scenarios:sc});out.push([r.results[0].win_per_100_rounds/100,r.results[1].win_per_100_rounds/100,r.results[0].swing_per_hour_1sd/10,r.results[1].swing_per_hour_1sd/10,(r.results[1].notes||[]).join(' ')]);}console.log(JSON.stringify(out));})();"""
 m=json.loads(subprocess.run(['node','-e',js],input=json.dumps([model(c) for c in C]).encode(),capture_output=True,check=True).stdout)
 with cf.ThreadPoolExecutor(2) as ex: sims=list(ex.map(sim,C))
 bad=0
