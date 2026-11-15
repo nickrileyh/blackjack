@@ -1259,33 +1259,20 @@ function Trainer({ rules, setRules }) {
 
   return (
     <div>
-      {/* progress */}
-      <section className="card p-5 mb-4">
-        <div className="flex items-baseline justify-between">
-          <div className="eyebrow">Mastery</div>
-          <div className="text-xs mono" style={{ color: "var(--muted)" }}>{mastered}/{pool.length} locked in ({pool.length ? Math.round((mastered / pool.length) * 100) : 0}%) · {seen} seen</div>
-        </div>
-        <div className="h-2 rounded-full mt-3 overflow-hidden" style={{ background: "rgba(255,255,255,.07)" }}>
-          <div className="h-full rounded-full bar shimmer" style={{ width: `${(mastered / Math.max(1, pool.length)) * 100}%`, background: "var(--brass)" }} />
-        </div>
-        <div className="grid grid-cols-3 gap-3 mt-4 text-center">
-          {[["This session", `${session.right}/${session.asked}`], ["Streak", streak], ["Due now", pool.filter((c) => prog[c.id]?.due <= qn).length]].map(([k, v]) => (
-            <div key={k}><div className="eyebrow" style={{ fontSize: 10 }}>{k}</div><div className="mono text-sm mt-1">{v}</div></div>
-          ))}
-        </div>
-      </section>
-
       <Seg value={view} options={[["drill", "Practice"], ["fill", "Fill chart"], ["charts", "Charts"]]} onChange={setView} style={{ marginBottom: 12 }} />
 
       {view === "charts" ? <Charts R={rules} devs={DEVS} /> : view === "fill" ? <FillChart R={rules} devs={DEVS} /> : <>
       {/* mode */}
-      <Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(null); setResult(null); }} style={{ marginBottom: 8 }} />
-      <div className="mb-4 mt-3 px-1"><Toggle label="Deal the next hand automatically" on={auto} onChange={(v) => { setAuto(v); if (!v) pause(); }} /></div>
+      <Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(null); setResult(null); }} style={{ marginBottom: 12 }} />
 
 
       {/* card */}
       {cur && (
         <section className={"card p-5 mb-4 " + (result ? (result.ok ? "" : "shake") : "")} style={{ borderColor: result ? (result.ok ? "rgba(var(--acc),.6)" : "rgba(var(--neg),.6)") : undefined }}>
+          <div className="flex justify-between text-xs mb-3 mono" style={{ color: "var(--muted)" }}>
+            <span>{session.right}/{session.asked} this session{streak >= 2 ? <> · <span style={{ color: "var(--brass)" }}>{streak} in a row</span></> : null}</span>
+            <span>{mastered}/{pool.length} locked in</span>
+          </div>
           <Table cards={cur.cards} dealer={cur.dealer} tc={cur.tc} qkey={cur.qkey} leaving={leaving} />
           <div className="flex justify-between text-xs mt-1 mono" style={{ color: "var(--muted)" }}>
             <span>Dealer {upLabel(cur.kind === "dev" ? cur.dev.up : cur.up)}</span>
@@ -1330,6 +1317,7 @@ function Trainer({ rules, setRules }) {
               <button onClick={next} disabled={!result || leaving} className="btn col-span-2">Next hand</button>
             </div>
             <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>H</b> hit · <b>S</b> stand · <b>D</b> double · <b>P</b> split{rules.surrender ? <> · <b>R</b> surrender</> : null} · <b>O</b> odds · <b>Enter</b> next</div>
+            <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}><Toggle label="Deal the next hand automatically" on={auto} onChange={(v) => { setAuto(v); if (!v) pause(); }} /></div>
           </div>
         </section>
       )}
@@ -1348,6 +1336,17 @@ function Trainer({ rules, setRules }) {
       )}
 
       </>}
+
+      {/* progress — below the table, so the hand and its buttons are the first thing on screen */}
+      <section className="card p-5 mb-4">
+        <div className="flex items-baseline justify-between">
+          <div className="eyebrow">Mastery</div>
+          <div className="text-xs mono" style={{ color: "var(--muted)" }}>{mastered}/{pool.length} locked in ({pool.length ? Math.round((mastered / pool.length) * 100) : 0}%) · {seen} seen · {pool.filter((c) => prog[c.id]?.due <= qn).length} due</div>
+        </div>
+        <div className="h-2 rounded-full mt-3 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}>
+          <div className="h-full rounded-full bar shimmer" style={{ width: `${(mastered / Math.max(1, pool.length)) * 100}%`, background: "var(--brass)" }} />
+        </div>
+      </section>
 
       <section className="card p-5">
         <div className="eyebrow mb-2">How it works</div>
@@ -1480,19 +1479,6 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
 
   return (
     <div>
-      {/* session stats */}
-      <section className="card p-5 mb-4">
-        <div className="flex items-baseline justify-between">
-          <div className="eyebrow">Counting</div>
-          <div className="text-xs mono" style={{ color: "var(--muted)" }}>{stats.cards.toLocaleString()} cards counted</div>
-        </div>
-        <div className="grid grid-cols-3 gap-3 mt-3 text-center">
-          {[["Accuracy", stats.drills ? Math.round((stats.right / stats.drills) * 100) + "%" : "—"], ["Drills", stats.drills], ["Best speed", stats.bestSpeed ? stats.bestSpeed + "s / card" : "—"]].map(([k, v]) => (
-            <div key={k}><div className="eyebrow" style={{ fontSize: 10 }}>{k}</div><div className="mono text-sm mt-1">{v}</div></div>
-          ))}
-        </div>
-      </section>
-
       {phase === "setup" && (
         <section className="card p-5 mb-4 rise">
           <div className="eyebrow mb-3">Drill</div>
@@ -1647,6 +1633,18 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
         <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
           <span className="text-xs" style={{ color: "var(--muted)" }}>Work up to 0.5s per card with zero misses before you play.</span>
           <button onClick={newShoe} className="text-xs underline underline-offset-2" style={{ color: "var(--muted)" }}>New shoe</button>
+        </div>
+      </section>
+      {/* lifetime stats — below the drill */}
+      <section className="card p-5 mt-4">
+        <div className="flex items-baseline justify-between">
+          <div className="eyebrow">Counting</div>
+          <div className="text-xs mono" style={{ color: "var(--muted)" }}>{stats.cards.toLocaleString()} cards counted</div>
+        </div>
+        <div className="grid grid-cols-3 gap-3 mt-3 text-center">
+          {[["Accuracy", stats.drills ? Math.round((stats.right / stats.drills) * 100) + "%" : "—"], ["Drills", stats.drills], ["Best speed", stats.bestSpeed ? stats.bestSpeed + "s / card" : "—"]].map(([k, v]) => (
+            <div key={k}><div className="eyebrow" style={{ fontSize: 10 }}>{k}</div><div className="mono text-sm mt-1">{v}</div></div>
+          ))}
         </div>
       </section>
     </div>
@@ -2185,12 +2183,6 @@ function Play({ rules, bets, minBet, bankroll0 }) {
   const kinds = { bet: "Bet size", play: "Play", insurance: "Insurance", count: "Count" };
   return (
     <div>
-      <section className="card p-4 mb-4">
-        <div className="relative">
-          <StatRow items={[["Bankroll", `$${bank.toLocaleString()}`], ["Hands", stats.hands], ["Clean", stats.hands ? <span style={{ color: stats.clean === stats.hands ? "var(--brass)" : undefined }}>{Math.round((stats.clean / stats.hands) * 100) + "%"}</span> : "—"], [phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{lastNet > 0 ? "+" : "−"}${Math.abs(lastNet).toLocaleString()}</span> : "Net", (stats.net >= 0 ? "+" : "−") + "$" + Math.abs(stats.net).toLocaleString()]]} />
-          {history.length > 1 && <div className="flex gap-1.5 justify-center mt-2.5">{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
-        </div>
-      </section>
 
       <section className="card p-5 mb-4">
         <div className="flex items-center justify-between mb-3">
@@ -2251,6 +2243,14 @@ function Play({ rules, bets, minBet, bankroll0 }) {
             <button className="btn mt-3" onClick={checkCount}>Check</button>
           </div>
         )}
+      </section>
+
+      {/* bankroll and results — below the table, so the hand and its buttons fit on one screen */}
+      <section className="card p-4 mb-4">
+        <div className="relative">
+          <StatRow items={[["Bankroll", `$${bank.toLocaleString()}`], ["Hands", stats.hands], ["Clean", stats.hands ? <span style={{ color: stats.clean === stats.hands ? "var(--brass)" : undefined }}>{Math.round((stats.clean / stats.hands) * 100) + "%"}</span> : "—"], [phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{lastNet > 0 ? "+" : "−"}${Math.abs(lastNet).toLocaleString()}</span> : "Net", (stats.net >= 0 ? "+" : "−") + "$" + Math.abs(stats.net).toLocaleString()]]} />
+          {history.length > 1 && <div className="flex gap-1.5 justify-center mt-2.5">{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
+        </div>
       </section>
 
       {mistakes.length > 0 && (
