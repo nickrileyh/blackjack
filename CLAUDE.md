@@ -22,6 +22,13 @@ This repo's `main` branch is the single source of truth. GitHub Pages serves it 
 
 Commit the source change and the rebuilt `index.html` together. `build.sh` never touches the icons, `manifest.json` or `sw.js`.
 
+## Navigation and motion
+
+- Phone: bottom tab bar; desktop (1024px+): sidebar. Train has Strategy / Drills tabs. On Train and Live play the table comes first and stats sit below it.
+- The compact top bar (`TopBar`) appears on scroll. On long pages it also shows section chips that follow the scroll position and jump on tap: add a page's sections to `PAGE_SECTIONS` and give each section the matching `id` (`sp-*` on Spread, `ss-*` on Sessions).
+- `Seg` (segmented control) has a pill that slides to the selected option when its options sit in one row.
+- Keep motion small and purposeful, and add anything new to the `prefers-reduced-motion` rule.
+
 ## Card sizes
 
 Playing cards are drawn at fixed pixel sizes (`.pc`, `.pc.sm`, `.pc.big`) and scaled with CSS `zoom: var(--cz)`. Each felt sets `--cz` through a class (`cz-play` live play, `cz-train` strategy table / pairs / hand totals, `cz-big` single-card drills and tests, `cz-rounds` + `rd-seats` table rounds), with larger values at 640px and 1024px. To change how big cards are, change those values in the `css` string; don't edit the card artwork sizes. Anything sized to hold cards uses `calc(Npx * var(--cz, 1))`. Hands use `.hand > .slot` so cards sit side by side when they fit and tuck under each other when they don't.
