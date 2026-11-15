@@ -256,11 +256,6 @@ html,body{background:var(--bg)}
 @keyframes tabin{from{transform:scaleX(.3);opacity:0}to{transform:none;opacity:1}}
 .topbar{position:fixed;left:0;right:0;top:0;z-index:45;padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;background:rgba(var(--bgrgb),.78);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid rgba(var(--fg),.06);transform:translateY(-110%);opacity:0;transition:transform .26s var(--ease),opacity .2s var(--ease);pointer-events:none}
 .topbar.show{transform:none;opacity:1;pointer-events:auto}
-.tb-secs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:8px;padding-bottom:1px}
-.tb-secs button{flex:none;height:28px;padding:0 12px;border-radius:99px;font-size:12px;font-weight:600;color:var(--muted);border:1px solid transparent;white-space:nowrap;transition:background .22s var(--ease),color .22s var(--ease),border-color .22s var(--ease)}
-.tb-secs button.on{color:var(--ivory);background:rgba(var(--acc),.14);border-color:rgba(var(--acc),.28)}
-.tb-secs button:active{transform:scale(.95)}
-@media (min-width:1024px){.tb-secs{display:none}}
 .rack{display:grid;grid-template-columns:repeat(var(--n),minmax(0,64px));gap:10px;justify-content:center}
 .rack .chipbtn{width:100%;height:auto;aspect-ratio:1}
 .switch{position:relative;width:46px;height:28px;border-radius:14px;background:rgba(var(--fg),.12);transition:background .2s var(--ease);flex-shrink:0}
@@ -282,8 +277,7 @@ html,body{background:var(--bg)}
 @media (hover:hover) and (pointer:fine) and (min-width:700px){.kbdhint{display:block}}
 .card.focuscard{background:linear-gradient(135deg,rgba(var(--acc),.12),rgba(var(--acc),.03) 55%,rgba(var(--fg),.03));border-color:rgba(var(--acc),.3)}
 :root[data-theme="light"] .card.focuscard{background:linear-gradient(135deg,rgba(30,63,168,.07),#FFFFFF 60%);border-color:rgba(30,63,168,.2)}
-.shell [id^="sp-"],.shell [id^="ss-"]{scroll-margin-top:calc(env(safe-area-inset-top) + 100px)}
-@media (min-width:1024px){.shell [id^="sp-"],.shell [id^="ss-"]{scroll-margin-top:68px}}
+.shell section[id^="sp-"]{scroll-margin-top:68px}
 @media (min-width:1180px){.jumprow{display:none!important}}
 .stepbtn{width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;line-height:1;color:var(--ivory-d);background:rgba(var(--fg),.06);border:1px solid rgba(var(--fg),.1);transition:transform .12s,background .15s}
 .stepbtn:active{transform:scale(.9)}
@@ -3428,7 +3422,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
       <div className={"dgrid" + (list.length ? "" : " solo")}><div className="dcol">
       {/* hero */}
       {sessions.length > 0 && (
-      <section id="ss-chart" className="card p-5 mb-3 overflow-hidden">
+      <section className="card p-5 mb-3 overflow-hidden">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow">{filtered ? [period === "30" ? "Last 30 days" : period === "90" ? "Last 90 days" : period === "ytd" ? "This year" : "All time", casino !== "all" ? byCasino[0]?.name || "" : ""].filter(Boolean).join(" · ") : "All-time result"}</div>
@@ -3476,7 +3470,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
 
       {list.length > 0 && <>
         {/* luck */}
-        <section id="ss-luck" className="card p-5 mb-4">
+        <section className="card p-5 mb-4">
           <div className="flex items-baseline justify-between"><div className="eyebrow">Luck check</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{st.z >= 0 ? "+" : "−"}{Math.abs(st.z).toFixed(2)} SD</div></div>
           <div className="text-xl font-semibold mt-1" style={{ letterSpacing: "-.01em" }}>Running at the <span style={{ color: st.pct < 0.1 ? "var(--rose)" : st.pct > 0.9 ? "var(--brass)" : "var(--ivory)" }}>{pctTxt(st.pct)} percentile</span></div>
           <p className="text-xs mt-1 mb-2" style={{ color: "var(--ivory-d)" }}>{st.pct < 0.5 ? `${Math.round((1 - st.pct) * 100)}% of players with your spreads and hours would be ahead of you.` : `You're ahead of ${Math.round(st.pct * 100)}% of players with your spreads and hours.`} {st.pct < 0.05 ? "That's unusual — double-check bet sizing, deviations and the game conditions you entered." : st.pct > 0.95 ? "Enjoy it, and don't let it change the bet sizing." : "That's normal variance."}</p>
@@ -3491,7 +3485,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
         </section>
 
         {/* stats */}
-        <div id="ss-stats" className="eyebrow mb-2 px-1">Stats</div>
+        <div className="eyebrow mb-2 px-1">Stats</div>
         <div className="grid grid-cols-2 gap-2 mb-4">
           <StatTile k="Best session" v={st.best ? sgnMoney(st.best.result) : "—"} sub={st.best ? `${dateShort(st.best.date)}${st.best.where ? " · " + st.best.where : ""}` : ""} tone="var(--brass)" />
           <StatTile k="Worst session" v={st.worst ? sgnMoney(st.worst.result) : "—"} sub={st.worst ? `${dateShort(st.worst.date)}${st.worst.where ? " · " + st.worst.where : ""}` : ""} tone={st.worst && st.worst.result < 0 ? "var(--neg-l)" : undefined} />
@@ -3515,7 +3509,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
       {list.length > 0 && <>
         {/* by casino */}
         {byCasino.length > 0 && (
-          <section id="ss-casino" className="card p-5 mb-4">
+          <section className="card p-5 mb-4">
             <div className="eyebrow mb-3">By casino</div>
             <div className="space-y-2.5">
               {byCasino.map((c) => (
@@ -3538,14 +3532,14 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
 
         {/* months */}
         {months.length >= 2 && (
-          <section id="ss-month" className="card p-5 mb-4">
+          <section className="card p-5 mb-4">
             <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">By month</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{months.length} months</div></div>
             <MonthBars months={months} />
           </section>
         )}
 
         {/* history */}
-        <section id="ss-history" className="card p-5 mb-4">
+        <section className="card p-5 mb-4">
           <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">History</div><button onClick={exportCsv} className="text-xs font-semibold" style={{ color: "var(--brass)" }}>Export CSV</button></div>
           {exportMsg && <div className="text-xs mb-2" style={{ color: "var(--brass)" }}>{exportMsg}</div>}
           {groups.map((g) => { const mt = monthTot(g.k); return (
@@ -3936,43 +3930,15 @@ const NAV_ITEMS = [
   ["calc", "Spread", <path d="M4 20h16M7 16.5v-4M12 16.5V8M17 16.5V4.5" />],
   ["sessions", "Sessions", <><path d="M4 18.5 9.2 12.8l3.6 3.2 7.2-8.5" /><path d="M15.5 7.5H20V12" /></>],
 ];
-// Long pages list their sections here; the compact top bar shows them as chips, highlights the one on screen and jumps to one on tap.
-const PAGE_SECTIONS = {
-  calc: [["sp-results", "Results"], ["sp-ramp", "Ramp"], ["sp-numbers", "Your numbers"], ["sp-bets", "Bets"], ["sp-opt", "Optimizer"]],
-  sessions: [["ss-chart", "Chart"], ["ss-luck", "Luck"], ["ss-stats", "Stats"], ["ss-casino", "Casinos"], ["ss-month", "Months"], ["ss-history", "History"]],
-};
-function TopBar({ title, children, sections }) {
+function TopBar({ title, children }) {
   const [show, setShow] = useState(false);
-  const [here, setHere] = useState({ at: null, have: "" });
-  const row = useRef(null);
-  useEffect(() => {
-    const f = () => {
-      setShow(window.scrollY > 64);
-      if (!sections) return;
-      let at = null; const have = [];
-      for (const [id] of sections) { const el = document.getElementById(id); if (!el) continue; have.push(id); if (el.getBoundingClientRect().top <= 150) at = id; }
-      const hv = have.join(",");
-      setHere((h) => (h.at === at && h.have === hv ? h : { at, have: hv }));
-    };
-    f(); window.addEventListener("scroll", f, { passive: true }); const t = setTimeout(f, 400);
-    return () => { window.removeEventListener("scroll", f); clearTimeout(t); };
-  }, [sections]);
-  // keep the highlighted chip in view when the row is wider than the screen
-  useEffect(() => { const r = row.current, c = r && r.querySelector("button.on"); if (r && c) r.scrollTo({ left: c.offsetLeft - (r.clientWidth - c.offsetWidth) / 2, behavior: "smooth" }); }, [here.at]);
-  const have = here.have ? here.have.split(",") : [];
+  useEffect(() => { const f = () => setShow(window.scrollY > 64); f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
   return (
     <div className={"topbar" + (show ? " show" : "")} aria-hidden={!show}>
       <div className="mx-auto flex items-center justify-between gap-3" style={{ maxWidth: "42rem" }}>
         <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[15px] font-semibold truncate" style={{ letterSpacing: "-.01em" }}>{title}</button>
         {children}
       </div>
-      {sections && have.length > 1 && (
-        <div className="tb-secs hidescroll mx-auto" ref={row} style={{ maxWidth: "42rem" }} aria-label="Sections">
-          {sections.filter(([id]) => have.includes(id)).map(([id, l]) => (
-            <button key={id} tabIndex={show ? 0 : -1} className={here.at === id ? "on" : ""} onClick={() => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }}>{l}</button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -4498,7 +4464,7 @@ function BetSpreadCalculator() {
             <button onClick={() => go(tab === "settings" ? "progress" : "settings")} className="iconbtn hdrgear shrink-0" aria-label={tab === "settings" ? "Close settings" : "Settings"} aria-pressed={tab === "settings"}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>
           </div>
         </header>
-        <TopBar sections={PAGE_SECTIONS[tab] || null} title={({ progress: "Today", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions" })[tab]}>
+        <TopBar title={({ progress: "Today", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions" })[tab]}>
           <button onClick={() => setSetupOpen(true)} className="rulespill shrink-0" style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </TopBar>
         <div className="sbar" aria-hidden="true" />
