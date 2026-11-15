@@ -139,6 +139,7 @@ function shoeRounds(rf, bets, spotsMap, cal, pen) {
   return k > 0 ? Math.floor((Math.min(90, Math.max(50, Number(pen) || 75)) / 100) * 52 * cal.decks) / k : 0;
 }
 const tailFix = (rps, rounds) => { const x = rounds > 0 ? Math.min(0.5, rps / rounds) : 0; return { c99: 0.994 + 0.532 * x, c95: 0.973 + 0.102 * x, d90: 1.027 + 0.086 * x, d50: 1.017 - 0.518 * x }; };
+const pctTxt = (p) => { const v = Math.round(p * 100); return `${v}${v % 10 === 1 && v !== 11 ? "st" : v % 10 === 2 && v !== 12 ? "nd" : v % 10 === 3 && v !== 13 ? "rd" : "th"}`; };
 const PhiN = (z) => { const t = 1 / (1 + 0.2316419 * Math.abs(z)); const d = 0.3989423 * Math.exp((-z * z) / 2); const q = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return z > 0 ? 1 - q : q; };
 // chance your session ever dips $x below where you started, playing T hours at mu $/hr with sd $/hr
 const pDip = (x, mu, sd, T) => { const m = mu * T, v = sd * Math.sqrt(T); return PhiN((-x - m) / v) + Math.exp((-2 * mu * x) / (sd * sd)) * PhiN((-x + m) / v); };
@@ -1979,7 +1980,32 @@ function TCDrill({ decks }) {
 
 // ======================= live play =======================
 const PLAY_KEY = "bj-play-v1";
-let _playPrefs = { totals: true, count: false };
+const PLAY_PREFS_DEF = { totals: true, count: false, checkEvery: 5, auto: false, speed: 1 };
+let _playPrefs = { ...PLAY_PREFS_DEF };
+
+// Your ramp at a glance while you play: one bar per true count, the one you're on lit up.
+function SpreadMini({ bets, tc }) {
+  const rows = COUNTS.map((c) => ({ c, b: Number(bets[c]) || 0 }));
+  const mx = Math.max(1, ...rows.map((x) => x.b));
+  const here = tc === undefined ? null : (tc <= -3 ? -3 : tc >= 6 ? 6 : tc);
+  const now = rows.find((x) => x.c === here);
+  return (
+    <section className="card p-4 mb-4">
+      <div className="flex items-baseline justify-between mb-2.5">
+        <div className="eyebrow">Your spread</div>
+        {now && <div className="mono text-xs" style={{ color: "var(--muted)" }}>at {LABEL(now.c)} bet <span style={{ color: now.b ? "var(--brass)" : "var(--ivory-d)" }}>{now.b ? money(now.b) : "nothing"}</span></div>}
+      </div>
+      <div className="flex items-end gap-1" style={{ height: 52 }} aria-label="Your bet ramp">
+        {rows.map((x) => { const on = x.c === here; return (
+          <div key={x.c} className="flex-1 flex flex-col items-center justify-end h-full">
+            <span className="mono" style={{ fontSize: 8.5, color: on ? "var(--brass)" : x.b ? "var(--ivory-d)" : "var(--muted)", fontWeight: on ? 700 : 500 }}>{x.b ? (x.b >= 1000 ? `${x.b / 1000}k` : x.b) : "—"}</span>
+            <div className="w-full rounded-t" style={{ height: `${x.b ? Math.max(8, (x.b / mx) * 70) : 3}%`, background: x.b ? (on ? "var(--brass)" : "rgba(var(--acc),.4)") : "rgba(var(--fg),.1)", transition: "background .25s" }} />
+          </div>); })}
+      </div>
+      <div className="flex gap-1 mt-1">{rows.map((x) => <span key={x.c} className="flex-1 text-center mono" style={{ fontSize: 8.5, color: x.c === here ? "var(--brass)" : "var(--muted)" }}>{LABEL(x.c).replace("≤ ", "≤").replace("≥ ", "≥")}</span>)}</div>
+    </section>
+  );
+}
 const CHIP_COLORS = (v) => v < 25 ? ["#A83236", "#C4494E", "#F6EFE2"] : v < 100 ? ["#2E7D5B", "#3E9971", "#F6EFE2"] : v < 500 ? ["#26292F", "#3A3F48", "#F6EFE2"] : v < 1000 ? ["#5F3B92", "#7650AE", "#F6EFE2"] : ["#C9A24C", "#DDBA6B", "#1C1C1E"];
 function Info({ label, children }) {
   const [open, setOpen] = useState(false);
@@ -2010,7 +2036,7 @@ function Chip({ v, onClick, disabled }) {
     </button>
   );
 }
-function HandView({ cards, label, bet, active, total, hidden, small, result }) {
+function HandView({ cards, label, bet, active, total, hidden, small, result, stagger = 0, base = 0, dur = 0.35 }) {
   return (
     <div className="rounded-xl px-2 pt-2 pb-1" style={{ background: active ? "rgba(var(--acc),.1)" : "transparent", boxShadow: active ? "0 0 0 1px rgba(var(--acc),.5)" : "none", minWidth: 120, maxWidth: "100%" }}>
       <div className="flex items-center justify-between mb-1">
@@ -2018,15 +2044,15 @@ function HandView({ cards, label, bet, active, total, hidden, small, result }) {
         {total !== undefined && <span className="mono text-[11px]" style={{ color: result ? (result > 0 ? "var(--brass)" : result < 0 ? "var(--neg-l)" : "var(--ivory-d)") : "var(--ivory-d)" }}>{result !== undefined ? (result > 0 ? `+$${result}` : result < 0 ? `−$${-result}` : "push") : total}</span>}
       </div>
       <div className="hand" style={{ minHeight: "calc(88px * var(--cz, 1))" }}>
-        {cards.map((c, i) => <div className="slot" key={hidden && i === 1 ? "hole" : c.id}>{hidden && i === 1
-          ? <div className="pcback pcz dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": "0ms", animationDuration: ".35s" }} />
-          : <PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={0} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: ".35s" }} />}</div>)}
+        {cards.map((c, i) => { const d = base + i * stagger; return <div className="slot" key={hidden && i === 1 ? "hole" : c.id}>{hidden && i === 1
+          ? <div className="pcback pcz dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": `${d}ms`, animationDuration: `${dur}s` }} />
+          : <PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={d} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: `${dur}s` }} />}</div>; })}
       </div>
       {bet !== undefined && <div className="mono text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>bet ${bet}</div>}
     </div>
   );
 }
-function Play({ rules, bets, minBet, bankroll0 }) {
+function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const decks = rules.decks, pen = rules.pen;
   const bucket = (tc) => (tc <= -3 ? -3 : tc >= 6 ? 6 : tc);
   const spreadFor = (tc) => Number(bets[bucket(tc)]) || 0;
@@ -2048,7 +2074,19 @@ function Play({ rules, bets, minBet, bankroll0 }) {
   const [guess, setGuess] = useState(0);
   const [showTotals, setShowTotals] = useState(_playPrefs.totals);
   const [showCount, setShowCount] = useState(_playPrefs.count);
-  useEffect(() => { _playPrefs = { totals: showTotals, count: showCount }; }, [showTotals, showCount]);
+  const [checkEvery, setCheckEvery] = useState(_playPrefs.checkEvery); // hands between count checks; 0 = never
+  const [autoNext, setAutoNext] = useState(_playPrefs.auto);
+  const [speed, setSpeed] = useState(_playPrefs.speed);                // 0.55 fast … 1.5 relaxed, multiplies every deal timing
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+  useEffect(() => { (async () => {
+    try { const r = await window.storage.get(PLAY_KEY, false); if (r?.value) { const d = { ...PLAY_PREFS_DEF, ...JSON.parse(r.value) };
+      setShowTotals(!!d.totals); setShowCount(!!d.count); setCheckEvery(d.checkEvery); setAutoNext(!!d.auto); setSpeed(d.speed); } } catch (_) {}
+    setPrefsLoaded(true); })(); }, []);
+  useEffect(() => {
+    _playPrefs = { totals: showTotals, count: showCount, checkEvery, auto: autoNext, speed };
+    if (prefsLoaded) { try { window.storage.set(PLAY_KEY, JSON.stringify(_playPrefs), false); } catch (_) {} }
+  }, [showTotals, showCount, checkEvery, autoNext, speed, prefsLoaded]);
+  const ms = (x) => Math.round(x * speed);
   const [shuffled, setShuffled] = useState(false);
   const sh = useRef(null);
   const hm = useRef(0); // mistakes in the current hand
@@ -2081,7 +2119,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
     const p = [draw(), draw()]; const d = [draw(), draw(false)];
     setPhantom(null); setHands([{ cards: p, bet: v, done: false }]); setDealer(d); setHoleHidden(true); setActive(0);
     setPhase("dealing");
-    setTimeout(() => afterDeal(p, d, v, ok), 700);
+    setTimeout(() => afterDeal(p, d, v, ok), ms(700));
   };
   const afterDeal = (p, d, v, betOk) => {
     if (d[0].rank === 11 && rules.insurance) { setPhase("insurance"); return; }
@@ -2141,7 +2179,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
     }
     setHands(hs);
     const nextIdx = hs.findIndex((x) => !x.done);
-    if (nextIdx === -1) { setTimeout(() => dealerTurn(hs), 350); }
+    if (nextIdx === -1) { setTimeout(() => dealerTurn(hs), ms(350)); }
     else setActive(nextIdx);
   };
   const dealerTurn = (hs) => {
@@ -2153,9 +2191,9 @@ function Play({ rules, bets, minBet, bankroll0 }) {
       const v = handValue(cards);
       if (v.total > 17 || (v.total === 17 && !(rules.h17 && v.soft))) { finishRound(hs, cards, insured, false); return; }
       cards = [...cards, draw()]; setDealer(cards);
-      dealerTick.current = setTimeout(step, 420);
+      dealerTick.current = setTimeout(step, ms(420));
     };
-    dealerTick.current = setTimeout(step, 380);
+    dealerTick.current = setTimeout(step, ms(380));
   };
   const finishRound = (hs, d, ins, dealerBJ) => {
     let net = 0;
@@ -2170,7 +2208,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
   };
   const nextHand = () => {
     setHands([]); setDealer([]); setPhantom(null); setMsg(null);
-    if ((stats.hands) % 5 === 0 && stats.hands > 0) { setGuess(0); setPhase("check"); return; }
+    if (checkEvery > 0 && stats.hands > 0 && stats.hands % checkEvery === 0) { setGuess(0); setPhase("check"); return; }
     setPhase("bet");
   };
   const checkCount = () => {
@@ -2186,8 +2224,10 @@ function Play({ rules, bets, minBet, bankroll0 }) {
   useEffect(() => {
     const onKey = (e) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const tag = (e.target?.tagName || "").toLowerCase(); if (tag === "input" || tag === "textarea") return;
       const k = e.key.toLowerCase();
+      const tag = (e.target?.tagName || "").toLowerCase();
+      // Enter still submits the count you just typed; every other shortcut stays out of text fields
+      if (tag === "input" || tag === "textarea") { if (phase === "check" && k === "enter") { e.preventDefault(); checkCount(); } return; }
       if (phase === "play" && ["h", "s", "d", "p", "r"].includes(k)) act(k.toUpperCase());
       else if (phase === "result" && (k === "enter" || k === " " || k === "n")) { e.preventDefault(); nextHand(); }
       else if (phase === "insurance" && (k === "y" || k === "n")) takeInsurance(k === "y");
@@ -2196,6 +2236,13 @@ function Play({ rules, bets, minBet, bankroll0 }) {
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
   });
 
+  // hands off: when auto-continue is on the next hand deals itself, with longer to read a flagged mistake
+  useEffect(() => {
+    if (!autoNext || phase !== "result" || bank <= 0) return;
+    const t = setTimeout(() => nextHand(), ms(msg && !msg.ok ? 3200 : 1500));
+    return () => clearTimeout(t);
+  }, [autoNext, phase, speed, bank]); // eslint-disable-line
+
   // money ticks to its new value after each hand; the tween works in whole dollars, so settle on the exact figure (3:2 pays halves)
   const bankTw = useCountUp(bank, 450), netTw = useCountUp(stats.net, 450);
   const bankAnim = Math.abs(bankTw - bank) < 1 ? bank : bankTw, netAnim = Math.abs(netTw - stats.net) < 1 ? stats.net : netTw;
@@ -2203,6 +2250,18 @@ function Play({ rules, bets, minBet, bankroll0 }) {
   const dl = decksLeft(); const tc = Math.trunc(shoe.rc / dl);
   const dv = handValue(dealer); const h = hands[active]; const av = h ? available(h, active) : {};
   const kinds = { bet: "Bet size", play: "Play", insurance: "Insurance", count: "Count" };
+  // where this session sits on the spread's own bell curve, updated every hand
+  const evRound = evHour && rph ? evHour / rph : null;
+  const sdRound = sdHour && rph ? sdHour / Math.sqrt(rph) : null;
+  const run = (() => {
+    if (!evRound || !sdRound || !stats.hands) return { z: 0, pct: 0.5, exp: 0 };
+    const exp = evRound * stats.hands, sd = sdRound * Math.sqrt(stats.hands);
+    const z = sd > 0 ? (stats.net - exp) / sd : 0;
+    return { z, pct: Math.min(0.999, Math.max(0.001, PhiN(z))), exp };
+  })();
+
+  // the opening deal alternates player, dealer, player, hole — every later card lands as soon as it's drawn
+  const dealAnim = (seat) => (phase === "dealing" ? { stagger: ms(150), base: ms(seat * 75), dur: Math.max(0.22, 0.35 * speed) } : { dur: Math.max(0.22, 0.35 * speed) });
   return (
     <div>
 
@@ -2215,10 +2274,10 @@ function Play({ rules, bets, minBet, bankroll0 }) {
         <div className="relative tbl felt cz-play px-4 pt-4 pb-4" style={{ minHeight: 300 }}>
           <FeltPrint />
           {shuffled && <div className="absolute inset-0 flex items-center justify-center rounded-2xl z-10 rise" style={{ background: "rgba(0,0,0,.6)" }}><div className="disp text-2xl font-semibold" style={{ color: "var(--brass)" }}>Shuffling…</div></div>}
-          <HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small />
+          <HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small {...dealAnim(1)} />
           {phantom && <div className="mt-3"><HandView cards={phantom} label="Other player" total={showTotals ? handValue(phantom).total : undefined} small /></div>}
           <div className="flex gap-2 mt-3 justify-end flex-wrap">
-            {hands.map((hd, i) => { const v = handValue(hd.cards); return <HandView key={i} cards={hd.cards} label={hands.length > 1 ? `Hand ${i + 1}` : "You"} bet={hd.bet} active={phase === "play" && i === active} total={showTotals ? (hd.surrendered ? "surr." : v.bust ? "bust" : (v.soft ? "soft " : "") + v.total) : undefined} result={hd.result} small />; })}
+            {hands.map((hd, i) => { const v = handValue(hd.cards); return <HandView key={i} cards={hd.cards} label={hands.length > 1 ? `Hand ${i + 1}` : "You"} {...dealAnim(0)} bet={hd.bet} active={phase === "play" && i === active} total={showTotals ? (hd.surrendered ? "surr." : v.bust ? "bust" : (v.soft ? "soft " : "") + v.total) : undefined} result={hd.result} small />; })}
           </div>
         </div>
 
@@ -2269,6 +2328,8 @@ function Play({ rules, bets, minBet, bankroll0 }) {
       </section>
       </div><div className="dcol o2 stick">
 
+      <SpreadMini bets={bets} tc={shoe.pos > 1 ? tc : undefined} />
+
       {/* bankroll and results — below the table, so the hand and its buttons fit on one screen */}
       <section className="card p-4 mb-4">
         <div className="relative">
@@ -2276,6 +2337,22 @@ function Play({ rules, bets, minBet, bankroll0 }) {
           {history.length > 1 && <div className="flex gap-1.5 justify-center mt-2.5">{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
         </div>
       </section>
+
+      {/* how the session is running against the spread's own expectation — wide screens have room for the curve */}
+      {stats.hands >= 5 && evRound !== null && (
+        <section className="card p-5 mb-4 deskonly">
+          <div className="flex items-baseline justify-between">
+            <div className="eyebrow">How you're running</div>
+            <div className="mono text-xs" style={{ color: "var(--muted)" }}>{run.z >= 0 ? "+" : "−"}{Math.abs(run.z).toFixed(2)} SD</div>
+          </div>
+          <div className="text-xl font-semibold mt-1" style={{ letterSpacing: "-.01em" }}>
+            <span style={{ color: run.pct < 0.1 ? "var(--rose)" : run.pct > 0.9 ? "var(--brass)" : "var(--ivory)" }}>{pctTxt(run.pct)} percentile</span>
+          </div>
+          <p className="text-xs mt-1 mb-2" style={{ color: "var(--ivory-d)" }}>Over {stats.hands} hands your spread expects {sgnCash(run.exp)}. You're at {sgnCash(stats.net)}.</p>
+          <LuckGauge z={run.z} pct={run.pct} />
+          <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>A fair stretch this short is mostly luck — the curve shows how wide normal is.</p>
+        </section>
+      )}
 
       {mistakes.length > 0 && (
         <section className="card p-5 mb-4">
@@ -2300,9 +2377,18 @@ function Play({ rules, bets, minBet, bankroll0 }) {
         <div className="space-y-3">
           <Toggle label="Show hand totals" on={showTotals} onChange={setShowTotals} />
           <Toggle label="Show the running count" sub="Hidden is how you'll play in a casino" on={showCount} onChange={setShowCount} />
+          <Toggle label="Deal the next hand automatically" sub="Skips the Next hand tap — you still place the bet" on={autoNext} onChange={setAutoNext} />
         </div>
-        <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
-          <span className="text-[11px]" style={{ color: "var(--muted)" }}>Every 5 hands you'll be asked for the running count. Mistakes are flagged but the hand plays on, like a real table.</span>
+        <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+          <div className="flex items-baseline justify-between mb-1.5"><span className="text-sm" style={{ color: "var(--ivory)" }}>Count check</span><span className="text-[11px] mono" style={{ color: "var(--muted)" }}>{checkEvery ? `every ${checkEvery} hands` : "off"}</span></div>
+          <Seg small value={checkEvery} options={[[3, "3"], [5, "5"], [10, "10"], [20, "20"], [0, "Off"]]} onChange={setCheckEvery} />
+        </div>
+        <div className="mt-4">
+          <div className="flex items-baseline justify-between mb-1.5"><span className="text-sm" style={{ color: "var(--ivory)" }}>Dealing speed</span><span className="text-[11px] mono" style={{ color: "var(--muted)" }}>{({ 0.55: "snappy", 0.8: "quick", 1: "normal", 1.5: "relaxed" })[speed] || "normal"}</span></div>
+          <Seg small value={speed} options={[[0.55, "Snappy"], [0.8, "Quick"], [1, "Normal"], [1.5, "Relaxed"]]} onChange={setSpeed} />
+        </div>
+        <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+          <span className="text-[11px]" style={{ color: "var(--muted)" }}>Mistakes are flagged but the hand plays on, like a real table.</span>
           <ConfirmLink label="New session" confirm="Tap again to restart" onConfirm={reset} className="ml-3 whitespace-nowrap" />
         </div>
       </section>
@@ -3421,7 +3507,6 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
   const n0Hours = n0 && hph ? n0 / hph : 0;
   const longRun = n0Hours > 0 ? Math.min(1, st.H / n0Hours) : 0;
   const sdRatio = st.modelSd > 0 ? st.realSd / st.modelSd : 1;
-  const pctTxt = (p) => { const v = Math.round(p * 100); return `${v}${v % 10 === 1 && v !== 11 ? "st" : v % 10 === 2 && v !== 12 ? "nd" : v % 10 === 3 && v !== 13 ? "rd" : "th"}`; };
 
   const exportCsv = async () => {
     const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -3910,7 +3995,7 @@ function optimizeForProfit({ evHandGoal, ...args }) {
 
 // start a skill over from zero (sessions, spread and rules are never touched)
 const SKILL_RESETS = [
-  ["Skill accuracy", "Accuracy and reps on Today's “Your skills” card", [LOG_KEY]],
+  ["Skill accuracy", "Accuracy and reps on Home's “Your skills” card", [LOG_KEY]],
   ["Strategy training", "Which strategy and deviation hands you've mastered", [STORE_KEY]],
   ["Counting drills", "Drill totals and best speeds", [COUNT_KEY]],
   ["Casino-ready tests", "Which tests you've passed", [TESTS_KEY, ASSESS_KEY]],
@@ -3950,7 +4035,7 @@ function ConfirmLink({ label, confirm, onConfirm, className = "", style }) {
 }
 
 const NAV_ITEMS = [
-  ["progress", "Today", <path d="M3.5 10.2 12 3.5l8.5 6.7V19a1.5 1.5 0 0 1-1.5 1.5h-4.2v-5.8H9.2v5.8H5A1.5 1.5 0 0 1 3.5 19z" />],
+  ["progress", "Home", <path d="M3.5 10.2 12 3.5l8.5 6.7V19a1.5 1.5 0 0 1-1.5 1.5h-4.2v-5.8H9.2v5.8H5A1.5 1.5 0 0 1 3.5 19z" />],
   ["train", "Train", <><rect x="4.5" y="3.5" width="11" height="15" rx="2" /><path d="M8.5 20.5h9a2 2 0 0 0 2-2v-11" /><path d="M10 8.2c-1.4 1.7-2.6 2.6-2.6 3.9a1.4 1.4 0 0 0 2.5.9l-.4 1.8h1l-.4-1.8a1.4 1.4 0 0 0 2.5-.9c0-1.3-1.2-2.2-2.6-3.9z" fill="currentColor" stroke="none" /></>],
   ["play", "Play", <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.2" /><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3" /></>],
   ["calc", "Spread", <path d="M4 20h16M7 16.5v-4M12 16.5V8M17 16.5V4.5" />],
@@ -4521,7 +4606,7 @@ function BetSpreadCalculator() {
   }, [firstRun]);
   const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
   const cmdItems = !cmd ? [] : [
-    ["Pages", "Today", () => go("progress")],
+    ["Pages", "Home", () => go("progress")],
     ["Pages", "Live play", () => go("play"), "table simulation"],
     ["Pages", "Bet spread", () => go("calc"), "calculator optimizer risk of ruin bankroll"],
     ["Pages", "Sessions", () => go("sessions"), "casino log chart results"],
@@ -4549,7 +4634,7 @@ function BetSpreadCalculator() {
         <header className="mb-5 flex items-end justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow mb-1.5">{({ progress: new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }), settings: "Preferences", calc: "Calculator", train: "Strategy & drills", count: "Strategy & drills", play: "Table simulation", sessions: "Casino log" })[tab]}</div>
-            <h1 className="leading-none font-semibold">{({ progress: "Today", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions" })[tab]}</h1>
+            <h1 className="leading-none font-semibold">{({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions" })[tab]}</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => setSetupOpen(true)} className="rulespill shrink-0" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
@@ -4559,14 +4644,14 @@ function BetSpreadCalculator() {
             <button onClick={() => go(tab === "settings" ? "progress" : "settings")} className="iconbtn hdrgear shrink-0" aria-label={tab === "settings" ? "Close settings" : "Settings"} aria-pressed={tab === "settings"}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>
           </div>
         </header>
-        <TopBar title={({ progress: "Today", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions" })[tab]}>
+        <TopBar title={({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions" })[tab]}>
           <button onClick={() => setSetupOpen(true)} className="rulespill shrink-0" style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </TopBar>
         <div className="sbar" aria-hidden="true" />
 
 
         {(tab === "train" || tab === "count") && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
-        {tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
+        {tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .6s" }}>

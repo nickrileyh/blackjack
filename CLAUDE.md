@@ -32,6 +32,10 @@ Commit the source change and the rebuilt `index.html` together. `build.sh` never
 - `Seg` (segmented control) has a pill that slides to the selected option when its options sit in one row.
 - Keep motion small and purposeful, and add anything new to the `prefers-reduced-motion` rule.
 
+## Live play
+
+Settings live in the card at the end of the page and persist to `PLAY_KEY` (`_playPrefs`): hand totals, running count, auto-deal the next hand (skips the Next tap, the bet is still the user's), count check every 3/5/10/20 hands or off, and dealing speed. `speed` multiplies every deal timing through `ms()`; the opening deal staggers through `HandView`'s `stagger` / `base` / `dur` props so cards land one at a time. The right column carries `SpreadMini` (the ramp with the live true count lit) and, on wide screens only, the running-percentile card built from `evHour`/`sdHour`/`rph`.
+
 ## Card sizes
 
 Playing cards are drawn at fixed pixel sizes (`.pc`, `.pc.sm`, `.pc.big`) and scaled with CSS `zoom: var(--cz)`. Each felt sets `--cz` through a class (`cz-play` live play, `cz-train` strategy table / pairs / hand totals, `cz-big` single-card drills and tests, `cz-rounds` + `rd-seats` table rounds), with larger values at 640px and 1024px. To change how big cards are, change those values in the `css` string; don't edit the card artwork sizes. Anything sized to hold cards uses `calc(Npx * var(--cz, 1))`. Hands use `.hand > .slot` so cards sit side by side when they fit and tuck under each other when they don't.
