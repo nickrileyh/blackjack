@@ -23,7 +23,6 @@ Las Vegas|Flamingo|36.1162,-115.1708
 Las Vegas|The LINQ|36.1178,-115.1707
 Las Vegas|Harrah's Las Vegas|36.1195,-115.1711
 Las Vegas|The Cromwell|36.1152,-115.1716
-Las Vegas|Casino Royale|36.1205,-115.1720
 Las Vegas|Treasure Island|36.1247,-115.1721
 Las Vegas|Resorts World Las Vegas|36.1340,-115.1670
 Las Vegas|Fontainebleau Las Vegas|36.1375,-115.1620
@@ -49,7 +48,6 @@ Las Vegas|The D Las Vegas|36.1697,-115.1430
 Las Vegas|Four Queens|36.1700,-115.1437
 Las Vegas|Binion's|36.1713,-115.1438
 Las Vegas|Fremont|36.1707,-115.1430
-Las Vegas|Golden Gate|36.1717,-115.1463
 Las Vegas|Plaza|36.1722,-115.1473
 Las Vegas|California Hotel & Casino|36.1730,-115.1440
 Las Vegas|Main Street Station|36.1741,-115.1450
@@ -71,6 +69,7 @@ Henderson|Green Valley Ranch|36.0263,-115.0850
 Henderson|Sunset Station|36.0660,-115.0430
 Henderson|M Resort|35.9647,-115.1670
 Henderson|Railroad Pass|35.9717,-114.9130
+Henderson|Skyline Casino|36.0515,-115.0000
 Primm|Primm Valley Resort|35.6110,-115.3880
 Laughlin|Don Laughlin's Riverside|35.1680,-114.5722
 Laughlin|Aquarius|35.1626,-114.5727
@@ -152,7 +151,6 @@ Hartford|Four Winds Hartford|42.2160,-86.1770
 Dowagiac|Four Winds Dowagiac|41.9480,-86.1260
 Wayland|Gun Lake Casino|42.6340,-85.6560
 Mount Pleasant|Soaring Eagle Casino|43.6030,-84.7130
-Standish|Saganing Eagles Landing|43.9300,-83.9350
 Manistee|Little River Casino|44.2880,-86.2460
 Williamsburg|Turtle Creek Casino|44.7740,-85.4220
 Petoskey|Odawa Casino|45.3530,-84.9620
@@ -180,8 +178,8 @@ Terre Haute|Terre Haute Casino Resort|39.4340,-87.3240
 @US IL
 Des Plaines|Rivers Casino Des Plaines|42.0220,-87.8620
 Elgin|Grand Victoria Casino|42.0350,-88.2800
-Aurora|Hollywood Casino Aurora
-Joliet|Hollywood Casino Joliet
+Aurora|Hollywood Casino Aurora|41.7985,-88.2760
+Joliet|Hollywood Casino Joliet|41.5020,-88.1800
 Joliet|Harrah's Joliet|41.5260,-88.0830
 Chicago|Bally's Chicago|41.8930,-87.6270
 Rockford|Hard Rock Casino Rockford|42.2670,-88.9710
@@ -321,6 +319,7 @@ Niagara Falls|Seneca Niagara|43.0850,-79.0570
 Salamanca|Seneca Allegany|42.1500,-78.7440
 Buffalo|Seneca Buffalo Creek|42.8720,-78.8660
 Hogansburg|Akwesasne Mohawk Casino|44.9790,-74.6620
+Queens|Resorts World New York City|40.6723,-73.8312
 @US MD
 Oxon Hill|MGM National Harbor|38.7955,-77.0090
 Hanover|Live! Casino & Hotel Maryland|39.1560,-76.7260
