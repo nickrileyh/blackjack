@@ -1983,6 +1983,31 @@ function TCDrill({ decks }) {
 // ======================= live play =======================
 const PLAY_KEY = "bj-play-v1";
 const PLAY_PREFS_DEF = { totals: true, count: false, checkEvery: 5, auto: false, speed: 1 };
+const DEAL_SPEEDS = [[0.5, "Snappy"], [0.75, "Quick"], [1, "Normal"], [1.3, "Easy"], [1.7, "Relaxed"]]; // dealing speed slider stops
+const PLAYALL_KEY = "bj-playall-v1";
+const PLAYALL_DEF = { hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0, pts: [0] };
+// the running total after every hand, thinned by half once it gets long so the line keeps its shape
+const pushPt = (pts, v) => { const out = [...(pts && pts.length ? pts : [0]), v]; return out.length > 600 ? out.filter((_, i) => i % 2 === 0 || i === out.length - 1) : out; };
+
+// a session's money over time — small enough to sit beside the table
+function PnlMini({ pts, hands }) {
+  if (!pts || pts.length < 3) return <div className="text-xs py-6 text-center" style={{ color: "var(--muted)" }}>A few more hands and the line shows up here.</div>;
+  const lo = Math.min(...pts), hi = Math.max(...pts), rng = Math.max(1, hi - lo);
+  const W = 300, H = 72, X = (i) => (i / (pts.length - 1)) * W, Y = (v) => H - 6 - ((v - lo) / rng) * (H - 14);
+  const line = pts.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join("");
+  const up = pts[pts.length - 1] >= 0, col = up ? "var(--brass)" : "var(--rose)";
+  return (
+    <>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" preserveAspectRatio="none" style={{ height: 76 }} role="img" aria-label="Money over time">
+        <defs><linearGradient id="pnl-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={col} stopOpacity=".26" /><stop offset="1" stopColor={col} stopOpacity="0" /></linearGradient></defs>
+        {lo < 0 && hi > 0 && <line x1="0" x2={W} y1={Y(0)} y2={Y(0)} stroke="rgba(var(--fg),.18)" strokeDasharray="3 4" vectorEffect="non-scaling-stroke" />}
+        <path d={`${line}L${W},${H}L0,${H}Z`} fill="url(#pnl-g)" />
+        <path d={line} fill="none" stroke={col} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <div className="flex justify-between mt-1 mono" style={{ fontSize: 9.5, color: "var(--muted)" }}><span>hand 1</span><span>{hands} hands</span></div>
+    </>
+  );
+}
 let _playPrefs = { ...PLAY_PREFS_DEF };
 
 // Your ramp at a glance while you play: one bar per true count, the one you're on lit up.
@@ -2089,11 +2114,25 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     if (prefsLoaded) { try { window.storage.set(PLAY_KEY, JSON.stringify(_playPrefs), false); } catch (_) {} }
   }, [showTotals, showCount, checkEvery, autoNext, speed, prefsLoaded]);
   const ms = (x) => Math.round(x * speed);
+  const speedIdx = Math.max(0, DEAL_SPEEDS.findIndex(([v]) => Math.abs(v - speed) < 0.01));
   const [shuffled, setShuffled] = useState(false);
   const sh = useRef(null);
   const hm = useRef(0); // mistakes in the current hand
   const [lastNet, setLastNet] = useState(null);
   const [history, setHistory] = useState([]);
+  const [pts, setPts] = useState([0]);                 // this session's running total, one point per hand
+  const [all, setAll] = useState(PLAYALL_DEF);          // every hand ever played here
+  const allRef = useRef(PLAYALL_DEF); const allLoaded = useRef(false);
+  const [scope, setScope] = useState("session");        // which numbers the stats and charts show
+  useEffect(() => { (async () => {
+    try { const r = await window.storage.get(PLAYALL_KEY, false); if (r?.value) { const d = { ...PLAYALL_DEF, ...JSON.parse(r.value) }; allRef.current = d; setAll(d); } } catch (_) {}
+    allLoaded.current = true; })(); }, []);
+  const bumpAll = (patch) => {
+    if (!allLoaded.current) return;
+    const a = allRef.current, next = { ...a, ...patch(a) };
+    allRef.current = next; setAll(next);
+    try { window.storage.set(PLAYALL_KEY, JSON.stringify(next), false); } catch (_) {}
+  };
   const dealerTick = useRef(null);
   useEffect(() => () => clearTimeout(dealerTick.current), []);
 
@@ -2115,7 +2154,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     if (v === 0) { // sit out: watch one hand go by so you keep counting
       const other = [draw(), draw()]; const d = [draw(), draw(false)];
       setPhantom(other); setDealer(d); setHoleHidden(true); setHands([]);
-      setTimeout(() => { seeCard(d[1]); setHoleHidden(false); const full = dealerPlay(d, () => draw(), rules.h17); setDealer(full); setPhase("result"); setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (ok ? 1 : 0) })); logResult("play", ok, { kind: "sitout" }); }, 900);
+      setTimeout(() => { seeCard(d[1]); setHoleHidden(false); const full = dealerPlay(d, () => draw(), rules.h17); setDealer(full); setPhase("result"); setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (ok ? 1 : 0) })); setPts((p) => pushPt(p, p[p.length - 1] || 0)); bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (ok ? 1 : 0), pts: pushPt(a.pts, a.net) })); logResult("play", ok, { kind: "sitout" }); }, 900);
       setPhase("dealing"); return;
     }
     const p = [draw(), draw()]; const d = [draw(), draw(false)];
@@ -2205,6 +2244,8 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     const clean = hm.current === 0;
     setLastNet(net); setHistory((h) => [...h.slice(-9), net]);
     setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (clean ? 1 : 0), net: s.net + net }));
+    setPts((p) => pushPt(p, (p[p.length - 1] || 0) + net));
+    bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (clean ? 1 : 0), net: a.net + net, pts: pushPt(a.pts, a.net + net) }));
     logResult("play", clean, { net });
     setPhase("result");
   };
@@ -2216,12 +2257,13 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const checkCount = () => {
     const ok = guess === sh.current.rc;
     setStats((s) => ({ ...s, checks: s.checks + 1, checksOk: s.checksOk + (ok ? 1 : 0) }));
+    bumpAll((a) => ({ checks: a.checks + 1, checksOk: a.checksOk + (ok ? 1 : 0) }));
     logResult("count", ok, { live: 1 });
     if (!ok) setMistakes((m) => [...m, { kind: "count", you: guess, correct: sh.current.rc, hand: stats.hands }]);
     setMsg(ok ? { ok: true, title: `Running count ${fmtTC(sh.current.rc)} — right.` } : { ok: false, title: `Running count is ${fmtTC(sh.current.rc)}.`, body: `You said ${fmtTC(guess)}.` });
     setPhase("bet");
   };
-  const reset = () => { clearTimeout(dealerTick.current); setLastNet(null); setHistory([]); sh.current = newShoe(); setShoe({ ...sh.current }); setHands([]); setDealer([]); setPhantom(null); setMistakes([]); setStats({ hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0 }); setBank(bankroll0 || 1000); setMsg(null); setPhase("bet"); };
+  const reset = () => { clearTimeout(dealerTick.current); setLastNet(null); setHistory([]); setPts([0]); setScope("session"); sh.current = newShoe(); setShoe({ ...sh.current }); setHands([]); setDealer([]); setPhantom(null); setMistakes([]); setStats({ hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0 }); setBank(bankroll0 || 1000); setMsg(null); setPhase("bet"); };
 
   useEffect(() => {
     const onKey = (e) => {
@@ -2252,14 +2294,19 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const dl = decksLeft(); const tc = Math.trunc(shoe.rc / dl);
   const dv = handValue(dealer); const h = hands[active]; const av = h ? available(h, active) : {};
   const kinds = { bet: "Bet size", play: "Play", insurance: "Insurance", count: "Count" };
-  // where this session sits on the spread's own bell curve, updated every hand
+  // the same figures for either view: this session, or every hand played on this device
+  const allTime = scope === "all";
+  const view = allTime
+    ? { hands: all.hands, clean: all.clean, net: all.net, checks: all.checks, checksOk: all.checksOk, pts: all.pts }
+    : { hands: stats.hands, clean: stats.clean, net: stats.net, checks: stats.checks, checksOk: stats.checksOk, pts };
+  // where the run sits on the spread's own bell curve, updated every hand
   const evRound = evHour && rph ? evHour / rph : null;
   const sdRound = sdHour && rph ? sdHour / Math.sqrt(rph) : null;
   const run = (() => {
-    if (!evRound || !sdRound || !stats.hands) return { z: 0, pct: 0.5, exp: 0 };
-    const exp = evRound * stats.hands, sd = sdRound * Math.sqrt(stats.hands);
-    const z = sd > 0 ? (stats.net - exp) / sd : 0;
-    return { z, pct: Math.min(0.999, Math.max(0.001, PhiN(z))), exp };
+    if (!evRound || !sdRound || !view.hands) return { z: 0, pct: 0.5, exp: 0 };
+    const exp = evRound * view.hands, sd = sdRound * Math.sqrt(view.hands);
+    const z = sd > 0 ? (view.net - exp) / sd : 0;
+    return { z, pct: Math.min(0.99, Math.max(0.01, PhiN(z))), exp };
   })();
 
   // the opening deal alternates player, dealer, player, hole — every later card lands as soon as it's drawn
@@ -2332,14 +2379,27 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
 
       {/* bankroll and results — below the table, so the hand and its buttons fit on one screen */}
       <section className="card p-4 mb-4">
+        {all.hands > stats.hands && <Seg small value={scope} options={[["session", "This session"], ["all", "All time"]]} onChange={setScope} style={{ marginBottom: 14 }} />}
         <div className="relative">
-          <StatRow items={[["Bankroll", cash(bankAnim)], ["Hands", stats.hands], ["Clean", stats.hands ? <span style={{ color: stats.clean === stats.hands ? "var(--brass)" : undefined }}>{Math.round((stats.clean / stats.hands) * 100) + "%"}</span> : "—"], [phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{sgnCash(lastNet)}</span> : "Net", sgnCash(netAnim)]]} />
-          {history.length > 1 && <div className="flex gap-1.5 justify-center mt-2.5">{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
+          {allTime
+            ? <StatRow items={[["Hands", view.hands], ["Clean", view.hands ? <span style={{ color: view.clean === view.hands ? "var(--brass)" : undefined }}>{Math.round((view.clean / view.hands) * 100) + "%"}</span> : "—"], ["Checks", view.checks ? `${Math.round((view.checksOk / view.checks) * 100)}%` : "—"], ["Net", sgnCash(view.net)]]} />
+            : <StatRow items={[["Bankroll", cash(bankAnim)], ["Hands", stats.hands], ["Clean", stats.hands ? <span style={{ color: stats.clean === stats.hands ? "var(--brass)" : undefined }}>{Math.round((stats.clean / stats.hands) * 100) + "%"}</span> : "—"], [phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{sgnCash(lastNet)}</span> : "Net", sgnCash(netAnim)]]} />}
+          {!allTime && history.length > 1 && <div className="flex gap-1.5 justify-center mt-2.5">{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
         </div>
       </section>
 
-      {/* how the session is running against the spread's own expectation — wide screens have room for the curve */}
-      {stats.hands >= 5 && evRound !== null && (
+      {/* money over time and the percentile — wide screens have room for the curves */}
+      {view.hands > 0 && (
+        <section className="card p-5 mb-4 deskonly">
+          <div className="flex items-baseline justify-between mb-2">
+            <div className="eyebrow">{allTime ? "All-time money" : "This session"}</div>
+            <div className="mono text-xs font-semibold" style={{ color: view.net > 0 ? "var(--brass)" : view.net < 0 ? "var(--neg-l)" : "var(--muted)" }}>{sgnCash(view.net)}</div>
+          </div>
+          <PnlMini pts={view.pts} hands={view.hands} />
+        </section>
+      )}
+
+      {view.hands > 0 && evRound !== null && (
         <section className="card p-5 mb-4 deskonly">
           <div className="flex items-baseline justify-between">
             <div className="eyebrow">How you're running</div>
@@ -2348,9 +2408,9 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <div className="text-xl font-semibold mt-1" style={{ letterSpacing: "-.01em" }}>
             <span style={{ color: run.pct < 0.1 ? "var(--rose)" : run.pct > 0.9 ? "var(--brass)" : "var(--ivory)" }}>{pctTxt(run.pct)} percentile</span>
           </div>
-          <p className="text-xs mt-1 mb-2" style={{ color: "var(--ivory-d)" }}>Over {stats.hands} hands your spread expects {sgnCash(run.exp)}. You're at {sgnCash(stats.net)}.</p>
+          <p className="text-xs mt-1 mb-2" style={{ color: "var(--ivory-d)" }}>Over {view.hands} hand{view.hands === 1 ? "" : "s"} your spread expects {sgnCash(run.exp)}. You're at {sgnCash(view.net)}.</p>
           <LuckGauge z={run.z} pct={run.pct} />
-          <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>A fair stretch this short is mostly luck — the curve shows how wide normal is.</p>
+          <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>{view.hands < 200 ? "A stretch this short is mostly luck — the curve shows how wide normal is." : "Priced at your current spread, so older hands on a different spread are an approximation."}</p>
         </section>
       )}
 
@@ -2386,8 +2446,9 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <Seg small value={checkEvery} options={[[3, "3"], [5, "5"], [10, "10"], [20, "20"], [0, "Off"]]} onChange={setCheckEvery} />
         </div>
         <div className="mt-4">
-          <div className="flex items-baseline justify-between mb-1.5"><span className="text-sm" style={{ color: "var(--ivory)" }}>Dealing speed</span><span className="text-[11px] mono" style={{ color: "var(--muted)" }}>{({ 0.55: "snappy", 0.8: "quick", 1: "normal", 1.5: "relaxed" })[speed] || "normal"}</span></div>
-          <Seg small value={speed} options={[[0.55, "Snappy"], [0.8, "Quick"], [1, "Normal"], [1.5, "Relaxed"]]} onChange={setSpeed} />
+          <div className="flex items-baseline justify-between"><span className="text-sm" style={{ color: "var(--ivory)" }}>Dealing speed</span><span className="text-[11px] mono" style={{ color: "var(--brass)" }}>{DEAL_SPEEDS[speedIdx][1]}</span></div>
+          <input type="range" min={0} max={DEAL_SPEEDS.length - 1} step={1} value={speedIdx} onChange={(e) => setSpeed(DEAL_SPEEDS[Number(e.target.value)][0])} className="w-full mt-1" aria-label="Dealing speed" />
+          <div className="flex justify-between -mt-1" style={{ fontSize: 10, color: "var(--muted)" }}><span>faster</span><span>slower</span></div>
         </div>
         <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
           <span className="text-[11px]" style={{ color: "var(--muted)" }}>Mistakes are flagged but the hand plays on, like a real table.</span>
@@ -4001,6 +4062,7 @@ const SKILL_RESETS = [
   ["Strategy training", "Which strategy and deviation hands you've mastered", [STORE_KEY]],
   ["Counting drills", "Drill totals and best speeds", [COUNT_KEY]],
   ["Casino-ready tests", "Which tests you've passed", [TESTS_KEY, ASSESS_KEY]],
+  ["Live play record", "All-time hands, money and count checks in Live play", [PLAYALL_KEY]],
 ];
 function ResetSkills() {
   const [msg, setMsg] = useState(null);
