@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, Fragment, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
-import { AskPage, AskKeyCard } from "./ask.jsx";
+import { AskPage, AskKeyCard, AskDot } from "./ask.jsx";
 import CasinosPage, { openCasinoAdd } from "./casinos.jsx";
 
 // ---------- model ----------
@@ -5029,7 +5029,7 @@ function BetSpreadCalculator() {
         {NAV_ITEMS.map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
           <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"sn-item" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg>
-            <span>{l}</span>
+            <span>{l}</span>{k === "ask" && <AskDot side />}
           </button>); })}
         <div className="sn-foot">
           {spreadLoaded && <button onClick={() => go("calc")} className="sn-rules" aria-label="Your spread. Open the calculator">
@@ -5050,7 +5050,7 @@ function BetSpreadCalculator() {
         <div className="flex">
           {NAV_ITEMS.map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
             <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
-              <span className="navicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
+              <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg>{k === "ask" && <AskDot />}</span>
               <span>{l}</span>
             </button>); })}
         </div>
