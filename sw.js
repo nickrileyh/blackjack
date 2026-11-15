@@ -1,5 +1,5 @@
-const CACHE = "bj-v3";
-self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./index.html", "./icon.png?v=2"]))); self.skipWaiting(); });
+const CACHE = "bj-v4";
+self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./index.html", "./icon-192.png?v=3", "./apple-touch-icon.png?v=3", "./icon.svg?v=3"]))); self.skipWaiting(); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET" || new URL(e.request.url).origin !== self.location.origin) return; // never touch sync traffic to GitHub
