@@ -17,6 +17,7 @@ This repo's `main` branch is the single source of truth. GitHub Pages serves it 
 - `src/app.jsx` — the entire app (all components, styles in the `css` template string, strategy/sim data)
 - `src/head.html` — everything in `<head>` before the app styles (meta tags, icon links, inlined fonts)
 - `src/entry.jsx` — mounts the app and the `window.storage` wrapper around localStorage
+- `src/casinos.jsx`, `src/casino-map.js`, `src/casino-data.js` — the Casinos page, its map maths and its generated data (see "Casinos page" below)
 - `src/input.css` — Tailwind entry
 - `build.sh` — `npm ci` once, then `./build.sh` writes `index.html` (scratch files go to `.build/`, ignored)
 
@@ -39,6 +40,22 @@ Settings open as a sheet from the gear on the table header (`setupOpen` in `Play
 Page order: the table card (felt, then the bankroll/net strip, then the controls), `SpreadMini` (the ramp with the live true count lit), the record card, the percentile card, mistakes. The record card holds a `scope` switch (this session / all time), the stat row and the money chart; the percentile is built from `evHour`/`sdHour`/`rph`. Both charts show on phones too. On wide screens the table is the left column and everything after it the right.
 
 All-time hands, money, clean rate, count checks and a per-hand money list live in `PLAYALL_KEY`, which is in `BACKUP_KEYS` so it syncs: the counter names are in `SYNC_COUNTERS` so two devices' totals add up, and the money list is `{id, n}` per hand so their hands merge; `syncTidy` sorts and thins it (`thinPts` adds neighbouring hands together past 600 points). It saves every tenth hand and on pagehide/visibilitychange, never once per hand, and reloads itself on `bj-sync-applied`. Wipe it from Settings → Reset skill results.
+
+## Casinos page
+
+A sixth tab (`casinos`): a built-in, offline map of casinos with Nick's own scouting notes. It lives in its own files so work on it doesn't collide with `app.jsx`:
+
+- `src/casinos.jsx` — the page (`CasinosPage`), the map component (`CasinoMap`), the sheets, and its own CSS (`casCss`, rendered in a `<style>` by the page; new motion goes in its `prefers-reduced-motion` rule). It imports shared controls from `app.jsx` (the `export { … }` line at the very end of `app.jsx`) and `app.jsx` imports the page back, so **nothing from `app.jsx` may be used while `casinos.jsx` loads — only inside components.**
+- `src/casino-map.js` — plain maths, no React: unpacks the TopoJSON outlines, projects them (`albersUsa` for the US with Alaska and Hawaii inset, `azimuthal` for everything else), fits a box to the view, finds the state under a point.
+- `src/casino-data.js` — **generated, never edit by hand.** Outlines for the US states, Canadian provinces and every country (Natural Earth), the built-in casino list (`CASINO_ROWS`: id | name | town | state | lat | lon) and the scouting reports (`CASINO_INTEL`). All are strings, parsed the first time the page opens.
+- `tools/casinos/` — `casinos.src.txt` (the list, one casino per line, only places with live blackjack), `intel.json` (sourced reports keyed by casino id: `asOf`, `tables`, `games[]`, `hl`, `heat`, `note`, `src[[label, url]]`), `build-data.mjs` (writes `src/casino-data.js`; needs `npm i --no-save mapshaper all-the-cities` first; checks every casino against its town and state outline and stops on anything suspicious) and `check-map.mjs` (checks the maths and the data, writes preview maps). After changing the list or the reports: run `build-data.mjs`, then `check-map.mjs`, then `./build.sh`.
+- **Casino ids never change once shipped** (`us-oh-jack-cleveland-casino`): Nick's marks are stored against them. To rename a casino, change its name in `casinos.src.txt` and pin the old id as a fourth field on the line (`City|New name|lat,lon|old-id`).
+
+How it works: the country button picks a country (US and Canada have lists and states/provinces; any other country shows its outline and takes casinos you add). At the full view a tap on a state zooms to it and filters the list; once zoomed, a tap opens the casino under it, a crowd of pins zooms in instead, and a few overlapping pins open a short chooser. Taps are handled on `click`, not pointer-up, so the sheet a tap opens isn't closed by the same tap. One finger scrolls the page at the full view and pans once zoomed (`touch-action` switches); pinch, the buttons, Ctrl/trackpad-pinch wheel and + − 0 arrows zoom and move. Pins on a simplified outline are nudged just inside their own state at build time so none shows across a border.
+
+Data: `bj-casinos-v1` (in `BACKUP_KEYS`, so it syncs) holds `{ marks: [...] }` — one record per casino Nick has touched (`status` been/backed, `backedOn`, `heat` 1–3, `games[]` each with the app's rule shape plus `label`/`min`/`max`/`tables`/`note`, `notes`, `aka[]`, `hidden`) and his own casinos (`custom: true` with `name`, `city`, `cc`, `st`, `lat`, `lon`). Every list item has an `id` so the sync merges them one by one. The casino sheet saves on close. Sessions are matched to casinos by name (`linkSessions`: an explicit `aka` link, then an exact name, then a name whose words fit exactly one casino); a session with heat "Backed off" marks its casino backed off on the map. Unmatched names are listed under "From your sessions" to be matched by hand. "Log a session" on a casino opens the Sessions sheet with that name (`go("sessions", { log: true, where })`), and "Practice this game in the app" sets the app's rules to that table.
+
+Not built yet: reports shared between people using the app (needs an online home and a decision about what is public).
 
 ## Card sizes
 

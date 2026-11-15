@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef, Fragment, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
+import CasinosPage, { openCasinoAdd } from "./casinos.jsx";
 
 // ---------- model ----------
 const COUNTS = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
@@ -3440,7 +3441,8 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
   const editing = !!initial;
   const [f, setF] = useState(() => initial
     ? { date: initial.date, where: initial.where || "", hours: String(initial.hours ?? ""), won: initial.result >= 0, result: String(Math.abs(initial.result)), notes: initial.notes || "", low: initial.low != null ? String(Math.abs(initial.low)) : "", seats: initial.seats || null, heat: initial.heat || "none" }
-    : { date: localDay(), where: casinos[0] || "", hours: "", won: true, result: "", notes: "", low: "", seats: seats0 || null, heat: "none" });
+    : { date: localDay(), where: _logWhere || casinos[0] || "", hours: "", won: true, result: "", notes: "", low: "", seats: seats0 || null, heat: "none" });
+  useEffect(() => { _logWhere = ""; }, []);
   const [more, setMore] = useState(editing && (initial.low != null || initial.heat && initial.heat !== "none" || initial.seats));
   const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
   const amt = Math.abs(+String(f.result).replace(/[^0-9.]/g, "")) || 0;
@@ -3812,7 +3814,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
   );
 }
 
-const BACKUP_KEYS = ["bj-rules-v1", "bj-spread-v1", "bj-trainer-v1", "bj-count-v1", "bj-log-v1", "bj-tests-v1", "bj-sessions-v1", "bj-assess-v1", "bj-playall-v1"];
+const BACKUP_KEYS = ["bj-rules-v1", "bj-spread-v1", "bj-trainer-v1", "bj-count-v1", "bj-log-v1", "bj-tests-v1", "bj-sessions-v1", "bj-assess-v1", "bj-playall-v1", "bj-casinos-v1"];
 function Backup() {
   const [text, setText] = useState("");
   const [status, setStatus] = useState(null);
@@ -4144,6 +4146,7 @@ const NAV_ITEMS = [
   ["play", "Play", <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.2" /><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3" /></>],
   ["calc", "Spread", <path d="M4 20h16M7 16.5v-4M12 16.5V8M17 16.5V4.5" />],
   ["sessions", "Sessions", <><path d="M4 18.5 9.2 12.8l3.6 3.2 7.2-8.5" /><path d="M15.5 7.5H20V12" /></>],
+  ["casinos", "Casinos", <><path d="M12 20.8s-6.6-5.9-6.6-10.9a6.6 6.6 0 0 1 13.2 0c0 5-6.6 10.9-6.6 10.9z" /><circle cx="12" cy="9.9" r="2.4" /></>],
 ];
 // Jump-to palette (⌘K / Ctrl K / "/"): type a few letters, arrow to a row, Enter. Every page, drill and setting is in it.
 function CommandPalette({ items, onClose }) {
@@ -4197,6 +4200,7 @@ function TopBar({ title, children }) {
   );
 }
 let _openLog = false;
+let _logWhere = ""; // casino name handed over by the Casinos page's "Log a session"
 const THEME_KEY = "bj-theme-v1";
 const THEME_LIST = [["emerald", "Emerald", "#34D399", "#0D1114", "#1A2024"], ["sapphire", "Dark blue", "#7AA2FF", "#0D1020", "#1A1F3A"], ["gold", "Classic gold", "#D9B56A", "#0C1422", "#1A2234"], ["light", "White & blue", "#1E3FA8", "#EEF2F8", "#FFFFFF"]];
 const applyTheme = (t) => { try { if (t && t !== "emerald") document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", t === "light" ? "#0E1A3A" : getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#07090A"); } catch (_) {} };
@@ -4697,7 +4701,7 @@ function BetSpreadCalculator() {
   const maxBar = Math.max(1, ...r.rows.map((x) => x.bet));
   const [trainSub, setTrainSub] = useState("train");
   useEffect(() => { if (tab === "train" || tab === "count") setTrainSub(tab); }, [tab]);
-  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; const same = t === tab; setTab(t); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } try { window.scrollTo({ top: 0, behavior: same ? "smooth" : "auto" }); } catch (_) {} };
+  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; const same = t === tab; setTab(t); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } try { window.scrollTo({ top: 0, behavior: same ? "smooth" : "auto" }); } catch (_) {} };
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
   const [cmd, setCmd] = useState(false);
   useEffect(() => {
@@ -4715,6 +4719,7 @@ function BetSpreadCalculator() {
     ["Pages", "Live play", () => go("play"), "table simulation"],
     ["Pages", "Bet spread", () => go("calc"), "calculator optimizer risk of ruin bankroll"],
     ["Pages", "Sessions", () => go("sessions"), "casino log chart results"],
+    ["Pages", "Casinos", () => go("casinos"), "map scouting backed off heat penetration rules countries"],
     ["Pages", "Settings", () => go("settings"), "sync backup reset"],
     ["Train", "Strategy practice", () => go("train", { trainView: "drill", trainMode: "basic" }), "basic"],
     ["Train", "Deviations practice", () => go("train", { trainView: "drill", trainMode: "dev" }), "index illustrious"],
@@ -4726,6 +4731,7 @@ function BetSpreadCalculator() {
     ["Drills", "Hand totals", () => go("count", { drill: "totals" })],
     ["Drills", "Casino-ready tests", () => go("count", { drill: "tests" })],
     ["Actions", "Log a session", () => go("sessions", { log: true }), "add new result"],
+    ["Actions", "Add a casino", () => { openCasinoAdd(); go("casinos", { add: true }); }, "map pin new"],
     ["Actions", "Change game rules", () => setSetupOpen(true), "decks h17 s17 surrender penetration", rulesShort(rules)],
   ].map(([group, label, run, more, note]) => ({ group, label, run, more, note }));
 
@@ -4738,8 +4744,8 @@ function BetSpreadCalculator() {
         {/* header */}
         <header className="mb-5 flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <div className="eyebrow mb-1.5">{({ progress: new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }), settings: "Preferences", calc: "Calculator", train: "Strategy & drills", count: "Strategy & drills", play: "Table simulation", sessions: "Casino log" })[tab]}</div>
-            <h1 className="leading-none font-semibold">{({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions" })[tab]}</h1>
+            <div className="eyebrow mb-1.5">{({ progress: new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }), settings: "Preferences", calc: "Calculator", train: "Strategy & drills", count: "Strategy & drills", play: "Table simulation", sessions: "Casino log", casinos: "Scouting map" })[tab]}</div>
+            <h1 className="leading-none font-semibold">{({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos" })[tab]}</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => setSetupOpen(true)} className="rulespill shrink-0" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
@@ -4749,14 +4755,14 @@ function BetSpreadCalculator() {
             <button onClick={() => go(tab === "settings" ? "progress" : "settings")} className="iconbtn hdrgear shrink-0" aria-label={tab === "settings" ? "Close settings" : "Settings"} aria-pressed={tab === "settings"}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>
           </div>
         </header>
-        <TopBar title={({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions" })[tab]}>
+        <TopBar title={({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos" })[tab]}>
           <button onClick={() => setSetupOpen(true)} className="rulespill shrink-0" style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </TopBar>
         <div className="sbar" aria-hidden="true" />
 
 
         {(tab === "train" || tab === "count") && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
-        {tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
+        {tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .6s" }}>
@@ -5047,3 +5053,5 @@ function BetSpreadCalculator() {
     </div></RulesCtx.Provider>
   );
 }
+// shared with src/casinos.jsx (the Casinos page lives in its own file)
+export { Sheet, Seg, ChipRow, ConfirmLink, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav };

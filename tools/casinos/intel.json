@@ -1,0 +1,26 @@
+{
+  "us-oh-jack-cleveland-casino": {
+    "asOf": "Dec 2025",
+    "tables": "97 table games on the floor at the end of December 2025, as reported to the state regulator.",
+    "note": "Tables returned 74.4% of the money exchanged for chips that month — the tightest of Ohio's four casinos.",
+    "src": [["Ohio Casino Control Commission — 2025 monthly revenue report", "https://dam.assets.ohio.gov/image/upload/v1769793091/casinocontrol.ohio.gov/revenue-reports/2025/2025_Ohio_Casino_Monthly_Revenue_Report12.pdf"]]
+  },
+  "us-oh-hollywood-casino-columbus": {
+    "asOf": "Dec 2025",
+    "tables": "103 table games on the floor at the end of December 2025, as reported to the state regulator.",
+    "note": "Tables returned 76.9% of the money exchanged for chips that month.",
+    "src": [["Ohio Casino Control Commission — 2025 monthly revenue report", "https://dam.assets.ohio.gov/image/upload/v1769793091/casinocontrol.ohio.gov/revenue-reports/2025/2025_Ohio_Casino_Monthly_Revenue_Report12.pdf"]]
+  },
+  "us-oh-hard-rock-casino-cincinnati": {
+    "asOf": "Dec 2025",
+    "tables": "104 table games on the floor at the end of December 2025, as reported to the state regulator — the most in Ohio.",
+    "note": "Tables returned 76.9% of the money exchanged for chips that month.",
+    "src": [["Ohio Casino Control Commission — 2025 monthly revenue report", "https://dam.assets.ohio.gov/image/upload/v1769793091/casinocontrol.ohio.gov/revenue-reports/2025/2025_Ohio_Casino_Monthly_Revenue_Report12.pdf"]]
+  },
+  "us-oh-hollywood-casino-toledo": {
+    "asOf": "Dec 2025",
+    "tables": "53 table games on the floor at the end of December 2025, as reported to the state regulator — the smallest pit in Ohio.",
+    "note": "Tables returned 80.3% of the money exchanged for chips that month, the loosest of Ohio's four casinos.",
+    "src": [["Ohio Casino Control Commission — 2025 monthly revenue report", "https://dam.assets.ohio.gov/image/upload/v1769793091/casinocontrol.ohio.gov/revenue-reports/2025/2025_Ohio_Casino_Monthly_Revenue_Report12.pdf"]]
+  }
+}
