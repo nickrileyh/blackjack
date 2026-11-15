@@ -5,10 +5,10 @@ import { createPortal } from "react-dom";
 const COUNTS = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
 // today / a timestamp as YYYY-MM-DD in *your* time zone (toISOString would give the UTC date, a day ahead in the evening)
 const localDay = (t = Date.now()) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
-const LABEL = (tc) => (tc === -3 ? "≤ −3" : tc === 6 ? "≥ +6" : tc > 0 ? `+${tc}` : `${tc}`);
+const LABEL = (tc) => (tc === -3 ? "≤ −3" : tc === 6 ? "≥ +6" : tc > 0 ? `+${tc}` : tc < 0 ? `−${-tc}` : "0");
 const DEFAULT_BETS = { "-3": 0, "-2": 0, "-1": 0, "0": 0, "1": 25, "2": 50, "3": 50, "4": 75, "5": 75, "6": 100 };
 const fmtH = (h) => `${Math.round((Number(h) || 0) * 100) / 100}h`; // hours to the hundredth, no float noise
-const sgnMoney = (v) => `${v >= 0 ? "+" : "−"}$${Math.abs(Math.round(v)).toLocaleString()}`;
+const sgnMoney = (v) => { const r = Math.round(v); return `${r > 0 ? "+" : r < 0 ? "−" : ""}$${Math.abs(r).toLocaleString()}`; };
 const shortMoney = (v) => { const a = Math.abs(v), sg = v < 0 ? "−" : ""; return a >= 1000 ? `${sg}$${(a / 1000).toFixed(a >= 10000 ? 0 : 1)}k` : `${sg}$${Math.round(a)}`; };
 function niceTicks(lo, hi, n = 5) { const span = hi - lo || 1; const raw = span / n; const mag = Math.pow(10, Math.floor(Math.log10(raw))); const e = raw / mag; const step = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag; const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(+v.toFixed(10)); return out; }
 const money = (n, d = 0) =>
@@ -340,6 +340,8 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 @keyframes dotin{from{opacity:0;transform:translateX(-50%) scale(.3)}to{opacity:1;transform:translateX(-50%) scale(1)}}
 .in{min-width:0;-webkit-appearance:none;appearance:none;box-sizing:border-box;background:rgba(var(--sh),.55);border:1px solid rgba(var(--fg),.14);color:var(--ivory);border-radius:10px;padding:10px 12px;width:100%;outline:none;font-variant-numeric:tabular-nums;font-size:16px}
 .in:focus{border-color:var(--brass);box-shadow:0 0 0 3px rgba(var(--acc),.18)}
+.bj input[type=number]{-moz-appearance:textfield}
+.bj input[type=number]::-webkit-outer-spin-button,.bj input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .in.sm{padding:7px 8px;border-radius:8px;text-align:right}
 input.in[type=date]{min-height:44px;color-scheme:dark}
 input.in[type=date]::-webkit-date-and-time-value{text-align:left}
@@ -808,8 +810,8 @@ function Table({ cards, dealer, tc, qkey, leaving }) {
         </div>
       </div>
       {tc !== undefined && (
-        <div className="absolute left-4 bottom-4 rounded-lg px-3 py-1.5 mono text-sm" style={{ background: "rgba(12,9,11,.75)", border: "1px solid rgba(var(--acc),.4)" }}>
-          TC <span style={{ color: "var(--brass)" }}>{tc >= 0 ? "+" : ""}{tc}</span>
+        <div className="absolute left-4 bottom-4 rounded-lg px-3 py-1.5 mono text-sm" style={{ background: "rgba(0,0,0,.55)", border: "1px solid rgba(var(--acc),.4)" }}>
+          TC <span style={{ color: "var(--brass)" }}>{fmtTC(tc)}</span>
         </div>
       )}
     </div>
@@ -922,7 +924,7 @@ function Charts({ R, devs }) {
           <div className="text-xs mono px-2 py-1 rounded-md" style={{ background: "rgba(var(--fg),.08)", color: "var(--brass)" }}>{R.h17 ? "H17" : "S17"} · {dasOn(R) ? "DAS" : "NDAS"}{dblRule(R) === "any" ? "" : ` · D${dblRule(R).replace("-", "–")}`}{R.surrender ? " · LS" : ""}</div>
         </div>
         <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>Find your hand on the left, the dealer's up-card on top.</p>
-        <div className="grid grid-cols-3 gap-x-3 gap-y-1.5 mb-5 text-[11px]" style={{ color: "var(--ivory-d)" }}>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-5 text-xs" style={{ color: "var(--ivory-d)" }}>
           {Object.entries({ H: "Hit", S: "Stand", D: "Double, else hit", P: "Split", R: "Surrender, else hit" }).filter(([k]) => R.surrender || k !== "R").map(([k, v]) => (
             <span key={k} className="flex items-center gap-1.5"><span className="inline-flex items-center justify-center w-5 h-5 rounded font-semibold mono" style={{ background: ACOL[k], color: k === "D" ? "var(--ink)" : "#fff", fontSize: 10 }}>{k}</span>{v}</span>
           ))}
@@ -947,7 +949,7 @@ function Charts({ R, devs }) {
         <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>Hi-Lo indices from the Blackjack Apprenticeship {R.h17 ? "H17" : "S17"} chart{R.surrender ? ", surrender included" : ""}. Make the right-hand play once the true count reaches the index; otherwise play the left-hand one.</p>
         <div className="space-y-1.5">
           {devs.map((d) => (
-            <div key={d.id} className="grid items-center gap-2 rounded-xl px-3" style={{ gridTemplateColumns: "minmax(80px,1fr) 78px 1fr 78px", height: 44, background: "rgba(255,255,255,.035)" }}>
+            <div key={d.id} className="grid items-center gap-2 rounded-xl px-3" style={{ gridTemplateColumns: "minmax(80px,1fr) 78px 1fr 78px", height: 44, background: "rgba(var(--fg),.04)" }}>
               <div>
                 <div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{d.name}</div>
                 {d.above === "R" && <div className="text-[10px]" style={{ color: "var(--muted)" }}>surrender</div>}
@@ -955,7 +957,7 @@ function Charts({ R, devs }) {
               <span className="text-[11px] px-2 py-1 rounded-md text-center" style={{ background: ACOL[d.below] || "rgba(var(--fg),.08)", color: d.below === "D" ? "var(--ink)" : "var(--ivory)", opacity: .75 }}>{(ANAME[d.below] || d.below).replace("No insurance","Skip")}</span>
               <div className="flex items-center gap-1">
                 <div className="h-px flex-1" style={{ background: "rgba(var(--fg),.2)" }} />
-                <span className="mono text-sm font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(var(--sh),.6)", color: "var(--brass)" }}>{d.idx >= 0 ? "+" : ""}{d.idx}</span>
+                <span className="mono text-sm font-semibold px-1.5 py-0.5 rounded" style={{ background: "rgba(var(--sh),.6)", color: "var(--brass)" }}>{fmtTC(d.idx)}</span>
                 <div className="h-px flex-1" style={{ background: "rgba(var(--fg),.2)" }} />
               </div>
               <span className="text-[11px] px-2 py-1 rounded-md font-semibold text-center" style={{ background: ACOL[d.above] || "var(--brass)", color: d.above === "D" || !ACOL[d.above] ? "var(--ink)" : "#fff" }}>{(ANAME[d.above] || d.above).replace("Take insurance","Insure")}</span>
@@ -1048,11 +1050,11 @@ function FillChart({ R, devs }) {
             {devs.map((d) => {
               const v = dev[d.id] || {}; const idxOk = checked && +v.idx === d.idx; const actOk = checked && (d.id === "ins" || v.act === d.above);
               return (
-                <div key={d.id} className="rounded-xl px-3 py-2" style={{ background: checked ? (idxOk && actOk ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)") : "rgba(255,255,255,.035)" }}>
+                <div key={d.id} className="rounded-xl px-3 py-2" style={{ background: checked ? (idxOk && actOk ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)") : "rgba(var(--fg),.04)" }}>
                   <div className="grid items-center gap-2" style={{ gridTemplateColumns: "1fr 88px" }}>
                     <div>
                       <div className="text-sm font-semibold">{d.name}</div>
-                      {checked && !(idxOk && actOk) && <div className="text-[11px] mono" style={{ color: "var(--neg-l)" }}>{d.idx >= 0 ? "+" : ""}{d.idx} · {ANAME[d.above] || d.above}</div>}
+                      {checked && !(idxOk && actOk) && <div className="text-[11px] mono" style={{ color: "var(--neg-l)" }}>{fmtTC(d.idx)} · {ANAME[d.above] || d.above}</div>}
                     </div>
                     <input className="in sm mono" type="number" inputMode="numeric" placeholder="idx" value={v.idx ?? ""} disabled={checked} onChange={(e) => setDev({ ...dev, [d.id]: { ...v, idx: e.target.value } })} style={{ textAlign: "center", borderColor: checked ? (idxOk ? "var(--brass)" : "var(--rose)") : undefined }} />
                   </div>
@@ -1225,7 +1227,7 @@ function Trainer({ rules, setRules }) {
     const u = c.up, a = c.answer;
     if (c.kind === "dev") {
       const d = c.dev, over = c.tc >= d.idx;
-      const idx = `${d.idx >= 0 ? "+" : ""}${d.idx}`;
+      const idx = `${fmtTC(d.idx)}`;
       if (d.id === "ins") return over ? `TC is at +3 or more, so over a third of the remaining cards are tens. Insurance pays.` : `Below +3 there aren't enough tens left. Skip it.`;
       const reason = d.above === "S" ? "more tens are left, so the dealer busts more and you bust more if you hit" : d.above === "D" ? "more tens are left, so your double lands a big card more often" : d.above === "P" ? "more tens are left — two 20s beat one when the dealer is weak" : "more tens are left, so you lose this hand too often to play it out";
       const basicIsAbove = ["12v4", "13v2", "s16v9", "s15v10"].includes(d.id) || (d.id === "A8v6" && rules.h17) || (d.id === "s15vA" && rules.h17);
@@ -1306,7 +1308,7 @@ function Trainer({ rules, setRules }) {
           </div>
 
           <div className="mt-4">
-            <div className="rounded-xl px-4 py-3 relative overflow-hidden" style={{ minHeight: 64, background: result ? (result.ok ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)") : "rgba(0,0,0,.18)", transition: "background .25s" }}>
+            <div className="rounded-xl px-4 py-3 relative overflow-hidden" style={{ minHeight: 64, background: result ? (result.ok ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)") : "rgba(var(--fg),.045)", transition: "background .25s" }}>
               {timer && result && <div className="drain" style={{ "--t": result.ok ? "1.4s" : "3.4s", background: result.ok ? "var(--brass)" : "var(--rose)" }} />}
               {result ? (
                 <div className="rise">
@@ -1336,7 +1338,7 @@ function Trainer({ rules, setRules }) {
           <div className="eyebrow mb-3">Your weak spots</div>
           {weakest.map((c) => (
             <div key={c.id} className="flex justify-between text-sm py-1.5" style={{ borderBottom: "1px solid rgba(var(--fg),.08)" }}>
-              <span>{c.kind === "dev" ? `${c.dev.name} ${c.side === "hi" ? "at/above" : "below"} ${c.dev.idx >= 0 ? "+" : ""}${c.dev.idx}` : `${c.hand} vs ${upLabel(c.up)}`}</span>
+              <span>{c.kind === "dev" ? `${c.dev.name} ${c.side === "hi" ? "at/above" : "below"} ${fmtTC(c.dev.idx)}` : `${c.hand} vs ${upLabel(c.up)}`}</span>
               <span className="mono" style={{ color: "var(--muted)" }}>{c.opts ? label(c.answer) : c.answer} · {prog[c.id].wrong}✕</span>
             </div>
           ))}
@@ -1501,7 +1503,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
 
           {opts && <div className="space-y-3 mt-1 mb-1 rise">
             <div className="grid items-center gap-3" style={{ gridTemplateColumns: "1fr 200px" }}>
-              <span className="text-sm" style={{ color: "var(--ivory-d)" }}>Decks in the shoe</span>
+              <span className="text-sm" style={{ color: "var(--ivory-d)" }}>Decks</span>
               <Seg value={decks} options={[[1, "1"], [2, "2"], [6, "6"], [8, "8"]]} onChange={(d) => { setDecks(d); setShoe(null); }} />
             </div>
             <div className="grid items-center gap-3" style={{ gridTemplateColumns: "1fr 200px" }}>
@@ -1529,7 +1531,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
 
           <button className="btn mt-3" onClick={start}>{shoe ? "Deal" : "Shuffle and deal"}</button>
           <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>
-            {mode === "pairs" ? "Two cards at once: cancel a high against a low instantly, only count the leftovers. " : ""}A real {decks}-deck shoe is shuffled, one card is burned, and cards deal from where the last drill stopped until the cut card comes out.{carry ? " You're carrying the running count between drills — casino conditions." : " Each drill starts a fresh count."} {shoe && shoe.pos > 1 ? `Shoe is at card ${shoe.pos} of ${shoe.cut} (${decksLeft.toFixed(1)} decks left). Running count carried in: ${shoe.rc >= 0 ? "+" : ""}${shoe.rc}.` : ""}
+            {mode === "pairs" ? "Two cards at once: cancel a high against a low instantly, only count the leftovers. " : ""}A real {decks}-deck shoe is shuffled, one card is burned, and cards deal from where the last drill stopped until the cut card comes out.{carry ? " You're carrying the running count between drills — casino conditions." : " Each drill starts a fresh count."} {shoe && shoe.pos > 1 ? `Shoe is at card ${shoe.pos} of ${shoe.cut} (${decksLeft.toFixed(1)} decks left). Running count carried in: ${fmtTC(shoe.rc)}.` : ""}
           </p>
         </section>
       )}
@@ -1538,9 +1540,9 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
         <section className="card p-5 mb-4">
           <div className="flex items-center justify-between mb-3">
             <div className="mono text-xs" style={{ color: "var(--muted)" }}>{progress}</div>
-            <div className="mono text-xs" style={{ color: "var(--muted)" }}>{decksLeft.toFixed(1)} decks left{showCount && phase !== "ask" && phase !== "result" ? <> · RC <span style={{ color: "var(--brass)" }}>{rcLive >= 0 ? "+" : ""}{rcLive}</span></> : null}</div>
+            <div className="mono text-xs" style={{ color: "var(--muted)" }}>{decksLeft.toFixed(1)} decks left{showCount && phase !== "ask" && phase !== "result" ? <> · RC <span style={{ color: "var(--brass)" }}>{fmtTC(rcLive)}</span></> : null}</div>
           </div>
-          <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: "rgba(255,255,255,.07)" }}>
+          <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: "rgba(var(--fg),.08)" }}>
             <div className="h-full bar" style={{ width: `${mode !== "hands" ? (shown.length / amount) * 100 : (rounds / amount) * 100}%`, background: "var(--brass)" }} />
           </div>
 
@@ -1606,8 +1608,8 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
                   {result.ok ? "Correct." : result.rcOk ? "Running count right, true count off." : `Off by ${Math.abs(guess - result.rc)}.`}
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-2 text-sm" style={{ color: "var(--ivory-d)" }}>
-                  <div>Running count <span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{result.rc >= 0 ? "+" : ""}{result.rc}</span>{!result.rcOk && <span className="mono" style={{ color: "var(--neg-l)" }}> (you said {guess >= 0 ? "+" : ""}{guess})</span>}</div>
-                  <div>True count <span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{result.tc >= 0 ? "+" : ""}{result.tc}</span>{askTC && !result.tcOk && <span className="mono" style={{ color: "var(--neg-l)" }}> (you said {guessTC >= 0 ? "+" : ""}{guessTC})</span>}</div>
+                  <div>Running count <span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{fmtTC(result.rc)}</span>{!result.rcOk && <span className="mono" style={{ color: "var(--neg-l)" }}> (you said {fmtTC(guess)})</span>}</div>
+                  <div>True count <span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{fmtTC(result.tc)}</span>{askTC && !result.tcOk && <span className="mono" style={{ color: "var(--neg-l)" }}> (you said {fmtTC(guessTC)})</span>}</div>
                 </div>
                 <div className="text-xs mt-2" style={{ color: "var(--muted)" }}>{result.counts.lo} low (+1) · {result.counts.hi} high (−1) · {result.counts.neu} neutral{carry && stateRef.current.startRc ? ` · carried in ${fmtTC(stateRef.current.startRc)}` : ""} · {result.remaining.toFixed(1)} decks left</div>
               </div>
@@ -1618,7 +1620,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
                 <div className="mt-3">
                   <div className="eyebrow mb-2" style={{ fontSize: 10 }}>Every card, in order</div>
                   <div className="flex flex-wrap gap-1">
-                    {stateRef.current.dealt.map((c, i) => { const v = hilo(c.rank); return <span key={i} className="mono text-[11px] px-1.5 py-0.5 rounded" style={{ background: v > 0 ? "rgba(47,122,98,.5)" : v < 0 ? "rgba(168,50,50,.5)" : "rgba(var(--fg),.08)", color: "var(--ivory)" }}>{c.face}{c.suit}</span>; })}
+                    {stateRef.current.dealt.map((c, i) => { const v = hilo(c.rank); return <span key={i} className="mono text-[11px] px-1.5 py-0.5 rounded" style={{ background: v > 0 ? "rgba(var(--acc),.24)" : v < 0 ? "rgba(var(--neg),.26)" : "rgba(var(--fg),.08)", color: "var(--ivory)" }}>{c.face}{c.suit}</span>; })}
                   </div>
                 </div>
               )}
@@ -1634,13 +1636,13 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
       <section className="card p-5">
         <div className="eyebrow mb-2">Hi-Lo</div>
         <div className="grid grid-cols-3 gap-2 text-center text-sm">
-          {[["2 – 6", "+1", "rgba(47,122,98,.5)"], ["7 – 9", "0", "rgba(var(--fg),.08)"], ["10 – A", "−1", "rgba(168,50,50,.5)"]].map(([k, v, bg]) => (
+          {[["2 – 6", "+1", "rgba(var(--acc),.24)"], ["7 – 9", "0", "rgba(var(--fg),.08)"], ["10 – A", "−1", "rgba(var(--neg),.26)"]].map(([k, v, bg]) => (
             <div key={k} className="rounded-xl py-2" style={{ background: bg }}><div className="mono font-semibold">{v}</div><div className="text-xs" style={{ color: "var(--ivory-d)" }}>{k}</div></div>
           ))}
         </div>
         <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
           <span className="text-xs" style={{ color: "var(--muted)" }}>Work up to 0.5s per card with zero misses before you play.</span>
-          <button onClick={newShoe} className="text-xs underline underline-offset-2" style={{ color: "var(--muted)" }}>New shoe</button>
+          <button onClick={newShoe} className="text-xs underline underline-offset-2 whitespace-nowrap shrink-0 ml-3" style={{ color: "var(--muted)" }}>New shoe</button>
         </div>
       </section>
       {/* lifetime stats — below the drill */}
@@ -1749,7 +1751,7 @@ function logResult(skill, ok, extra = {}) {
   })();
 }
 const SKILLS = [["strategy", "Basic strategy"], ["deviation", "Deviations"], ["count", "Running count"], ["pairs", "Pair counting"], ["tc", "True count"], ["totals", "Hand totals"], ["ramp", "Bet ramp"], ["play", "Live play"]];
-const fmtTC = (tc) => (tc >= 0 ? "+" : "") + tc;
+const fmtTC = (tc) => (tc >= 0 ? "+" : "−") + Math.abs(tc);
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 
 // ======================= blackjack engine =======================
@@ -2202,7 +2204,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
         </div>
         <div className="relative tbl felt cz-play px-4 pt-4 pb-4" style={{ minHeight: 300 }}>
           <FeltPrint />
-          {shuffled && <div className="absolute inset-0 flex items-center justify-center rounded-2xl z-10 rise" style={{ background: "rgba(12,9,11,.7)" }}><div className="disp text-2xl font-semibold" style={{ color: "var(--brass)" }}>Shuffling…</div></div>}
+          {shuffled && <div className="absolute inset-0 flex items-center justify-center rounded-2xl z-10 rise" style={{ background: "rgba(0,0,0,.6)" }}><div className="disp text-2xl font-semibold" style={{ color: "var(--brass)" }}>Shuffling…</div></div>}
           <HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small />
           {phantom && <div className="mt-3"><HandView cards={phantom} label="Other player" total={showTotals ? handValue(phantom).total : undefined} small /></div>}
           <div className="flex gap-2 mt-3 justify-end flex-wrap">
@@ -2234,7 +2236,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
         )}
         {phase === "insurance" && (
           <div className="mt-2 rise">
-            <div className="eyebrow text-center mb-2">Dealer shows an ace — insurance?</div>
+            <div className="text-center mb-3"><div className="eyebrow">Insurance</div><div className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>The dealer shows an ace. Take it?</div></div>
             <div className="grid grid-cols-2 gap-2"><button className="btn ghost" onClick={() => takeInsurance(false)}>No insurance</button><button className="btn" onClick={() => takeInsurance(true)}>Take insurance</button></div>
             <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>N</b> no · <b>Y</b> take it</div>
           </div>
@@ -2249,7 +2251,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
         {phase === "dealing" && <div className="mt-2" style={{ height: 52 }} />}
         {phase === "check" && (
           <div className="mt-2 rise">
-            <div className="eyebrow mb-2">Count check after {stats.hands} hands — running count?</div>
+            <div className="text-center mb-3"><div className="eyebrow">Count check</div><div className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>{stats.hands} hands in. What's the running count?</div></div>
             <Stepper value={guess} onChange={setGuess} />
             <button className="btn mt-3" onClick={checkCount}>Check</button>
           </div>
@@ -2319,7 +2321,7 @@ function Tests({ rules, onRun }) {
       )}
       <div className="space-y-2">
         {TEST_DEFS.map((t) => { const b = best[t.id]; return (
-          <button key={t.id} onClick={() => onRun(t.id)} className="w-full text-left rounded-xl px-4 py-3 grid items-center gap-3" style={{ gridTemplateColumns: "1fr auto", background: b?.pass ? "rgba(var(--acc),.08)" : "rgba(255,255,255,.035)", border: `1px solid ${b?.pass ? "rgba(var(--acc),.4)" : "var(--line)"}` }}>
+          <button key={t.id} onClick={() => onRun(t.id)} className="w-full text-left rounded-xl px-4 py-3 grid items-center gap-3" style={{ gridTemplateColumns: "1fr auto", background: b?.pass ? "rgba(var(--acc),.08)" : "rgba(var(--fg),.04)", border: `1px solid ${b?.pass ? "rgba(var(--acc),.4)" : "var(--line)"}` }}>
             <div><div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{t.name}</div><div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>{t.std}</div>
               {b && <div className="mono text-[11px] mt-1" style={{ color: b.pass ? "var(--brass)" : "var(--neg-l)" }}>{b.pass ? "Passed" : "Best"}: {b.summary}</div>}</div>
             <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "var(--brass)" }}>{b?.pass ? "Again ›" : "Start ›"}</span>
@@ -2392,7 +2394,7 @@ function TestRunner({ id, rules, onDone }) {
         <div className="eyebrow">{TEST_DEFS.find((t) => t.id === id).name}</div>
         <div className="mono text-xs" style={{ color: "var(--muted)" }}>{id === "deck" ? `${pos} / 51` : `${state.i + 1} / ${count}`} · <Clock t0={state.t0} stop={state.done} /></div>
       </div>
-      <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: "rgba(255,255,255,.07)" }}><div className="h-full bar" style={{ width: `${((id === "deck" ? pos : state.i) / count) * 100}%`, background: "var(--brass)" }} /></div>
+      <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: "rgba(var(--fg),.08)" }}><div className="h-full bar" style={{ width: `${((id === "deck" ? pos : state.i) / count) * 100}%`, background: "var(--brass)" }} /></div>
 
       {id === "deck" && (
         <>
@@ -2572,7 +2574,7 @@ function Assessment({ rules, bets, onDone, onCancel }) {
         <div className="eyebrow">Assessment · {stage.name}</div>
         <div className="mono text-xs" style={{ color: "var(--muted)" }}>{done + 1} / {total}</div>
       </div>
-      <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: "rgba(255,255,255,.07)" }}><div className="h-full bar" style={{ width: `${(done / total) * 100}%`, background: "var(--brass)" }} /></div>
+      <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: "rgba(var(--fg),.08)" }}><div className="h-full bar" style={{ width: `${(done / total) * 100}%`, background: "var(--brass)" }} /></div>
 
       {(stage.id === "strategy" || stage.id === "deviation") && q && (
         <>
@@ -2711,7 +2713,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
           {ASSESS_SKILLS.map((sk) => { const sc = latest.scores[sk.id]?.score ?? 0; const lv = levelOf(sc); return (
             <div key={sk.id} className="grid items-center gap-2" style={{ gridTemplateColumns: "110px 1fr 34px" }}>
               <span className="text-xs" style={{ color: "var(--ivory-d)" }}>{sk.name}</span>
-              <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,.07)" }}><div className="h-full rounded-full bar" style={{ width: `${sc}%`, background: lv[2] }} /></div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(var(--fg),.08)" }}><div className="h-full rounded-full bar" style={{ width: `${sc}%`, background: lv[2] }} /></div>
               <span className="mono text-xs text-right" style={{ color: lv[2] }}>{sc}</span>
             </div>); })}
         </div>
@@ -2744,13 +2746,13 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
             const acc = reps.length ? Math.round((reps.reduce((a, e) => a + e.ok, 0) / reps.length) * 100) : null;
             const doneFrac = Math.min(1, reps.length / need);
             return (
-              <button key={it.id + (it.maintenance ? "m" : "")} onClick={() => go && go(...NAV[it.id])} className="opt w-full text-left rounded-xl px-3 py-2.5" style={{ background: doneFrac >= 1 ? "rgba(var(--acc),.08)" : "rgba(255,255,255,.03)", border: `1px solid ${doneFrac >= 1 ? "rgba(var(--acc),.4)" : "var(--line)"}` }}>
+              <button key={it.id + (it.maintenance ? "m" : "")} onClick={() => go && go(...NAV[it.id])} className="opt w-full text-left rounded-xl px-3 py-2.5" style={{ background: doneFrac >= 1 ? "rgba(var(--acc),.08)" : "rgba(var(--fg),.035)", border: `1px solid ${doneFrac >= 1 ? "rgba(var(--acc),.4)" : "var(--line)"}` }}>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{it.name}{it.maintenance ? <span className="text-[10px] font-normal ml-2" style={{ color: "var(--muted)" }}>keep sharp</span> : null}</span>
                   <span className="mono text-xs" style={{ color: doneFrac >= 1 ? "var(--brass)" : "var(--muted)" }}>{doneFrac >= 1 ? "done" : `${reps.length}/${need}`}{acc !== null ? ` · ${acc}%` : ""} <span style={{ color: "var(--brass)" }}>›</span></span>
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "var(--ivory-d)" }}>{it.what(it.score)} · aim for {it.goal}</div>
-                <div className="h-1 rounded-full mt-2 overflow-hidden" style={{ background: "rgba(255,255,255,.06)" }}><div className="h-full bar" style={{ width: `${doneFrac * 100}%`, background: doneFrac >= 1 ? "var(--brass)" : "rgba(var(--acc),.5)" }} /></div>
+                <div className="h-1 rounded-full mt-2 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full bar" style={{ width: `${doneFrac * 100}%`, background: doneFrac >= 1 ? "var(--brass)" : "rgba(var(--acc),.5)" }} /></div>
               </button>
             );
           })}
@@ -3051,7 +3053,7 @@ function SkillsCard({ log, go }) {
     <section className="card p-5 mb-4">
       <div className="flex items-baseline justify-between mb-1">
         <div className="eyebrow">Your skills</div>
-        <span className="text-[11px]" style={{ color: "var(--muted)" }}>accuracy · last 7 days</span>
+        {rows.length > 0 && <span className="text-[11px]" style={{ color: "var(--muted)" }}>accuracy · last 7 days</span>}
       </div>
       {!rows.length ? (
         <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>Practice any drill and your accuracy for each skill shows up here.</p>
@@ -3118,7 +3120,7 @@ function SpreadSheet({ cfg0, current, legacy, session, others = 0, onUse, onUseA
         </div>
         <div className="flex gap-1 mt-1">{COUNTS.map((c) => <span key={c} className="flex-1 text-center mono" style={{ fontSize: 8.5, color: "var(--muted)" }}>{LABEL(c).replace("≤ ", "≤").replace("≥ ", "≥")}</span>)}</div>
         <div className="grid grid-cols-2 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
-          <div><div className="eyebrow" style={{ fontSize: 9.5 }}>Expected</div><div className="mono text-base font-semibold" style={{ color: snap.ev >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(snap.ev)}/hr{h ? <span className="text-xs font-medium" style={{ color: "var(--muted)" }}> · {sgnMoney(snap.ev * h)} this session</span> : null}</div></div>
+          <div><div className="eyebrow" style={{ fontSize: 9.5 }}>Expected</div><div className="mono text-base font-semibold" style={{ color: snap.ev >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(snap.ev)}/hr</div>{h ? <div className="text-[11px]" style={{ color: "var(--muted)" }}>{sgnMoney(snap.ev * h)} over {h}h</div> : null}</div>
           <div><div className="eyebrow" style={{ fontSize: 9.5 }}>Swings</div><div className="mono text-base font-semibold">±{money(snap.sd)}/hr</div></div>
         </div>
       </div>
@@ -3306,8 +3308,10 @@ function LuckGauge({ z, pct }) {
 
 function MonthBars({ months }) {
   if (months.length < 2) return null;
-  const W = 320, H = 132, P = { t: 14, b: 18 }, mx = Math.max(1, ...months.map((m) => Math.abs(m.net)));
-  const bw = (W / months.length) * 0.62, y0 = P.t + (H - P.t - P.b) / 2, sc = ((H - P.t - P.b) / 2 - 13) / mx;
+  const up = Math.max(0, ...months.map((m) => m.net)), dn = Math.max(0, ...months.map((m) => -m.net));
+  const H = dn && up ? 132 : 104, W = 320, P = { t: 14, b: 18 }, lab = 13; // room for the value label on each side that has bars
+  const span = H - P.t - P.b - (up ? lab : 0) - (dn ? lab : 0), sc = span / Math.max(1, up + dn);
+  const bw = (W / months.length) * 0.62, y0 = P.t + (up ? lab : 0) + up * sc;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" role="img" aria-label="Results by month">
       <line x1="0" x2={W} y1={y0} y2={y0} stroke="rgba(var(--fg),.15)" />
@@ -3478,7 +3482,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
           {n0Hours > 0 && (
             <div className="mt-4">
               <div className="flex items-baseline justify-between text-xs"><span style={{ color: "var(--ivory-d)" }}>Long run</span><span className="mono" style={{ color: "var(--muted)" }}>{fmtH(Math.round(st.H))} of {Math.round(n0Hours).toLocaleString()}h</span></div>
-              <div className="h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(255,255,255,.06)" }}><div className="h-full bar" style={{ width: `${Math.max(1.5, longRun * 100)}%`, background: "linear-gradient(90deg,var(--brass-d),var(--brass))" }} /></div>
+              <div className="h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full bar" style={{ width: `${Math.max(1.5, longRun * 100)}%`, background: "linear-gradient(90deg,var(--brass-d),var(--brass))" }} /></div>
               <p className="text-[11px] mt-1.5" style={{ color: "var(--muted)" }}>{longRun < 1 ? `Until about ${Math.round(n0Hours).toLocaleString()} hours (N₀ at your current spread), luck outweighs your edge — results this early say little about skill.` : "Past N₀ — your edge now outweighs a 1-SD swing of luck."}</p>
             </div>
           )}
@@ -3554,7 +3558,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
                       <div className="text-[11px] truncate" style={{ color: "var(--muted)" }}>{fmtH(s.hours)}{s.notes ? ` · ${s.notes}` : ""}</div>
                     </div>
                     <div className="text-right">
-                      <div className="mono text-sm font-semibold" style={{ color: s.result >= 0 ? "var(--brass)" : "var(--neg-l)" }}>{sgnMoney(s.result)}</div>
+                      <div className="mono text-sm font-semibold" style={{ color: s.result > 0 ? "var(--brass)" : s.result < 0 ? "var(--neg-l)" : "var(--ivory-d)" }}>{sgnMoney(s.result)}</div>
                       <div className="text-[10px]" style={{ color: "var(--muted)" }}>exp {sgnMoney(sessEv(s, evHour) * (+s.hours || 0))}</div>
                     </div>
                   </button>))}
@@ -4593,7 +4597,7 @@ function BetSpreadCalculator() {
                 <input className="in sm mono text-sm" type="number" inputMode="numeric" step={5} min={0} value={bets[row.c]} aria-label={`Bet at TC ${LABEL(row.c)}`} onChange={(e) => setBets({ ...bets, [row.c]: e.target.value === "" ? "" : Math.max(0, Number(e.target.value)) })} />
                 <button className="mono text-xs rounded-lg" style={{ height: 34, background: spotsMap[row.c] === 2 ? "var(--brass)" : "rgba(var(--fg),.07)", color: spotsMap[row.c] === 2 ? "var(--ink)" : "var(--muted)", fontWeight: 600, opacity: spotsMap[row.c] === 2 && seats >= 7 ? 0.5 : 1 }} aria-label={`Hands at ${LABEL(row.c)}`} onClick={() => setSpotsMap((m) => ({ ...m, [row.c]: m[row.c] === 2 ? 1 : 2 }))}>{spotsMap[row.c] === 2 ? "×2" : "×1"}</button>
                 {showFreq && <span className="mono text-xs text-right" style={{ color: "var(--ivory-d)" }}>{(row.f * 100).toFixed(row.f < 0.01 ? 2 : 1)}%</span>}
-                <span className="mono text-xs text-right" style={{ color: row.edge > 0 ? "var(--brass)" : "var(--rose)" }}>{(row.edge * 100).toFixed(2)}%</span>
+                <span className="mono text-xs text-right" style={{ color: row.edge > 0 ? "var(--brass)" : "var(--rose)" }}>{(row.edge * 100).toFixed(2).replace("-", "−")}%</span>
                 <span className="mono text-xs text-right" style={{ color: row.evHand > 0 ? "var(--ivory)" : row.evHand < 0 ? "var(--rose)" : "var(--muted)" }}>{row.bet ? money(row.evHand, 2) : "—"}</span>
               </div>
             ))}
@@ -4655,7 +4659,7 @@ function BetSpreadCalculator() {
                 );
               })()}
               {preview && !preview.infeasible && (
-                <div className="text-sm mb-3 mono" style={{ color: "var(--ivory-d)" }}>This cap → <span style={{ color: "var(--brass)" }}>${preview.ev.toFixed(preview.ev < 10 ? 2 : 1)}/hr</span> at {pct(preview.ror, preview.ror < 0.1 ? 2 : 1)} risk{preview.ev > 0 && <span style={{ color: "var(--muted)" }}> · doubles the roll in ~{Math.round((+bankroll || 0) / preview.ev).toLocaleString()}h</span>}</div>
+                <div className="text-sm mb-3 mono" style={{ color: "var(--ivory-d)" }}>This cap earns <span style={{ color: "var(--brass)" }}>${preview.ev.toFixed(preview.ev < 10 ? 2 : 0)}/hr</span> at {pct(preview.ror, 1)} risk{preview.ev > 0 && <span style={{ color: "var(--muted)" }}> · doubles your bankroll in about {Math.round((+bankroll || 0) / preview.ev).toLocaleString()} hours</span>}</div>
               )}
               {preview && preview.infeasible && (
                 <div className="text-sm mb-3" style={{ color: "var(--neg-l)" }}>Not reachable — the safest possible here is {pct(preview.minRor, 1)}.</div>
