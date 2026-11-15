@@ -14,6 +14,8 @@ function niceTicks(lo, hi, n = 5) { const span = hi - lo || 1; const raw = span 
 const money = (n, d = 0) =>
   (n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
 const pct = (x, d = 2) => (x * 100).toFixed(d) + "%";
+const cash = (n) => money(n, Math.round(n * 100) % 100 ? 2 : 0);           // $5,037.50 only when there are cents
+const sgnCash = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + cash(Math.abs(n));
 
 // Calibrated model. Every number in CALR / CALQ was measured by a card-by-card Monte Carlo simulator playing BJA
 // basic strategy, the Illustrious 18 and Fab 4 (Hi-Lo, half-deck true count truncated toward zero), insurance at +3,
@@ -388,7 +390,7 @@ input.in[type=date]::-webkit-date-and-time-value{text-align:left}
 .chipseg.slide button.on{background:none;box-shadow:none}
 .bar{transition:height .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1)}
 input[type=range]{accent-color:var(--brass)}
-.pc{width:86px;height:122px;border-radius:10px;background:linear-gradient(160deg,#FFFEFA 0%,#F7F2E7 78%,#EFE8D8 100%);color:#1C1C1E;position:relative;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.9) inset,0 2px 3px -1px rgba(var(--sh),.5),0 14px 26px -10px rgba(var(--sh),.95);font-family:Fraunces,Georgia,serif;user-select:none;flex-shrink:0}
+.pc{width:86px;height:122px;border-radius:10px;background:linear-gradient(160deg,#FFFEFA 0%,#F7F2E7 78%,#EFE8D8 100%);color:#1C1C1E;position:relative;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.9) inset,0 2px 3px -1px rgba(0,0,0,.4),0 14px 26px -10px rgba(0,0,0,.8);font-family:Fraunces,Georgia,serif;user-select:none;flex-shrink:0}
 .pc.red{color:#C0262B}
 .chipbtn{position:relative;width:66px;height:66px;border-radius:50%;transition:transform .13s var(--ease),filter .13s;flex-shrink:0}
 .chipbtn:active:not(:disabled){transform:scale(.9)}
@@ -431,7 +433,7 @@ input[type=range]{accent-color:var(--brass)}
 .pc .face.ace{font-size:44px}
 .pc.sm .cn b{font-size:11px}.pc.sm .cn b.ten{font-size:10px}.pc.sm .cn i{font-size:7px;margin-top:1.5px}.pc.sm .pip{font-size:10px}.pc.sm .face small{font-size:9px;margin-top:3px}.pc.sm .face.ace{font-size:31px}.pc.sm .cn.tl{top:4px;left:3.5px}.pc.sm .cn.br{bottom:4px;right:3.5px}
 .pc.big .cn b{font-size:21px}.pc.big .cn b.ten{font-size:19px}.pc.big .cn i{font-size:14px;margin-top:3px}.pc.big .pip{font-size:20px}.pc.big .face small{font-size:18px;margin-top:7px}.pc.big .face.ace{font-size:62px}.pc.big .cn.tl{top:8px;left:7px}.pc.big .cn.br{bottom:8px;right:7px}
-.pcback{background:repeating-linear-gradient(45deg,var(--back1) 0 4px,var(--back2) 4px 8px);box-shadow:0 0 0 4px #F6EFE2 inset,0 0 0 1px rgba(var(--sh),.55),0 8px 18px -8px rgba(0,0,0,.85);flex-shrink:0}
+.pcback{background:repeating-linear-gradient(45deg,var(--back1) 0 4px,var(--back2) 4px 8px);box-shadow:0 0 0 4px #F6EFE2 inset,0 0 0 1px rgba(0,0,0,.45),0 8px 18px -8px rgba(0,0,0,.85);flex-shrink:0}
 .shoe{position:absolute;top:10px;right:14px;width:86px;height:122px;pointer-events:none}
 .shoe .pcback{position:absolute;inset:0;border-radius:9px}
 .felt{border-radius:16px;background:radial-gradient(120% 90% at 50% 0%,var(--felt1) 0%,var(--felt2) 60%,var(--felt3) 100%);box-shadow:inset 0 1px 0 rgba(var(--acc),.12),inset 0 22px 40px -24px rgba(0,0,0,.95)}
@@ -1796,7 +1798,7 @@ function logResult(skill, ok, extra = {}) {
     try { await window.storage.set(LOG_KEY, JSON.stringify(l), false); } catch (_) {}
   })();
 }
-const SKILLS = [["strategy", "Basic strategy"], ["deviation", "Deviations"], ["count", "Running count"], ["pairs", "Pair counting"], ["tc", "True count"], ["totals", "Hand totals"], ["ramp", "Bet ramp"], ["play", "Live play"]];
+const SKILLS = [["strategy", "Basic strategy"], ["deviation", "Deviations"], ["count", "Running count"], ["pairs", "Pair counting"], ["tc", "True count"], ["totals", "Hand totals"], ["play", "Live play"]];
 const fmtTC = (tc) => (tc >= 0 ? "+" : "−") + Math.abs(tc);
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 
@@ -1972,45 +1974,6 @@ function TCDrill({ decks }) {
       <button className="btn mt-2" onClick={next} disabled={!result}>Next</button>
       <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Round toward zero: +1.9 plays as +1.</p>
     </section>
-  );
-}
-
-// ======================= drill: bet ramp =======================
-function RampDrill({ bets, minBet }) {
-  const bucket = (tc) => (tc <= -3 ? -3 : tc >= 6 ? 6 : tc);
-  const expected = (tc) => Number(bets[bucket(tc)]) || 0;
-  const make = () => { const left = Math.max(0.5, rnd(1, 11) / 2); const rc = rnd(-Math.round(4 * left) - 2, Math.round(7 * left) + 2); return { rc, left, tc: Math.trunc(rc / left) }; };
-  const [q, setQ] = useState(make);
-  const [result, setResult] = useState(null);
-  const [sess, setSess] = useState({ asked: 0, right: 0, streak: 0 });
-  const [key, setKey] = useState(0);
-  const values = Array.from(new Set(COUNTS.map((c) => Number(bets[c]) || 0))).sort((a, b) => a - b);
-  const answer = (v) => { if (result) return; const ok = v === expected(q.tc); setResult({ ok, v }); setSess({ asked: sess.asked + 1, right: sess.right + (ok ? 1 : 0), streak: ok ? sess.streak + 1 : 0 }); logResult("ramp", ok); };
-  const next = () => { setQ(make()); setResult(null); setKey((k) => k + 1); };
-  const exp = expected(q.tc);
-  return (
-    <section className="card p-5 mb-4">
-      <div className="flex items-baseline justify-between mb-3">
-        <div className="eyebrow">Bet ramp</div>
-        <div className="mono text-xs" style={{ color: "var(--muted)" }}>{sess.streak >= 3 && <span className="pop mr-2 font-semibold" key={sess.streak} style={{ color: "var(--brass)" }}>×{sess.streak}</span>}{sess.right}/{sess.asked}</div>
-      </div>
-      <div className="relative tbl felt px-4 py-6 rise" key={key}>
-        <div className="grid grid-cols-2 gap-4 text-center">
-          <div><div className="eyebrow mb-1">Running count</div><div className="disp mono text-5xl font-semibold" style={{ color: q.rc > 0 ? "var(--brass)" : "var(--ivory)" }}>{fmtTC(q.rc)}</div></div>
-          <div><div className="eyebrow mb-1">Decks left</div><div className="disp mono text-5xl font-semibold">{q.left}</div></div>
-        </div>
-        <div className="eyebrow text-center mt-4">Convert in your head — what do you bet?</div>
-      </div>
-      <div className="grid gap-2 mt-4" style={{ gridTemplateColumns: `repeat(${Math.min(4, values.length)}, 1fr)` }}>
-        {values.map((v) => { const isAns = result && v === exp, isPick = result && v === result.v && !result.ok; return (
-          <button key={v} onClick={() => answer(v)} disabled={!!result} className="opt rounded-xl py-3 mono text-base font-semibold" style={{ background: isAns ? "var(--brass)" : isPick ? "var(--rose)" : "rgba(var(--fg),.08)", color: isAns ? "var(--ink)" : "var(--ivory)", border: "1px solid rgba(var(--fg),.14)", opacity: result && !isAns && !isPick ? .4 : 1 }}>{v ? `$${v}` : "Sit out"}</button>); })}
-      </div>
-      <div className="mt-4" style={{ minHeight: 96 }}>
-        {result && <Feedback ok={result.ok} title={result.ok ? (exp ? `$${exp}.` : "Sit out.") : (exp ? `Your spread says $${exp} here.` : "Your spread says sit this one out.")}
-          body={`${fmtTC(q.rc)} ÷ ${q.left} = true count ${fmtTC(q.tc)}.${!result.ok && q.tc <= 0 && result.v > 0 ? " You'd be betting into a count where the house has the edge." : ""}${!result.ok && q.tc >= 3 && result.v < exp ? " Under-betting high counts is where most of the profit leaks." : ""}`} />}
-      </div>
-      <button className="btn mt-2" onClick={next} disabled={!result}>Next</button>
-          </section>
   );
 }
 
@@ -2309,7 +2272,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
       {/* bankroll and results — below the table, so the hand and its buttons fit on one screen */}
       <section className="card p-4 mb-4">
         <div className="relative">
-          <StatRow items={[["Bankroll", `$${bankAnim.toLocaleString()}`], ["Hands", stats.hands], ["Clean", stats.hands ? <span style={{ color: stats.clean === stats.hands ? "var(--brass)" : undefined }}>{Math.round((stats.clean / stats.hands) * 100) + "%"}</span> : "—"], [phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{lastNet > 0 ? "+" : "−"}${Math.abs(lastNet).toLocaleString()}</span> : "Net", (netAnim >= 0 ? "+" : "−") + "$" + Math.abs(netAnim).toLocaleString()]]} />
+          <StatRow items={[["Bankroll", cash(bankAnim)], ["Hands", stats.hands], ["Clean", stats.hands ? <span style={{ color: stats.clean === stats.hands ? "var(--brass)" : undefined }}>{Math.round((stats.clean / stats.hands) * 100) + "%"}</span> : "—"], [phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{sgnCash(lastNet)}</span> : "Net", sgnCash(netAnim)]]} />
           {history.length > 1 && <div className="flex gap-1.5 justify-center mt-2.5">{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
         </div>
       </section>
@@ -2529,7 +2492,6 @@ const PLAN_TEMPLATES = {
   deviation: { where: "Strategy → Practice → Deviations", what: (sc) => sc < 80 ? "30 index questions — say the number out loud before answering" : "20 index questions", reps: (sc) => (sc < 80 ? 30 : 20), goal: "90%+" },
   count: { where: "Drills → Running count", what: (sc) => sc < 80 ? "3 runs of 52 cards at a comfortable speed, then 1 at the next speed up" : "2 runs of 104 at Casino speed", reps: () => 3, goal: "zero misses" },
   tc: { where: "Drills → True count", what: (sc) => sc < 80 ? "25 conversions — no rushing, accuracy first" : "20 conversions under 2s each", reps: (sc) => (sc < 80 ? 25 : 20), goal: "90%+ under 2s" },
-  ramp: { where: "Drills → Bet ramp", what: () => "20 reps until the bet is automatic", reps: () => 20, goal: "95%+" },
 };
 function recentAcc(log, id, days = 7) {
   const cut = Date.now() - days * 864e5;
@@ -2671,7 +2633,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
   })(); }, []);
   const netTotal = (sess || []).reduce((a, x) => a + x.result, 0);
   const netAnim = useCountUp(netTotal);
-  const NAV = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }], ramp: ["count", { drill: "ramp" }] };
+  const NAV = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }] };
   const [data, setData] = useState(null);
   const [running, setRunning] = useState(false);
   useEffect(() => { (async () => { try { const r = await window.storage.get(ASSESS_KEY, false); if (r?.value) setData(JSON.parse(r.value)); } catch (_) {} })(); }, []);
@@ -3054,7 +3016,7 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go }) {
     </div></div>
   );
 }
-const SKILL_GO = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], pairs: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }], totals: ["count", { drill: "totals" }], ramp: ["count", { drill: "ramp" }], play: ["play", {}] };
+const SKILL_GO = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], pairs: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }], totals: ["count", { drill: "totals" }], play: ["play", {}] };
 // the one thing most worth practising today: a core skill you haven't tried, then your weakest under 95%,
 // then anything you haven't touched this week — or, if it's all casino-ready, a shoe of live play
 function FocusCard({ log, go }) {
@@ -3720,12 +3682,11 @@ function DrillHub({ rules, bets, minBet }) {
   const [testResult, setTestResult] = useState(null);
   return (
     <div>
-      <div className="mb-4"><ChipRow value={drill} options={[["count", "Running count"], ["tc", "True count"], ["totals", "Hand totals"], ["ramp", "Bet ramp"], ["tests", "Tests"]]} onChange={(d) => { setDrill(d); setTest(null); setTestResult(null); }} /></div>
+      <div className="mb-4"><ChipRow value={drill} options={[["count", "Running count"], ["tc", "True count"], ["totals", "Hand totals"], ["tests", "Tests"]]} onChange={(d) => { setDrill(d); setTest(null); setTestResult(null); }} /></div>
       {drill === "count" && <Counter decks0={rules.decks} pen0={rules.pen} />}
       <div className="narrow">
       {drill === "tc" && <TCDrill decks={rules.decks} />}
             {drill === "totals" && <HandTotals />}
-      {drill === "ramp" && <RampDrill bets={bets} minBet={minBet} />}
       {drill === "tests" && (testResult ? <TestResult r={testResult} id={test} onBack={() => { setTestResult(null); setTest(null); }} /> : test ? <TestRunner id={test} rules={rules} onDone={(r) => { if (r) setTestResult(r); else setTest(null); }} /> : <Tests rules={rules} onRun={setTest} />)}
       </div>
     </div>
@@ -4053,7 +4014,6 @@ const applyTheme = (t) => { try { if (t && t !== "emerald") document.documentEle
 function ThemePicker() {
   const [t, setT] = useState(() => { try { return localStorage.getItem("bj:" + THEME_KEY) || "emerald"; } catch (_) { return "emerald"; } });
   useEffect(() => { applyTheme(t); try { window.storage.set(THEME_KEY, t, false); } catch (_) {} }, [t]);
-  useEffect(() => { const h = (e) => setT(e.detail); window.addEventListener("bj-theme", h); return () => window.removeEventListener("bj-theme", h); }, []);
   return (
     <div className="grid grid-cols-2 gap-2.5">
       {THEME_LIST.map(([k, l, acc, bg, card]) => { const on = t === k, lightT = k === "light"; return (
@@ -4560,7 +4520,6 @@ function BetSpreadCalculator() {
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
   }, [firstRun]);
   const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
-  const setTheme = (t) => { applyTheme(t); try { window.storage.set(THEME_KEY, t, false); window.dispatchEvent(new CustomEvent("bj-theme", { detail: t })); } catch (_) {} };
   const cmdItems = !cmd ? [] : [
     ["Pages", "Today", () => go("progress")],
     ["Pages", "Live play", () => go("play"), "table simulation"],
@@ -4575,11 +4534,9 @@ function BetSpreadCalculator() {
     ["Drills", "Running count", () => go("count", { drill: "count" }), "counting hi-lo"],
     ["Drills", "True count", () => go("count", { drill: "tc" }), "conversion"],
     ["Drills", "Hand totals", () => go("count", { drill: "totals" })],
-    ["Drills", "Bet ramp", () => go("count", { drill: "ramp" })],
     ["Drills", "Casino-ready tests", () => go("count", { drill: "tests" })],
     ["Actions", "Log a session", () => go("sessions", { log: true }), "add new result"],
     ["Actions", "Change game rules", () => setSetupOpen(true), "decks h17 s17 surrender penetration", rulesShort(rules)],
-    ...THEME_LIST.map(([k, l]) => ["Appearance", `${l} theme`, () => setTheme(k), "color look dark light"]),
   ].map(([group, label, run, more, note]) => ({ group, label, run, more, note }));
 
   return (
