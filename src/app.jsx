@@ -375,6 +375,19 @@ input[type=range]{accent-color:var(--brass)}
 .pc.sm{width:60px;height:86px;border-radius:7px}.pc.sm .cn b{font-size:13px}.pc.sm .cn i{font-size:10px}.pc.sm .pip{font-size:13px}.pc.sm .face{top:26px;bottom:26px;left:16px;right:16px;font-size:19px}.pc.sm .face small{font-size:9px;margin-top:2px}.pc.sm .face.ace{font-size:34px;inset:0}.pc.sm .cn.tl{top:4px;left:5px}.pc.sm .cn.br{bottom:4px;right:5px}
 .pc.big{width:120px;height:170px;border-radius:12px}.pc.big .cn b{font-size:24px}.pc.big .cn i{font-size:18px}.pc.big .pip{font-size:28px}.pc.big .face{top:50px;bottom:50px;left:32px;right:32px;font-size:42px}.pc.big .face small{font-size:20px;margin-top:6px}.pc.big .face.ace{font-size:76px;inset:0}.pc.big .cn.tl{top:9px;left:10px}.pc.big .cn.br{bottom:9px;right:10px}
 .pc svg.suit{display:block;width:1em;height:1em;fill:currentColor;overflow:visible}
+/* card size: every card on a felt scales with --cz (set per screen and per kind of table below), so cards are bigger on
+   wider screens without touching the card artwork. .pcz is for card backs that sit next to cards. */
+.pc,.pcz{zoom:var(--cz,1)}
+.cz-play{--cz:1.25}.cz-train{--cz:1.15}.cz-big{--cz:1.1}.cz-rounds{--cz:1.2}
+.rd-seats.s3{--cz:.95}.rd-seats.s5{--cz:.57}
+.cz-train .shoe,.cz-big .shoe,.cz-rounds .shoe{zoom:.8}
+@media (max-width:379px){.cz-train{--cz:1.06}}
+@media (min-width:640px){.cz-play{--cz:1.45}.cz-train{--cz:1.25}.cz-big{--cz:1.2}.cz-rounds{--cz:1.45}.rd-seats.s3{--cz:1.3}.rd-seats.s5{--cz:1.1}.cz-train .shoe,.cz-big .shoe,.cz-rounds .shoe{zoom:1}}
+@media (min-width:1024px){.cz-play{--cz:1.7}.cz-train{--cz:1.35}.cz-big{--cz:1.3}.cz-rounds{--cz:1.7}.rd-seats.s3{--cz:1.6}.rd-seats.s5{--cz:1.3}.cz-train .shoe,.cz-big .shoe,.cz-rounds .shoe{zoom:1.3}}
+/* a hand of cards: side by side while they fit, fanned (each card tucked under the next, corner index showing) when they don't */
+.hand{display:flex;flex-wrap:nowrap;min-width:0}
+.hand>.slot{flex:0 1 calc(var(--cw,60px) * var(--cz,1) + var(--cg,4px));min-width:calc(24px * var(--cz,1))}
+.hand>.slot:last-child{flex:0 0 calc(var(--cw,60px) * var(--cz,1))}
 .pc .cn{display:flex;flex-direction:column;align-items:center;font-weight:600}
 .pc .cn.tl{top:6px;left:5px}.pc .cn.br{bottom:6px;right:5px}
 .pc .cn b{font-size:15px;letter-spacing:0}.pc .cn b.ten{letter-spacing:-.1em;margin-left:-.1em;font-size:13.5px}
@@ -742,7 +755,7 @@ function hardCards(t) {
 }
 function Table({ cards, dealer, tc, qkey, leaving }) {
   return (
-    <div className={"relative tbl felt px-4 pt-5 pb-4 " + (leaving ? "leave" : "")}>
+    <div className={"relative tbl felt cz-train px-4 pt-5 pb-4 " + (leaving ? "leave" : "")}>
       <div className="shoe go">
         {[0, 1, 2, 3].map((i) => <div key={i} className="pcback" style={{ transform: `translate(${i * 1.5}px,${-i * 1.5}px)`, opacity: 1 - i * 0.12 }} />)}
       </div>
@@ -751,7 +764,7 @@ function Table({ cards, dealer, tc, qkey, leaving }) {
           <div className="eyebrow mb-2">Dealer</div>
           <div className="flex">
             <PlayingCard key={"d" + qkey} rank={dealer.rank} suit={dealer.suit} delay={0} style={{ rot: "-1deg", "--ld": "0ms" }} />
-            <div className="pcback dealt" style={{ width: 86, height: 122, borderRadius: 9, marginLeft: 8, "--dx": "140px", "--dy": "-150px", "--r0": "12deg", "--r1": "3deg", "--d": "140ms", "--ld": "30ms" }} />
+            <div className="pcback pcz dealt" style={{ width: 86, height: 122, borderRadius: 9, marginLeft: 8, "--dx": "140px", "--dy": "-150px", "--r0": "12deg", "--r1": "3deg", "--d": "140ms", "--ld": "30ms" }} />
           </div>
         </div>
         <div className="self-end text-right">
@@ -1510,7 +1523,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
             <div className="h-full bar" style={{ width: `${mode !== "hands" ? (shown.length / amount) * 100 : (rounds / amount) * 100}%`, background: "var(--brass)" }} />
           </div>
 
-          <div className="relative tbl felt px-4 pt-5 pb-5" style={{ minHeight: mode !== "hands" ? 250 : 200 }}>
+          <div className={"relative tbl felt px-4 pt-5 pb-5 " + (mode === "pairs" ? "cz-train" : mode === "cards" ? "cz-big" : "cz-rounds")} style={{ minHeight: mode !== "hands" ? 250 : 200 }}>
             <div className="shoe go" style={{ top: 10 }}>
               {[0, 1, 2, 3].map((i) => <div key={i} className="pcback" style={{ transform: `translate(${i * 1.5}px,${-i * 1.5}px)`, opacity: 1 - i * 0.12 }} />)}
             </div>
@@ -1520,28 +1533,26 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
                   : <div className="eyebrow" style={{ opacity: .6 }}>{phase === "ask" || phase === "result" ? "What's the running count?" : ""}</div>}
               </div>
             ) : mode === "cards" ? (
-              <div className="flex items-center justify-center" style={{ minHeight: 210 }}>
+              <div className="flex items-center justify-center" style={{ minHeight: "calc(190px * var(--cz, 1))" }}>
                 {last && phase !== "ask" && phase !== "result" ? <PlayingCard key={last.id + shown.length} rank={last.rank} suit={last.suit} face={last.face} big delay={0} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: `${Math.min(0.45, Math.max(0.18, speed * 0.7))}s` }} />
                   : <div className="eyebrow" style={{ opacity: .6 }}>{phase === "ask" || phase === "result" ? "What's the running count?" : ""}</div>}
               </div>
             ) : (
               (phase === "ask" || phase === "result") ? <div className="flex items-center justify-center" style={{ minHeight: 160 }}><div className="eyebrow" style={{ opacity: .6 }}>What's the running count?</div></div> :
               <div className="flex flex-col gap-4">
-                <div>
+                <div className="rd-dealer">
                   <div className="eyebrow mb-1.5">Dealer</div>
-                  <div className="flex" style={{ height: 90 }}>{(table[spots] || []).map((c, i) => <PlayingCard key={c.id} rank={c.rank} suit={c.suit} face={c.face} small delay={0} style={{ rot: "0deg", marginLeft: i ? 4 : 0, "--dx": "140px", "--dy": "-40px", "--r0": "10deg", animationDuration: `${Math.min(0.45, Math.max(0.2, speed * 0.8))}s` }} />)}</div>
+                  <div className="hand" style={{ height: "calc(90px * var(--cz, 1))" }}>{(table[spots] || []).map((c) => <div className="slot" key={c.id}><PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={0} style={{ rot: "0deg", "--dx": "140px", "--dy": "-40px", "--r0": "10deg", animationDuration: `${Math.min(0.45, Math.max(0.2, speed * 0.8))}s` }} /></div>)}</div>
                 </div>
-                {(() => { const sc = spots >= 5 ? 0.52 : spots >= 3 ? 0.78 : 1; return (
-                <div style={{ height: 112 * sc, overflow: "visible" }}>
-                  <div className="flex justify-between gap-1" style={{ transform: `scale(${sc})`, transformOrigin: "top left", width: `${100 / sc}%` }}>
-                    {Array.from({ length: spots }).map((_, si) => (
-                      <div key={si} style={{ width: 128 }}>
-                        <div className="eyebrow mb-1.5" style={{ fontSize: 9 }}>Seat {si + 1}</div>
-                        <div className="flex" style={{ height: 90 }}>{(table[si] || []).map((c, i) => <PlayingCard key={c.id} rank={c.rank} suit={c.suit} face={c.face} small delay={0} style={{ rot: "0deg", marginLeft: i ? 4 : 0, "--dx": "120px", "--dy": "-120px", "--r0": "10deg", animationDuration: `${Math.min(0.45, Math.max(0.2, speed * 0.8))}s` }} />)}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>); })()}
+                {/* each seat gets an equal share of the width; its two cards sit side by side when they fit and tuck when they don't */}
+                <div className={"flex gap-2 rd-seats " + (spots >= 5 ? "s5" : spots >= 3 ? "s3" : "")}>
+                  {Array.from({ length: spots }).map((_, si) => (
+                    <div key={si} style={{ flex: "1 1 0", minWidth: 0 }}>
+                      <div className="eyebrow mb-1.5" style={{ fontSize: 9 }}>Seat {si + 1}</div>
+                      <div className="hand" style={{ height: "calc(90px * var(--cz, 1))" }}>{(table[si] || []).map((c) => <div className="slot" key={c.id}><PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={0} style={{ rot: "0deg", "--dx": "120px", "--dy": "-120px", "--r0": "10deg", animationDuration: `${Math.min(0.45, Math.max(0.2, speed * 0.8))}s` }} /></div>)}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -1829,9 +1840,9 @@ function HandTotals() {
         <div className="mono text-xs" style={{ color: "var(--muted)" }}>{sess.streak >= 3 && <span className="pop mr-2 font-semibold" key={sess.streak} style={{ color: "var(--brass)" }}>×{sess.streak}</span>}{sess.right}/{sess.asked} · avg {avg ? (avg / 1000).toFixed(2) + "s" : "—"}</div>
       </div>
       <Seg value={n} options={[[2, "2 cards"], [3, "3 cards"], [4, "4 cards"]]} onChange={(v) => { setN(v); next(v); }} style={{ marginBottom: 12 }} />
-      <div className="relative tbl felt px-4 py-5">
-        <div className="flex justify-center" style={{ height: 130 }}>
-          {cards.map((c, i) => <PlayingCard key={c.id + key} rank={c.rank} suit={c.suit} face={c.face} delay={i * 90} style={{ rot: "0deg", marginLeft: i ? 6 : 0, "--dx": "120px", "--dy": "-80px", "--r0": "10deg" }} />)}
+      <div className="relative tbl felt cz-train px-4 py-5">
+        <div className="hand justify-center" style={{ height: "calc(126px * var(--cz, 1))", "--cw": "86px", "--cg": "6px" }}>
+          {cards.map((c, i) => <div className="slot" key={c.id + key}><PlayingCard rank={c.rank} suit={c.suit} face={c.face} delay={i * 90} style={{ rot: "0deg", "--dx": "120px", "--dy": "-80px", "--r0": "10deg" }} /></div>)}
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2 mt-4">
@@ -1957,15 +1968,15 @@ function Chip({ v, onClick, disabled }) {
 }
 function HandView({ cards, label, bet, active, total, hidden, small, result }) {
   return (
-    <div className="rounded-xl px-2 pt-2 pb-1" style={{ background: active ? "rgba(var(--acc),.1)" : "transparent", boxShadow: active ? "0 0 0 1px rgba(var(--acc),.5)" : "none", minWidth: 120 }}>
+    <div className="rounded-xl px-2 pt-2 pb-1" style={{ background: active ? "rgba(var(--acc),.1)" : "transparent", boxShadow: active ? "0 0 0 1px rgba(var(--acc),.5)" : "none", minWidth: 120, maxWidth: "100%" }}>
       <div className="flex items-center justify-between mb-1">
         <span className="eyebrow" style={{ fontSize: 9 }}>{label}</span>
         {total !== undefined && <span className="mono text-[11px]" style={{ color: result ? (result > 0 ? "var(--brass)" : result < 0 ? "var(--neg-l)" : "var(--ivory-d)") : "var(--ivory-d)" }}>{result !== undefined ? (result > 0 ? `+$${result}` : result < 0 ? `−$${-result}` : "push") : total}</span>}
       </div>
-      <div className="flex flex-wrap" style={{ minHeight: 90, gap: 4 }}>
-        {cards.map((c, i) => hidden && i === 1
-          ? <div key="hole" className="pcback dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": "0ms", animationDuration: ".35s" }} />
-          : <PlayingCard key={c.id} rank={c.rank} suit={c.suit} face={c.face} small delay={0} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: ".35s" }} />)}
+      <div className="hand" style={{ minHeight: "calc(88px * var(--cz, 1))" }}>
+        {cards.map((c, i) => <div className="slot" key={hidden && i === 1 ? "hole" : c.id}>{hidden && i === 1
+          ? <div className="pcback pcz dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": "0ms", animationDuration: ".35s" }} />
+          : <PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={0} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: ".35s" }} />}</div>)}
       </div>
       {bet !== undefined && <div className="mono text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>bet ${bet}</div>}
     </div>
@@ -2160,7 +2171,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
           <div className="mono text-xs" style={{ color: "var(--muted)" }}>{dl.toFixed(1)} decks left · card {shoe.pos}/{shoe.cut}</div>
           <div className="mono text-xs" style={{ color: "var(--muted)" }}>{showCount ? <>RC <span style={{ color: "var(--brass)" }}>{fmtTC(shoe.rc)}</span> · TC <span style={{ color: "var(--brass)" }}>{fmtTC(tc)}</span></> : "count hidden"}</div>
         </div>
-        <div className="relative tbl felt px-4 pt-4 pb-4" style={{ minHeight: 300 }}>
+        <div className="relative tbl felt cz-play px-4 pt-4 pb-4" style={{ minHeight: 300 }}>
           {shuffled && <div className="absolute inset-0 flex items-center justify-center rounded-2xl z-10 rise" style={{ background: "rgba(12,9,11,.7)" }}><div className="disp text-2xl font-semibold" style={{ color: "var(--brass)" }}>Shuffling…</div></div>}
           <HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small />
           {phantom && <div className="mt-3"><HandView cards={phantom} label="Other player" total={showTotals ? handValue(phantom).total : undefined} small /></div>}
@@ -2347,7 +2358,7 @@ function TestRunner({ id, rules, onDone }) {
 
       {id === "deck" && (
         <>
-          <div className="relative tbl felt px-4 py-5"><div className="flex items-center justify-center" style={{ minHeight: 190 }}>
+          <div className="relative tbl felt cz-big px-4 py-5"><div className="flex items-center justify-center" style={{ minHeight: "calc(180px * var(--cz, 1))" }}>
             {pos > 0 && pos <= 51 && !state.done ? <><PlayingCard key={pos + "-" + dealKey} rank={deckCards[pos - 1].rank} suit={deckCards[pos - 1].suit} face={deckCards[pos - 1].face} big delay={0} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: ".3s" }} /><span className="absolute top-2 right-3 mono text-[10px]" style={{ color: "var(--muted)" }}>{pos}/51</span></> : <div className="eyebrow" style={{ opacity: .7 }}>{state.done ? "What's the running count?" : "Ready…"}</div>}
           </div></div>
           {state.done && <div className="mt-4 rise"><Stepper value={guess} onChange={setGuess} /><button className="btn mt-3" onClick={() => answer(guess)}>Check</button></div>}
@@ -2536,7 +2547,7 @@ function Assessment({ rules, bets, onDone, onCancel }) {
       )}
       {stage.id === "count" && (
         <>
-          <div className="relative tbl felt px-4 py-5"><div className="flex items-center justify-center" style={{ minHeight: 180 }}>
+          <div className="relative tbl felt cz-big px-4 py-5"><div className="flex items-center justify-center" style={{ minHeight: "calc(175px * var(--cz, 1))" }}>
             {cardPos > 0 && !countDone ? <PlayingCard key={cardPos + "-" + dealKey} rank={countCards[cardPos - 1].rank} suit={countCards[cardPos - 1].suit} face={countCards[cardPos - 1].face} big delay={0} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: ".3s" }} />
               : <div className="eyebrow" style={{ opacity: .7 }}>{countDone ? "What's the running count?" : interrupted && cardPos === 0 ? "Interrupted — fresh pack, count restarts." : "30 cards, keep the count…"}</div>}
           </div></div>

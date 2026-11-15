@@ -22,6 +22,10 @@ This repo's `main` branch is the single source of truth. GitHub Pages serves it 
 
 Commit the source change and the rebuilt `index.html` together. `build.sh` never touches the icons, `manifest.json` or `sw.js`.
 
+## Card sizes
+
+Playing cards are drawn at fixed pixel sizes (`.pc`, `.pc.sm`, `.pc.big`) and scaled with CSS `zoom: var(--cz)`. Each felt sets `--cz` through a class (`cz-play` live play, `cz-train` strategy table / pairs / hand totals, `cz-big` single-card drills and tests, `cz-rounds` + `rd-seats` table rounds), with larger values at 640px and 1024px. To change how big cards are, change those values in the `css` string; don't edit the card artwork sizes. Anything sized to hold cards uses `calc(Npx * var(--cz, 1))`. Hands use `.hand > .slot` so cards sit side by side when they fit and tuck under each other when they don't.
+
 ## Splash screen and icons
 
 The splash lives in `src/app.jsx` (`Splash`, `SPLASH_LAYERS`, and the `.splash` / `.sp-*` CSS); the icon links are in `src/head.html`. Details of the current design, for reference:
