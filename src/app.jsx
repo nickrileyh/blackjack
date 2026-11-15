@@ -349,8 +349,6 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 .dgrid.wl{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
 .dcol.stick{position:sticky;top:24px}
 .dcol.flipd{display:flex;flex-direction:column-reverse;justify-content:flex-end}
-.dcol.pcol{display:flex;flex-direction:column}
-.dcol.pcol>.spreadmini{order:-1}
 .segw{max-width:460px}
 .narrow{max-width:720px}
 .deskonly{display:block}.notdesk{display:none}
@@ -2031,7 +2029,7 @@ function SpreadMini({ bets, tc }) {
   const here = tc === undefined ? null : (tc <= -3 ? -3 : tc >= 6 ? 6 : tc);
   const now = rows.find((x) => x.c === here);
   return (
-    <section className="card p-4 mb-4 spreadmini">
+    <section className="card p-4 mb-4">
       <div className="flex items-baseline justify-between mb-2.5">
         <div className="eyebrow">Your spread</div>
         {now && <div className="mono text-xs" style={{ color: "var(--muted)" }}>at {LABEL(now.c)} bet <span style={{ color: now.b ? "var(--brass)" : "var(--ivory-d)" }}>{now.b ? money(now.b) : "nothing"}</span></div>}
@@ -2402,6 +2400,18 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
         {phase === "result" && <button className="btn mt-2" onClick={nextHand}>Next hand</button>}
         {(phase === "play" || phase === "result") && <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>H</b> hit · <b>S</b> stand · <b>D</b> double · <b>P</b> split{rules.surrender ? <> · <b>R</b> surrender</> : null} · <b>Enter</b> next hand</div>}
         {phase === "dealing" && <div className="mt-2" style={{ height: 52 }} />}
+        {/* the live numbers, attached to the table rather than floating in their own card */}
+        <div className="mt-4 pt-3 flex items-center justify-between gap-3" style={{ borderTop: "1px solid var(--line)" }}>
+          <div>
+            <div className="eyebrow" style={{ fontSize: 9 }}>Bankroll</div>
+            <div className="mono font-semibold" style={{ fontSize: 17 }}>{cash(bankAnim)}</div>
+          </div>
+          {history.length > 1 && <div className="flex gap-1.5 flex-wrap justify-center" style={{ maxWidth: 140 }}>{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
+          <div className="text-right">
+            <div className="eyebrow" style={{ fontSize: 9 }}>{phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{sgnCash(lastNet)} this hand</span> : `Net · ${stats.hands} hand${stats.hands === 1 ? "" : "s"}`}</div>
+            <div className="mono font-semibold" style={{ fontSize: 17, color: stats.net > 0 ? "var(--brass)" : stats.net < 0 ? "var(--neg-l)" : "var(--ivory)" }}>{sgnCash(netAnim)}</div>
+          </div>
+        </div>
         {phase === "check" && (
           <div className="mt-2 rise">
             <div className="text-center mb-3"><div className="eyebrow">Count check</div><div className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>{stats.hands} hands in. What's the running count?</div></div>
@@ -2410,27 +2420,18 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           </div>
         )}
       </section>
-      </div><div className="dcol o2 stick pcol">
+      </div><div className="dcol o2 stick">
 
-      {/* bankroll and results — below the table, so the hand and its buttons fit on one screen */}
-      <section className="card p-4 mb-4">
-        {all.hands > stats.hands && <Seg small value={scope} options={[["session", "This session"], ["all", "All time"]]} onChange={(v) => { if (v === "all") flushAll(); setScope(v); }} style={{ marginBottom: 14 }} />}
-        <div className="relative">
-          {allTime
-            ? <StatRow items={[["Hands", view.hands], ["Clean", view.hands ? <span style={{ color: view.clean === view.hands ? "var(--brass)" : undefined }}>{Math.round((view.clean / view.hands) * 100) + "%"}</span> : "—"], ["Checks", view.checks ? `${Math.round((view.checksOk / view.checks) * 100)}%` : "—"], ["Net", sgnCash(view.net)]]} />
-            : <StatRow items={[["Bankroll", cash(bankAnim)], ["Hands", stats.hands], ["Clean", stats.hands ? <span style={{ color: stats.clean === stats.hands ? "var(--brass)" : undefined }}>{Math.round((stats.clean / stats.hands) * 100) + "%"}</span> : "—"], [phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{sgnCash(lastNet)}</span> : "Net", sgnCash(netAnim)]]} />}
-          {!allTime && history.length > 1 && <div className="flex gap-1.5 justify-center mt-2.5">{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
-        </div>
-      </section>
+      <SpreadMini bets={bets} tc={shoe.pos > 1 ? tc : undefined} />
 
-      {/* money over time and the percentile — wide screens have room for the curves */}
-      {view.hands > 0 && (
-        <section className="card p-5 mb-4 deskonly">
-          <div className="flex items-baseline justify-between mb-2">
-            <div className="eyebrow">{allTime ? `All-time money · ${view.hands.toLocaleString()} hands` : "This session"}</div>
-            <div className="mono text-xs font-semibold" style={{ color: view.net > 0 ? "var(--brass)" : view.net < 0 ? "var(--neg-l)" : "var(--muted)" }}>{sgnCash(view.net)}</div>
-          </div>
-          <PnlMini pts={view.pts} hands={view.hands} />
+      {/* how you're doing: this session or every hand you've played */}
+      {(all.hands > 0 || stats.hands > 0) && (
+        <section className="card p-4 mb-4">
+          {all.hands > stats.hands
+            ? <Seg small value={scope} options={[["session", "This session"], ["all", "All time"]]} onChange={(v) => { if (v === "all") flushAll(); setScope(v); }} style={{ marginBottom: 14 }} />
+            : <div className="eyebrow mb-3">This session</div>}
+          <StatRow items={[["Hands", view.hands.toLocaleString()], ["Clean", view.hands ? <span style={{ color: view.clean === view.hands ? "var(--brass)" : undefined }}>{Math.round((view.clean / view.hands) * 100) + "%"}</span> : "—"], ["Checks", view.checks ? `${Math.round((view.checksOk / view.checks) * 100)}%` : "—"], ["Net", <span style={{ color: view.net > 0 ? "var(--brass)" : view.net < 0 ? "var(--neg-l)" : undefined }}>{sgnCash(view.net)}</span>]]} />
+          {view.hands > 0 && <div className="deskonly mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}><PnlMini pts={view.pts} hands={view.hands} /></div>}
         </section>
       )}
 
@@ -2448,8 +2449,6 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>{view.hands < 200 ? "A stretch this short is mostly luck — the curve shows how wide normal is." : "Priced at your current spread, so older hands on a different spread are an approximation."}</p>
         </section>
       )}
-
-      <SpreadMini bets={bets} tc={shoe.pos > 1 ? tc : undefined} />
 
       {mistakes.length > 0 && (
         <section className="card p-5 mb-4">
