@@ -349,6 +349,8 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 .dgrid.wl{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
 .dcol.stick{position:sticky;top:24px}
 .dcol.flipd{display:flex;flex-direction:column-reverse;justify-content:flex-end}
+.dcol.pcol{display:flex;flex-direction:column}
+.dcol.pcol>.spreadmini{order:-1}
 .segw{max-width:460px}
 .narrow{max-width:720px}
 .deskonly{display:block}.notdesk{display:none}
@@ -1990,7 +1992,7 @@ function SpreadMini({ bets, tc }) {
   const here = tc === undefined ? null : (tc <= -3 ? -3 : tc >= 6 ? 6 : tc);
   const now = rows.find((x) => x.c === here);
   return (
-    <section className="card p-4 mb-4">
+    <section className="card p-4 mb-4 spreadmini">
       <div className="flex items-baseline justify-between mb-2.5">
         <div className="eyebrow">Your spread</div>
         {now && <div className="mono text-xs" style={{ color: "var(--muted)" }}>at {LABEL(now.c)} bet <span style={{ color: now.b ? "var(--brass)" : "var(--ivory-d)" }}>{now.b ? money(now.b) : "nothing"}</span></div>}
@@ -2326,9 +2328,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           </div>
         )}
       </section>
-      </div><div className="dcol o2 stick">
-
-      <SpreadMini bets={bets} tc={shoe.pos > 1 ? tc : undefined} />
+      </div><div className="dcol o2 stick pcol">
 
       {/* bankroll and results — below the table, so the hand and its buttons fit on one screen */}
       <section className="card p-4 mb-4">
@@ -2353,6 +2353,8 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>A fair stretch this short is mostly luck — the curve shows how wide normal is.</p>
         </section>
       )}
+
+      <SpreadMini bets={bets} tc={shoe.pos > 1 ? tc : undefined} />
 
       {mistakes.length > 0 && (
         <section className="card p-5 mb-4">

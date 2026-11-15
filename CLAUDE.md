@@ -34,7 +34,7 @@ Commit the source change and the rebuilt `index.html` together. `build.sh` never
 
 ## Live play
 
-Settings live in the card at the end of the page and persist to `PLAY_KEY` (`_playPrefs`): hand totals, running count, auto-deal the next hand (skips the Next tap, the bet is still the user's), count check every 3/5/10/20 hands or off, and dealing speed. `speed` multiplies every deal timing through `ms()`; the opening deal staggers through `HandView`'s `stagger` / `base` / `dur` props so cards land one at a time. The right column carries `SpreadMini` (the ramp with the live true count lit) and, on wide screens only, the running-percentile card built from `evHour`/`sdHour`/`rph`.
+Settings live in the card at the end of the page and persist to `PLAY_KEY` (`_playPrefs`): hand totals, running count, auto-deal the next hand (skips the Next tap, the bet is still the user's), count check every 3/5/10/20 hands or off, and dealing speed. `speed` multiplies every deal timing through `ms()`; the opening deal staggers through `HandView`'s `stagger` / `base` / `dur` props so cards land one at a time. The right column carries `SpreadMini` (the ramp with the live true count lit) and, on wide screens only, the running-percentile card built from `evHour`/`sdHour`/`rph`. Source order puts the bankroll/net card before `SpreadMini` (the phone order Nick asked for); `.dcol.pcol` turns that column into a flex column on wide screens so `.spreadmini` can take `order:-1` and sit above the stats there.
 
 ## Card sizes
 
