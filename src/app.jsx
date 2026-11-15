@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, Fragment } from "react";
+import { useState, useMemo, useEffect, useRef, Fragment, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 
 // ---------- model ----------
@@ -223,7 +223,7 @@ const css = `
 :root[data-theme="sapphire"]{--bg:#06070D;--bg2:#0A0C15;--velvet:#0D1020;--velvet-l:#161B36;--fg:234,237,247;--ivory:#EAEDF7;--ivory-d:#B6BCD0;--brass:#7AA2FF;--brass-d:#4A6FD6;--acc:122,162,255;--acc-hi:#A9C2FF;--rose:#FF6E7A;--neg:255,110,122;--neg-l:#FFB6BD;--muted:#7F87A0;--ink:#060A1C;--sh:2,3,9;--bgrgb:6,7,13;--felt1:#14193A;--felt2:#0D1128;--felt3:#080A18;--sheet1:#141831;--sheet2:#0A0C18;--back1:#3B2A6E;--back2:#271C4D;--seg-hi:#F3F5FC;--seg-lo:#DDE2F2;--line:rgba(234,237,247,.11)}
 html,body{background:var(--bg)}
 :root{color-scheme:dark;--sbar:transparent;--bg-end:#020304;--scrim:rgba(2,3,6,.62)}
-:root[data-theme="light"]{color-scheme:light;--bg-end:#E4EAF3;--scrim:rgba(14,26,58,.38);--bg:#EEF2F8;--bg2:#FFFFFF;--velvet:#F3F6FB;--velvet-l:#FFFFFF;--fg:15,27,61;--ivory:#0E1A3A;--ivory-d:#34405E;--brass:#1E3FA8;--brass-d:#16307F;--acc:30,63,168;--acc-hi:#3459CF;--rose:#D02E2E;--neg:208,46,46;--neg-l:#B42323;--muted:#66718C;--ink:#FFFFFF;--sh:255,255,255;--bgrgb:242,245,250;--felt1:#E9EEF7;--felt2:#E1E8F3;--felt3:#D8E0EE;--sheet1:#FFFFFF;--sheet2:#F5F7FB;--back1:#1E3FA8;--back2:#142D7A;--seg-hi:#2A4CC0;--seg-lo:#1E3FA8;--line:rgba(15,27,61,.1);--sbar:#0E1A3A}
+:root[data-theme="light"]{color-scheme:light;--bg-end:#E4EAF3;--scrim:rgba(14,26,58,.38);--bg:#EEF2F8;--bg2:#FFFFFF;--velvet:#F3F6FB;--velvet-l:#FFFFFF;--fg:15,27,61;--ivory:#0E1A3A;--ivory-d:#34405E;--brass:#1E3FA8;--brass-d:#16307F;--acc:30,63,168;--acc-hi:#3459CF;--rose:#D02E2E;--neg:208,46,46;--neg-l:#B42323;--muted:#66718C;--ink:#FFFFFF;--sh:255,255,255;--bgrgb:242,245,250;--felt1:#2C4797;--felt2:#1F3478;--felt3:#17285F;--sheet1:#FFFFFF;--sheet2:#F5F7FB;--back1:#1E3FA8;--back2:#142D7A;--seg-hi:#2A4CC0;--seg-lo:#1E3FA8;--line:rgba(15,27,61,.1);--sbar:#0E1A3A}
 :root[data-theme="light"] .card{background:#FFFFFF;border:1px solid rgba(15,27,61,.08);box-shadow:0 1px 2px rgba(15,27,61,.06),0 10px 28px -16px rgba(15,27,61,.22)}
 :root[data-theme="light"] .chipseg{background:rgba(15,27,61,.06);box-shadow:inset 0 1px 2px rgba(15,27,61,.08)}
 :root[data-theme="light"] .chipseg button.on{box-shadow:0 2px 6px -2px rgba(30,63,168,.55)}
@@ -231,7 +231,8 @@ html,body{background:var(--bg)}
 :root[data-theme="light"] .bottom-nav,:root[data-theme="light"] .topbar{box-shadow:0 -1px 0 rgba(15,27,61,.06)}
 :root[data-theme="light"] .switch::after{background:#FFFFFF}
 :root[data-theme="light"] .in{background:#FFFFFF;border-color:rgba(15,27,61,.16)}
-:root[data-theme="light"] .felt{box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 18px 36px -26px rgba(15,27,61,.35)}
+/* the light theme keeps a real felt: deep blue, with everything printed or written on it switched to light-on-dark */
+:root[data-theme="light"] .felt{--fg:255,255,255;--ivory:#F5F7FF;--ivory-d:#D3DBF2;--muted:#AAB8E0;--brass:#B9CBFF;--brass-d:#93ACF2;--acc:185,203,255;--acc-hi:#D6E0FF;--rose:#FF8E8E;--neg:255,142,142;--neg-l:#FFC4C4;--ink:#0E1A3A;--line:rgba(255,255,255,.16);color:var(--ivory);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 22px 40px -24px rgba(6,12,40,.7)}
 .sbar{position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top);background:var(--sbar);z-index:80;pointer-events:none}
 .bj{overscroll-behavior-y:contain;-webkit-touch-callout:none;background:var(--bg);min-height:100vh;line-height:1.55;background:radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%);color:var(--ivory);font-family:'Instrument Sans',Inter,system-ui,sans-serif;min-height:100vh;padding-bottom:env(safe-area-inset-bottom);-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 .bj::before{content:"";position:fixed;inset:0;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E")}
@@ -299,8 +300,8 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 .topbar>div{max-width:var(--W)!important}
 .sidenav{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:248px;z-index:46;padding:28px 14px 18px;background:rgba(var(--bgrgb),.6);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-right:1px solid rgba(var(--fg),.07);overflow-y:auto}
 .sn-brand{display:flex;align-items:center;gap:12px;padding:0 10px 30px}
-.sn-tile{position:relative;flex:none;width:38px;height:38px;border-radius:11px;background:linear-gradient(160deg,#121722,#07090D);box-shadow:0 0 0 1.25px rgba(var(--acc),.55) inset,0 6px 16px -6px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
-.sn-tile i{position:absolute;right:-3px;bottom:-3px;width:14px;height:14px;border-radius:99px;background:var(--brass);box-shadow:0 0 0 2px var(--bg)}
+.sn-tile{position:relative;flex:none;width:38px;height:38px;border-radius:11px;overflow:hidden;background:radial-gradient(120% 110% at 50% 10%,var(--b1),var(--b3));box-shadow:0 0 0 1.25px rgba(var(--acc),.5) inset,0 6px 16px -6px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
+.sn-tile svg{position:absolute;inset:0;width:100%;height:100%}
 .sn-name{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--ivory);line-height:1.1}
 .sn-tag{font-size:9.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:3px}
 .sn-label{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:0 12px 8px;opacity:.8}
@@ -328,7 +329,6 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 .dcol>:first-child>.card:first-child{margin-top:0}
 }
 :root[data-theme="light"] .sidenav{background:rgba(255,255,255,.7);border-right-color:rgba(15,27,61,.08)}
-:root[data-theme="light"] .sn-tile{background:linear-gradient(160deg,#1B2540,#0E1528)}
 .sheet{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);border-top-left-radius:22px;border-top-right-radius:22px;border:1px solid rgba(var(--acc),.16);border-bottom:none;box-shadow:0 -20px 50px -10px rgba(0,0,0,.8);animation:sheetin .28s cubic-bezier(.2,.8,.2,1)}
 @keyframes sheetin{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 .navbtn:active{transform:scale(.94)}
@@ -381,7 +381,7 @@ input[type=range]{accent-color:var(--brass)}
 .cz-play{--cz:1.25}.cz-train{--cz:1.15}.cz-big{--cz:1.1}.cz-rounds{--cz:1.2}
 .rd-seats.s3{--cz:.95}.rd-seats.s5{--cz:.57}
 .cz-train .shoe,.cz-big .shoe,.cz-rounds .shoe{zoom:.8}
-@media (max-width:379px){.cz-train{--cz:1.06}}
+@media (max-width:379px){.cz-train{--cz:1.06}.cz-train .shoe{zoom:.68}}
 @media (min-width:640px){.cz-play{--cz:1.45}.cz-train{--cz:1.25}.cz-big{--cz:1.2}.cz-rounds{--cz:1.45}.rd-seats.s3{--cz:1.3}.rd-seats.s5{--cz:1.1}.cz-train .shoe,.cz-big .shoe,.cz-rounds .shoe{zoom:1}}
 @media (min-width:1024px){.cz-play{--cz:1.7}.cz-train{--cz:1.35}.cz-big{--cz:1.3}.cz-rounds{--cz:1.7}.rd-seats.s3{--cz:1.6}.rd-seats.s5{--cz:1.3}.cz-train .shoe,.cz-big .shoe,.cz-rounds .shoe{zoom:1.3}}
 /* a hand of cards: side by side while they fit, fanned (each card tucked under the next, corner index showing) when they don't */
@@ -404,6 +404,12 @@ input[type=range]{accent-color:var(--brass)}
 @keyframes deal{0%{transform:translate(var(--dx),var(--dy)) rotate(var(--r0)) rotateY(70deg) scale(.9);opacity:0;filter:brightness(.7)}20%{opacity:1}100%{transform:translate(0,0) rotate(var(--r1)) rotateY(0) scale(1);opacity:1;filter:brightness(1)}}
 .dealt{animation:deal .5s cubic-bezier(.22,.9,.3,1) both;animation-delay:var(--d);transform-style:preserve-3d;backface-visibility:hidden;will-change:transform,opacity}
 .tbl{perspective:900px}
+.felt{isolation:isolate}
+.feltprint{position:absolute;left:50%;top:50%;width:min(100%,520px);transform:translate(-50%,-46%);z-index:-1;pointer-events:none;color:rgb(var(--fg));opacity:.15;overflow:visible}
+.feltprint .fp-l{fill:none;stroke:currentColor;stroke-width:.7;opacity:.8}
+.feltprint text{fill:currentColor;font-family:Inter,system-ui,sans-serif;font-weight:600}
+.feltprint .fp-t{font-size:12.5px;letter-spacing:.26em}
+.feltprint .fp-s{font-size:8px;letter-spacing:.3em}
 @keyframes shoe{0%,100%{transform:translateX(0)}30%{transform:translateX(-6px)}}
 .shoe.go{animation:shoe .5s ease-out}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -455,7 +461,7 @@ input[type=range]{accent-color:var(--brass)}
 .opt{min-height:44px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .opt:focus-visible,.chipseg button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .bj ::-webkit-scrollbar{display:none}
-.bj input::placeholder,.bj textarea::placeholder{color:rgba(156,143,147,.7)}
+.bj input::placeholder,.bj textarea::placeholder{color:var(--muted);opacity:.75}
 button,input{-webkit-tap-highlight-color:transparent}
 button{user-select:none;-webkit-user-select:none}
 .hidescroll::-webkit-scrollbar{display:none}
@@ -753,9 +759,30 @@ function hardCards(t) {
   const [a, b] = opts.length ? opts[Math.floor(Math.random() * opts.length)] : [Math.min(10, t - 2), Math.max(2, t - Math.min(10, t - 2))];
   return [{ rank: a, suit: rs() }, { rank: b, suit: rs() }];
 }
+// The game rules, for the few places deep in the tree that only need to read them (the printing on the felt).
+const RulesCtx = createContext(null);
+
+// The printing on a real blackjack felt — the payout and the dealer's rule, on arcs that curve around the dealer.
+// It states the game actually set in the app, sits behind the cards, and is the same on every table.
+function FeltPrint() {
+  const rules = useContext(RulesCtx) || {};
+  return (
+    <svg className="feltprint" viewBox="0 0 400 132" aria-hidden="true">
+      <defs>
+        <path id="fp-a" d="M 26 18 Q 200 132 374 18" />
+        <path id="fp-b" d="M 62 12 Q 200 100 338 12" />
+      </defs>
+      <path className="fp-l" d="M 8 30 Q 200 162 392 30" />
+      <text className="fp-t"><textPath href="#fp-a" startOffset="50%" textAnchor="middle">BLACKJACK PAYS {rules.bj65 ? "6 TO 5" : "3 TO 2"}</textPath></text>
+      <text className="fp-s"><textPath href="#fp-b" startOffset="50%" textAnchor="middle">{rules.h17 ? "DEALER MUST HIT SOFT 17" : "DEALER MUST STAND ON ALL 17S"}</textPath></text>
+    </svg>
+  );
+}
+
 function Table({ cards, dealer, tc, qkey, leaving }) {
   return (
     <div className={"relative tbl felt cz-train px-4 pt-5 pb-4 " + (leaving ? "leave" : "")}>
+      <FeltPrint />
       <div className="shoe go">
         {[0, 1, 2, 3].map((i) => <div key={i} className="pcback" style={{ transform: `translate(${i * 1.5}px,${-i * 1.5}px)`, opacity: 1 - i * 0.12 }} />)}
       </div>
@@ -1798,7 +1825,7 @@ function Burst() {
 function StatRow({ items }) {
   return (
     <div className="grid gap-2 text-center" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
-      {items.map(([k, v]) => <div key={k}><div className="eyebrow" style={{ fontSize: 9 }}>{k}</div><div className="mono mt-1" style={{ fontSize: 15 }}>{v}</div></div>)}
+      {items.map(([k, v], i) => <div key={i}><div className="eyebrow" style={{ fontSize: 9 }}>{k}</div><div className="mono mt-1" style={{ fontSize: 15 }}>{v}</div></div>)}
     </div>
   );
 }
@@ -2160,8 +2187,7 @@ function Play({ rules, bets, minBet, bankroll0 }) {
     <div>
       <section className="card p-4 mb-4">
         <div className="relative">
-          {phase === "result" && lastNet !== null && lastNet !== 0 && <span key={stats.hands} className="pop absolute right-0 -top-1 mono text-sm font-semibold" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{lastNet > 0 ? "+" : "−"}${Math.abs(lastNet).toLocaleString()}</span>}
-          <StatRow items={[["Bankroll", `$${bank.toLocaleString()}`], ["Hands", stats.hands], ["Clean", stats.hands ? <span style={{ color: stats.clean === stats.hands ? "var(--brass)" : undefined }}>{Math.round((stats.clean / stats.hands) * 100) + "%"}</span> : "—"], ["Net", (stats.net >= 0 ? "+" : "−") + "$" + Math.abs(stats.net).toLocaleString()]]} />
+          <StatRow items={[["Bankroll", `$${bank.toLocaleString()}`], ["Hands", stats.hands], ["Clean", stats.hands ? <span style={{ color: stats.clean === stats.hands ? "var(--brass)" : undefined }}>{Math.round((stats.clean / stats.hands) * 100) + "%"}</span> : "—"], [phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{lastNet > 0 ? "+" : "−"}${Math.abs(lastNet).toLocaleString()}</span> : "Net", (stats.net >= 0 ? "+" : "−") + "$" + Math.abs(stats.net).toLocaleString()]]} />
           {history.length > 1 && <div className="flex gap-1.5 justify-center mt-2.5">{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
         </div>
       </section>
@@ -2172,13 +2198,13 @@ function Play({ rules, bets, minBet, bankroll0 }) {
           <div className="mono text-xs" style={{ color: "var(--muted)" }}>{showCount ? <>RC <span style={{ color: "var(--brass)" }}>{fmtTC(shoe.rc)}</span> · TC <span style={{ color: "var(--brass)" }}>{fmtTC(tc)}</span></> : "count hidden"}</div>
         </div>
         <div className="relative tbl felt cz-play px-4 pt-4 pb-4" style={{ minHeight: 300 }}>
+          <FeltPrint />
           {shuffled && <div className="absolute inset-0 flex items-center justify-center rounded-2xl z-10 rise" style={{ background: "rgba(12,9,11,.7)" }}><div className="disp text-2xl font-semibold" style={{ color: "var(--brass)" }}>Shuffling…</div></div>}
           <HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small />
           {phantom && <div className="mt-3"><HandView cards={phantom} label="Other player" total={showTotals ? handValue(phantom).total : undefined} small /></div>}
           <div className="flex gap-2 mt-3 justify-end flex-wrap">
             {hands.map((hd, i) => { const v = handValue(hd.cards); return <HandView key={i} cards={hd.cards} label={hands.length > 1 ? `Hand ${i + 1}` : "You"} bet={hd.bet} active={phase === "play" && i === active} total={showTotals ? (hd.surrendered ? "surr." : v.bust ? "bust" : (v.soft ? "soft " : "") + v.total) : undefined} result={hd.result} small />; })}
           </div>
-          {phase === "bet" && !hands.length && <div className="absolute inset-0 flex items-center justify-center eyebrow" style={{ opacity: .5 }}>Table open — place a bet</div>}
         </div>
 
         {/* message */}
@@ -2206,7 +2232,8 @@ function Play({ rules, bets, minBet, bankroll0 }) {
         {phase === "insurance" && (
           <div className="mt-2 rise">
             <div className="eyebrow text-center mb-2">Dealer shows an ace — insurance?</div>
-            <div className="grid grid-cols-2 gap-2"><button className="btn ghost" onClick={() => takeInsurance(false)}>No (N)</button><button className="btn" onClick={() => takeInsurance(true)}>Take insurance (Y)</button></div>
+            <div className="grid grid-cols-2 gap-2"><button className="btn ghost" onClick={() => takeInsurance(false)}>No insurance</button><button className="btn" onClick={() => takeInsurance(true)}>Take insurance</button></div>
+            <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>N</b> no · <b>Y</b> take it</div>
           </div>
         )}
         {phase === "play" && (
@@ -3588,8 +3615,8 @@ function Backup() {
       <div className="eyebrow mb-1">Backup</div>
       <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Everything is saved on this phone and survives restarts. Export a copy now and then in case you switch phones or clear Safari data.</p>
       <div className="grid grid-cols-2 gap-2 mb-2">
-        <button className="btn ghost" onClick={exportAll}>Export progress</button>
-        <button className="btn ghost" onClick={importAll} disabled={!text.trim()}>Restore from text</button>
+        <button className="btn ghost" onClick={exportAll}>Export</button>
+        <button className="btn ghost" onClick={importAll} disabled={!text.trim()}>Restore</button>
       </div>
       <textarea className="in mono text-[11px]" rows={3} placeholder="Paste a backup here to restore" value={text} onChange={(e) => setText(e.target.value)} />
       {status && <div className="text-xs mt-2" style={{ color: "var(--brass)" }}>{status}</div>}
@@ -4408,7 +4435,7 @@ function BetSpreadCalculator() {
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
 
   return (
-    <div className="bj">
+    <RulesCtx.Provider value={rules}><div className="bj">
       <style>{css}</style>
       {setupOpen && <RulesModal rules={rules} onSave={saveRules} first={firstRun} />}
       <div className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
@@ -4684,11 +4711,11 @@ function BetSpreadCalculator() {
           Risk of ruin uses e^(−2·EV·bankroll / variance) with your spread's simulated EV and variance (checked against simulated bankroll paths) and assumes you never resize your bets. Real results depend on playing accuracy and the game you actually get. Counting is legal, but casinos can ask you to leave.
         </p>
         </div>}
-        <p className="text-center text-[10px] mt-10" style={{ color: "rgba(156,143,147,.6)" }}>Strategy and indices follow Blackjack Apprenticeship's {rules.h17 ? "H17" : "S17"} charts · practice tool, not gambling advice</p>
+        <p className="text-center text-[10px] mt-10" style={{ color: "var(--muted)", opacity: .7 }}>Strategy and indices follow Blackjack Apprenticeship's {rules.h17 ? "H17" : "S17"} charts · practice tool, not gambling advice</p>
       </div>
       <nav className="sidenav" aria-label="Sections">
         <div className="sn-brand">
-          <span className="sn-tile" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 100 100"><path d="M50 6C50 6 12 36 12 58c0 12 9 20 19 20 7 0 12-3 15-8-1 10-5 18-11 24h30c-6-6-10-14-11-24 3 5 8 8 15 8 10 0 19-8 19-20C88 36 50 6 50 6z" fill="#F4EFE4" /></svg><i /></span>
+          <span className="sn-tile" aria-hidden="true"><svg viewBox="0 0 512 512"><path d="M240 92C206 136 108 204 108 288C108 332 140 362 178 362C204 362 224 350 234 332C232 368 216 396 190 414H290C264 396 248 368 246 332C256 350 276 362 302 362C340 362 372 332 372 288C372 204 274 136 240 92Z" style={{ fill: "var(--ivory)" }} /><circle cx="338" cy="346" r="100" style={{ fill: "var(--b2)" }} /><circle cx="338" cy="346" r="80" style={{ fill: "var(--brass)" }} /></svg></span>
           <span className="min-w-0"><span className="sn-name block">Blackjack</span><span className="sn-tag block">Count · Play · Win</span></span>
         </div>
         <div className="sn-label">Menu</div>
@@ -4717,6 +4744,6 @@ function BetSpreadCalculator() {
             </button>); })}
         </div>
       </nav>
-    </div>
+    </div></RulesCtx.Provider>
   );
 }
