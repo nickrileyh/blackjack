@@ -8,6 +8,9 @@ import { runTool, setupBrief } from "./aitools.js";
 const KEY_LS = "bj:__ask-key", CHATS_KEY = "bj-ask-v1", API = "https://api.anthropic.com/v1/messages";
 const ls = { get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (_) {} } };
 export const askKey = () => (ls.get(KEY_LS) || "").trim();
+// Two ways to run it: Claude through the user's Anthropic account (paid per question, strongest), or Google's Gemini
+// through a free Google AI Studio key (no card, daily limits). The key itself says which one it is.
+export const providerOf = (k) => (/^sk-ant-/.test(k || "") ? "anthropic" : k ? "google" : null);
 
 // The app picks how hard Claude thinks from the question itself — there is nothing to choose. Anything that involves
 // building a scenario goes to the strongest model with more thinking; plain look-ups go to the mid model. Each plan
@@ -111,10 +114,72 @@ async function callModel(state, args) {
   }
   throw last || new ApiError(404, "not_found", "no model available");
 }
-const errText = (e) => {
+/* ---------- Google Gemini (free tier) ---------- */
+const GAPI = "https://generativelanguage.googleapis.com/v1beta/";
+// tool schemas in the subset Gemini accepts
+const gSchema = (x) => { if (!x || typeof x !== "object") return x; const o = {}; if (x.type) o.type = x.type; if (x.description) o.description = x.description; if (Array.isArray(x.enum) && x.enum.every((v) => typeof v === "string")) o.enum = x.enum; if (x.properties) { o.properties = {}; Object.keys(x.properties).forEach((k) => (o.properties[k] = gSchema(x.properties[k]))); } if (x.items) o.items = gSchema(x.items); if (x.required) o.required = x.required; return o; };
+let _gModels = null;
+// the newest Flash models this key can use, best first, then the lighter ones (which have a much larger free daily allowance)
+async function geminiModels(key, signal) {
+  if (_gModels) return _gModels;
+  const fallback = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash"];
+  try {
+    const r = await fetch(GAPI + "models?pageSize=200", { signal, headers: { "x-goog-api-key": key } });
+    if (!r.ok) { if (r.status === 400 || r.status === 401 || r.status === 403) { let m = ""; try { m = ((await r.json()).error || {}).message || ""; } catch (_) {} throw new ApiError(r.status === 400 ? 401 : r.status, "auth", m); } return fallback; }
+    const j = await r.json(), flash = [], lite = [];
+    (j.models || []).forEach((m) => { const x = /^models\/gemini-(\d+(?:\.\d+)?)-flash(-lite)?$/.exec(m.name || ""); if (x && (m.supportedGenerationMethods || []).includes("generateContent")) (x[2] ? lite : flash).push([+x[1], m.name.slice(7)]); });
+    const top = (a) => a.sort((p, q) => q[0] - p[0]).slice(0, 2).map((p) => p[1]), list = [...top(flash), ...top(lite)];
+    return (_gModels = list.length ? list : fallback);
+  } catch (e) { if (e instanceof ApiError || (e && e.name === "AbortError")) throw e; return fallback; }
+}
+function toGemini(msgs) {
+  let lastUser = -1; msgs.forEach((m, i) => { if (m.role === "user" && typeof m.content === "string") lastUser = i; });
+  const names = {}; msgs.forEach((m) => { if (m.role === "assistant" && Array.isArray(m.content)) m.content.forEach((b) => { if (b.type === "tool_use") names[b.id] = b.name; }); });
+  const out = [], push = (role, parts) => { const p = out[out.length - 1]; if (p && p.role === role && p.parts.every((x) => x.text != null) && parts.every((x) => x.text != null)) p.parts.push(...parts); else out.push({ role, parts }); };
+  msgs.forEach((m, i) => {
+    if (typeof m.content === "string") push("user", [{ text: m.content }]);
+    else if (i < lastUser) { if (m.role === "assistant") { const t = m.content.filter((b) => b.type === "text" && b.text).map((b) => b.text).join("\n\n"); if (t) push("model", [{ text: t }]); } } // earlier turns: the answers only
+    else if (m.role === "assistant") out.push({ role: "model", parts: m._g || m.content.map((b) => (b.type === "text" ? { text: b.text } : b.type === "tool_use" ? { functionCall: { name: b.name, args: b.input } } : null)).filter(Boolean) });
+    else out.push({ role: "user", parts: m.content.filter((b) => b.type === "tool_result").map((b) => { let v = b.content; try { v = JSON.parse(b.content); } catch (_) {} return { functionResponse: { name: names[b.tool_use_id] || "tool", response: { result: v } } }; }) });
+  });
+  return out;
+}
+async function callGemini(state, { key, system, tools, msgs, signal }) {
+  const models = await geminiModels(key, signal);
+  const body = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: toGemini(msgs), tools: [{ functionDeclarations: tools.map((t) => ({ name: t.name, description: t.description, parameters: gSchema(t.input_schema) })) }], generationConfig: { maxOutputTokens: 16000 } });
+  let last = null;
+  for (let mi = state.mi || 0; mi < models.length; mi++) {
+    let res;
+    try { res = await fetch(GAPI + "models/" + models[mi] + ":generateContent", { method: "POST", signal, headers: { "content-type": "application/json", "x-goog-api-key": key }, body }); }
+    catch (e) { if (e && e.name === "AbortError") throw e; throw new ApiError(0, "network", "network"); }
+    if (!res.ok) {
+      let msg = "", st = ""; try { const j = await res.json(); msg = (j.error && j.error.message) || ""; st = (j.error && j.error.status) || ""; } catch (_) {}
+      last = new ApiError(res.status === 400 && /api key/i.test(msg) ? 401 : res.status, st, msg);
+      if (res.status === 429 || res.status === 404 || res.status >= 500) continue; // this model's free allowance is used up, or it isn't offered: try the next one
+      throw last;
+    }
+    const j = await res.json(), cand = (j.candidates || [])[0], parts = (cand && cand.content && cand.content.parts) || [];
+    if (!parts.length) { last = new ApiError(500, "empty", (cand && cand.finishReason) || (j.promptFeedback && j.promptFeedback.blockReason) || "no answer"); continue; }
+    state.mi = mi;
+    const content = []; parts.forEach((p, k) => { if (p.functionCall) content.push({ type: "tool_use", id: p.functionCall.id || "g" + Date.now().toString(36) + k, name: p.functionCall.name, input: p.functionCall.args || {} }); else if (p.text && !p.thought) content.push({ type: "text", text: p.text }); });
+    const calls = content.some((b) => b.type === "tool_use");
+    return { content, _g: parts, stop: calls ? "tool_use" : cand.finishReason === "MAX_TOKENS" ? "max_tokens" : "end_turn", model: models[mi] };
+  }
+  throw last || new ApiError(404, "not_found", "no model available");
+}
+const errTextG = (e) => {
+  if (e.status === 0) return "Couldn't reach Google — check your connection and try again.";
+  if (e.status === 401 || e.status === 403) return "Google didn't accept this key. Check it in Settings → Ask.";
+  if (e.status === 429) return "You've used up Google's free allowance for now. It refills through the day and resets overnight — try again later, or add a Claude key in Settings for unlimited questions.";
+  if (e.status >= 500) return "Google's servers are busy. Try again in a moment.";
+  if (e.status === 404) return "This key doesn't have access to a Gemini model the app can use.";
+  return "Google returned an error: " + (e.message || e.status);
+};
+const errText = (e, prov) => {
   if (!(e instanceof ApiError)) return "Something went wrong: " + String((e && e.message) || e);
+  if (prov === "google") return errTextG(e);
   if (e.status === 0) return "Couldn't reach Anthropic — check your connection and try again.";
-  if (e.status === 401 || e.status === 403) return "Anthropic didn't accept this key. Check it in Settings → Ask AI.";
+  if (e.status === 401 || e.status === 403) return "Anthropic didn't accept this key. Check it in Settings → Ask.";
   if (/credit|billing|balance/i.test(e.message)) return "Your Anthropic account is out of credit. Add some at console.anthropic.com → Billing, then ask again.";
   if (e.status === 429) return "Anthropic is rate-limiting this key right now. Give it a minute and ask again.";
   if (e.status >= 500) return "Anthropic's servers are busy. Try again in a moment.";
@@ -296,27 +361,51 @@ function Work({ w }) {
   );
 }
 
-function KeyForm({ onSaved }) {
+function KeyForm({ onSaved, hint }) {
   const [v, setV] = useState(""), [msg, setMsg] = useState("");
-  const save = () => { const k = v.replace(/[^\x21-\x7E]/g, ""); if (!/^sk-ant-/.test(k) || k.length < 30) { setMsg("That doesn't look like an Anthropic key — they start with sk-ant-"); return; } ls.set(KEY_LS, k); setV(""); setMsg(""); onSaved && onSaved(); };
+  const save = () => { const k = v.replace(/[^\x21-\x7E]/g, ""); if (k.length < 30 || /\s/.test(k)) { setMsg("That doesn't look like a complete key — copy the whole thing and paste it again."); return; } ls.set(KEY_LS, k); _gModels = null; setV(""); setMsg(""); onSaved && onSaved(); };
   return (
     <div>
       <div className="flex gap-2">
-        <input className="in" type="password" autoComplete="off" spellCheck={false} placeholder="sk-ant-…" value={v} onChange={(e) => { setV(e.target.value); setMsg(""); }} onKeyDown={(e) => { if (e.key === "Enter") save(); }} aria-label="Anthropic API key" />
+        <input className="in" type="password" autoComplete="off" spellCheck={false} placeholder={hint || "Paste your key"} value={v} onChange={(e) => { setV(e.target.value); setMsg(""); }} onKeyDown={(e) => { if (e.key === "Enter") save(); }} aria-label="API key" />
         <button className="btn" style={{ width: "auto", padding: "10px 20px", fontSize: 14 }} onClick={save} disabled={!v.trim()}>Save</button>
       </div>
       {msg && <div className="text-xs mt-2" style={{ color: "var(--rose)" }} role="alert">{msg}</div>}
     </div>
   );
 }
+const LINK = { color: "var(--brass)", textDecoration: "underline", textUnderlineOffset: 2 };
+// The two ways to turn the Ask tab on. Free is the default; Claude is there for people who want the strongest answers.
+function KeySetup({ onSaved }) {
+  const [paid, setPaid] = useState(false);
+  return (
+    <div>
+      <div className="chipseg mb-4" role="tablist" aria-label="How to run it">{[[false, "Free", "Google Gemini"], [true, "Best answers", "Claude, a few cents each"]].map(([k, a, b]) => <button key={a} type="button" role="tab" aria-selected={paid === k} className={paid === k ? "on" : ""} onClick={() => setPaid(k)} style={{ padding: "8px 6px", lineHeight: 1.2 }}><span className="block text-sm font-semibold">{a}</span><span className="block text-[11px]" style={{ opacity: .75 }}>{b}</span></button>)}</div>
+      {paid ? <>
+        <div className="askstep"><b>1</b><span>Open <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer" style={LINK}>console.anthropic.com</a>, create an API key, and add a few dollars of credit under Billing.</span></div>
+        <div className="askstep" style={{ marginBottom: 14 }}><b>2</b><span>Paste the key here.</span></div>
+        <KeyForm onSaved={onSaved} hint="sk-ant-…" />
+        <p className="text-xs mt-4" style={{ color: "var(--muted)" }}>You pay Anthropic directly, usually a few cents a question. The key stays on this device and is sent only to Anthropic.</p>
+      </> : <>
+        <div className="askstep"><b>1</b><span>Open <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" style={LINK}>aistudio.google.com/apikey</a> and sign in with a Google account. No card needed.</span></div>
+        <div className="askstep"><b>2</b><span>Tap <strong style={{ color: "var(--ivory)" }}>Create API key</strong> and copy it.</span></div>
+        <div className="askstep" style={{ marginBottom: 14 }}><b>3</b><span>Paste the key here.</span></div>
+        <KeyForm onSaved={onSaved} hint="Paste your Google key" />
+        <p className="text-xs mt-4" style={{ color: "var(--muted)" }}>Free, with a daily limit that's plenty for normal use. The key stays on this device and is sent only to Google. On the free plan Google may use your questions to improve its models, so don't type anything private.</p>
+      </>}
+    </div>
+  );
+}
 // Settings card
 export function AskKeyCard() {
-  const [has, setHas] = useState(() => !!askKey());
+  const [prov, setProv] = useState(() => providerOf(askKey()));
   return (
     <section className="card p-5 mb-4">
       <div className="eyebrow mb-1">Ask</div>
-      <p className="text-sm mb-3" style={{ color: "var(--ivory-d)" }}>{has ? "Your Anthropic key is saved on this device. Questions are billed to your Anthropic account, usually a few cents each." : "The Ask tab uses Claude through your own Anthropic account. Paste a key to turn it on."}</p>
-      {has ? <ConfirmLink label="Remove the key from this device" confirm="Tap again to remove" onConfirm={() => { ls.set(KEY_LS, null); setHas(false); }} /> : <KeyForm onSaved={() => setHas(true)} />}
+      {prov ? <>
+        <p className="text-sm mb-3" style={{ color: "var(--ivory-d)" }}>{prov === "google" ? "Running on Google Gemini's free plan with your Google key, saved on this device." : "Running on Claude with your Anthropic key, saved on this device. Questions are billed to your Anthropic account, usually a few cents each."}</p>
+        <ConfirmLink label={prov === "google" ? "Remove the key (to switch to Claude, or paste a new one)" : "Remove the key (to switch to the free option, or paste a new one)"} confirm="Tap again to remove" onConfirm={() => { ls.set(KEY_LS, null); _gModels = null; setProv(null); }} />
+      </> : <KeySetup onSaved={() => setProv(providerOf(askKey()))} />}
     </section>
   );
 }
@@ -350,14 +439,15 @@ export function AskPage() {
     const base = live.current.chats.find((c) => c.id === live.current.cid);
     const c = base ? { ...base, msgs: base.msgs.slice() } : { id: Date.now(), title: q.length > 60 ? q.slice(0, 58) + "…" : q, msgs: [] };
     c.t = Date.now(); c.msgs.push({ role: "user", content: q }); live.current.cid = c.id; setCid(c.id); put(c);
-    const state = { plan: PLANS[pickPlan(q)] }, ctl = new AbortController(); abort.current = ctl;
+    const prov = providerOf(key), state = { plan: PLANS[pickPlan(q)] }, ctl = new AbortController(); abort.current = ctl;
     setDraft({ text: "", status: "Thinking it through" }); scroll(true);
     const start = c.msgs.length;
     try {
       const brief = await setupBrief(), system = SYSTEM + "\n\nToday is " + new Date().toDateString() + ".\n\nTHE USER'S SETUP RIGHT NOW (from the app; numbers here came from the calculator and may be quoted):\n" + brief.text;
       for (let step = 0; step < 10; step++) {
-        const r = await callModel(state, { key, system, tools: brief.tools, msgs: c.msgs, signal: ctl.signal, onText: (blocks) => { const t = blocks.filter((b) => b && b.type === "text").map((b) => b.text).join("\n\n"); const tool = blocks.find((b) => b && b.type === "tool_use"); setDraft({ text: t, status: tool ? TOOL_BUSY[tool.name] || "Working" : t ? "" : "Thinking it through" }); scroll(); } });
-        c.msgs.push({ role: "assistant", content: r.content, ...(r.stop === "max_tokens" ? { _note: "The answer was cut off at the length limit — ask it to continue." } : {}) });
+        const r = prov === "google" ? await callGemini(state, { key, system, tools: brief.toolsFlat, msgs: c.msgs, signal: ctl.signal }) : await callModel(state, { key, system, tools: brief.tools, msgs: c.msgs, signal: ctl.signal, onText: (blocks) => { const t = blocks.filter((b) => b && b.type === "text").map((b) => b.text).join("\n\n"); const tool = blocks.find((b) => b && b.type === "tool_use"); setDraft({ text: t, status: tool ? TOOL_BUSY[tool.name] || "Working" : t ? "" : "Thinking it through" }); scroll(); } });
+        if (prov === "google") { const t = r.content.filter((b) => b.type === "text").map((b) => b.text).join("\n\n"); if (t) { setDraft({ text: t, status: "" }); scroll(); } }
+        c.msgs.push({ role: "assistant", content: r.content, ...(r._g ? { _g: r._g } : {}), ...(r.stop === "max_tokens" ? { _note: "The answer was cut off at the length limit — ask it to continue." } : {}) });
         const calls = r.content.filter((b) => b.type === "tool_use");
         if (r.stop !== "tool_use" || !calls.length) break;
         setDraft((d) => ({ text: (d && d.text) || "", status: TOOL_BUSY[calls[0].name] || "Working" }));
@@ -367,13 +457,13 @@ export function AskPage() {
         setDraft((d) => ({ text: (d && d.text) || "", status: "Writing the answer" }));
       }
     } catch (e) {
-      if (!(e && e.name === "AbortError")) setErr(errText(e));
+      if (!(e && e.name === "AbortError")) setErr(errText(e, prov));
       // a turn that died mid-way can't be continued by the API (dangling tool calls): drop the fragments
       const tail = c.msgs.slice(start), lastA = tail.filter((m) => m.role === "assistant").pop(), done = lastA && !lastA.content.some((b) => b.type === "tool_use");
       if (!done) { c.msgs = c.msgs.slice(0, start - 1); setText(q); } // and put the question back in the box to send again
     }
     // thinking blocks are only needed inside a turn
-    c.msgs = c.msgs.map((m) => (m.role === "assistant" && Array.isArray(m.content) ? { ...m, content: m.content.filter((b) => b.type !== "thinking" && b.type !== "redacted_thinking") } : m)).filter((m) => typeof m.content === "string" || m.content.length);
+    c.msgs = c.msgs.map((m) => { if (!(m.role === "assistant" && Array.isArray(m.content))) return m; const { _g, ...rest } = m; return { ...rest, content: m.content.filter((b) => b.type !== "thinking" && b.type !== "redacted_thinking") }; }).filter((m) => typeof m.content === "string" || m.content.length);
     c.t = Date.now();
     if (c.msgs.length) put(c); else { const next = live.current.chats.filter((x) => x.id !== c.id); live.current.chats = next; setChats(next); saveChats(next); live.current.cid = null; setCid(null); }
     setDraft(null); setBusy(false); abort.current = null; scroll();
@@ -390,12 +480,9 @@ export function AskPage() {
       <section className="card p-5 mb-4">
         <div className="askhero" style={{ marginBottom: 18 }}>
           <div className="askbadge">{I.chat}</div>
-          <div><div className="text-lg font-semibold" style={{ letterSpacing: "-.01em" }}>Ask about your game</div><p className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>What a cover play costs, how a change moves your risk, how you're running. Claude answers with this app's calculator and your saved setup, so the numbers match the Spread page.</p></div>
+          <div><div className="text-lg font-semibold" style={{ letterSpacing: "-.01em" }}>Ask about your game</div><p className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>What a cover play costs, how a change moves your risk, how you're running. The assistant answers with this app's calculator and your saved setup, so the numbers match the Spread page.</p></div>
         </div>
-        <div className="askstep"><b>1</b><span>Open <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer" style={{ color: "var(--brass)", textDecoration: "underline", textUnderlineOffset: 2 }}>console.anthropic.com</a>, create an API key, and add a few dollars of credit under Billing.</span></div>
-        <div className="askstep" style={{ marginBottom: 14 }}><b>2</b><span>Paste the key here.</span></div>
-        <KeyForm onSaved={() => setHasKey(true)} />
-        <p className="text-xs mt-4" style={{ color: "var(--muted)" }}>The key stays on this device and is sent only to Anthropic. You pay Anthropic directly, usually a few cents a question. Asking needs a connection; the rest of the app still works offline.</p>
+        <KeySetup onSaved={() => setHasKey(true)} />
       </section>
     </div></div>
   );

@@ -36,8 +36,9 @@ A chat with Claude that answers from the app's own calculator. Files:
 Rules to keep:
 
 - **The model never does blackjack arithmetic.** Every number comes from a tool. To let it answer something new, add a tool or a scenario field in `aitools.js` (and describe it in the schema) — don't loosen the prompt.
-- **The API key is the user's own** (Anthropic, pay-as-you-go). It lives in `localStorage` under `bj:__ask-key` on that device only: never in the repo, never in `BACKUP_KEYS`, never synced. Chats are in `bj-ask-v1`, also device-only (they'd bloat the sync gist).
-- Answer speed: `PLANS` in `ask.jsx` lists the models per speed (Fast → Haiku, Balanced → Sonnet, Deep → Opus) with fallbacks; Auto picks by the question (`pickPlan`). All use adaptive thinking; a model that rejects those settings is retried without them.
+- **Two ways to run it, both with the user's own key.** Free: Google Gemini through a Google AI Studio key (no card, daily limits; `callGemini`, which lists the key's models and uses the newest Flash, falling back to Flash-Lite when the day's allowance runs out). Paid: Claude through an Anthropic key (`callModel`). `providerOf(key)` tells them apart (`sk-ant-…` is Anthropic). The setup screen offers Free first. The key lives in `localStorage` under `bj:__ask-key` on that device only: never in the repo, never in `BACKUP_KEYS`, never synced. Chats are in `bj-ask-v1`, also device-only (they'd bloat the sync gist).
+- Chats are stored in one neutral shape (Anthropic-style blocks: `text`, `tool_use`, `tool_result`) and converted for Gemini in `toGemini`. Gemini's tool schemas can't describe free-form keys, so `toolsFor(rules, true)` gives it bets and hands as lists; `resolve` in `aitools.js` accepts both shapes.
+- There is no model or speed picker (Nick asked for it to be removed). With Claude, `pickPlan` sends plain look-ups to Sonnet and everything else to Opus, both with adaptive thinking; a model that rejects those settings is retried without them, and a model name the account lacks falls through to the next in `PLANS`.
 - Thinking blocks are passed back unchanged inside a turn (required for tool use) and stripped when the turn is saved.
 - The tab is the sixth item in `NAV_ITEMS`; keep the page itself plain (Nick wants the app clean).
 
