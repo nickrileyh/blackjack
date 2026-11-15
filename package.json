@@ -1,0 +1,15 @@
+{
+  "name": "blackjack-trainer",
+  "version": "1.0.0",
+  "description": "Blackjack card-counting trainer. Source in src/, build with ./build.sh \u2192 index.html",
+  "scripts": {
+    "build": "bash build.sh"
+  },
+  "dependencies": {
+    "esbuild": "^0.21.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.19"
+  },
+  "private": true
+}

@@ -10,11 +10,21 @@ This repo's `main` branch is the single source of truth. GitHub Pages serves it 
 4. Only touch the files your change needs. Do not regenerate or replace icons, `manifest.json` or `sw.js` unless that is the task.
 5. When anything in `index.html` or the cached files changes in a way users must pick up, bump `CACHE` in `sw.js`.
 
-## index.html is a built bundle
+## Source and build
 
-`index.html` is the compiled app (React + CSS inlined). Its JSX source and build script are **not in this repo** yet; they live in the workspace of the chat that builds the app. Until the source is committed here (recommended: `src/` plus the build script), any session that rebuilds `index.html` from its own source must first port the changes below into that source, or the rebuild will silently undo them.
+`index.html` is a generated file: the whole app (React + CSS + fonts) compiled into one offline page. **Never edit it by hand** — the next build overwrites it. Edit the source and rebuild:
 
-## Splash screen and icons (changed directly in the built file)
+- `src/app.jsx` — the entire app (all components, styles in the `css` template string, strategy/sim data)
+- `src/head.html` — everything in `<head>` before the app styles (meta tags, icon links, inlined fonts)
+- `src/entry.jsx` — mounts the app and the `window.storage` wrapper around localStorage
+- `src/input.css` — Tailwind entry
+- `build.sh` — `npm ci` once, then `./build.sh` writes `index.html` (scratch files go to `.build/`, ignored)
+
+Commit the source change and the rebuilt `index.html` together. `build.sh` never touches the icons, `manifest.json` or `sw.js`.
+
+## Splash screen and icons
+
+The splash lives in `src/app.jsx` (`Splash`, `SPLASH_LAYERS`, and the `.splash` / `.sp-*` CSS); the icon links are in `src/head.html`. Details of the current design, for reference:
 
 Design: flat spade + "21" chip. On the splash the logo takes its colors from the active theme (`--b1/--b2/--b3` tile, `--ivory` spade, `--brass` chip, `--ink` digits). The tile eases in, the spade rises, the chip rolls in from the right and settles upright. The old stroke trace, shine and ring pulse were removed on purpose.
 
