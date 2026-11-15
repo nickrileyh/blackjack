@@ -25,7 +25,7 @@ Commit the source change and the rebuilt `index.html` together. `build.sh` never
 ## Navigation and motion
 
 - Phone: bottom tab bar; desktop (1024px+): sidebar. Train has Strategy / Drills tabs. On Train and Live play the table comes first and stats sit below it.
-- The compact top bar (`TopBar`) appears on scroll and shows only the page title and rules pill. Section chips in it were tried and removed at Nick's request (he wants the app kept clean) — don't add extra navigation rows.
+- The compact top bar (`TopBar`) appears on scroll and shows only the page title and rules pill. Section chips in it were tried and removed at Nick's request (he wants the app kept clean) — don't add extra navigation rows. The "Ramp ↓ · Your numbers ↓ …" jump pills at the top of Bet spread were removed for the same reason.
 - `Seg` (segmented control) has a pill that slides to the selected option when its options sit in one row.
 - Keep motion small and purposeful, and add anything new to the `prefers-reduced-motion` rule.
 

@@ -278,7 +278,7 @@ html,body{background:var(--bg)}
 .card.focuscard{background:linear-gradient(135deg,rgba(var(--acc),.12),rgba(var(--acc),.03) 55%,rgba(var(--fg),.03));border-color:rgba(var(--acc),.3)}
 :root[data-theme="light"] .card.focuscard{background:linear-gradient(135deg,rgba(30,63,168,.07),#FFFFFF 60%);border-color:rgba(30,63,168,.2)}
 .shell section[id^="sp-"]{scroll-margin-top:68px}
-@media (min-width:1180px){.jumprow{display:none!important}}
+
 .stepbtn{width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;line-height:1;color:var(--ivory-d);background:rgba(var(--fg),.06);border:1px solid rgba(var(--fg),.1);transition:transform .12s,background .15s}
 .stepbtn:active{transform:scale(.9)}
 .stepbtn:disabled{opacity:.35}
@@ -4472,10 +4472,6 @@ function BetSpreadCalculator() {
 
         {(tab === "train" || tab === "count") && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
         {tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
-        <div className="jumprow hidescroll flex gap-1.5 overflow-x-auto mb-3 -mx-1 px-1" style={{ scrollbarWidth: "none" }} aria-label="Jump to">
-          {[["sp-ramp", "Ramp"], ["sp-numbers", "Your numbers"], ["sp-bets", "Bets"], ["sp-opt", "Optimizer"]].map(([id, l]) => (
-            <button key={id} onClick={() => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }} className="chippress whitespace-nowrap rounded-full text-[12px] font-semibold" style={{ height: 30, padding: "0 12px", background: "rgba(var(--fg),.05)", color: "var(--ivory-d)", border: "1px solid rgba(var(--fg),.1)" }}>{l} ↓</button>))}
-        </div>
         <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .6s" }}>
