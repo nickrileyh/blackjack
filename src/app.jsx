@@ -1985,9 +1985,23 @@ const PLAY_KEY = "bj-play-v1";
 const PLAY_PREFS_DEF = { totals: true, count: false, checkEvery: 5, auto: false, speed: 1 };
 const DEAL_SPEEDS = [[0.5, "Snappy"], [0.75, "Quick"], [1, "Normal"], [1.3, "Easy"], [1.7, "Relaxed"]]; // dealing speed slider stops
 const PLAYALL_KEY = "bj-playall-v1";
-const PLAYALL_DEF = { hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0, pts: [0] };
-// the running total after every hand, thinned by half once it gets long so the line keeps its shape
-const pushPt = (pts, v) => { const out = [...(pts && pts.length ? pts : [0]), v]; return out.length > 600 ? out.filter((_, i) => i % 2 === 0 || i === out.length - 1) : out; };
+const readAll = (raw) => { let d = {}; try { d = JSON.parse(raw) || {}; } catch (_) {} const pts = Array.isArray(d.pts) ? d.pts.filter(isObj) : []; return { ...PLAYALL_DEF, ...d, pts }; };
+const PLAYALL_DEF = { hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0, pts: [] };
+// one {id, n} per hand (id = when it finished, n = money won or lost). Once the list gets long,
+// neighbouring hands are added together, so the curve keeps its shape and its total without growing.
+const thinPts = (pts) => {
+  let out = pts;
+  while (out.length > 600) { const half = []; for (let i = 0; i < out.length; i += 2) half.push(out[i + 1] ? { id: out[i].id, n: out[i].n + out[i + 1].n } : out[i]); out = half; }
+  return out;
+};
+const pushPt = (pts, n) => thinPts([...(Array.isArray(pts) ? pts.filter(isObj) : []), { id: Date.now(), n }]);
+// the line the chart draws. `end` pins the last point to a known total, so a curve that starts
+// partway through (an older record, or one merged from another device) still ends on the real figure.
+const ptLine = (pts, end) => {
+  const ns = (Array.isArray(pts) ? pts.filter(isObj) : []).map((p) => p.n || 0);
+  const base = end === undefined ? 0 : end - ns.reduce((a, b) => a + b, 0);
+  let v = base; return [base, ...ns.map((n) => (v += n))];
+};
 
 // a session's money over time — small enough to sit beside the table
 function PnlMini({ pts, hands }) {
@@ -2004,7 +2018,7 @@ function PnlMini({ pts, hands }) {
         <path d={`${line}L${W},${H}L0,${H}Z`} fill="url(#pnl-g)" />
         <path d={line} fill="none" stroke={col} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       </svg>
-      <div className="flex justify-between mt-1 mono" style={{ fontSize: 9.5, color: "var(--muted)" }}><span>hand 1</span><span>{hands} hands</span></div>
+      <div className="flex justify-between mt-1 mono" style={{ fontSize: 9.5, color: "var(--muted)" }}><span>oldest</span><span>latest</span></div>
     </>
   );
 }
@@ -2120,18 +2134,39 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const hm = useRef(0); // mistakes in the current hand
   const [lastNet, setLastNet] = useState(null);
   const [history, setHistory] = useState([]);
-  const [pts, setPts] = useState([0]);                 // this session's running total, one point per hand
+  const [pts, setPts] = useState([]);                  // this session, one {id, n} per hand
   const [all, setAll] = useState(PLAYALL_DEF);          // every hand ever played here
-  const allRef = useRef(PLAYALL_DEF); const allLoaded = useRef(false);
+  const allRef = useRef(PLAYALL_DEF); const allLoaded = useRef(false); const allDirty = useRef(false); const savedAt = useRef(0);
   const [scope, setScope] = useState("session");        // which numbers the stats and charts show
+  const allLine = useMemo(() => ptLine(all.pts, all.net), [all.pts, all.net]);
+  const sessLine = useMemo(() => ptLine(pts), [pts]);
   useEffect(() => { (async () => {
-    try { const r = await window.storage.get(PLAYALL_KEY, false); if (r?.value) { const d = { ...PLAYALL_DEF, ...JSON.parse(r.value) }; allRef.current = d; setAll(d); } } catch (_) {}
+    try { const r = await window.storage.get(PLAYALL_KEY, false); if (r?.value) { const d = readAll(r.value); allRef.current = d; setAll(d); savedAt.current = d.hands; } } catch (_) {}
     allLoaded.current = true; })(); }, []);
+  // your other device sent its hands over: take them
+  useEffect(() => {
+    const onApplied = async (e) => {
+      if (!e.detail?.keys?.includes(PLAYALL_KEY)) return;
+      try { const r = await window.storage.get(PLAYALL_KEY, false); if (r?.value) { const d = readAll(r.value); allRef.current = d; setAll(d); savedAt.current = d.hands; allDirty.current = false; } } catch (_) {}
+    };
+    window.addEventListener("bj-sync-applied", onApplied); return () => window.removeEventListener("bj-sync-applied", onApplied);
+  }, []);
+  const flushAll = () => {
+    if (!allLoaded.current || !allDirty.current) return;
+    allDirty.current = false; savedAt.current = allRef.current.hands;
+    try { window.storage.set(PLAYALL_KEY, JSON.stringify(allRef.current), false); } catch (_) {}
+  };
+  // saved every tenth hand and whenever you leave the page or the app — never once per hand, which would sync every hand
+  useEffect(() => {
+    const f = () => flushAll();
+    window.addEventListener("pagehide", f); document.addEventListener("visibilitychange", f);
+    return () => { f(); window.removeEventListener("pagehide", f); document.removeEventListener("visibilitychange", f); };
+  }, []); // eslint-disable-line
   const bumpAll = (patch) => {
     if (!allLoaded.current) return;
     const a = allRef.current, next = { ...a, ...patch(a) };
-    allRef.current = next; setAll(next);
-    try { window.storage.set(PLAYALL_KEY, JSON.stringify(next), false); } catch (_) {}
+    allRef.current = next; setAll(next); allDirty.current = true;
+    if (next.hands - savedAt.current >= 10) flushAll();
   };
   const dealerTick = useRef(null);
   useEffect(() => () => clearTimeout(dealerTick.current), []);
@@ -2154,7 +2189,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     if (v === 0) { // sit out: watch one hand go by so you keep counting
       const other = [draw(), draw()]; const d = [draw(), draw(false)];
       setPhantom(other); setDealer(d); setHoleHidden(true); setHands([]);
-      setTimeout(() => { seeCard(d[1]); setHoleHidden(false); const full = dealerPlay(d, () => draw(), rules.h17); setDealer(full); setPhase("result"); setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (ok ? 1 : 0) })); setPts((p) => pushPt(p, p[p.length - 1] || 0)); bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (ok ? 1 : 0), pts: pushPt(a.pts, a.net) })); logResult("play", ok, { kind: "sitout" }); }, 900);
+      setTimeout(() => { seeCard(d[1]); setHoleHidden(false); const full = dealerPlay(d, () => draw(), rules.h17); setDealer(full); setPhase("result"); setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (ok ? 1 : 0) })); setPts((p) => pushPt(p, 0)); bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (ok ? 1 : 0), pts: pushPt(a.pts, 0) })); logResult("play", ok, { kind: "sitout" }); }, 900);
       setPhase("dealing"); return;
     }
     const p = [draw(), draw()]; const d = [draw(), draw(false)];
@@ -2244,8 +2279,8 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     const clean = hm.current === 0;
     setLastNet(net); setHistory((h) => [...h.slice(-9), net]);
     setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (clean ? 1 : 0), net: s.net + net }));
-    setPts((p) => pushPt(p, (p[p.length - 1] || 0) + net));
-    bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (clean ? 1 : 0), net: a.net + net, pts: pushPt(a.pts, a.net + net) }));
+    setPts((p) => pushPt(p, net));
+    bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (clean ? 1 : 0), net: a.net + net, pts: pushPt(a.pts, net) }));
     logResult("play", clean, { net });
     setPhase("result");
   };
@@ -2263,7 +2298,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     setMsg(ok ? { ok: true, title: `Running count ${fmtTC(sh.current.rc)} — right.` } : { ok: false, title: `Running count is ${fmtTC(sh.current.rc)}.`, body: `You said ${fmtTC(guess)}.` });
     setPhase("bet");
   };
-  const reset = () => { clearTimeout(dealerTick.current); setLastNet(null); setHistory([]); setPts([0]); setScope("session"); sh.current = newShoe(); setShoe({ ...sh.current }); setHands([]); setDealer([]); setPhantom(null); setMistakes([]); setStats({ hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0 }); setBank(bankroll0 || 1000); setMsg(null); setPhase("bet"); };
+  const reset = () => { clearTimeout(dealerTick.current); setLastNet(null); setHistory([]); setPts([]); setScope("session"); sh.current = newShoe(); setShoe({ ...sh.current }); setHands([]); setDealer([]); setPhantom(null); setMistakes([]); setStats({ hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0 }); setBank(bankroll0 || 1000); setMsg(null); setPhase("bet"); };
 
   useEffect(() => {
     const onKey = (e) => {
@@ -2297,8 +2332,8 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   // the same figures for either view: this session, or every hand played on this device
   const allTime = scope === "all";
   const view = allTime
-    ? { hands: all.hands, clean: all.clean, net: all.net, checks: all.checks, checksOk: all.checksOk, pts: all.pts }
-    : { hands: stats.hands, clean: stats.clean, net: stats.net, checks: stats.checks, checksOk: stats.checksOk, pts };
+    ? { hands: all.hands, clean: all.clean, net: all.net, checks: all.checks, checksOk: all.checksOk, pts: allLine }
+    : { hands: stats.hands, clean: stats.clean, net: stats.net, checks: stats.checks, checksOk: stats.checksOk, pts: sessLine };
   // where the run sits on the spread's own bell curve, updated every hand
   const evRound = evHour && rph ? evHour / rph : null;
   const sdRound = sdHour && rph ? sdHour / Math.sqrt(rph) : null;
@@ -2379,7 +2414,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
 
       {/* bankroll and results — below the table, so the hand and its buttons fit on one screen */}
       <section className="card p-4 mb-4">
-        {all.hands > stats.hands && <Seg small value={scope} options={[["session", "This session"], ["all", "All time"]]} onChange={setScope} style={{ marginBottom: 14 }} />}
+        {all.hands > stats.hands && <Seg small value={scope} options={[["session", "This session"], ["all", "All time"]]} onChange={(v) => { if (v === "all") flushAll(); setScope(v); }} style={{ marginBottom: 14 }} />}
         <div className="relative">
           {allTime
             ? <StatRow items={[["Hands", view.hands], ["Clean", view.hands ? <span style={{ color: view.clean === view.hands ? "var(--brass)" : undefined }}>{Math.round((view.clean / view.hands) * 100) + "%"}</span> : "—"], ["Checks", view.checks ? `${Math.round((view.checksOk / view.checks) * 100)}%` : "—"], ["Net", sgnCash(view.net)]]} />
@@ -2392,7 +2427,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
       {view.hands > 0 && (
         <section className="card p-5 mb-4 deskonly">
           <div className="flex items-baseline justify-between mb-2">
-            <div className="eyebrow">{allTime ? "All-time money" : "This session"}</div>
+            <div className="eyebrow">{allTime ? `All-time money · ${view.hands.toLocaleString()} hands` : "This session"}</div>
             <div className="mono text-xs font-semibold" style={{ color: view.net > 0 ? "var(--brass)" : view.net < 0 ? "var(--neg-l)" : "var(--muted)" }}>{sgnCash(view.net)}</div>
           </div>
           <PnlMini pts={view.pts} hands={view.hands} />
@@ -3772,7 +3807,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
   );
 }
 
-const BACKUP_KEYS = ["bj-rules-v1", "bj-spread-v1", "bj-trainer-v1", "bj-count-v1", "bj-log-v1", "bj-tests-v1", "bj-sessions-v1", "bj-assess-v1"];
+const BACKUP_KEYS = ["bj-rules-v1", "bj-spread-v1", "bj-trainer-v1", "bj-count-v1", "bj-log-v1", "bj-tests-v1", "bj-sessions-v1", "bj-assess-v1", "bj-playall-v1"];
 function Backup() {
   const [text, setText] = useState("");
   const [status, setStatus] = useState(null);
@@ -4250,7 +4285,7 @@ function Splash() {
 const SYNC_CFG = "bj:__sync-cfg", SYNC_BASE = "bj:__sync-base", SYNC_META = "bj:__sync-meta";
 const SYNC_FILE = "blackjack-sync.json", SYNC_DESC = "Blackjack trainer — sync data (private)";
 const SYNC_TOKEN_URL = "https://github.com/settings/tokens/new?scopes=gist&description=Blackjack%20sync";
-const SYNC_COUNTERS = new Set(["drills", "right", "cards", "seen", "wrong", "qn"]);
+const SYNC_COUNTERS = new Set(["drills", "right", "cards", "seen", "wrong", "qn", "hands", "clean", "checks", "checksOk", "net"]);
 const _sync = { busy: false, again: false, status: "idle", err: null, last: 0, lastFrom: null, timer: 0, listeners: new Set(), lastPush: 0 };
 const syncKeys = () => BACKUP_KEYS;
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } };
@@ -4292,6 +4327,7 @@ function syncTidy(k, v) {
   if (k === "bj-sessions-v1" && Array.isArray(v)) return v.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)) || (a.id || 0) - (b.id || 0));
   if (k === "bj-log-v1" && Array.isArray(v)) { const o = v.slice().sort((a, b) => (a.t || 0) - (b.t || 0)); return o.length > 5000 ? o.slice(o.length - 5000) : o; }
   if (k === "bj-assess-v1" && isObj(v) && Array.isArray(v.history)) return { ...v, history: v.history.slice().sort((a, b) => (a.t || a.at || 0) - (b.t || b.at || 0)) };
+  if (k === "bj-playall-v1" && isObj(v) && Array.isArray(v.pts)) return { ...v, pts: thinPts(v.pts.filter(isObj).slice().sort((a, b) => (a.id || 0) - (b.id || 0))) };
   return v;
 }
 const deviceName = () => { const u = navigator.userAgent || ""; return /iPhone/.test(u) ? "iPhone" : /iPad/.test(u) ? "iPad" : /Android/.test(u) ? "Android phone" : /Mac/.test(u) ? "Mac" : /Windows/.test(u) ? "Windows PC" : "computer"; };
