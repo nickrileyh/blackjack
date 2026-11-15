@@ -2136,6 +2136,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const [all, setAll] = useState(PLAYALL_DEF);          // every hand ever played here
   const allRef = useRef(PLAYALL_DEF); const allLoaded = useRef(false); const allDirty = useRef(false); const savedAt = useRef(0);
   const [scope, setScope] = useState("session");        // which numbers the stats and charts show
+  const [setupOpen, setSetupOpen] = useState(false);    // the table settings, in a sheet
   const allLine = useMemo(() => ptLine(all.pts, all.net), [all.pts, all.net]);
   const sessLine = useMemo(() => ptLine(pts), [pts]);
   useEffect(() => { (async () => {
@@ -2349,9 +2350,13 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
 
       <div className="dgrid wl"><div className="dcol">
       <section className="card p-5 mb-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between gap-3 mb-3">
           <div className="mono text-xs" style={{ color: "var(--muted)" }}>{dl.toFixed(1)} decks left · card {shoe.pos}/{shoe.cut}</div>
-          <div className="mono text-xs" style={{ color: "var(--muted)" }}>{showCount ? <>RC <span style={{ color: "var(--brass)" }}>{fmtTC(shoe.rc)}</span> · TC <span style={{ color: "var(--brass)" }}>{fmtTC(tc)}</span></> : "count hidden"}</div>
+          <div className="flex items-center gap-2.5 shrink-0"><div className="mono text-xs" style={{ color: "var(--muted)" }}>{showCount ? <>RC <span style={{ color: "var(--brass)" }}>{fmtTC(shoe.rc)}</span> · TC <span style={{ color: "var(--brass)" }}>{fmtTC(tc)}</span></> : "count hidden"}</div>
+            <button onClick={() => setSetupOpen(true)} className="iconbtn" style={{ width: 30, height: 30 }} aria-label="Table settings">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
+            </button>
+          </div>
         </div>
         <div className="relative tbl felt cz-play px-4 pt-4 pb-4" style={{ minHeight: 300 }}>
           <FeltPrint />
@@ -2363,6 +2368,18 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           </div>
         </div>
 
+        {/* the live numbers, attached to the table rather than floating in their own card */}
+        <div className="mt-3 pb-3 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid var(--line)" }}>
+          <div>
+            <div className="eyebrow" style={{ fontSize: 9 }}>Bankroll</div>
+            <div className="mono font-semibold" style={{ fontSize: 17 }}>{cash(bankAnim)}</div>
+          </div>
+          {history.length > 1 && <div className="flex gap-1.5 flex-wrap justify-center" style={{ maxWidth: 140 }}>{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
+          <div className="text-right">
+            <div className="eyebrow" style={{ fontSize: 9 }}>{phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{sgnCash(lastNet)} this hand</span> : `Net · ${stats.hands} hand${stats.hands === 1 ? "" : "s"}`}</div>
+            <div className="mono font-semibold" style={{ fontSize: 17, color: stats.net > 0 ? "var(--brass)" : stats.net < 0 ? "var(--neg-l)" : "var(--ivory)" }}>{sgnCash(netAnim)}</div>
+          </div>
+        </div>
         {/* message */}
         <div className="mt-4" style={{ minHeight: 60 }}>
           {msg && <div className="rounded-xl px-4 py-3 rise" style={{ background: msg.ok ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)" }}>
@@ -2400,18 +2417,6 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
         {phase === "result" && <button className="btn mt-2" onClick={nextHand}>Next hand</button>}
         {(phase === "play" || phase === "result") && <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>H</b> hit · <b>S</b> stand · <b>D</b> double · <b>P</b> split{rules.surrender ? <> · <b>R</b> surrender</> : null} · <b>Enter</b> next hand</div>}
         {phase === "dealing" && <div className="mt-2" style={{ height: 52 }} />}
-        {/* the live numbers, attached to the table rather than floating in their own card */}
-        <div className="mt-4 pt-3 flex items-center justify-between gap-3" style={{ borderTop: "1px solid var(--line)" }}>
-          <div>
-            <div className="eyebrow" style={{ fontSize: 9 }}>Bankroll</div>
-            <div className="mono font-semibold" style={{ fontSize: 17 }}>{cash(bankAnim)}</div>
-          </div>
-          {history.length > 1 && <div className="flex gap-1.5 flex-wrap justify-center" style={{ maxWidth: 140 }}>{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
-          <div className="text-right">
-            <div className="eyebrow" style={{ fontSize: 9 }}>{phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{sgnCash(lastNet)} this hand</span> : `Net · ${stats.hands} hand${stats.hands === 1 ? "" : "s"}`}</div>
-            <div className="mono font-semibold" style={{ fontSize: 17, color: stats.net > 0 ? "var(--brass)" : stats.net < 0 ? "var(--neg-l)" : "var(--ivory)" }}>{sgnCash(netAnim)}</div>
-          </div>
-        </div>
         {phase === "check" && (
           <div className="mt-2 rise">
             <div className="text-center mb-3"><div className="eyebrow">Count check</div><div className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>{stats.hands} hands in. What's the running count?</div></div>
@@ -2431,12 +2436,12 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
             ? <Seg small value={scope} options={[["session", "This session"], ["all", "All time"]]} onChange={(v) => { if (v === "all") flushAll(); setScope(v); }} style={{ marginBottom: 14 }} />
             : <div className="eyebrow mb-3">This session</div>}
           <StatRow items={[["Hands", view.hands.toLocaleString()], ["Clean", view.hands ? <span style={{ color: view.clean === view.hands ? "var(--brass)" : undefined }}>{Math.round((view.clean / view.hands) * 100) + "%"}</span> : "—"], ["Checks", view.checks ? `${Math.round((view.checksOk / view.checks) * 100)}%` : "—"], ["Net", <span style={{ color: view.net > 0 ? "var(--brass)" : view.net < 0 ? "var(--neg-l)" : undefined }}>{sgnCash(view.net)}</span>]]} />
-          {view.hands > 0 && <div className="deskonly mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}><PnlMini pts={view.pts} hands={view.hands} /></div>}
+          {view.hands > 0 && <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}><PnlMini pts={view.pts} hands={view.hands} /></div>}
         </section>
       )}
 
       {view.hands > 0 && evRound !== null && (
-        <section className="card p-5 mb-4 deskonly">
+        <section className="card p-5 mb-4">
           <div className="flex items-baseline justify-between">
             <div className="eyebrow">How you're running</div>
             <div className="mono text-xs" style={{ color: "var(--muted)" }}>{run.z >= 0 ? "+" : "−"}{Math.abs(run.z).toFixed(2)} SD</div>
@@ -2469,7 +2474,9 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
         </section>
       )}
 
-      <section className="card p-4">
+      </div></div>
+
+      {setupOpen && <Sheet title="Table settings" onClose={() => setSetupOpen(false)}>
         <div className="space-y-3">
           <Toggle label="Show hand totals" on={showTotals} onChange={setShowTotals} />
           <Toggle label="Show the running count" sub="Hidden is how you'll play in a casino" on={showCount} onChange={setShowCount} />
@@ -2488,8 +2495,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <span className="text-[11px]" style={{ color: "var(--muted)" }}>Mistakes are flagged but the hand plays on, like a real table.</span>
           <ConfirmLink label="New session" confirm="Tap again to restart" onConfirm={reset} className="ml-3 whitespace-nowrap" />
         </div>
-      </section>
-      </div></div>
+      </Sheet>}
     </div>
   );
 }
