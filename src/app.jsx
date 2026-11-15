@@ -2369,7 +2369,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
         </div>
 
         {/* the live numbers, attached to the table rather than floating in their own card */}
-        <div className="mt-3 pb-3 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid var(--line)" }}>
+        <div className="mt-2.5 pb-2.5 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid var(--line)" }}>
           <div>
             <div className="eyebrow" style={{ fontSize: 9 }}>Bankroll</div>
             <div className="mono font-semibold" style={{ fontSize: 17 }}>{cash(bankAnim)}</div>
@@ -2381,7 +2381,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           </div>
         </div>
         {/* message */}
-        <div className="mt-4" style={{ minHeight: 60 }}>
+        <div className={msg ? "mt-3" : ""}>
           {msg && <div className="rounded-xl px-4 py-3 rise" style={{ background: msg.ok ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)" }}>
             <div className="font-semibold text-sm" style={{ color: msg.ok ? "var(--brass)" : "var(--neg-l)" }}>{msg.title}</div>
             {msg.body && <div className="text-xs mt-0.5" style={{ color: "var(--ivory-d)" }}>{msg.body}</div>}
@@ -2396,8 +2396,8 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           </div>
         )}
         {phase === "bet" && bank > 0 && (
-          <div className="mt-2">
-            <div className="eyebrow text-center mb-3">Place your bet</div>
+          <div className="mt-3">
+            <div className="eyebrow text-center mb-2.5">Place your bet</div>
             <div className="rack" style={{ "--n": ((n) => (n <= 6 ? n : Math.ceil(n / 2)))(chipValues.filter((v) => v > 0).length) }}>{chipValues.filter((v) => v > 0).map((v) => <Chip key={v} v={v} onClick={() => placeBet(v)} />)}</div>
             {chipValues.includes(0) && <button onClick={() => placeBet(0)} className="opt block mx-auto mt-4 rounded-full px-5 text-sm font-medium" style={{ minHeight: 40, background: "rgba(var(--fg),.07)", color: "var(--ivory-d)", border: "1px solid rgba(var(--fg),.16)" }}>Sit this hand out</button>}
                       </div>
