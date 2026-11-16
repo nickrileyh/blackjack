@@ -52,6 +52,13 @@ Rules to keep:
 - `go(tab, options)` also fires a `bj-nav` event when the target page is already open; pages read it with `useNav` (train mode/view, drill, log sheet).
 - `Seg` (segmented control) has a pill that slides to the selected option when its options sit in one row.
 - Keep motion small and purposeful, and add anything new to the `prefers-reduced-motion` rule.
+- **Entrance motion is one small kit** (in the `css` string, after `.growy`), so every chart and meter moves the same way. Use these rather than inventing new keyframes; all of them are switched off together in the `prefers-reduced-motion` rule, and all use `backwards` fill so nothing is left clipped or dashed once they finish:
+  - `.drawline` + `pathLength="1"` on a solid SVG line: it traces itself with an easy ease (`--ee`). Used on the Sessions chart, the full-screen chart, the Home sparkline and the bell curve.
+  - `.wipex` on the `<svg>` itself: a left-to-right reveal, for charts drawn with `vector-effect: non-scaling-stroke` or a filled area (Live play money chart, desktop Home chart), where a dash trace is unreliable.
+  - `.fadein` (bands, dashed lines, labels) and `.popin` (the end dot, delayed so it lands after the trace).
+  - `.bary` on a column and `.barlab` on the number above it (set `--i` to the column's index for the stagger): bet ramps, the optimizer's bars, dealer outcomes. `.barx` on a meter fill: mastery, skills, long run, odds.
+  - Wrap a chart's moving parts in a `<g key=…>` built from what is drawn, so a new filter or new data plays the entrance again (see `PnlChart`).
+- Numbers that move: `<Glide v={n} f={format} />` glides to a new value when it changes (add `enter` to also count up from zero when the page opens — headline numbers only). It is a tiny component on purpose: only its own text re-renders each frame, never the page. `useTween` is the hook underneath (used by `LuckGauge`, whose marker rides the curve). Don't tween a number with a hook at the top of a big page component.
 - Small phones (320–370px) are checked: the bottom bar's seven tabs share the width (`.navbtn{flex:1 1 0;min-width:0}`, labels step down a size), the page title and rules pill shrink so they never touch, and rows of answer buttons carry the `acts` class (side padding, no wrapping). On touch screens small text links, steppers and round icon buttons get a larger invisible touch area (`@media (pointer:coarse)` in the `css` string) — keep new small controls inside those selectors.
 - A true count of zero prints as "0", never "+0" (`fmtTC`).
 - Rows that must fit a phone are checked at 320, 360, 375 and 390px, not just one size: a row of five answer buttons tightens below 390px (the `nth-last-child(n+5)` rule next to `.acts`), the bet table on Bet spread is `.btrow` (below 431px "Show frequencies" swaps the EV/round column for Freq % instead of adding a sixth column), the deviation list is `.devrow`, and the Fill chart play picker is `.chipseg.brushes`. Change their columns in the `css` string, not inline.
@@ -59,7 +66,7 @@ Rules to keep:
 - Tapping into a number box selects its contents (one `focusin` listener in `App`), so typing replaces the old value. Give new number inputs `inputMode="numeric"` or `"decimal"` and they get it too.
 - The printing on the Live play felt fades back while cards are out (`.felt.busy .feltprint`) so it never fights the hand labels.
 - Sessions → Export CSV saves a file on a computer; on a phone it shares a real `.csv` file when the phone allows it, then falls back to sharing text, then to the clipboard.
-- **Nothing slow may run while a page opens or on a keystroke.** The drawdown replay (`drawdownFromMix`, up to three million rounds) goes through `useDeferred(key, fn, keep)`: it runs just after the screen paints, debounces itself while you type, and remembers answers by key. Its results are `undefined`/`null` until ready, so the UI must cope ("…"). Use the same hook for any new heavy sum.
+- **Nothing slow may run while a page opens or on a keystroke.** The drawdown replay (`drawdownFromMix`, up to three million rounds) goes through `useDeferred(key, fn, keep)`: it waits until the page has finished animating in (about 1.25 s after it opens, so the sum never makes a chart trace stutter), debounces itself while you type, and remembers answers by key. Its results are `undefined`/`null` until ready, so the UI must cope ("…"). Use the same hook for any new heavy sum.
 
 ## Live play
 

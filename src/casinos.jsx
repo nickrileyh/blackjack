@@ -81,6 +81,8 @@ const casCss = `
 .cpin.halo{fill:rgba(var(--neg),.2);stroke:rgba(var(--neg),.55);stroke-width:1}
 .cpin.pulse{fill:none;stroke:rgba(var(--neg),.6);stroke-width:1.2;animation:cpulse 2.6s ease-out infinite}
 .cpin.sel{fill:none;stroke:var(--ivory);stroke-width:1.6}
+.cpinsin{animation:cpinsin .7s cubic-bezier(.33,0,.67,1) .12s backwards}
+@keyframes cpinsin{from{opacity:0}}
 @keyframes cpulse{0%{transform:scale(calc(var(--ik) * .55));opacity:.9}70%,100%{transform:scale(calc(var(--ik) * 1.5));opacity:0}}
 .cm-lab{font:600 11px Inter,system-ui,sans-serif;fill:var(--ivory);paint-order:stroke;stroke:var(--bg);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
 .cm-labs{transition:opacity .18s var(--ease)}
@@ -108,7 +110,7 @@ const casCss = `
 .cback{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--brass);margin-bottom:12px}
 .clink{color:var(--brass);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 @media (min-width:1180px){.cmap{aspect-ratio:16/11}}
-@media (prefers-reduced-motion:reduce){.cpin.pulse{animation:none;opacity:0}.cm-banner{animation:none}.cm-reg,.cm-labs,.cm-btn{transition:none}}
+@media (prefers-reduced-motion:reduce){.cpin.pulse{animation:none;opacity:0}.cpinsin{animation:none}.cm-banner{animation:none}.cm-reg,.cm-labs,.cm-btn{transition:none}}
 `;
 
 // ---------- the map ----------
@@ -279,7 +281,7 @@ function CasinoMap({ map, pins, focus, sel, placing, miles, regionWord, onRegion
         <svg viewBox={`0 0 ${size.w} ${size.h}`} aria-hidden="true">
           <g transform={`translate(${view.x.toFixed(2)},${view.y.toFixed(2)}) scale(${view.k})`} style={{ "--ik": 1 / view.k, "--ps": Math.min(2.6, 1 + Math.max(0, Math.log2(z)) * 0.3) }}>
             <MapBase map={map} focus={focus} />
-            <MapPins pins={pins} sel={sel} />
+            <g className="cpinsin"><MapPins pins={pins} sel={sel} /></g>
           </g>
           <g className="cm-labs" style={{ opacity: settled === view ? 1 : 0 }}>{labels.map((l) => <text key={l.id} className="cm-lab" x={l.x} y={l.y} textAnchor={l.a}>{l.t}</text>)}</g>
         </svg>

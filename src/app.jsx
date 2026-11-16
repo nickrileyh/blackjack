@@ -203,11 +203,15 @@ const _deferred = new Map();
 function useDeferred(key, fn, keep) {
   const [v, setV] = useState(() => (key != null && _deferred.has(key) ? _deferred.get(key) : undefined));
   const f = useRef(fn); f.current = fn;
+  const opened = useRef(0);
   useEffect(() => {
     if (key == null) { setV(undefined); return; }
     if (_deferred.has(key)) { setV(_deferred.get(key)); return; }
     if (!keep) setV(undefined);
-    const id = setTimeout(() => { const r = f.current(); if (_deferred.size > 60) _deferred.clear(); _deferred.set(key, r); setV(r); }, 90);
+    // while the page is still animating in, wait for it to finish: a heavy sum in the middle of a trace makes it stutter
+    const now = performance.now(); if (!opened.current) opened.current = now;
+    const wait = Math.max(90, 1250 - (now - opened.current));
+    const id = setTimeout(() => { const r = f.current(); if (_deferred.size > 60) _deferred.clear(); _deferred.set(key, r); setV(r); }, wait);
     return () => clearTimeout(id);
   }, [key]); // eslint-disable-line
   return key == null ? undefined : v;
@@ -520,8 +524,20 @@ input[type=range]{accent-color:var(--brass)}
 @keyframes navpop{0%{transform:scale(.78)}100%{transform:scale(1)}}
 .growy{transform-box:fill-box;animation:growy .55s cubic-bezier(.2,.8,.2,1) both}
 @keyframes growy{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-.drawline{stroke-dasharray:1;stroke-dashoffset:1;animation:drawline .9s var(--ease) .1s forwards}
-@keyframes drawline{to{stroke-dashoffset:0}}
+/* entrance motion, shared by every chart and meter: --ee is an easy ease (slow out, slow in) for things that travel, --eo a soft landing for things that grow */
+:root{--ee:cubic-bezier(.33,0,.67,1);--eo:cubic-bezier(.22,1,.36,1)}
+.drawline{animation:drawline 1s var(--ee) .12s backwards}
+@keyframes drawline{from{stroke-dasharray:1 1;stroke-dashoffset:1}to{stroke-dasharray:1 1;stroke-dashoffset:0}}
+.wipex{animation:wipex .95s var(--ee) .1s backwards}
+@keyframes wipex{from{clip-path:inset(-6px 100% -6px -6px)}to{clip-path:inset(-6px -6px -6px -6px)}}
+.fadein{animation:fadein .55s var(--ease) backwards}
+@keyframes fadein{from{opacity:0}}
+.popin{transform-box:fill-box;transform-origin:center;animation:popin .45s var(--eo) backwards}
+@keyframes popin{from{opacity:0;transform:scale(.3)}}
+.bary{transform-origin:50% 100%;animation:growy .65s var(--eo) backwards;animation-delay:calc(var(--i,0) * 32ms + 90ms)}
+.barlab{animation:fadein .4s var(--ease) backwards;animation-delay:calc(var(--i,0) * 32ms + 300ms)}
+.barx{transform-origin:0 50%;animation:growx .85s var(--eo) .16s backwards}
+@keyframes growx{from{transform:scaleX(0)}}
 .splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(90% 60% at 50% 40%,var(--velvet-l) 0%,var(--velvet) 40%,var(--bg) 80%,var(--bg-end) 100%)}
 .splash:not(.go)>*{opacity:0}
 .splash.go{animation:splashout .45s cubic-bezier(.4,0,.2,1) 1.5s forwards}
@@ -573,7 +589,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .burst i{position:absolute;left:50%;top:45%;width:5px;height:5px;border-radius:50%;background:var(--brass);opacity:0;animation:fly var(--t) ease-out forwards;animation-delay:var(--dl)}
 .burst i:nth-child(3n){background:var(--acc-hi)}.burst i:nth-child(4n){width:3px;height:3px}
 @keyframes fly{0%{opacity:1;transform:rotate(var(--a)) translateY(-6px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(-6px - var(--d))) scale(.3)}}
-@media (prefers-reduced-motion:reduce){.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -957,7 +973,7 @@ function Odds({ c, picked, R }) {
             <div key={r.a} className="grid items-center gap-2" style={{ gridTemplateColumns: "74px 1fr 58px" }}>
               <span className="text-xs" style={{ color: isBest ? "var(--brass)" : isPick ? "var(--neg-l)" : "var(--ivory-d)" }}>{names[r.a]}{isPick && !isBest ? " ←" : ""}</span>
               <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--recess)" }}>
-                <div className="h-full rounded-full bar" style={{ width: `${Math.max(3, w)}%`, background: isBest ? "var(--brass)" : isPick ? "var(--rose)" : "rgba(var(--fg),.3)" }} />
+                <div className="h-full rounded-full bar barx" style={{ width: `${Math.max(3, w)}%`, background: isBest ? "var(--brass)" : isPick ? "var(--rose)" : "rgba(var(--fg),.3)" }} />
               </div>
               <span className="mono text-xs text-right" style={{ color: r.ev >= 0 ? "var(--ivory)" : "var(--neg-l)" }}>{r.ev >= 0 ? "+" : "−"}${Math.abs(r.ev * 100).toFixed(1)}</span>
             </div>
@@ -973,8 +989,8 @@ function Odds({ c, picked, R }) {
       <div className="flex items-end gap-1 h-14">
         {o.dealer.map((p, i) => (
           <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
-            <span className="mono text-[9px] mb-0.5" style={{ color: "var(--muted)" }}>{P(p)}</span>
-            <div className="w-full rounded-t bar" style={{ height: `${(p / Math.max(...o.dealer)) * 70}%`, background: i === 5 ? "var(--brass)" : "rgba(var(--fg),.3)" }} />
+            <span className="mono text-[9px] mb-0.5 barlab" style={{ "--i": i, color: "var(--muted)" }}>{P(p)}</span>
+            <div className="w-full rounded-t bar bary" style={{ "--i": i, height: `${(p / Math.max(...o.dealer)) * 70}%`, background: i === 5 ? "var(--brass)" : "rgba(var(--fg),.3)" }} />
             <span className="mono text-[9px] mt-1" style={{ color: "var(--muted)" }}>{dl[i]}</span>
           </div>
         ))}
@@ -1390,7 +1406,7 @@ function Trainer({ rules, setRules }) {
           <div className="text-xs mono" style={{ color: "var(--muted)" }}>{mastered}/{pool.length} locked in ({pool.length ? Math.round((mastered / pool.length) * 100) : 0}%) · {seen} seen · {pool.filter((c) => prog[c.id]?.due <= qn).length} due</div>
         </div>
         <div className="h-2 rounded-full mt-3 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}>
-          <div className="h-full rounded-full bar shimmer" style={{ width: `${(mastered / Math.max(1, pool.length)) * 100}%`, background: "var(--brass)" }} />
+          <div className="h-full rounded-full bar barx shimmer" style={{ width: `${(mastered / Math.max(1, pool.length)) * 100}%`, background: "var(--brass)" }} />
         </div>
       </section>
   );
@@ -1948,9 +1964,29 @@ function useTimer(active) {
   useEffect(() => { startRef.current = performance.now(); }, [active]);
   return () => Math.round(performance.now() - (startRef.current ?? performance.now()));
 }
-function useCountUp(target, dur = 550) {
-  const [v, setV] = useState(target);
-  const cur = useRef(target);
+const noMotion = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+// a number that glides to its new value with an easy ease (not rounded — for chart positions and decimals).
+// `from` is where it starts when the page opens; leave it out to start at the value itself.
+function useTween(target, dur = 700, from) {
+  const start = from === undefined || !isFinite(target) || noMotion() ? target : from;
+  const [v, setV] = useState(start);
+  const cur = useRef(start);
+  useEffect(() => {
+    if (target === cur.current) return;
+    if (!isFinite(target) || !isFinite(cur.current) || noMotion()) { cur.current = target; setV(target); return; }
+    const a = cur.current, t0 = performance.now(); let raf;
+    const step = (t) => { const p = Math.min(1, (t - t0) / dur); const e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; const nv = p >= 1 ? target : a + (target - a) * e; cur.current = nv; setV(nv); if (p < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, dur]);
+  return v;
+}
+// <Glide v={n} f={format} /> shows a number that glides to its new value when it changes; with `enter` it also counts up from zero when the page opens
+function Glide({ v, f, dur = 700, enter, round }) { const t = useTween(v, dur, enter ? 0 : undefined); return f(round ? Math.round(t) : t); }
+function useCountUp(target, dur = 550, enter) {
+  const first = enter && !noMotion() ? 0 : target;
+  const [v, setV] = useState(first);
+  const cur = useRef(first);
   useEffect(() => {
     if (target === cur.current) return;
     if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) { cur.current = target; setV(target); return; }
@@ -2134,7 +2170,7 @@ function PnlMini({ pts, hands }) {
   const up = pts[pts.length - 1] >= 0, col = up ? "var(--brass)" : "var(--rose)";
   return (
     <>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" preserveAspectRatio="none" style={{ height: 76 }} role="img" aria-label="Money over time">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full block wipex" preserveAspectRatio="none" style={{ height: 76 }} role="img" aria-label="Money over time">
         <defs><linearGradient id="pnl-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={col} stopOpacity=".26" /><stop offset="1" stopColor={col} stopOpacity="0" /></linearGradient></defs>
         {lo < 0 && hi > 0 && <line x1="0" x2={W} y1={Y(0)} y2={Y(0)} stroke="rgba(var(--fg),.18)" strokeDasharray="3 4" vectorEffect="non-scaling-stroke" />}
         <path d={`${line}L${W},${H}L0,${H}Z`} fill="url(#pnl-g)" />
@@ -2159,10 +2195,10 @@ function SpreadMini({ bets, tc }) {
         {now && <div className="mono text-xs" style={{ color: "var(--muted)" }}>at {LABEL(now.c)} {now.b ? "bet " : ""}<span style={{ color: now.b ? "var(--brass)" : "var(--ivory-d)" }}>{now.b ? money(now.b) : "sit out"}</span></div>}
       </div>
       <div className="flex items-end gap-1" style={{ height: 52 }} aria-label="Your bet ramp">
-        {rows.map((x) => { const on = x.c === here; return (
+        {rows.map((x, i) => { const on = x.c === here; return (
           <div key={x.c} className="flex-1 flex flex-col items-center justify-end h-full">
-            <span className="mono" style={{ fontSize: 8.5, color: on ? "var(--brass)" : x.b ? "var(--ivory-d)" : "var(--muted)", fontWeight: on ? 700 : 500 }}>{x.b ? (x.b >= 1000 ? `${x.b / 1000}k` : x.b) : "—"}</span>
-            <div className="w-full rounded-t" style={{ height: `${x.b ? Math.max(8, (x.b / mx) * 70) : 3}%`, background: x.b ? (on ? "var(--brass)" : "rgba(var(--acc),.4)") : "rgba(var(--fg),.1)", transition: "background .25s" }} />
+            <span className="mono barlab" style={{ "--i": i, fontSize: 8.5, color: on ? "var(--brass)" : x.b ? "var(--ivory-d)" : "var(--muted)", fontWeight: on ? 700 : 500 }}>{x.b ? (x.b >= 1000 ? `${x.b / 1000}k` : x.b) : "—"}</span>
+            <div className="w-full rounded-t bary" style={{ "--i": i, height: `${x.b ? Math.max(8, (x.b / mx) * 70) : 3}%`, background: x.b ? (on ? "var(--brass)" : "rgba(var(--acc),.4)") : "rgba(var(--fg),.1)", transition: "background .25s" }} />
           </div>); })}
       </div>
       <div className="flex gap-1 mt-1">{rows.map((x) => <span key={x.c} className="flex-1 text-center mono" style={{ fontSize: 8.5, color: x.c === here ? "var(--brass)" : "var(--muted)" }}>{LABEL(x.c).replace("≤ ", "≤").replace("≥ ", "≥")}</span>)}</div>
@@ -2951,7 +2987,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
     try { const r = await window.storage.get(SESS_KEY, false); setSess(r?.value ? JSON.parse(r.value) : []); } catch (_) { setSess([]); }
   })(); }, []);
   const netTotal = (sess || []).reduce((a, x) => a + x.result, 0);
-  const netAnim = useCountUp(netTotal);
+  const netAnim = netTotal;
   const NAV = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }] };
   const [data, setData] = useState(null);
   const [running, setRunning] = useState(false);
@@ -2994,11 +3030,11 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
               const spark = cum.map((v, i) => `${i ? "L" : "M"}${(i / (cum.length - 1)) * 72},${(18 - ((v - lo) / rng) * 16).toFixed(1)}`).join("");
               return (
               <div className="homesess flex items-end justify-between gap-3">
-                <div className="min-w-0"><div className="disp mono text-3xl" style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}${Math.abs(netAnim).toLocaleString()}</div>
+                <div className="min-w-0"><div className="disp mono text-3xl" style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}$<Glide v={Math.abs(netAnim)} enter round dur={850} f={(x) => x.toLocaleString()} /></div>
                 <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{fmtH(totH)} played · expected {exp >= 0 ? "+" : "−"}${Math.abs(exp).toLocaleString()}</div></div>
-                {cum.length > 2 && <svg className="notdesk" width="72" height="20" viewBox="0 0 72 20" aria-hidden="true"><path d={spark} fill="none" stroke={totR >= 0 ? "var(--brass)" : "var(--rose)"} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" opacity=".8" /></svg>}
+                {cum.length > 2 && <svg className="notdesk" width="72" height="20" viewBox="0 0 72 20" aria-hidden="true"><path className="drawline" pathLength="1" d={spark} fill="none" stroke={totR >= 0 ? "var(--brass)" : "var(--rose)"} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" opacity=".8" /></svg>}
                 {cum.length > 2 && (() => { const X = (i) => (i / (cum.length - 1)) * 300, Y = (v) => 66 - ((v - lo) / rng) * 60; const line = cum.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(""); const col = totR >= 0 ? "var(--brass)" : "var(--rose)"; return (
-                  <svg className="deskonly homechart" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true">
+                  <svg className="deskonly homechart wipex" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true">
                     <defs><linearGradient id="hc-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={col} stopOpacity=".28" /><stop offset="1" stopColor={col} stopOpacity="0" /></linearGradient></defs>
                     {lo < 0 && hi > 0 && <line x1="0" x2="300" y1={Y(0)} y2={Y(0)} stroke="rgba(var(--fg),.16)" strokeDasharray="3 4" vectorEffect="non-scaling-stroke" />}
                     <path d={`${line}L300,70L0,70Z`} fill="url(#hc-g)" />
@@ -3050,7 +3086,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
           {ASSESS_SKILLS.map((sk) => { const sc = latest.scores[sk.id]?.score ?? 0; const lv = levelOf(sc); return (
             <div key={sk.id} className="grid items-center gap-2" style={{ gridTemplateColumns: "110px 1fr 34px" }}>
               <span className="text-xs" style={{ color: "var(--ivory-d)" }}>{sk.name}</span>
-              <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(var(--fg),.08)" }}><div className="h-full rounded-full bar" style={{ width: `${sc}%`, background: lv[2] }} /></div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(var(--fg),.08)" }}><div className="h-full rounded-full bar barx" style={{ width: `${sc}%`, background: lv[2] }} /></div>
               <span className="mono text-xs text-right" style={{ color: lv[2] }}>{sc}</span>
             </div>); })}
         </div>
@@ -3089,7 +3125,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
                   <span className="mono text-xs" style={{ color: doneFrac >= 1 ? "var(--brass)" : "var(--muted)" }}>{doneFrac >= 1 ? "done" : `${reps.length}/${need}`}{acc !== null ? ` · ${acc}%` : ""} <span style={{ color: "var(--brass)" }}>›</span></span>
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "var(--ivory-d)" }}>{it.what(it.score)} · aim for {it.goal}</div>
-                <div className="h-1 rounded-full mt-2 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full bar" style={{ width: `${doneFrac * 100}%`, background: doneFrac >= 1 ? "var(--brass)" : "rgba(var(--acc),.5)" }} /></div>
+                <div className="h-1 rounded-full mt-2 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full bar barx" style={{ width: `${doneFrac * 100}%`, background: doneFrac >= 1 ? "var(--brass)" : "rgba(var(--acc),.5)" }} /></div>
               </button>
             );
           })}
@@ -3121,12 +3157,15 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
   return (
     <div className="mb-4">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ display: "block", cursor: onExpand ? "zoom-in" : undefined }} role="img" aria-label="Cumulative results vs expectation" onClick={onExpand}>
-        <path d={band} fill="rgba(var(--acc),.07)" />
         <line x1={P.l} x2={W - P.r} y1={y(0)} y2={y(0)} stroke="rgba(var(--fg),.14)" strokeWidth="1" />
-        <path d={line("exp")} fill="none" stroke="rgba(var(--fg),.4)" strokeWidth="1.5" strokeDasharray="3 4" />
-        <path d={line("act")} fill="none" stroke={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
-        <circle cx={x(pts.length - 1)} cy={y(last.act)} r="3.5" fill={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} />
-        <text x={x(pts.length - 1) - 4} y={y(last.act) - 8} textAnchor="end" fill="var(--ivory)" style={{ font: "600 11px Inter" }}>{last.act >= 0 ? "+" : "−"}${Math.abs(last.act).toLocaleString()}</text>
+        {/* keyed by what is drawn, so a new filter or a new session plays the trace again */}
+        <g key={`${pts.length}|${last.act}|${last.exp}`}>
+        <path className="fadein" d={band} fill="rgba(var(--acc),.07)" style={{ animationDuration: ".9s" }} />
+        <path className="fadein" d={line("exp")} fill="none" stroke="rgba(var(--fg),.4)" strokeWidth="1.5" strokeDasharray="3 4" style={{ animationDelay: ".15s" }} />
+        <path className="drawline" pathLength="1" d={line("act")} fill="none" stroke={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
+        <circle className="popin" style={{ animationDelay: "1.02s" }} cx={x(pts.length - 1)} cy={y(last.act)} r="3.5" fill={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} />
+        <text className="fadein" style={{ font: "600 11px Inter", animationDelay: "1.05s", animationDuration: ".35s" }} x={x(pts.length - 1) - 4} y={y(last.act) - 8} textAnchor="end" fill="var(--ivory)">{last.act >= 0 ? "+" : "−"}${Math.abs(last.act).toLocaleString()}</text>
+        </g>
         <text x={P.l} y={H - 4} fill="var(--muted)" style={{ font: "500 9px Inter" }}>0h</text>
         <text x={W - P.r} y={H - 4} textAnchor="end" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{fmtH(last.h)}</text>
       </svg>
@@ -3251,21 +3290,23 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
           </defs>
           {yT.map((v) => <g key={"y" + v}><line x1={P.l} x2={W - P.r} y1={y(v)} y2={y(v)} stroke={v === 0 ? "rgba(var(--fg),.22)" : "rgba(var(--fg),.05)"} strokeWidth="1" /><text x={W - P.r + 6} y={y(v) + 3} fill="var(--muted)" style={{ font: "500 10px Inter" }}>{shortMoney(v)}</text></g>)}
           {xT.map((v) => { const xx = P.l + (v / xMax) * cw; const edge = xx < P.l + 12; return <text key={"x" + v} x={edge ? P.l : xx} y={H - 6} textAnchor={edge ? "start" : "middle"} fill="var(--muted)" style={{ font: "500 10px Inter" }}>{useH ? fmtH(v) : `${v}`}</text>; })}
-          {view === "cum" ? (<>
-            {band >= 2 && <path d={bandPath(2)} fill="rgba(var(--fg),.035)" />}
-            {band >= 1 && <path d={bandPath(1)} fill="rgba(var(--fg),.06)" />}
-            {showExp && <path d={lineOf((p) => p.exp)} fill="none" stroke="rgba(var(--fg),.38)" strokeWidth="1.25" strokeDasharray="3 5" />}
-            <path d={lineOf((p) => p.act) + `L${xv(last).toFixed(1)},${y(0).toFixed(1)}L${xv(pts[0]).toFixed(1)},${y(0).toFixed(1)}Z`} fill="url(#pnlArea)" />
-            <path d={lineOf((p) => p.act)} fill="none" stroke={col} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
-            {picked ? (<>
+          {view === "cum" ? (<g key={`${axis}|${pts.length}|${last.act}`}>
+            {band >= 2 && <path className="fadein" d={bandPath(2)} fill="rgba(var(--fg),.035)" />}
+            {band >= 1 && <path className="fadein" d={bandPath(1)} fill="rgba(var(--fg),.06)" />}
+            {showExp && <path className="fadein" d={lineOf((p) => p.exp)} fill="none" stroke="rgba(var(--fg),.38)" strokeWidth="1.25" strokeDasharray="3 5" />}
+            <path d={lineOf((p) => p.act) + `L${xv(last).toFixed(1)},${y(0).toFixed(1)}L${xv(pts[0]).toFixed(1)},${y(0).toFixed(1)}Z`} fill="url(#pnlArea)" className="fadein" style={{ animationDuration: "1s", animationDelay: ".25s" }} />
+            <path className="drawline" pathLength="1" d={lineOf((p) => p.act)} fill="none" stroke={col} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
+            {picked && (<>
               <line x1={xv(sp)} x2={xv(sp)} y1={P.t} y2={H - P.b} stroke="rgba(var(--fg),.3)" strokeWidth="1" />
               <circle cx={xv(sp)} cy={y(sp.act)} r="5.5" fill={col} stroke="var(--bg)" strokeWidth="2.5" />
-            </>) : <circle cx={xv(last)} cy={y(last.act)} r="4" fill={col} stroke="var(--bg)" strokeWidth="2" />}
-          </>) : (<>
+            </>)}
+            {/* stays mounted so it lands once, after the trace, and isn't replayed every time you let go of the chart */}
+            <g style={{ opacity: picked ? 0 : 1 }}><circle className="popin" style={{ animationDelay: "1.02s" }} cx={xv(last)} cy={y(last.act)} r="4" fill={col} stroke="var(--bg)" strokeWidth="2" /></g>
+          </g>) : (<>
             {list.map((s, k) => { const a = pts[k], b = pts[k + 1]; const x0 = xv(a), x1 = xv(b); const gap = Math.min(4, (x1 - x0) * 0.28); const h = +s.hours || 0; const e = sessEv(s, evHour) * h, d = sessSd(s, sdHour) * Math.sqrt(h); const bx = x0 + gap / 2, bw = Math.max(1.5, x1 - x0 - gap); const on = !picked || k === si;
               return (<g key={s.id || k}>
                 {band > 0 && <rect x={bx} width={bw} y={y(e + band * d)} height={Math.max(1, y(e - band * d) - y(e + band * d))} rx={Math.min(2, bw / 3)} fill="rgba(var(--fg),.05)" />}
-                <rect x={bx} width={bw} y={Math.min(y(0), y(s.result))} height={Math.max(1, Math.abs(y(s.result) - y(0)))} rx={Math.min(3, bw / 3)} fill={s.result >= 0 ? "var(--brass)" : "var(--rose)"} opacity={on ? 0.9 : 0.35} style={{ transition: "opacity .15s" }} />
+                <rect className="growy" x={bx} width={bw} y={Math.min(y(0), y(s.result))} height={Math.max(1, Math.abs(y(s.result) - y(0)))} rx={Math.min(3, bw / 3)} fill={s.result >= 0 ? "var(--brass)" : "var(--rose)"} opacity={on ? 0.9 : 0.35} style={{ transition: "opacity .15s", transformOrigin: s.result >= 0 ? "50% 100%" : "50% 0%", animationDelay: `${Math.min(k, 30) * 0.018}s` }} />
                 {showExp && <line x1={bx} x2={bx + bw} y1={y(e)} y2={y(e)} stroke="rgba(var(--fg),.6)" strokeWidth="1.25" />}
               </g>); })}
           </>)}
@@ -3408,7 +3449,7 @@ function SkillsCard({ log, go }) {
                   </span>
                 </div>
                 <div className="flex items-center gap-3 mt-1.5">
-                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full rounded-full bar" style={{ width: `${Math.max(3, r.acc)}%`, background: skillTone(r.acc) }} /></div>
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full rounded-full bar barx" style={{ width: `${Math.max(3, r.acc)}%`, background: skillTone(r.acc) }} /></div>
                   <span className="text-[11px] shrink-0" style={{ color: "var(--muted)", minWidth: 118, textAlign: "right" }}>{r.sub}</span>
                 </div>
               </div>
@@ -3638,7 +3679,8 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
 }
 
 function LuckGauge({ z, pct }) {
-  const W = 300, H = 74, base = 60, zz = Math.max(-3.2, Math.min(3.2, z));
+  // the marker starts at "expected" and rides the curve out to where you are; in Live play it glides hand to hand
+  const W = 300, H = 74, base = 60, zz = useTween(Math.max(-3.2, Math.min(3.2, isFinite(z) ? z : 0)), 900, 0);
   const xOf = (v) => 10 + ((v + 3.5) / 7) * (W - 20);
   const yOf = (v) => base - Math.exp(-(v * v) / 2) * 48;
   let curve = "", fillL = `M${xOf(-3.5)},${base}`;
@@ -3648,7 +3690,7 @@ function LuckGauge({ z, pct }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" role="img" aria-label={`Luck percentile ${Math.round(pct * 100)}`}>
       <path d={fillL} fill="rgba(var(--acc),.16)" />
-      <path d={curve} fill="none" stroke="rgba(var(--fg),.35)" strokeWidth="1.5" />
+      <path className="drawline" pathLength="1" d={curve} fill="none" stroke="rgba(var(--fg),.35)" strokeWidth="1.5" style={{ animationDuration: ".8s", animationDelay: "0s" }} />
       <line x1={xOf(-3.5)} x2={xOf(3.5)} y1={base} y2={base} stroke="rgba(var(--fg),.15)" />
       {[-2, -1, 0, 1, 2].map((v) => <text key={v} x={xOf(v)} y={H - 2} textAnchor="middle" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{v === 0 ? "expected" : `${v > 0 ? "+" : "−"}${Math.abs(v)} SD`}</text>)}
       <line x1={xOf(zz)} x2={xOf(zz)} y1={yOf(zz) - 10} y2={base} stroke={col} strokeWidth="2" />
@@ -3749,7 +3791,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
     let inside = 0; lows.forEach((s) => { const sh = (+s.hours || 0); const c95 = sessionCash(0.05, sessEv(s, evHour), sessSd(s, sdHour), sh); if (Math.abs(s.low) <= c95) inside++; });
     return { n: lows.length, inside, deepest: Math.min(...lows.map((s) => s.low)) };
   }, [lows, evHour, sdHour]); // eslint-disable-line
-  const totAnim = useCountUp(Math.round(st.R));
+  const totAnim = Math.round(st.R);
   const n0Hours = n0 && hph ? n0 / hph : 0;
   const longRun = n0Hours > 0 ? Math.min(1, st.H / n0Hours) : 0;
   const sdRatio = st.modelSd > 0 ? st.realSd / st.modelSd : 1;
@@ -3785,7 +3827,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow">{filtered ? [period === "30" ? "Last 30 days" : period === "90" ? "Last 90 days" : period === "ytd" ? "This year" : "All time", casino !== "all" ? byCasino[0]?.name || "" : ""].filter(Boolean).join(" · ") : "All-time result"}</div>
-            <div className="disp mono mt-1" style={{ fontSize: 40, lineHeight: 1.05, color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)", letterSpacing: "-.02em" }}>{list.length ? `${up ? "+" : "−"}$${Math.abs(totAnim).toLocaleString()}` : "$0"}</div>
+            <div className="disp mono mt-1" style={{ fontSize: 40, lineHeight: 1.05, color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)", letterSpacing: "-.02em" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={850} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
             <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{list.length ? `${st.n} session${st.n === 1 ? "" : "s"} · ${fmtH(st.H)} · expected ${sgnMoney(st.E)}` : "No sessions yet"}</div>
           </div>
           <button onClick={() => setSheet("new")} className="btn shrink-0" style={{ width: "auto", padding: "10px 14px", fontSize: 14 }} aria-label="Log a session">+ Log</button>
@@ -3837,7 +3879,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
           {n0Hours > 0 && (
             <div className="mt-4">
               <div className="flex items-baseline justify-between text-xs"><span style={{ color: "var(--ivory-d)" }}>Long run</span><span className="mono" style={{ color: "var(--muted)" }}>{fmtH(Math.round(st.H))} of {Math.round(n0Hours).toLocaleString()}h</span></div>
-              <div className="h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full bar" style={{ width: `${Math.max(1.5, longRun * 100)}%`, background: "linear-gradient(90deg,var(--brass-d),var(--brass))" }} /></div>
+              <div className="h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full bar barx" style={{ width: `${Math.max(1.5, longRun * 100)}%`, background: "linear-gradient(90deg,var(--brass-d),var(--brass))" }} /></div>
               <p className="text-[11px] mt-1.5" style={{ color: "var(--muted)" }}>{longRun < 1 ? `Until about ${Math.round(n0Hours).toLocaleString()} hours (N₀ at your current spread), luck outweighs your edge — results this early say little about skill.` : "Past N₀ — your edge now outweighs a 1-SD swing of luck."}</p>
             </div>
           )}
@@ -4928,12 +4970,12 @@ function BetSpreadCalculator() {
           <div className="grid grid-cols-2 gap-5">
             <div>
               <div className="eyebrow">Profit / hour</div>
-              <div className="disp text-4xl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}<span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
+              <div className="disp text-4xl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={480} f={(x) => money(x)} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
               <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>expected, ± {money(r.sdHour)} (1 SD)</div>
             </div>
             <div>
               <div className="eyebrow">Risk of ruin</div>
-              <div className="disp text-4xl mt-1 mono" style={{ color: rorTone }}>{r.ror >= 0.9995 ? "100" : pct(r.ror, r.ror < 0.001 ? 3 : 1).replace("%", "")}<span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
+              <div className="disp text-4xl mt-1 mono" style={{ color: rorTone }}><Glide v={r.ror} enter dur={480} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
               <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>chance of losing {money(+bankroll || 0)}</div>
             </div>
           </div>
@@ -4963,10 +5005,10 @@ function BetSpreadCalculator() {
             </div>
             {sess ? (
               <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}>{money(Math.ceil(sess.c99 / 50) * 50)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}>{sgnMoney(sess.exp)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Chance of a losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{Math.round(sess.down * 100)}%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>finish below where you started</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : "−" + money(Math.round(sess.ddMed / 25) * 25)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>peak to low{sess.dd90 == null ? "" : ` · 1 in 10: −${money(Math.round(sess.dd90 / 25) * 25)}`}</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={420} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={420} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Chance of a losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={420} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>finish below where you started</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>peak to low{sess.dd90 == null ? "" : ` · 1 in 10: −${money(Math.round(sess.dd90 / 25) * 25)}`}</div></div>
               </div>
             ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
             <Info label="About these numbers">"Bring with you" covers the deepest you're likely to dip during the session, not just where you finish — including the extra swing from hot and cold shoes clustering, checked against full simulations. Drawdown is the biggest drop from a high point to a low within the session.</Info>
@@ -4985,10 +5027,11 @@ function BetSpreadCalculator() {
             <div className="text-xs" style={{ color: "var(--muted)" }}>playing {pct(r.playedFrac, 0)} of hands</div>
           </div>
           <div className="flex items-end gap-1.5 h-36">
-            {r.rows.map((row) => (
+            {r.rows.map((row, i) => (
               <div key={row.c} className="flex-1 flex flex-col items-center justify-end h-full">
-                <div className="mono text-[10px] mb-1" style={{ color: row.bet ? "var(--ivory)" : "var(--muted)" }}>{row.bet ? `$${row.bet}` : "—"}</div>
-                <div className="bar w-full rounded-t-md" style={{
+                <div className="mono text-[10px] mb-1 barlab" style={{ "--i": i, color: row.bet ? "var(--ivory)" : "var(--muted)" }}>{row.bet ? `$${row.bet}` : "—"}</div>
+                <div className="bar bary w-full rounded-t-md" style={{
+                  "--i": i,
                   height: `${Math.max(row.bet ? 6 : 2, (row.bet / maxBar) * 100)}%`,
                   background: row.bet === 0 ? "var(--line)" : row.edge > 0 ? "var(--brass)" : "var(--rose)",
                   opacity: row.bet === 0 ? 1 : 0.55 + 0.45 * Math.min(1, row.f / 0.15),
@@ -5092,7 +5135,7 @@ function BetSpreadCalculator() {
                         {frontier.map((p, i) => { const sel = Math.round(p.cap * 100) === rorPct; return (
                           <button key={p.cap} onClick={() => setRorPct(Math.round(p.cap * 100))} className="relative flex-1 flex flex-col items-center justify-end h-full" aria-label={`${Math.round(p.cap * 100)}% risk`}>
                             {sel && !p.infeasible && <span className="absolute mono whitespace-nowrap" style={{ fontSize: 9, top: -13, color: "var(--brass)" }}>${p.ev.toFixed(0)}</span>}
-                            <div className="w-full rounded-t" style={{ height: p.infeasible ? 3 : `${Math.max(8, (p.ev / mx) * 100)}%`, background: p.infeasible ? "rgba(var(--neg),.35)" : sel ? "var(--brass)" : p.ev > r.evHour ? "rgba(var(--acc),.45)" : "rgba(var(--acc),.22)", transition: "height .35s ease, background .2s" }} />
+                            <div className="w-full rounded-t bary" style={{ "--i": i, height: p.infeasible ? 3 : `${Math.max(8, (p.ev / mx) * 100)}%`, background: p.infeasible ? "rgba(var(--neg),.35)" : sel ? "var(--brass)" : p.ev > r.evHour ? "rgba(var(--acc),.45)" : "rgba(var(--acc),.22)", transition: "height .35s var(--eo), background .2s" }} />
                           </button>); })}
                       </div>
                     </div>
