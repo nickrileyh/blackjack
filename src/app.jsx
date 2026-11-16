@@ -933,8 +933,8 @@ function SoundCard() {
           <input type="range" min={20} max={100} step={10} value={Math.round(p.vol * 100)} onChange={(e) => set({ vol: Number(e.target.value) / 100 })} className="w-full mt-1" aria-label="Sound volume" disabled={!p.on} />
           <div className="flex justify-between -mt-1" style={{ fontSize: 10, color: "var(--muted)" }}><span>quieter</span><span>louder</span></div>
         </div>
-        <Toggle label="Cards and chips" sub="Dealing, betting and the shuffle" on={p.table} onChange={(v) => set({ table: v })} />
-        <Toggle label="Right and wrong" sub="A tick for each answer, a note for a win or a loss" on={p.feedback} onChange={(v) => set({ feedback: v })} />
+        <Toggle label="Cards and chips" sub="Recorded sounds for dealing, betting and the shuffle" on={p.table} onChange={(v) => set({ table: v })} />
+        <Toggle label="Answer and result notes" sub="A note for a right or wrong answer, and for a win or a loss" on={p.feedback} onChange={(v) => set({ feedback: v })} />
       </div>
     </section>
   );
