@@ -108,13 +108,14 @@ const fmtDay = (t) => new Date(t).toLocaleDateString(undefined, { month: "short"
 const ago = (days) => (days <= 0 ? "today" : days === 1 ? "yesterday" : days < 60 ? `${days} days ago` : `${Math.round(days / 30)} months ago`);
 // rest after a visit: a week by default; longer when the casino is warm, you were watched last time, or you've been a lot
 // lately; six months after a back-off
-export const REST = { base: 7, warm: 21, hot: 45, busy: 21, backed: 180 };
+export const REST = { base: 7, warm: 21, hot: 45, busy: 21, backed: 90, backedAgain: 180 };
 export function restOf(c, now) {
   const s = c.sess, m = c.mark || {}, dates = (s && s.dates) || [];
   const last = s && s.last ? dayOf(s.last) : null;
   if (m.status === "backed" || (s && s.backed)) {
     const on = [m.backedOn, s && s.backed].filter(Boolean).sort().pop(), from = on ? dayOf(on) : last;
-    return { kind: "backed", until: from ? from + REST.backed * DAY : null, last, why: "backed off" };
+    const n = Math.max(1, (s && s.backedN) || 0), days = n >= 2 ? REST.backedAgain : REST.backed;
+    return { kind: "backed", until: from ? from + days * DAY : null, last, why: n >= 2 ? `backed off ${n} times` : "backed off" };
   }
   const recent = dates.filter((d) => now - dayOf(d) <= 30 * DAY).length;
   let days = REST.base, why = "";
@@ -124,11 +125,38 @@ export function restOf(c, now) {
   if (m.heat === 3) { days = REST.hot; why = "high heat"; }
   return { kind: "rest", until: last ? last + days * DAY : null, last, why, recent };
 }
+// the best game known at a casino: your saved games first, else the scouting report's best game
+function gamesAt(c) {
+  const mine = ((c.mark && c.mark.games) || []).filter((g) => g.rules);
+  if (mine.length) return mine;
+  const b = c.intel && c.intel.best;
+  if (!b || b.bj65) return [];
+  return [{ rules: { decks: b.decks || 6, h17: b.h17 !== false, das: b.das !== false, surrender: !!b.ls, rsa: !!b.rsa, pen: b.pen || 75 }, min: c.intel.min || "" }];
+}
 export function RotationCard({ all, onOpen }) {
   const now = Date.now();
+  const [setup, setSetup] = useState(null);
+  useEffect(() => { spreadSetup().then(setSetup).catch(() => {}); }, []);
   const rows = useMemo(() => (all || []).filter((c) => (c.sess && c.sess.n) || (c.mark && (c.mark.status === "been" || c.mark.status === "backed")))
     .filter((c) => !(c.mark && c.mark.hidden)).map((c) => ({ c, ...restOf(c, now) })), [all]); // eslint-disable-line
-  const ready = rows.filter((r) => r.kind !== "backed" && (!r.until || r.until <= now)).sort((a, b) => (a.last || 0) - (b.last || 0));
+  const readyRaw = rows.filter((r) => r.kind !== "backed" && (!r.until || r.until <= now));
+  // each ready casino's best table score (50 = your usual game); worked out once the page has settled
+  const [scores, setScores] = useState({});
+  const readyKey = readyRaw.map((r) => r.c.id).join(",");
+  useEffect(() => {
+    if (!setup || !readyRaw.length) return;
+    const t = setTimeout(() => {
+      try {
+        const ref = scoreGame(setup, { rules: setup.rules, min: setup.minBet, max: setup.maxBet, seats: setup.seats }), o = {};
+        readyRaw.forEach((r) => { const best = Math.max(-1, ...gamesAt(r.c).map((g) => { const x = scoreGame(setup, g); return x.loses || x.infeasible ? 0 : scoreOf(x.ev, ref.ev); })); if (best >= 0) o[r.c.id] = best; });
+        setScores(o);
+      } catch (_) {}
+    }, 900);
+    return () => clearTimeout(t);
+  }, [setup, readyKey]); // eslint-disable-line
+  // longest rested first, nudged by game quality: days rested × 0.75 at a score of 0, × 1 at 50 (or unknown), × 1.25 at 100
+  const weight = (r) => ((r.last ? (now - r.last) / DAY : 365) + 1) * (0.75 + (scores[r.c.id] ?? 50) / 200);
+  const ready = readyRaw.slice().sort((a, b) => weight(b) - weight(a));
   const resting = rows.filter((r) => !ready.includes(r)).sort((a, b) => (a.until || Infinity) - (b.until || Infinity));
   // where your hours went over the last 90 days
   const h90 = useMemo(() => { const o = []; (all || []).forEach((c) => { const h = ((c.sess && c.sess.recs) || []).filter((x) => now - dayOf(x.date) <= 90 * DAY).reduce((s, x) => s + x.h, 0); if (h > 0) o.push([c, h]); }); return o.sort((a, b) => b[1] - a[1]); }, [all]); // eslint-disable-line
@@ -146,12 +174,12 @@ export function RotationCard({ all, onOpen }) {
     <section className="card p-5 mb-4 deskonly">
       <div className="eyebrow mb-1">Rotation</div>
       {ready.length > 0
-        ? <p className="text-sm mb-2" style={{ color: "var(--ivory-d)" }}>Next up: <span className="font-semibold" style={{ color: "var(--brass)" }}>{ready[0].c.name}</span>{ready.length === 1 ? " — the only one ready." : ready[0].last ? ` — the longest rested of the ${ready.length} ready.` : "."}</p>
+        ? <p className="text-sm mb-2" style={{ color: "var(--ivory-d)" }}>Next up: <span className="font-semibold" style={{ color: "var(--brass)" }}>{ready[0].c.name}</span>{ready.length === 1 ? " — the only one ready." : ` — best mix of rest and game of the ${ready.length} ready.`}</p>
         : <p className="text-sm mb-2" style={{ color: "var(--ivory-d)" }}>Everywhere you've played is resting. Earliest back: <span className="font-semibold" style={{ color: "var(--ivory)" }}>{resting[0] && resting[0].until ? fmtDay(resting[0].until) : "—"}</span>.</p>}
       {heavy && <p className="text-[11.5px] mb-2" style={{ color: "var(--neg-l)" }}>{Math.round((100 * heavy[1]) / tot)}% of your last 90 days' hours were at {heavy[0].name}. Spread them out.</p>}
-      {ready.length > 0 && <><div className="eyebrow mt-3" style={{ fontSize: 9.5 }}>Ready</div>{ready.map((r, i) => <Row key={r.c.id} r={r} first={i === 0} right="Ready" tone="var(--brass)" />)}</>}
+      {ready.length > 0 && <><div className="eyebrow mt-3" style={{ fontSize: 9.5 }}>Ready</div>{ready.map((r, i) => <Row key={r.c.id} r={r} first={i === 0} right={scores[r.c.id] != null ? <>Ready <span className="mono" style={{ color: "var(--muted)" }}>· {scores[r.c.id]}</span></> : "Ready"} tone="var(--brass)" />)}</>}
       {resting.length > 0 && <><div className="eyebrow mt-3" style={{ fontSize: 9.5 }}>Resting</div>{resting.map((r) => <Row key={r.c.id} r={r} right={r.until ? `Back ${fmtDay(r.until)}` : r.kind === "backed" ? "Backed off" : "—"} tone={r.kind === "backed" ? "var(--rose)" : "var(--ivory-d)"} />)}</>}
-      <Info label="How the rest days work">After a visit a casino rests {REST.base} days. It rests {REST.warm} days if you rated its heat Medium or were watched last time, {REST.busy} days after 3 or more visits in a month, and {REST.hot} days at High heat. A back-off rests it {REST.backed} days from the back-off. Heat comes from each casino's sheet and the heat you log with a session. Ready casinos are listed longest rested first, so your hours spread across them.</Info>
+      <Info label="How the rest days work">After a visit a casino rests {REST.base} days. It rests {REST.warm} days if you rated its heat Medium or were watched last time, {REST.busy} days after 3 or more visits in a month, and {REST.hot} days at High heat. A back-off rests it {REST.backed} days from the back-off, and {REST.backedAgain} days once you've been backed off there twice or more. Heat comes from each casino's sheet and the heat you log with a session. Ready casinos are listed longest rested first, nudged by how good their best game is — the number beside "Ready" is that game's table score (50 = your usual game), from your saved games or the scouting report. A great game counts about like a quarter more rest, so it moves up a little without pulling you back to the same place every time.</Info>
     </section>
   );
 }

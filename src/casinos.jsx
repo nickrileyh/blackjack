@@ -51,7 +51,7 @@ function linkSessions(sessions, all) {
     if (!hit && t.length) { const c = toks.filter(([, set]) => t.every((w) => set.has(w))); if (c.length === 1) hit = c[0][0]; }
     if (!hit) { loose.push({ key: k, name: o.name, n: o.list.length }); return; }
     const st = by.get(hit.id) || { n: 0, h: 0, net: 0, last: "", backed: null, watched: false, dates: [], recs: [], lastHeat: null };
-    o.list.forEach((s) => { st.n++; st.h += +s.hours || 0; st.net += +s.result || 0; st.dates.push(s.date); st.recs.push({ date: s.date, h: +s.hours || 0 }); if (s.date >= st.last) { st.last = s.date; st.lastHeat = s.heat || null; } if (s.heat === "backed" && (!st.backed || s.date > st.backed)) st.backed = s.date; if (s.heat === "watched") st.watched = true; });
+    o.list.forEach((s) => { st.n++; st.h += +s.hours || 0; st.net += +s.result || 0; st.dates.push(s.date); st.recs.push({ date: s.date, h: +s.hours || 0 }); if (s.date >= st.last) { st.last = s.date; st.lastHeat = s.heat || null; } if (s.heat === "backed") { st.backedN = (st.backedN || 0) + 1; if (!st.backed || s.date > st.backed) st.backed = s.date; } if (s.heat === "watched") st.watched = true; });
     by.set(hit.id, st);
   });
   return { by, loose: loose.sort((a, b) => b.n - a.n) };
