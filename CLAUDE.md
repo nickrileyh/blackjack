@@ -127,6 +127,14 @@ charts (doubling 9 vs 2, splitting 6s vs 7 and so on) — expected, BJA's charts
 uses one chart for every deck count. Soft 18 vs 2 in H17 ("0−": stand on a negative running count) came from that
 check; the BJA chart has no index there.
 
+## Sessions
+
+The Luck check card's **Long run** bar measures N₀ from the log itself, not from the spread currently set in the app:
+`sessionStats` returns `expHour` and `modelSd` (each session's own snapshot edge and swing, weighted by its hours),
+and N₀ in hours is `(modelSd / expHour)²`. It follows the page's period and casino filters, like every other figure on
+the card. With nothing logged, or when the logged average has no edge, it falls back to the current spread's `n0` and
+the caption says which one it used.
+
 ## Checking the arithmetic
 
 `tools/checks/run.sh` builds the app with a few internal functions exported and runs `tools/checks/math-test.jsx` in Node: payouts (`settle`), hand values, the normal curve (`PhiN`), the chance of a dip (`pDip`, against a brute-force random walk), the calculator's formulas (EV, swing, risk of ruin against a simulated walk, N0, session bankroll) across deck counts and table sizes, and about 70 basic-strategy and count-play spot checks against the published charts. It prints "all N checks passed" or each failure; run it after touching any of those. It does not re-measure the edge tables — that is the simulator's job (above). Two things it found that are by design, not bugs: heads-up with a $0 bet at the starting count never plays a hand (nobody else moves the count), and 12 v 5, 12 v 6 and 13 v 3 have no count play because BJA's chart leaves them out.

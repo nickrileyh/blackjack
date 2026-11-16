@@ -3985,7 +3985,11 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
     return { n: lows.length, inside, deepest: Math.min(...lows.map((s) => s.low)) };
   }, [lows, evHour, sdHour]); // eslint-disable-line
   const totAnim = Math.round(st.R);
-  const n0Hours = n0 && hph ? n0 / hph : 0;
+  // N₀ from the sessions themselves — each one's own edge and swing, weighted by its hours (st.expHour and
+  // st.modelSd) — so the bar measures the games actually played rather than whatever spread is set right now.
+  // Before anything is logged (or with no edge in the log) it falls back to the current spread.
+  const n0Logged = st.H > 0 && st.expHour > 0 && st.modelSd > 0 ? Math.pow(st.modelSd / st.expHour, 2) : 0;
+  const n0Hours = n0Logged || (n0 && hph && isFinite(n0) ? n0 / hph : 0);
   const longRun = n0Hours > 0 ? Math.min(1, st.H / n0Hours) : 0;
   const sdRatio = st.modelSd > 0 ? st.realSd / st.modelSd : 1;
 
@@ -4073,7 +4077,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
             <div className="mt-4">
               <div className="flex items-baseline justify-between text-xs"><span style={{ color: "var(--ivory-d)" }}>Long run</span><span className="mono" style={{ color: "var(--muted)" }}>{fmtH(Math.round(st.H))} of {Math.round(n0Hours).toLocaleString()}h</span></div>
               <div className="h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full bar barx" style={{ width: `${Math.max(1.5, longRun * 100)}%`, background: "linear-gradient(90deg,var(--brass-d),var(--brass))" }} /></div>
-              <p className="text-[11px] mt-1.5" style={{ color: "var(--muted)" }}>{longRun < 1 ? `Until about ${Math.round(n0Hours).toLocaleString()} hours (N₀ at your current spread), luck outweighs your edge — results this early say little about skill.` : "Past N₀ — your edge now outweighs a 1-SD swing of luck."}</p>
+              <p className="text-[11px] mt-1.5" style={{ color: "var(--muted)" }}>{longRun < 1 ? `Until about ${Math.round(n0Hours).toLocaleString()} hours (N₀ ${n0Logged ? "across your logged sessions" : "at your current spread"}), luck outweighs your edge — results this early say little about skill.` : "Past N₀ — your edge now outweighs a 1-SD swing of luck."}</p>
             </div>
           )}
         </section>
