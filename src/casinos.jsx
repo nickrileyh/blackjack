@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect, useRef, memo } from "react";
 import { Sheet, Seg, ChipRow, ConfirmLink, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav } from "./app.jsx";
 import { unpack, albersUsa, azimuthal, regionMap, countryMap, fitBox, regionAt } from "./casino-map.js";
 import { GEO_US, GEO_CA, GEO_WORLD, CASINO_ROWS, CASINO_INTEL } from "./casino-data.js";
-import { TableScoreCard, RotationCard } from "./planner.jsx";
+import { TableScoreCard, useCasinoScores, scoreTone, wideScreen } from "./planner.jsx";
 
 export const CAS_KEY = "bj-casinos-v1"; // your marks and your own casinos — backed up and synced
 const CAS_UI_KEY = "bj-casinos-ui"; // which country you were looking at — this device only
@@ -300,7 +300,7 @@ function CasinoMap({ map, pins, focus, sel, placing, miles, regionWord, onRegion
 }
 
 // ---------- rows and sheets ----------
-function CasinoRow({ c, place, onOpen }) {
+function CasinoRow({ c, place, onOpen, score }) {
   const st = statusOf(c), m = c.mark || {}, g = (m.games || [])[0];
   const it = c.intel, quick = !g && it ? [it.tablesN ? `${it.tablesN} tables` : null, it.min ? `from $${it.min}` : null].filter(Boolean) : [];
   const sub = [place, g && g.rules ? rulesShort(g.rules) : null, ...quick, m.heat ? `${HEATS[m.heat - 1][1].toLowerCase()} heat` : null].filter(Boolean).join(" · ");
@@ -308,7 +308,7 @@ function CasinoRow({ c, place, onOpen }) {
     <button className="crow" onClick={() => onOpen(c)}>
       <span className={"cdot" + (st === "backed" ? " x" : st === "been" ? " b" : "")} aria-hidden="true" />
       <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{sub}</span></span>
-      <span className="flex items-center gap-2">{st === "backed" ? <span className="ctag x">backed off</span> : st === "been" ? <span className="ctag b">been</span> : c.intel ? <span className="ctag n">report</span> : null}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)" }}><path d="M9 6l6 6-6 6" /></svg></span>
+      <span className="flex items-center gap-2">{score && <span className="deskonly text-right leading-none" title={`Table score ${score.score}: the best game here against your usual game (50)`}><span className="block mono text-[13px] font-semibold" style={{ color: scoreTone(score.score) }}>{score.score}</span><span className="block text-[8.5px] font-semibold uppercase mt-0.5" style={{ color: "var(--muted)", letterSpacing: ".08em" }}>score</span></span>}{st === "backed" ? <span className="ctag x">backed off</span> : st === "been" ? <span className="ctag b">been</span> : c.intel ? <span className="ctag n">report</span> : null}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)" }}><path d="M9 6l6 6-6 6" /></svg></span>
     </button>
   );
 }
@@ -508,6 +508,24 @@ function LinkSheet({ name, all, onLink, onAddNew, onClose }) {
 
 // ---------- the page ----------
 let _casUi = null; // country and focused state, kept while the app is open
+// everything known about every casino: the built-in list with your marks on top, plus the ones you added
+function buildAll(marksList, sessions) {
+  const base = baseData(), marks = new Map(marksList.map((m) => [m.id, m]));
+  const all = base.list.map((b) => ({ ...b, mark: marks.get(b.id), intel: base.intel[b.id] || null }));
+  marksList.forEach((m) => { if (m.custom) all.push({ id: m.id, name: m.name || "Casino", city: m.city || "", st: m.st || "", cc: m.cc || "USA", lat: m.lat, lon: m.lon, custom: true, mark: m }); });
+  const { by, loose } = linkSessions(sessions, all);
+  all.forEach((c) => { c.sess = by.get(c.id) || null; });
+  return { all, loose };
+}
+// for the Plan tab: the same list, read straight from storage
+export async function loadCasinoAll() {
+  let d = null, s = [];
+  try { const r = await window.storage.get(CAS_KEY, false); if (r?.value) d = JSON.parse(r.value); } catch (_) {}
+  try { const r = await window.storage.get(SESS_KEY, false); if (r?.value) s = JSON.parse(r.value) || []; } catch (_) {}
+  return buildAll(Array.isArray(d && d.marks) ? d.marks.filter((m) => m && m.id) : [], Array.isArray(s) ? s : []).all;
+}
+let _casOpen = null; // a casino the Plan tab asked to open before this page was showing
+export const openCasinoId = (id) => { _casOpen = id; };
 export default function CasinosPage({ rules, onUseRules, go }) {
   const [data, setData] = useState(null); // { marks: [...] }
   const [sessions, setSessions] = useState([]);
@@ -524,6 +542,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
   const [showHidden, setShowHidden] = useState(false);
   const [more, setMore] = useState(false);
   const mapCard = useRef(null);
+  const [wide] = useState(wideScreen); // table scores are a wide-screen extra
   useEffect(() => { (async () => {
     let d = null, s = [], ui = null;
     try { const r = await window.storage.get(CAS_KEY, false); if (r?.value) d = JSON.parse(r.value); } catch (_) {}
@@ -532,8 +551,8 @@ export default function CasinosPage({ rules, onUseRules, go }) {
     setSessions(Array.isArray(s) ? s : []); setData({ marks: Array.isArray(d && d.marks) ? d.marks.filter((m) => m && m.id) : [] });
   })(); }, []);
   useEffect(() => { _casUi = { cc, focus }; try { window.storage.set(CAS_UI_KEY, JSON.stringify({ cc }), false); } catch (_) {} }, [cc, focus]);
-  useNav((o) => { if (o.add) { _casAdd = false; startAdd(); } });
-  useEffect(() => { if (_casAdd) { _casAdd = false; startAdd(); } }, []); // eslint-disable-line
+  useNav((o) => { if (o.add) { _casAdd = false; startAdd(); } if (o.open) { _casOpen = null; setOpen(o.open); } });
+  useEffect(() => { if (_casAdd) { _casAdd = false; startAdd(); } if (_casOpen) { setOpen(_casOpen); _casOpen = null; } }, []); // eslint-disable-line
   const save = (marks) => { setData({ marks }); try { window.storage.set(CAS_KEY, JSON.stringify({ v: 1, marks }), false); } catch (_) {} };
   const patchMark = (id, patch, base) => {
     const cur = data.marks.find((m) => m.id === id), next = { ...(cur || base || { id }), ...patch, t: Date.now() };
@@ -545,15 +564,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
 
   const map = useMemo(() => mapFor(cc), [cc]);
   // everything known about every casino: the built-in list with your marks on top, plus the ones you added
-  const everything = useMemo(() => {
-    if (!data) return null;
-    const base = baseData(), marks = new Map(data.marks.map((m) => [m.id, m]));
-    const all = base.list.map((b) => ({ ...b, mark: marks.get(b.id), intel: base.intel[b.id] || null }));
-    data.marks.forEach((m) => { if (m.custom) all.push({ id: m.id, name: m.name || "Casino", city: m.city || "", st: m.st || "", cc: m.cc || "USA", lat: m.lat, lon: m.lon, custom: true, mark: m }); });
-    const { by, loose } = linkSessions(sessions, all);
-    all.forEach((c) => { c.sess = by.get(c.id) || null; });
-    return { all, loose };
-  }, [data, sessions]);
+  const everything = useMemo(() => (data ? buildAll(data.marks, sessions) : null), [data, sessions]);
   const here = useMemo(() => (everything ? everything.all.filter((c) => c.cc === cc) : []), [everything, cc]);
   const visible = useMemo(() => here.filter((c) => showHidden || !(c.mark && c.mark.hidden)), [here, showHidden]);
   const counts = useMemo(() => { const o = { all: visible.length, been: 0, backed: 0, intel: 0 }; visible.forEach((c) => { const s = statusOf(c); if (s !== "none") o.been++; if (s === "backed") o.backed++; if (c.intel) o.intel++; }); return o; }, [visible]);
@@ -599,9 +610,11 @@ export default function CasinosPage({ rules, onUseRules, go }) {
   const pickCountry = (id) => { setCountrySheet(false); if (id !== cc) { setCc(id); setFocus(null); setFilter("all"); setQ(""); } };
   const openCasino = (c) => { setPick(null); setOpen(c.id); };
 
+  const shownList = more ? list : list.slice(0, 40);
+  const scores = useCasinoScores(shownList, wide);
   if (!everything) return <div><style>{casCss}</style></div>;
   const cname = countryName(cc), cur = open && everything.all.find((c) => c.id === open);
-  const shown = more ? list : list.slice(0, 40);
+  const shown = shownList;
   const emptyAll = !searching && !focus && filter === "all" && !list.length;
   return (
     <div>
@@ -632,7 +645,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
             <div className="eyebrow">{title}</div>
             {!searching && list.length > 0 && <div className="mono text-xs" style={{ color: "var(--muted)" }}>{list.length}</div>}
           </div>
-          {shown.map((c) => <CasinoRow key={c.id} c={c} place={searching || !focus ? [c.city, c.st].filter(Boolean).join(", ") : placeOf(c)} onOpen={openCasino} />)}
+          {shown.map((c) => <CasinoRow key={c.id} c={c} place={searching || !focus ? [c.city, c.st].filter(Boolean).join(", ") : placeOf(c)} onOpen={openCasino} score={scores.get(c)} />)}
           {list.length > shown.length && <button onClick={() => setMore(true)} className="w-full text-xs font-semibold py-2.5" style={{ color: "var(--brass)" }}>Show all {list.length}</button>}
           {!list.length && (emptyAll
             ? <div className="text-center py-6"><div className="text-sm font-semibold">{counts.all ? "Mark where you've played" : `No casinos listed for ${cname} yet`}</div><p className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{counts.all ? `${map.hasRegions ? (cc === "USA" ? "Tap a state on the map" : "Tap a province on the map") : "Tap a pin on the map"} or search by name. Casinos you've been to, been backed off from or written notes on collect here.` : "Add the ones you play with “+ Add casino”, then tap the map where each one is."}</p></div>
@@ -651,7 +664,6 @@ export default function CasinosPage({ rules, onUseRules, go }) {
               </button>))}
           </section>
         )}
-        <RotationCard all={everything.all} onOpen={openCasino} />
         <TableScoreCard casinos={everything.all} appRules={rules} onUseRules={onUseRules} />
       </div></div>
 

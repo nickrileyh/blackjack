@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef, Fragment, createContext, useConte
 import { createPortal } from "react-dom";
 import { AskPage, AskKeyCard, AskDot } from "./ask.jsx";
 import CasinosPage, { openCasinoAdd } from "./casinos.jsx";
+import { PlanPage } from "./planner.jsx";
 import { sfx, soundPrefs, setSoundPrefs } from "./sound.js";
 import { coverCal } from "./cover.js";
 
@@ -3842,49 +3843,6 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
   );
 }
 
-// Desktop only (Bet spread): the table minimums your bankroll supports at a chosen risk, and how long until the next one.
-// Your current spread is scaled to each table's minimum (every bet × table min ÷ your min), so EV grows by that factor and
-// variance by its square: the bankroll a risk of ruin needs is k · variance · −ln(risk) / (2 · EV).
-const TABLE_MINS = [5, 10, 15, 25, 50, 75, 100, 200, 500];
-const PLAN_RISKS = [[0.02, "2%"], [0.05, "5%"], [0.1, "10%"]];
-function BankrollPlan({ r, bankroll, minBet, bets }) {
-  const [risk, setRisk] = useState(0.05);
-  if (!(minBet > 0)) return null;
-  const top = Math.max(0, ...COUNTS.map((c) => +bets[c] || 0));
-  const card = (body) => <section className="card p-5 mb-4 deskonly"><div className="flex items-center justify-between gap-3 mb-3"><div className="eyebrow">Growing your bankroll</div><Seg small value={risk} options={PLAN_RISKS} onChange={setRisk} style={{ width: 170 }} /></div>{body}</section>;
-  if (!(r.evHour > 0)) return card(<p className="text-sm" style={{ color: "var(--ivory-d)" }}>This spread doesn't win, so there's nothing to grow into. Find a winning spread first.</p>);
-  const per = (r.sdHour * r.sdHour * -Math.log(risk)) / (2 * r.evHour); // bankroll needed per 1× of your current spread
-  const mins = [...new Set([...TABLE_MINS, minBet])].sort((a, b) => a - b);
-  const at = mins.indexOf(minBet), lo = mins.filter((m, i) => i < at && per * (m / minBet) <= bankroll).pop();
-  const levels = [...(lo != null ? [lo] : []), ...mins.slice(at, at + 4)].map((m) => { const k = m / minBet; return { m, k, need: per * k, ev: r.evHour * k, sd: r.sdHour * k, top: top * k }; });
-  // play the biggest table you qualify for until the bankroll reaches the next one, then move up
-  let b = bankroll, hrs = 0, odds = 1, play = levels.filter((l) => l.need <= bankroll).pop() || null;
-  levels.forEach((l) => {
-    if (l.need <= bankroll) { l.state = l === play ? "now" : "ok"; return; }
-    if (!play) { l.state = "short"; return; }
-    const th = (2 * play.ev) / (play.sd * play.sd);
-    odds *= (1 - Math.exp(-th * b)) / (1 - Math.exp(-th * l.need)); l.chance = odds;
-    hrs += (l.need - b) / play.ev; l.hrs = hrs; l.state = "later"; b = l.need; play = l;
-  });
-  const cur = levels.filter((l) => l.state === "now").pop();
-  return card(<>
-    <p className="text-sm mb-3" style={{ color: "var(--ivory-d)" }}>{cur ? <>Your {money(bankroll)} supports <span className="mono font-semibold" style={{ color: "var(--brass)" }}>${cur.m}</span> tables with your spread at {pct(risk, 0)} risk of ruin.</> : <>At {pct(risk, 0)} risk your {money(bankroll)} is short of even the ${levels[0].m} table with this spread.</>}</p>
-    <div className="grid text-[10px] font-semibold uppercase pb-1.5" style={{ gridTemplateColumns: "64px minmax(0,1fr) 72px 84px minmax(0,1.2fr)", gap: 10, color: "var(--muted)", letterSpacing: ".08em", borderBottom: "1px solid var(--line)" }}><span>Table</span><span>Bets</span><span className="text-right">Per hour</span><span className="text-right">Bankroll</span><span className="text-right">Getting there</span></div>
-    {levels.map((l) => (
-      <div key={l.m} className="grid items-center py-2" style={{ gridTemplateColumns: "64px minmax(0,1fr) 72px 84px minmax(0,1.2fr)", gap: 10, borderBottom: "1px solid var(--line)", opacity: l.state === "ok" ? 0.6 : 1 }}>
-        <span className="mono text-sm font-semibold" style={{ color: l.state === "now" ? "var(--brass)" : "var(--ivory)" }}>${l.m}</span>
-        <span className="mono text-xs" style={{ color: "var(--ivory-d)" }}>${l.m}–{shortMoney(l.top)}</span>
-        <span className="mono text-xs text-right">{money(l.ev)}</span>
-        <span className="mono text-xs text-right">{shortMoney(l.need)}</span>
-        <span className="text-xs text-right" style={{ color: l.state === "now" ? "var(--brass)" : l.state === "short" ? "var(--neg-l)" : "var(--ivory-d)" }}>
-          {l.state === "now" ? "You're here" : l.state === "ok" ? "Covered" : l.state === "short" ? `${shortMoney(l.need - bankroll)} short` : <>~{Math.round(l.hrs).toLocaleString()} h · <span className="mono">{Math.round(l.chance * 100)}%</span></>}
-        </span>
-      </div>
-    ))}
-    <Info label="How it works">Each row is your current spread scaled to that table's minimum, so every bet grows by the same factor. Bankroll is what that spread needs to hold risk of ruin at {pct(risk, 0)}. "Getting there" plays the biggest table you qualify for until you reach the next bankroll, then moves up: the hours are the expected hours of play from today, and the % is the chance of getting all the way to that row without going broke on the way. Luck can make it much faster or slower. If you lose, drop back a row rather than keep the bigger bets.</Info>
-  </>);
-}
-
 function LuckGauge({ z, pct }) {
   // the marker starts at "expected" and rides the curve out to where you are; in Live play it glides hand to hand
   const W = 300, H = 74, base = 60, zz = useTween(Math.max(-3.2, Math.min(3.2, isFinite(z) ? z : 0)), 620, 0);
@@ -4551,6 +4509,7 @@ const NAV_ITEMS = [
   ["calc", "Spread", <path d="M4 20h16M7 16.5v-4M12 16.5V8M17 16.5V4.5" />],
   ["sessions", "Sessions", <><path d="M4 18.5 9.2 12.8l3.6 3.2 7.2-8.5" /><path d="M15.5 7.5H20V12" /></>],
   ["casinos", "Casinos", <><path d="M12 20.8s-6.6-5.9-6.6-10.9a6.6 6.6 0 0 1 13.2 0c0 5-6.6 10.9-6.6 10.9z" /><circle cx="12" cy="9.9" r="2.4" /></>],
+  ["plan", "Plan", <><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8.5 3.5v3M15.5 3.5v3M8 13.5h3M8 16.5h6" /></>], // wide screens only: left out of the phone's bottom bar
   ["ask", "Ask", <><path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4.5 19.5l1.3-4.2A7.5 7.5 0 1 1 20 11.5z" /><path d="M9.5 11.5h.01M12.5 11.5h.01M15.5 11.5h.01" /></>],
 ];
 // Jump-to palette (⌘K / Ctrl K / "/"): type a few letters, arrow to a row, Enter. Every page, drill and setting is in it.
@@ -5140,6 +5099,7 @@ function BetSpreadCalculator() {
     ["Pages", "Sessions", () => go("sessions"), "casino log chart results"],
     ["Pages", "Ask", () => go("ask"), "ai assistant chat question cover play claude"],
     ["Pages", "Casinos", () => go("casinos"), "map scouting backed off heat penetration rules countries"],
+    ["Pages", "Plan", () => go("plan"), "rotation cooldown rest next casino bankroll growth move up schedule"],
     ["Pages", "Settings", () => go("settings"), "sync backup reset"],
     ["Train", "Strategy practice", () => go("train", { trainView: "drill", trainMode: "basic" }), "basic"],
     ["Train", "Deviations practice", () => go("train", { trainView: "drill", trainMode: "dev" }), "index illustrious"],
@@ -5165,7 +5125,7 @@ function BetSpreadCalculator() {
         <header className="mb-5 flex items-end justify-between gap-3">
           <div className="shrink-0">
             {tab === "progress" && <div className="eyebrow mb-1.5">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>}
-            <h1 className="leading-none font-semibold">{({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", ask: "Ask" })[tab]}</h1>
+            <h1 className="leading-none font-semibold">{({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan", ask: "Ask" })[tab]}</h1>
           </div>
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
@@ -5175,14 +5135,14 @@ function BetSpreadCalculator() {
             <button onClick={() => go(tab === "settings" ? "progress" : "settings")} className="iconbtn hdrgear shrink-0" aria-label={tab === "settings" ? "Close settings" : "Settings"} aria-pressed={tab === "settings"}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>
           </div>
         </header>
-        <TopBar title={({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", ask: "Ask" })[tab]}>
+        <TopBar title={({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan", ask: "Ask" })[tab]}>
           <button onClick={() => setSetupOpen(true)} className="rulespill shrink-0" style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </TopBar>
         <div className="sbar" aria-hidden="true" />
 
 
         {(tab === "train" || tab === "count") && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
-        {tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "ask" ? <div className="rise" key="a"><AskPage /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
+        {tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage r={r} bankroll={+bankroll || 0} minBet={+minBet || 0} bets={bets} go={go} /></div> : tab === "ask" ? <div className="rise" key="a"><AskPage /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .6s" }}>
@@ -5423,7 +5383,6 @@ function BetSpreadCalculator() {
             to bring risk of ruin down to {pct(Math.min(rorTarget, 0.2), 0)}.
           </div>
         </section>
-        <BankrollPlan r={r} bankroll={+bankroll || 0} minBet={+minBet || 0} bets={bets} />
         </div></div>
 
         <p className="text-[11px] mt-5 leading-relaxed" style={{ color: "var(--muted)" }}>
@@ -5464,7 +5423,7 @@ function BetSpreadCalculator() {
       </nav>
       <nav className="bottom-nav" aria-label="Sections">
         <div className="flex">
-          {NAV_ITEMS.map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
+          {NAV_ITEMS.filter(([k]) => k !== "plan").map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
             <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
               <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg>{k === "ask" && <AskDot />}</span>
               <span>{l}</span>
