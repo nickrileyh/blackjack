@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef, Fragment, createContext, useConte
 import { createPortal } from "react-dom";
 import { AskPage, AskKeyCard, AskDot } from "./ask.jsx";
 import CasinosPage, { openCasinoAdd } from "./casinos.jsx";
+import { sfx, soundPrefs, setSoundPrefs } from "./sound.js";
 
 // ---------- model ----------
 const COUNTS = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
@@ -210,7 +211,7 @@ function useDeferred(key, fn, keep) {
     if (!keep) setV(undefined);
     // while the page is still animating in, wait for it to finish: a heavy sum in the middle of a trace makes it stutter
     const now = performance.now(); if (!opened.current) opened.current = now;
-    const wait = Math.max(90, 1250 - (now - opened.current));
+    const wait = Math.max(90, 1100 - (now - opened.current));
     const id = setTimeout(() => { const r = f.current(); if (_deferred.size > 60) _deferred.clear(); _deferred.set(key, r); setV(r); }, wait);
     return () => clearTimeout(id);
   }, [key]); // eslint-disable-line
@@ -522,21 +523,23 @@ input[type=range]{accent-color:var(--brass)}
 .rise>div>section:nth-of-type(n+5),.rise>section:nth-of-type(n+5){animation-delay:.2s}
 .navbtn.on .navicon svg{animation:navpop .38s cubic-bezier(.3,1.6,.5,1)}
 @keyframes navpop{0%{transform:scale(.78)}100%{transform:scale(1)}}
-.growy{transform-box:fill-box;animation:growy .55s cubic-bezier(.2,.8,.2,1) both}
+.growy{transform-box:fill-box;animation:growy .45s cubic-bezier(.2,.8,.2,1) both}
 @keyframes growy{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 /* entrance motion, shared by every chart and meter: --ee is an easy ease (slow out, slow in) for things that travel, --eo a soft landing for things that grow */
-:root{--ee:cubic-bezier(.33,0,.67,1);--eo:cubic-bezier(.22,1,.36,1)}
-.drawline{animation:drawline 1s var(--ee) .12s backwards}
+/* --trace is how long a line takes to draw; everything that should land when the line arrives (.late) is timed off it, so one number sets the pace */
+:root{--ee:cubic-bezier(.33,0,.67,1);--eo:cubic-bezier(.22,1,.36,1);--trace:.66s}
+.drawline{animation:drawline var(--trace) var(--ee) .08s backwards}
+.late{animation-delay:calc(var(--trace) + .04s)!important}
 @keyframes drawline{from{stroke-dasharray:1 1;stroke-dashoffset:1}to{stroke-dasharray:1 1;stroke-dashoffset:0}}
-.wipex{animation:wipex .95s var(--ee) .1s backwards}
+.wipex{animation:wipex .62s var(--ee) .06s backwards}
 @keyframes wipex{from{clip-path:inset(-6px 100% -6px -6px)}to{clip-path:inset(-6px -6px -6px -6px)}}
-.fadein{animation:fadein .55s var(--ease) backwards}
+.fadein{animation:fadein .4s var(--ease) backwards}
 @keyframes fadein{from{opacity:0}}
-.popin{transform-box:fill-box;transform-origin:center;animation:popin .45s var(--eo) backwards}
+.popin{transform-box:fill-box;transform-origin:center;animation:popin .34s var(--eo) backwards}
 @keyframes popin{from{opacity:0;transform:scale(.3)}}
-.bary{transform-origin:50% 100%;animation:growy .65s var(--eo) backwards;animation-delay:calc(var(--i,0) * 32ms + 90ms)}
-.barlab{animation:fadein .4s var(--ease) backwards;animation-delay:calc(var(--i,0) * 32ms + 300ms)}
-.barx{transform-origin:0 50%;animation:growx .85s var(--eo) .16s backwards}
+.bary{transform-origin:50% 100%;animation:growy .48s var(--eo) backwards;animation-delay:calc(var(--i,0) * 22ms + 50ms)}
+.barlab{animation:fadein .3s var(--ease) backwards;animation-delay:calc(var(--i,0) * 22ms + 190ms)}
+.barx{transform-origin:0 50%;animation:growx .6s var(--eo) .08s backwards}
 @keyframes growx{from{transform:scaleX(0)}}
 .splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(90% 60% at 50% 40%,var(--velvet-l) 0%,var(--velvet) 40%,var(--bg) 80%,var(--bg-end) 100%)}
 .splash:not(.go)>*{opacity:0}
@@ -857,6 +860,7 @@ function PlayingCard({ rank, suit, face, delay = 0, from = "shoe", style, big, s
   const label = face || (rank === 11 ? "A" : rank === 10 ? ["10", "J", "Q", "K"][Math.abs((rank * 7 + suit.charCodeAt(0)) % 4)] : String(rank));
   const isFace = label === "J" || label === "Q" || label === "K";
   const pipRank = label === "10" ? 10 : rank;
+  useEffect(() => { sfx("card", delay); }, []); // eslint-disable-line
   return (
     <div className={"pc dealt " + (red ? "red " : "") + (big ? "big" : small ? "sm" : "")} style={{ "--dx": from === "shoe" ? "140px" : "0px", "--dy": "-150px", "--r0": "14deg", "--r1": style?.rot || "0deg", "--d": `${delay}ms`, ...style }}>
       <div className="cn tl"><b className={label === "10" ? "ten" : ""}>{label}</b></div>
@@ -908,6 +912,33 @@ function FeltPrint() {
   );
 }
 
+// <Flick d={ms} /> draws nothing: it plays the card sound for a face-down card, which isn't a PlayingCard
+function Flick({ d = 0 }) { useEffect(() => { sfx("card", d); }, []); return null; } // eslint-disable-line
+function useSoundPrefs() {
+  const [v, setV] = useState(soundPrefs());
+  useEffect(() => { const h = () => setV(soundPrefs()); window.addEventListener("bj-sound", h); return () => window.removeEventListener("bj-sound", h); }, []);
+  return [v, setSoundPrefs];
+}
+// the sound switch as it appears in the Live play table settings; the full set is the Sound card in Settings (same settings, kept in step)
+function SoundToggle() { const [p, set] = useSoundPrefs(); return <Toggle label="Sound effects" sub="Volume and more in Settings" on={p.on} onChange={(v) => set({ on: v })} />; }
+function SoundCard() {
+  const [p, set] = useSoundPrefs();
+  return (
+    <section className="card p-5 mb-4">
+      <div className="eyebrow mb-3">Sound</div>
+      <Toggle label="Sound effects" sub="Quiet and short. Your phone's silent switch mutes them too." on={p.on} onChange={(v) => set({ on: v })} />
+      <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--line)", opacity: p.on ? 1 : 0.4, pointerEvents: p.on ? "auto" : "none", transition: "opacity .2s" }} aria-hidden={!p.on}>
+        <div>
+          <div className="flex items-baseline justify-between"><span className="text-sm" style={{ color: "var(--ivory)" }}>Volume</span><span className="text-[11px] mono" style={{ color: "var(--brass)" }}>{Math.round(p.vol * 100)}%</span></div>
+          <input type="range" min={20} max={100} step={10} value={Math.round(p.vol * 100)} onChange={(e) => set({ vol: Number(e.target.value) / 100 })} className="w-full mt-1" aria-label="Sound volume" disabled={!p.on} />
+          <div className="flex justify-between -mt-1" style={{ fontSize: 10, color: "var(--muted)" }}><span>quieter</span><span>louder</span></div>
+        </div>
+        <Toggle label="Cards and chips" sub="Dealing, betting and the shuffle" on={p.table} onChange={(v) => set({ table: v })} />
+        <Toggle label="Right and wrong" sub="A tick for each answer, a note for a win or a loss" on={p.feedback} onChange={(v) => set({ feedback: v })} />
+      </div>
+    </section>
+  );
+}
 function Table({ cards, dealer, tc, rcs, qkey, leaving }) {
   return (
     <div className={"relative tbl felt cz-train px-4 pt-5 pb-4 " + (leaving ? "leave" : "")}>
@@ -920,7 +951,7 @@ function Table({ cards, dealer, tc, rcs, qkey, leaving }) {
           <div className="eyebrow mb-2">Dealer</div>
           <div className="flex">
             <PlayingCard key={"d" + qkey} rank={dealer.rank} suit={dealer.suit} delay={0} style={{ rot: "-1deg", "--ld": "0ms" }} />
-            <div className="pcback pcz dealt" style={{ width: 86, height: 122, borderRadius: 9, marginLeft: 8, "--dx": "140px", "--dy": "-150px", "--r0": "12deg", "--r1": "3deg", "--d": "140ms", "--ld": "30ms" }} />
+            <div className="pcback pcz dealt" style={{ width: 86, height: 122, borderRadius: 9, marginLeft: 8, "--dx": "140px", "--dy": "-150px", "--r0": "12deg", "--r1": "3deg", "--d": "140ms", "--ld": "30ms" }} /><Flick key={"f" + qkey} d={140} />
           </div>
         </div>
         <div className="self-end text-right">
@@ -1615,8 +1646,9 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
     setResult({ ok, rc, tc, remaining, counts, rcOk: guess === rc, tcOk: guessTC === tc });
     const st2 = { drills: stats.drills + 1, right: stats.right + (ok ? 1 : 0), cards: stats.cards + st.dealt.length, bestSpeed: ok ? Math.min(stats.bestSpeed ?? 99, speed) : stats.bestSpeed };
     saveStats(st2);
-    logResult(mode === "pairs" ? "pairs" : "count", ok, { speed, n: st.dealt.length });
-    if (askTC) logResult("tc", guessTC === tc);
+    logResult(mode === "pairs" ? "pairs" : "count", ok, { speed, n: st.dealt.length }, true);
+    if (askTC) logResult("tc", guessTC === tc, {}, true);
+    sfx(ok && (!askTC || guessTC === tc) ? "right" : "wrong");
     setPhase("result");
   };
   const newShoe = () => { stop(); setShoe(freshShoe()); setPhase("setup"); setShown([]); setTable([]); setResult(null); };
@@ -1892,7 +1924,9 @@ async function loadLog() {
   try { const r = await window.storage.get(LOG_KEY, false); _logCache = r?.value ? JSON.parse(r.value) : []; } catch (_) { _logCache = []; }
   return _logCache;
 }
-function logResult(skill, ok, extra = {}) {
+function logResult(skill, ok, extra = {}, quiet) {
+  // Live play has its own sounds (chips, a win or a loss), so only drills and tests tick here
+  if (!quiet && skill !== "play") sfx(ok ? "right" : "wrong");
   (async () => {
     const l = await loadLog();
     l.push({ t: Date.now(), s: skill, ok: ok ? 1 : 0, ...extra });
@@ -2244,7 +2278,7 @@ function HandView({ cards, label, bet, active, total, hidden, small, result, sta
       </div>
       <div className="hand" style={{ minHeight: "calc(88px * var(--cz, 1))" }}>
         {cards.map((c, i) => { const d = base + i * stagger; return <div className="slot" key={hidden && i === 1 ? "hole" : c.id}>{hidden && i === 1
-          ? <div className="pcback pcz dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": `${d}ms`, animationDuration: `${dur}s` }} />
+          ? <><div className="pcback pcz dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": `${d}ms`, animationDuration: `${dur}s` }} /><Flick d={d} /></>
           : <PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={d} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: `${dur}s` }} />}</div>; })}
       </div>
       {bet !== undefined && <div className="mono text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>bet ${bet}</div>}
@@ -2340,10 +2374,11 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
 
   // ----- betting -----
   const placeBet = (v) => {
-    if (sh.current.pos >= sh.current.cut) { sh.current = newShoe(); setShoe({ ...sh.current }); setShuffled(true); setTimeout(() => setShuffled(false), 1800); setMsg({ ok: true, title: "Shuffle.", body: "Fresh shoe — the count is back to zero." }); return; }
+    if (sh.current.pos >= sh.current.cut) { sfx("shuffle"); sh.current = newShoe(); setShoe({ ...sh.current }); setShuffled(true); setTimeout(() => setShuffled(false), 1800); setMsg({ ok: true, title: "Shuffle.", body: "Fresh shoe — the count is back to zero." }); return; }
     const tc = tcNow(), exp = spreadFor(tc);
     const ok = v === exp; hm.current = ok ? 0 : 1;
-    if (!ok) { setMistakes((m) => [...m, { kind: "bet", tc, you: v, correct: exp, hand: stats.hands + 1 }]); setMsg({ ok: false, title: exp ? `Your spread says $${exp} at ${fmtTC(tc)}.` : `Your spread sits out at ${fmtTC(tc)}.`, body: `You bet ${v ? "$" + v : "nothing"}.` }); }
+    if (v > 0) sfx("chip");
+    if (!ok) { sfx("wrong", v > 0 ? 190 : 0); setMistakes((m) => [...m, { kind: "bet", tc, you: v, correct: exp, hand: stats.hands + 1 }]); setMsg({ ok: false, title: exp ? `Your spread says $${exp} at ${fmtTC(tc)}.` : `Your spread sits out at ${fmtTC(tc)}.`, body: `You bet ${v ? "$" + v : "nothing"}.` }); }
     else setMsg(null);
     setBet(v); setInsured(false);
     if (v === 0) { // sit out: watch one hand go by so you keep counting
@@ -2363,7 +2398,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   };
   const takeInsurance = (yes) => {
     const tc = tcNow(); const ok = yes === (tc >= 3);
-    if (!ok) { hm.current++; setMistakes((m) => [...m, { kind: "insurance", tc, you: yes ? "Take" : "Decline", correct: tc >= 3 ? "Take" : "Decline", hand: stats.hands + 1 }]); setMsg({ ok: false, title: tc >= 3 ? `Take insurance at ${fmtTC(tc)}.` : `No insurance at ${fmtTC(tc)}.`, body: "The index is +3." }); }
+    if (!ok) { sfx("wrong"); hm.current++; setMistakes((m) => [...m, { kind: "insurance", tc, you: yes ? "Take" : "Decline", correct: tc >= 3 ? "Take" : "Decline", hand: stats.hands + 1 }]); setMsg({ ok: false, title: tc >= 3 ? `Take insurance at ${fmtTC(tc)}.` : `No insurance at ${fmtTC(tc)}.`, body: "The index is +3." }); }
     setInsured(yes);
     resolvePeek(hands[0].cards, dealer, bet, yes);
   };
@@ -2394,6 +2429,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     const cp = correctPlay(h.cards, up, tc, rules, { canDouble: av.D, canSplit: av.P, canSurrender: av.R, rc });
     const ok = a === cp.act, byRc = cp.dev && cp.dev.edge && tc === 0; // a 0+ / 0− play decided by the running count's sign
     if (!ok) {
+      sfx("wrong");
       hm.current++;
       setMistakes((m) => [...m, { kind: "play", hand: stats.hands + 1, key: cp.key, up, tc, you: a, correct: cp.act, dev: cp.dev?.name }]);
       setMsg({ ok: false, title: `${ACT[cp.act]} ${cp.key} vs ${upLabel(up)}${byRc ? ` on a running count of ${fmtTC(rc).replace("+0", "0")}` : cp.dev ? ` at ${fmtTC(tc)}` : ""}.`, body: byRc ? `${cp.dev.name} goes by the running count: ${edgeRule(cp.dev)}.` : cp.dev ? `${cp.dev.name} index is ${idxLabel(cp.dev)}; the count is ${fmtTC(tc)}.` : "Basic strategy." });
@@ -2443,6 +2479,9 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     setPts((p) => pushPt(p, net));
     bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (clean ? 1 : 0), net: a.net + net, pts: pushPt(a.pts, net) }));
     logResult("play", clean, { net });
+    // one quiet note for how the round came out, after the last card has landed
+    const natural = res.length === 1 && res[0].cards.length === 2 && !res[0].fromSplit && net > res[0].bet;
+    if (net > 0) sfx(natural ? "blackjack" : "win", 260); else if (net < 0) sfx("lose", 260);
     setPhase("result");
   };
   const nextHand = () => {
@@ -2646,6 +2685,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <Toggle label="Show hand totals" on={showTotals} onChange={setShowTotals} />
           <Toggle label="Show the running count" sub="Hidden is how you'll play in a casino" on={showCount} onChange={setShowCount} />
           <Toggle label="Deal the next hand automatically" sub="Skips the Next hand tap — you still place the bet" on={autoNext} onChange={setAutoNext} />
+          <SoundToggle />
         </div>
         <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
           <div className="flex items-baseline justify-between mb-1.5"><span className="text-sm" style={{ color: "var(--ivory)" }}>Count check</span><span className="text-[11px] mono" style={{ color: "var(--muted)" }}>{checkEvery ? `every ${checkEvery} hands` : "off"}</span></div>
@@ -2739,6 +2779,7 @@ function TestRunner({ id, rules, onDone }) {
     if (id === "strategy") { pass = ok === 100 && ms <= 180000; summary = `${ok}/100 in ${(ms / 1000).toFixed(0)}s`; score = ok * 1000 - ms / 1000; }
     if (id === "tc") { pass = ok === 20 && ms <= 40000; summary = `${ok}/20 in ${(ms / 1000).toFixed(1)}s`; score = ok * 1000 - ms / 1000; }
     const rec = { pass, summary, score, t: Date.now() };
+    if (pass) sfx("pass", 300);
     await saveTest(id, rec);
     onDone({ ...rec, ms, ok, total, extra });
   };
@@ -3030,7 +3071,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
               const spark = cum.map((v, i) => `${i ? "L" : "M"}${(i / (cum.length - 1)) * 72},${(18 - ((v - lo) / rng) * 16).toFixed(1)}`).join("");
               return (
               <div className="homesess flex items-end justify-between gap-3">
-                <div className="min-w-0"><div className="disp mono text-3xl" style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}$<Glide v={Math.abs(netAnim)} enter round dur={850} f={(x) => x.toLocaleString()} /></div>
+                <div className="min-w-0"><div className="disp mono text-3xl" style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}$<Glide v={Math.abs(netAnim)} enter round dur={600} f={(x) => x.toLocaleString()} /></div>
                 <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{fmtH(totH)} played · expected {exp >= 0 ? "+" : "−"}${Math.abs(exp).toLocaleString()}</div></div>
                 {cum.length > 2 && <svg className="notdesk" width="72" height="20" viewBox="0 0 72 20" aria-hidden="true"><path className="drawline" pathLength="1" d={spark} fill="none" stroke={totR >= 0 ? "var(--brass)" : "var(--rose)"} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" opacity=".8" /></svg>}
                 {cum.length > 2 && (() => { const X = (i) => (i / (cum.length - 1)) * 300, Y = (v) => 66 - ((v - lo) / rng) * 60; const line = cum.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(""); const col = totR >= 0 ? "var(--brass)" : "var(--rose)"; return (
@@ -3160,11 +3201,11 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
         <line x1={P.l} x2={W - P.r} y1={y(0)} y2={y(0)} stroke="rgba(var(--fg),.14)" strokeWidth="1" />
         {/* keyed by what is drawn, so a new filter or a new session plays the trace again */}
         <g key={`${pts.length}|${last.act}|${last.exp}`}>
-        <path className="fadein" d={band} fill="rgba(var(--acc),.07)" style={{ animationDuration: ".9s" }} />
-        <path className="fadein" d={line("exp")} fill="none" stroke="rgba(var(--fg),.4)" strokeWidth="1.5" strokeDasharray="3 4" style={{ animationDelay: ".15s" }} />
+        <path className="fadein" d={band} fill="rgba(var(--acc),.07)" style={{ animationDuration: ".6s" }} />
+        <path className="fadein" d={line("exp")} fill="none" stroke="rgba(var(--fg),.4)" strokeWidth="1.5" strokeDasharray="3 4" style={{ animationDelay: ".1s" }} />
         <path className="drawline" pathLength="1" d={line("act")} fill="none" stroke={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
-        <circle className="popin" style={{ animationDelay: "1.02s" }} cx={x(pts.length - 1)} cy={y(last.act)} r="3.5" fill={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} />
-        <text className="fadein" style={{ font: "600 11px Inter", animationDelay: "1.05s", animationDuration: ".35s" }} x={x(pts.length - 1) - 4} y={y(last.act) - 8} textAnchor="end" fill="var(--ivory)">{last.act >= 0 ? "+" : "−"}${Math.abs(last.act).toLocaleString()}</text>
+        <circle className="popin late" cx={x(pts.length - 1)} cy={y(last.act)} r="3.5" fill={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} />
+        <text className="fadein late" style={{ font: "600 11px Inter", animationDuration: ".3s" }} x={x(pts.length - 1) - 4} y={y(last.act) - 8} textAnchor="end" fill="var(--ivory)">{last.act >= 0 ? "+" : "−"}${Math.abs(last.act).toLocaleString()}</text>
         </g>
         <text x={P.l} y={H - 4} fill="var(--muted)" style={{ font: "500 9px Inter" }}>0h</text>
         <text x={W - P.r} y={H - 4} textAnchor="end" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{fmtH(last.h)}</text>
@@ -3294,19 +3335,19 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
             {band >= 2 && <path className="fadein" d={bandPath(2)} fill="rgba(var(--fg),.035)" />}
             {band >= 1 && <path className="fadein" d={bandPath(1)} fill="rgba(var(--fg),.06)" />}
             {showExp && <path className="fadein" d={lineOf((p) => p.exp)} fill="none" stroke="rgba(var(--fg),.38)" strokeWidth="1.25" strokeDasharray="3 5" />}
-            <path d={lineOf((p) => p.act) + `L${xv(last).toFixed(1)},${y(0).toFixed(1)}L${xv(pts[0]).toFixed(1)},${y(0).toFixed(1)}Z`} fill="url(#pnlArea)" className="fadein" style={{ animationDuration: "1s", animationDelay: ".25s" }} />
+            <path d={lineOf((p) => p.act) + `L${xv(last).toFixed(1)},${y(0).toFixed(1)}L${xv(pts[0]).toFixed(1)},${y(0).toFixed(1)}Z`} fill="url(#pnlArea)" className="fadein" style={{ animationDuration: ".7s", animationDelay: ".12s" }} />
             <path className="drawline" pathLength="1" d={lineOf((p) => p.act)} fill="none" stroke={col} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
             {picked && (<>
               <line x1={xv(sp)} x2={xv(sp)} y1={P.t} y2={H - P.b} stroke="rgba(var(--fg),.3)" strokeWidth="1" />
               <circle cx={xv(sp)} cy={y(sp.act)} r="5.5" fill={col} stroke="var(--bg)" strokeWidth="2.5" />
             </>)}
             {/* stays mounted so it lands once, after the trace, and isn't replayed every time you let go of the chart */}
-            <g style={{ opacity: picked ? 0 : 1 }}><circle className="popin" style={{ animationDelay: "1.02s" }} cx={xv(last)} cy={y(last.act)} r="4" fill={col} stroke="var(--bg)" strokeWidth="2" /></g>
+            <g style={{ opacity: picked ? 0 : 1 }}><circle className="popin late" cx={xv(last)} cy={y(last.act)} r="4" fill={col} stroke="var(--bg)" strokeWidth="2" /></g>
           </g>) : (<>
             {list.map((s, k) => { const a = pts[k], b = pts[k + 1]; const x0 = xv(a), x1 = xv(b); const gap = Math.min(4, (x1 - x0) * 0.28); const h = +s.hours || 0; const e = sessEv(s, evHour) * h, d = sessSd(s, sdHour) * Math.sqrt(h); const bx = x0 + gap / 2, bw = Math.max(1.5, x1 - x0 - gap); const on = !picked || k === si;
               return (<g key={s.id || k}>
                 {band > 0 && <rect x={bx} width={bw} y={y(e + band * d)} height={Math.max(1, y(e - band * d) - y(e + band * d))} rx={Math.min(2, bw / 3)} fill="rgba(var(--fg),.05)" />}
-                <rect className="growy" x={bx} width={bw} y={Math.min(y(0), y(s.result))} height={Math.max(1, Math.abs(y(s.result) - y(0)))} rx={Math.min(3, bw / 3)} fill={s.result >= 0 ? "var(--brass)" : "var(--rose)"} opacity={on ? 0.9 : 0.35} style={{ transition: "opacity .15s", transformOrigin: s.result >= 0 ? "50% 100%" : "50% 0%", animationDelay: `${Math.min(k, 30) * 0.018}s` }} />
+                <rect className="growy" x={bx} width={bw} y={Math.min(y(0), y(s.result))} height={Math.max(1, Math.abs(y(s.result) - y(0)))} rx={Math.min(3, bw / 3)} fill={s.result >= 0 ? "var(--brass)" : "var(--rose)"} opacity={on ? 0.9 : 0.35} style={{ transition: "opacity .15s", transformOrigin: s.result >= 0 ? "50% 100%" : "50% 0%", animationDelay: `${Math.min(k, 30) * 0.013}s` }} />
                 {showExp && <line x1={bx} x2={bx + bw} y1={y(e)} y2={y(e)} stroke="rgba(var(--fg),.6)" strokeWidth="1.25" />}
               </g>); })}
           </>)}
@@ -3680,7 +3721,7 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
 
 function LuckGauge({ z, pct }) {
   // the marker starts at "expected" and rides the curve out to where you are; in Live play it glides hand to hand
-  const W = 300, H = 74, base = 60, zz = useTween(Math.max(-3.2, Math.min(3.2, isFinite(z) ? z : 0)), 900, 0);
+  const W = 300, H = 74, base = 60, zz = useTween(Math.max(-3.2, Math.min(3.2, isFinite(z) ? z : 0)), 620, 0);
   const xOf = (v) => 10 + ((v + 3.5) / 7) * (W - 20);
   const yOf = (v) => base - Math.exp(-(v * v) / 2) * 48;
   let curve = "", fillL = `M${xOf(-3.5)},${base}`;
@@ -3690,7 +3731,7 @@ function LuckGauge({ z, pct }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" role="img" aria-label={`Luck percentile ${Math.round(pct * 100)}`}>
       <path d={fillL} fill="rgba(var(--acc),.16)" />
-      <path className="drawline" pathLength="1" d={curve} fill="none" stroke="rgba(var(--fg),.35)" strokeWidth="1.5" style={{ animationDuration: ".8s", animationDelay: "0s" }} />
+      <path className="drawline" pathLength="1" d={curve} fill="none" stroke="rgba(var(--fg),.35)" strokeWidth="1.5" style={{ animationDuration: ".55s", animationDelay: "0s" }} />
       <line x1={xOf(-3.5)} x2={xOf(3.5)} y1={base} y2={base} stroke="rgba(var(--fg),.15)" />
       {[-2, -1, 0, 1, 2].map((v) => <text key={v} x={xOf(v)} y={H - 2} textAnchor="middle" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{v === 0 ? "expected" : `${v > 0 ? "+" : "−"}${Math.abs(v)} SD`}</text>)}
       <line x1={xOf(zz)} x2={xOf(zz)} y1={yOf(zz) - 10} y2={base} stroke={col} strokeWidth="2" />
@@ -3827,7 +3868,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow">{filtered ? [period === "30" ? "Last 30 days" : period === "90" ? "Last 90 days" : period === "ytd" ? "This year" : "All time", casino !== "all" ? byCasino[0]?.name || "" : ""].filter(Boolean).join(" · ") : "All-time result"}</div>
-            <div className="disp mono mt-1" style={{ fontSize: 40, lineHeight: 1.05, color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)", letterSpacing: "-.02em" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={850} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
+            <div className="disp mono mt-1" style={{ fontSize: 40, lineHeight: 1.05, color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)", letterSpacing: "-.02em" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={600} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
             <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{list.length ? `${st.n} session${st.n === 1 ? "" : "s"} · ${fmtH(st.H)} · expected ${sgnMoney(st.E)}` : "No sessions yet"}</div>
           </div>
           <button onClick={() => setSheet("new")} className="btn shrink-0" style={{ width: "auto", padding: "10px 14px", fontSize: 14 }} aria-label="Log a session">+ Log</button>
@@ -4425,6 +4466,7 @@ function SettingsPage({ rules, onRules, seats, go }) {
         <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>Pick a look. Cards and chips keep their real colors.</p>
         <ThemePicker />
       </section>
+      <SoundCard />
       <section className="card px-5 pt-5 pb-2 mb-4">
         <div className="eyebrow mb-2">Game</div>
         <Row title="Game rules" sub={rulesLabel(rules)} onClick={onRules} right="Change" />
@@ -4970,12 +5012,12 @@ function BetSpreadCalculator() {
           <div className="grid grid-cols-2 gap-5">
             <div>
               <div className="eyebrow">Profit / hour</div>
-              <div className="disp text-4xl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={480} f={(x) => money(x)} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
+              <div className="disp text-4xl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={380} f={(x) => money(x)} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
               <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>expected, ± {money(r.sdHour)} (1 SD)</div>
             </div>
             <div>
               <div className="eyebrow">Risk of ruin</div>
-              <div className="disp text-4xl mt-1 mono" style={{ color: rorTone }}><Glide v={r.ror} enter dur={480} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
+              <div className="disp text-4xl mt-1 mono" style={{ color: rorTone }}><Glide v={r.ror} enter dur={380} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
               <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>chance of losing {money(+bankroll || 0)}</div>
             </div>
           </div>
@@ -5005,9 +5047,9 @@ function BetSpreadCalculator() {
             </div>
             {sess ? (
               <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={420} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={420} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Chance of a losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={420} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>finish below where you started</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={340} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={340} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Chance of a losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={340} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>finish below where you started</div></div>
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>peak to low{sess.dd90 == null ? "" : ` · 1 in 10: −${money(Math.round(sess.dd90 / 25) * 25)}`}</div></div>
               </div>
             ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}

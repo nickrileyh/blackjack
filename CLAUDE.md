@@ -19,6 +19,7 @@ This repo's `main` branch is the single source of truth. GitHub Pages serves it 
 - `src/entry.jsx` — mounts the app and the `window.storage` wrapper around localStorage
 - `src/casinos.jsx`, `src/casino-map.js`, `src/casino-data.js` — the Casinos page, its map maths and its generated data (see "Casinos page" below)
 - `src/input.css` — Tailwind entry
+- `src/sound.js` — the sound effects (see "Sound" below)
 - `src/ask.jsx`, `src/aitools.js`, `src/cover.js`, `src/coverdata.js`, `src/sim.js` — the Ask tab (see below)
 - `build.sh` — `npm ci` once, then `./build.sh` writes `index.html` (scratch files go to `.build/`, ignored)
 
@@ -55,7 +56,7 @@ Rules to keep:
 - **Entrance motion is one small kit** (in the `css` string, after `.growy`), so every chart and meter moves the same way. Use these rather than inventing new keyframes; all of them are switched off together in the `prefers-reduced-motion` rule, and all use `backwards` fill so nothing is left clipped or dashed once they finish:
   - `.drawline` + `pathLength="1"` on a solid SVG line: it traces itself with an easy ease (`--ee`). Used on the Sessions chart, the full-screen chart, the Home sparkline and the bell curve.
   - `.wipex` on the `<svg>` itself: a left-to-right reveal, for charts drawn with `vector-effect: non-scaling-stroke` or a filled area (Live play money chart, desktop Home chart), where a dash trace is unreliable.
-  - `.fadein` (bands, dashed lines, labels) and `.popin` (the end dot, delayed so it lands after the trace).
+  - `.fadein` (bands, dashed lines, labels) and `.popin` (the end dot). Add `.late` to anything that should land as the line arrives: it is timed off `--trace`, the one variable that sets how long a line takes to draw (0.66 s — Nick asked for the animations to be quick; change the pace there, not per chart).
   - `.bary` on a column and `.barlab` on the number above it (set `--i` to the column's index for the stagger): bet ramps, the optimizer's bars, dealer outcomes. `.barx` on a meter fill: mastery, skills, long run, odds.
   - Wrap a chart's moving parts in a `<g key=…>` built from what is drawn, so a new filter or new data plays the entrance again (see `PnlChart`).
 - Numbers that move: `<Glide v={n} f={format} />` glides to a new value when it changes (add `enter` to also count up from zero when the page opens — headline numbers only). It is a tiny component on purpose: only its own text re-renders each frame, never the page. `useTween` is the hook underneath (used by `LuckGauge`, whose marker rides the curve). Don't tween a number with a hook at the top of a big page component.
@@ -66,7 +67,17 @@ Rules to keep:
 - Tapping into a number box selects its contents (one `focusin` listener in `App`), so typing replaces the old value. Give new number inputs `inputMode="numeric"` or `"decimal"` and they get it too.
 - The printing on the Live play felt fades back while cards are out (`.felt.busy .feltprint`) so it never fights the hand labels.
 - Sessions → Export CSV saves a file on a computer; on a phone it shares a real `.csv` file when the phone allows it, then falls back to sharing text, then to the clipboard.
-- **Nothing slow may run while a page opens or on a keystroke.** The drawdown replay (`drawdownFromMix`, up to three million rounds) goes through `useDeferred(key, fn, keep)`: it waits until the page has finished animating in (about 1.25 s after it opens, so the sum never makes a chart trace stutter), debounces itself while you type, and remembers answers by key. Its results are `undefined`/`null` until ready, so the UI must cope ("…"). Use the same hook for any new heavy sum.
+- **Nothing slow may run while a page opens or on a keystroke.** The drawdown replay (`drawdownFromMix`, up to three million rounds) goes through `useDeferred(key, fn, keep)`: it waits until the page has finished animating in (about 1.1 s after it opens, so the sum never makes a chart trace stutter), debounces itself while you type, and remembers answers by key. Its results are `undefined`/`null` until ready, so the UI must cope ("…"). Use the same hook for any new heavy sum.
+
+## Sound
+
+`src/sound.js` makes every sound in the browser with Web Audio (filtered noise and short tones) — there are no audio files, so the app stays one offline page. `sfx(name, delayMs)` plays one: `card`, `chip`, `shuffle`, `right`, `wrong`, `win`, `blackjack`, `lose`, `pass`. Keep them quiet, short and few (Nick asked for clean and simple): no sounds on ordinary taps, tabs or sheets.
+
+- **Cards:** `PlayingCard` plays `card` when it mounts, timed to its own deal delay, so anything that deals a card is heard without extra code; a face-down card is a plain div, so put `<Flick d={ms} />` beside it. Cards that land together are spaced 50 ms apart inside `sfx`.
+- **Right / wrong:** `logResult` is the one place every drill and test answer passes through, and it plays `right` or `wrong` (pass `quiet` as the fourth argument when one answer logs twice, as the count drill does). Live play is skipped there: it has its own sounds — `chip` on a bet, `wrong` when a mistake is flagged, `win` / `blackjack` / `lose` once the round is settled, `shuffle` on a new shoe. Passing a test plays `pass`.
+- **The settings** (`soundPrefs()` / `setSoundPrefs(patch)`): on/off, volume, and two groups that can be switched separately — `table` (cards, chips, shuffle) and `feedback` (right/wrong, win/lose, pass); each sound's group is in `GROUP`. All on by default, saved on this device only under `bj-sound-v1` (not in `BACKUP_KEYS`). The full set is the Sound card in Settings (`SoundCard`); the Live play table settings carry just the on/off switch (`SoundToggle`). Both stay in step through the `bj-sound` event, and changing a setting plays a sample.
+- Nothing plays before the first tap or key press (browsers require it), while the page is hidden, or with the switch off; a phone's silent switch mutes it too. Low notes stay above about 250 Hz because small phone speakers can't play lower.
+- To check a change without ears: bundle `src/sound.js` alone, swap `AudioContext` for an `OfflineAudioContext`, render, and read the peak level (cards about 0.3, tones about 0.2, nothing near 1).
 
 ## Live play
 
