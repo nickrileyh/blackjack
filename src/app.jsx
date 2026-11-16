@@ -2555,7 +2555,8 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
       </section>
       </div><div className="dcol o2 stick">
 
-      <SpreadMini bets={bets} tc={shoe.pos > 1 ? tc : undefined} />
+      {/* the ramp only points at the current count when the player has chosen to see the count — otherwise it would give it away */}
+      <SpreadMini bets={bets} tc={showCount && shoe.pos > 1 ? tc : undefined} />
 
       {/* how you're doing: this session or every hand you've played */}
       {(all.hands > 0 || stats.hands > 0) && (
