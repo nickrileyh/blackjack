@@ -85,8 +85,8 @@ const dblAllowed = (R, key) => { const d = R.dbl === "9-11" ? 1 : R.dbl === "10-
 export function deviationCatalog(R) {
   return DEVIATIONS.filter((d) => (R.h17 ? d.h17 : d.s17) != null && (d.surrenderOnly ? !!R.surrender : true) && (d.above !== "D" || dblAllowed(R, DEV_DEFS[d.n][1]))).map((d) => {
     const idx = R.h17 ? d.h17 : d.s17;
-    const play = idx === 0 && d.edge ? (d.edge > 0 ? `${ACT[d.above]} on any positive running count, otherwise ${ACT[d.below]}` : `${ACT[d.below]} on any negative running count, otherwise ${ACT[d.above]}`) : `${ACT[d.above]} at true count ${idx > 0 ? "+" : idx < 0 ? "−" : ""}${Math.abs(idx)} or higher, otherwise ${ACT[d.below]}`;
-    return { id: d.id, hand: d.hand, dealer: d.up, index: idx === 0 && d.edge ? (d.edge > 0 ? "0+" : "0−") : idx, play, ...(d.surrenderOnly ? { needs: "surrender, first two cards" } : {}), ...(d.noSurrenderOnly && R.surrender ? { note: "used when surrender isn't available (after a hit)" } : {}) };
+    const play = idx === 0 && d.edge ? (d.edge > 0 ? `${ACT[d.above]} on any positive running count, otherwise ${ACT[d.below]}` : `${ACT[d.below]} on any negative running count, otherwise ${ACT[d.above]}`) : idx <= 0 ? `${ACT[d.below]} at true count −${1 - idx} or lower, otherwise ${ACT[d.above]}` : `${ACT[d.above]} at true count +${idx} or higher, otherwise ${ACT[d.below]}`;
+    return { id: d.id, hand: d.hand, dealer: d.up, index: idx === 0 && d.edge ? (d.edge > 0 ? "0+" : "0−") : idx <= 0 ? idx - 1 : idx, play, ...(d.surrenderOnly ? { needs: "surrender, first two cards" } : {}), ...(d.noSurrenderOnly && R.surrender ? { note: "used when surrender isn't available (after a hit)" } : {}) };
   });
 }
 

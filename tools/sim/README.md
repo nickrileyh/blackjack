@@ -21,8 +21,9 @@ Build with `gcc -O2 -march=native -o table_sim table_sim.c -lm`. Modes:
   count (and, at a true count of 0, by the sign of the running count). `audit_report.py` reads `aud/a_*.json` and
   lists every basic strategy cell where another play beats the chart and every index the cards disagree with. The report
   for the shipped run is `strategy-check.txt` (gains are in percent of the bet, ± one standard error). It is printed
-  against the app's indices as they are now; the run itself was dealt with surrender 16 vs 9 at −1, which this check
-  showed was one count too low (now 0).
+  against the app's indices as they are now; the run itself was dealt surrendering 16 vs 9 and 15 vs A (H17) at −1 and
+  hitting only from −2, one count late (the chart's −1 means hit at −1 and below; `defs[]` holds the lowest count
+  for the "above" play, so both are 0 there now).
 - `val decks h17 sur ins others pen rounds seed bets spots` — plays one spread outright. `val_base.py` uses it to check
   the calculator: random games and spreads, the simulator's result against `calFor` / `compute`.
 - `idx` — one hand against one upcard, both plays from the same cards, by true count (`PROBE=key,up,A,B`).

@@ -729,10 +729,10 @@ const DEV_TABLE = [
   { id: "A6v2", name: "A,6 vs 2", hand: "A,6", up: 2, s17: 1, h17: 1, below: "H", above: "D" },
   { id: "A7v2", name: "A,7 vs 2", hand: "A,7", up: 2, s17: 1, h17: 0, edge: "-", below: "S", above: "D", note: "S17: basic strategy stands; double at +1 and up. H17: the double is basic strategy; stand on any negative running count (this H17 index was measured by the app's simulator — the BJA chart prints none)." },
   { id: "s16v8", name: "16 vs 8", hand: "Hard 16", up: 8, s17: 4, h17: 4, below: "H", above: "R", ls: true },
-  { id: "s16v9", name: "16 vs 9", hand: "Hard 16", up: 9, s17: 0, h17: 0, below: "H", above: "R", ls: true, note: "Basic strategy surrenders; hit at −1 and below (the BJA chart prints −1: below −1 is a hit, and a true count shown as −1 here is a count between −2 and −1)." },
+  { id: "s16v9", name: "16 vs 9", hand: "Hard 16", up: 9, s17: 0, h17: 0, below: "H", above: "R", ls: true, note: "Basic strategy surrenders; hit at −1 and below (chart: −1)." },
   { id: "s15v9", name: "15 vs 9", hand: "Hard 15", up: 9, s17: 2, h17: 2, below: "H", above: "R", ls: true },
   { id: "s15v10", name: "15 vs 10", hand: "Hard 15", up: 10, s17: 0, h17: 0, edge: "-", below: "H", above: "R", ls: true, note: "Basic strategy surrenders; hit on any negative running count." },
-  { id: "s15vA", name: "15 vs A", hand: "Hard 15", up: 11, s17: 2, h17: -1, below: "H", above: "R", ls: true },
+  { id: "s15vA", name: "15 vs A", hand: "Hard 15", up: 11, s17: 2, h17: 0, below: "H", above: "R", ls: true, note: "S17: surrender at +2 and up. H17: basic strategy surrenders; hit at −1 and below (chart: −1)." },
 ];
 // a deviation that doubles only exists if the table lets you double that hand
 const devDoubleOk = (d, R) => {
@@ -751,7 +751,15 @@ function devsFor(R) {
 // Is the count high enough for a deviation's "above" play? rc is the running count when it's known. Without it, a true
 // count of 0 is read as a running count of exactly 0, which is basic strategy for both kinds of running-count play.
 const devOver = (d, tc, rc) => { if (!d.edge || tc !== 0) return tc >= d.idx; const s = rc == null ? 0 : Math.sign(rc); return d.edge === "+" ? s > 0 : s >= 0; };
-const idxLabel = (d) => (d.edge === "+" ? "0+" : d.edge === "-" ? "0−" : fmtTC(d.idx));
+// d.idx is always the lowest true count at which the "above" play is made. The BJA chart prints the plays where basic
+// strategy IS the above play (13 vs 2, surrender 16 vs 9, surrender 15 vs A in H17) the other way round: the highest
+// count at which you back off it — "−1" means hit at −1 and below. devLow marks those; chartIdx is the number the
+// chart prints (one below d.idx) and is what every label, list and fill-in test shows. devPlay is the count play itself
+// (the one that isn't basic strategy).
+const devLow = (d) => !d.edge && d.idx <= 0;
+const chartIdx = (d) => (devLow(d) ? d.idx - 1 : d.idx);
+const devPlay = (d) => (devLow(d) || d.edge === "-" ? d.below : d.above);
+const idxLabel = (d) => (d.edge === "+" ? "0+" : d.edge === "-" ? "0−" : fmtTC(chartIdx(d)));
 const edgeRule = (d) => (d.edge === "+" ? `${ACT[d.above].toLowerCase()} on any positive running count, otherwise ${ACT[d.below].toLowerCase()}` : `${ACT[d.below].toLowerCase()} on any negative running count, otherwise ${ACT[d.above].toLowerCase()}`);
 // The count a drill shows for a running-count play: hi = a count where you make the "above" play. rcs is the sign of the
 // running count, shown beside a true count of 0. Returns null for ordinary index plays (callers keep their own spread).
@@ -1123,7 +1131,7 @@ function Charts({ R, devs }) {
             </div>
           ))}
         </div>
-        <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Negative indices: you hit below the number even though basic strategy says stand.{R.h17 && devs.some((d) => d.id === "A7v2") ? " A,7 vs 2 isn't on the BJA H17 chart; its 0− was measured by this app's own simulations." : ""}</p>
+        <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Negative indices: basic strategy stands or surrenders, and you hit at that count and below.{R.h17 && devs.some((d) => d.id === "A7v2") ? " A,7 vs 2 isn't on the BJA H17 chart; its 0− was measured by this app's own simulations." : ""}</p>
       </section>
       </div>
     </div>
@@ -1143,7 +1151,7 @@ function FillChart({ R, devs }) {
   const brushes = ["H", "S", "D", "P", ...(R.surrender ? ["R"] : [])];
   const all = groups.flatMap(([, rows]) => rows.flatMap(([key, , fn]) => UP.map((u) => ({ k: `${key}|${u}`, ans: fn(u) }))));
   const score = all.filter((c) => fill[c.k] === c.ans).length;
-  const devScore = devs.filter((d) => dev[d.id] && +dev[d.id].idx === d.idx && (d.id === "ins" || dev[d.id].act === d.above)).length;
+  const devScore = devs.filter((d) => dev[d.id] && +dev[d.id].idx === chartIdx(d) && (d.id === "ins" || dev[d.id].act === devPlay(d))).length;
   const tap = (k) => { if (checked) return; setFill((f) => ({ ...f, [k]: f[k] === brush ? undefined : brush })); };
   const reset = () => { setFill({}); setDev({}); setChecked(false); };
   const cellStyle = (k, ans) => {
@@ -1205,16 +1213,16 @@ function FillChart({ R, devs }) {
             <div className="disp text-2xl font-semibold">Fill in the indices</div>
             <div className="text-xs mono px-2 py-1 rounded-md" style={{ background: "var(--recess)", color: "var(--brass)" }}>{checked ? `${devScore} / ${devs.length}` : `${Object.keys(dev).length} / ${devs.length}`}</div>
           </div>
-          <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>For each hand, enter the true count index and the play you make at or above it.</p>
+          <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>For each hand, enter the index the chart prints and the count play (the one that isn't basic strategy). For a 0+ or 0− play, enter 0.</p>
           <div className="space-y-2">
             {devs.map((d) => {
-              const v = dev[d.id] || {}; const idxOk = checked && +v.idx === d.idx; const actOk = checked && (d.id === "ins" || v.act === d.above);
+              const v = dev[d.id] || {}; const idxOk = checked && +v.idx === chartIdx(d); const actOk = checked && (d.id === "ins" || v.act === devPlay(d));
               return (
                 <div key={d.id} className="rounded-xl px-3 py-2" style={{ background: checked ? (idxOk && actOk ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)") : "rgba(var(--fg),.04)" }}>
                   <div className="grid items-center gap-2" style={{ gridTemplateColumns: "1fr 88px" }}>
                     <div>
                       <div className="text-sm font-semibold">{d.name}</div>
-                      {checked && !(idxOk && actOk) && <div className="text-[11px] mono" style={{ color: "var(--neg-l)" }}>{idxLabel(d)} · {ANAME[d.above] || d.above}</div>}
+                      {checked && !(idxOk && actOk) && <div className="text-[11px] mono" style={{ color: "var(--neg-l)" }}>{idxLabel(d)} · {ANAME[devPlay(d)] || devPlay(d)}</div>}
                     </div>
                     <input className="in sm mono" type="number" inputMode="numeric" placeholder="idx" value={v.idx ?? ""} disabled={checked} onChange={(e) => setDev({ ...dev, [d.id]: { ...v, idx: e.target.value } })} style={{ textAlign: "center", borderColor: checked ? (idxOk ? "var(--brass)" : "var(--rose)") : undefined }} />
                   </div>
@@ -1396,10 +1404,10 @@ function Trainer({ rules, setRules }) {
       const idx = idxLabel(d);
       if (d.id === "ins") return over ? `TC is at +3 or more, so over a third of the remaining cards are tens. Insurance pays.` : `Below +3 there aren't enough tens left. Skip it.`;
       const reason = d.above === "S" ? "more tens are left, so the dealer busts more and you bust more if you hit" : d.above === "D" ? "more tens are left, so your double lands a big card more often" : d.above === "P" ? "more tens are left — two 20s beat one when the dealer is weak" : "more tens are left, so you lose this hand too often to play it out";
-      const basicIsAbove = ["12v4", "13v2", "s16v9", "s15v10"].includes(d.id) || ((d.id === "A8v6" || d.id === "A7v2") && rules.h17) || (d.id === "s15vA" && rules.h17);
       if (d.edge) return `${d.name} is marked ${idx}: it goes by the running count, not a true count of zero — ${edgeRule(d)}. ${over ? (d.edge === "+" ? "Yours is positive, so make the play." : "Yours isn't negative, so the basic play stands.") : (d.edge === "+" ? "Yours isn't positive, so play basic strategy." : "Yours is negative, so back off the basic play.")}`;
+      if (devLow(d)) return over ? `Index is ${idx}: you ${ACT[d.below].toLowerCase()} at ${idx} and below. You're above it, so the basic play stays.` : `Index is ${idx}. You're at or below it, so you back off the basic play and ${ACT[d.below].toLowerCase()}.`;
       if (over) return `Index is ${idx}. You're at or above it — ${reason}.`;
-      return basicIsAbove ? `Index is ${idx}. The count is under it, so you back off the basic play and ${ACT[d.below].toLowerCase()}.` : `Index is ${idx}. You're under it, so play basic strategy.`;
+      return `Index is ${idx}. You're under it, so play basic strategy.`;
     }
     const weak = u >= 2 && u <= 6;
     if (c.cat === "pair") {
@@ -1522,7 +1530,7 @@ function Trainer({ rules, setRules }) {
           <div className="eyebrow mb-3">Your weak spots</div>
           {weakest.map((c) => (
             <div key={c.id} className="flex justify-between text-sm py-1.5" style={{ borderBottom: "1px solid rgba(var(--fg),.08)" }}>
-              <span>{c.kind === "dev" ? `${c.dev.name} ${c.side === "hi" ? "at/above" : "below"} ${idxLabel(c.dev)}` : `${c.hand} vs ${upLabel(c.up)}`}</span>
+              <span>{c.kind === "dev" ? `${c.dev.name} ${devLow(c.dev) ? (c.side === "hi" ? "above" : "at/below") : c.side === "hi" ? "at/above" : "below"} ${idxLabel(c.dev)}` : `${c.hand} vs ${upLabel(c.up)}`}</span>
               <span className="mono" style={{ color: "var(--muted)" }}>{c.opts ? label(c.answer) : c.answer} · {prog[c.id].wrong}✕</span>
             </div>
           ))}
