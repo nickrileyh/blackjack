@@ -52,6 +52,9 @@ Rules to keep:
 - `go(tab, options)` also fires a `bj-nav` event when the target page is already open; pages read it with `useNav` (train mode/view, drill, log sheet).
 - `Seg` (segmented control) has a pill that slides to the selected option when its options sit in one row.
 - Keep motion small and purposeful, and add anything new to the `prefers-reduced-motion` rule.
+- Small phones (320–370px) are checked: the bottom bar's seven tabs share the width (`.navbtn{flex:1 1 0;min-width:0}`, labels step down a size), the page title and rules pill shrink so they never touch, and rows of answer buttons carry the `acts` class (side padding, no wrapping). On touch screens small text links, steppers and round icon buttons get a larger invisible touch area (`@media (pointer:coarse)` in the `css` string) — keep new small controls inside those selectors.
+- A true count of zero prints as "0", never "+0" (`fmtTC`).
+- **Nothing slow may run while a page opens or on a keystroke.** The drawdown replay (`drawdownFromMix`, up to three million rounds) goes through `useDeferred(key, fn, keep)`: it runs just after the screen paints, debounces itself while you type, and remembers answers by key. Its results are `undefined`/`null` until ready, so the UI must cope ("…"). Use the same hook for any new heavy sum.
 
 ## Live play
 

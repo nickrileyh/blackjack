@@ -613,7 +613,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
             onRegion={(id) => { setFocus(id); if (id) setQ(""); }} onPins={(L) => { if (L.length === 1) setOpen(L[0].id); else setPick(L.map((p) => p.id)); }}
             onPlace={placed} onCancelPlace={() => { const was = placing; setPlacing(null); if (was && was !== "add") setOpen(was); }} />
           <div className="px-4 py-3">
-            <ChipRow small value={filter} onChange={setFilter} options={[["all", `All ${counts.all}`], ["been", <span key="b" className="flex items-center gap-1.5"><span className="cdot b" />Been {counts.been}</span>], ["backed", <span key="x" className="flex items-center gap-1.5"><span className="cdot x" style={{ boxShadow: "none" }} />Backed off {counts.backed}</span>], ...(counts.intel ? [["intel", `Reports ${counts.intel}`]] : [])]} />
+            <ChipRow small value={filter} onChange={setFilter} options={[["all", "All"], ["been", <span key="b" className="flex items-center gap-1.5"><span className="cdot b" />Been {counts.been}</span>], ["backed", <span key="x" className="flex items-center gap-1.5"><span className="cdot x" style={{ boxShadow: "none" }} />Backed off {counts.backed}</span>], ...(counts.intel ? [["intel", "Reports"]] : [])]} />
           </div>
         </section>
       </div><div className="dcol o2">

@@ -439,6 +439,7 @@ export function AskKeyCard() {
   const [prov, setProv] = useState(() => providerOf(askKey()));
   return (
     <section className="card p-5 mb-4">
+      <style>{CSS}</style>
       <div className="eyebrow mb-1">Ask</div>
       {prov ? <>
         <p className="text-sm mb-3" style={{ color: "var(--ivory-d)" }}>{prov === "google" ? "Running on Google Gemini's free plan with your Google key, saved on this device." : "Running on Claude with your Anthropic key, saved on this device. Questions are billed to your Anthropic account, usually a few cents each."}</p>

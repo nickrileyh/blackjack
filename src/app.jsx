@@ -195,6 +195,24 @@ function drawdownFromMix(parts, maxPaths = 1500) {
   dds.sort();
   return { med: dds[Math.floor(paths * 0.5)], p90: dds[Math.floor(paths * 0.9)] };
 }
+// The drawdown replay deals up to three million rounds, far too slow to run while a page is opening or on every keystroke.
+// useDeferred runs such a sum shortly after the screen has painted (so typing debounces itself) and remembers the answer by
+// key, so coming back to a page is instant. It returns undefined until the first answer is in; with keep, the last answer
+// stays on screen while a new one is worked out.
+const _deferred = new Map();
+function useDeferred(key, fn, keep) {
+  const [v, setV] = useState(() => (key != null && _deferred.has(key) ? _deferred.get(key) : undefined));
+  const f = useRef(fn); f.current = fn;
+  useEffect(() => {
+    if (key == null) { setV(undefined); return; }
+    if (_deferred.has(key)) { setV(_deferred.get(key)); return; }
+    if (!keep) setV(undefined);
+    const id = setTimeout(() => { const r = f.current(); if (_deferred.size > 60) _deferred.clear(); _deferred.set(key, r); setV(r); }, 90);
+    return () => clearTimeout(id);
+  }, [key]); // eslint-disable-line
+  return key == null ? undefined : v;
+}
+const ddKey = (list, mix, hph) => JSON.stringify([list.map((x) => [x.hours, x.snap ? [x.snap.hph, x.snap.mix] : 0]), mix, hph]);
 function sessionDrawdown(rows, cal, hours, hph) {
   return drawdownFromMix([{ mix: mixOf(rows, cal), rounds: Math.round(hours * hph) }], 2000);
 }
@@ -252,9 +270,27 @@ html,body{background:var(--bg)}
 .eyebrow{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:6px 8px calc(env(safe-area-inset-bottom) + 6px);background:rgba(var(--bgrgb),.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(var(--acc),.14);box-shadow:0 -12px 30px -18px rgba(0,0,0,.9)}
 .bottom-nav>div{max-width:42rem;margin:0 auto}
-.navbtn{flex:1;min-height:52px;padding:4px 0 2px;font-size:10.5px;font-weight:600;letter-spacing:.02em;color:var(--muted);position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .18s var(--ease),transform .13s var(--ease)}
-.navicon{display:flex;align-items:center;justify-content:center;width:48px;height:30px;border-radius:15px;transition:background .2s var(--ease)}
+.navbtn{flex:1 1 0;min-width:0;min-height:52px;padding:4px 0 2px;font-size:10.5px;font-weight:600;letter-spacing:.02em;color:var(--muted);position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .18s var(--ease),transform .13s var(--ease)}
+.navicon{display:flex;align-items:center;justify-content:center;width:100%;max-width:48px;height:30px;border-radius:15px;transition:background .2s var(--ease)}
 .navbtn.on .navicon{background:rgba(var(--acc),.14)}
+.navbtn>span:last-child{max-width:100%;white-space:nowrap}
+/* seven tabs on a narrow phone: labels step down a size so none collide and the last tab isn't pushed off the edge */
+@media (max-width:420px){.bottom-nav{padding-left:4px;padding-right:4px}.navbtn{font-size:10px;letter-spacing:0}}
+@media (max-width:350px){.navbtn{font-size:9px}.shell>header h1{font-size:21px;letter-spacing:-.025em}}
+/* small phones: the page title and the rules pill share one row without touching */
+@media (max-width:370px){.shell>header{gap:8px}.shell>header h1{font-size:24px;white-space:nowrap}.shell>header .rulespill{font-size:11px;gap:3px;padding:6px 7px 6px 9px}.shell>header .rulespill svg{display:none}.shell>header .rulespill{padding-right:9px}}
+/* rows of answer buttons: labels keep a little air on both sides and never wrap, however many buttons share the row */
+.acts>button{padding-left:7px;padding-right:7px;white-space:nowrap}
+@media (max-width:420px){.acts{gap:6px}.acts>button.text-sm,.acts>button.text-base{font-size:13px}}
+@media (max-width:350px){.acts>button.text-sm,.acts>button.text-base{font-size:12px}.acts>button{padding-left:5px;padding-right:5px}}
+/* fingers: small text links, steppers and round icon buttons get a larger touch area than they show */
+@media (pointer:coarse){
+.iconbtn,.stepbtn,.bj button.underline:not(.absolute){position:relative}
+.iconbtn::before,.stepbtn::before{content:"";position:absolute;inset:-7px}
+.bj button.underline:not(.absolute)::before{content:"";position:absolute;inset:-12px -8px}
+.shell>header .rulespill{min-height:34px}
+.bj .chippress.rounded-full{min-height:34px}
+}
 .tabs{display:flex;gap:22px;border-bottom:1px solid rgba(var(--fg),.08);margin-bottom:18px}
 .tabs button{position:relative;padding:4px 2px 11px;font-size:15px;font-weight:600;color:var(--muted);transition:color .18s var(--ease)}
 .tabs button.on{color:var(--ivory)}
@@ -1368,7 +1404,7 @@ function Trainer({ rules, setRules }) {
             <span>{cur.kind === "dev" ? cur.dev.hand : cur.hand}</span>
           </div>
 
-          <div className="grid gap-2 mt-5" style={{ gridTemplateColumns: cur.opts ? `repeat(${Math.min(cur.opts.length, 5)}, 1fr)` : "1fr 1fr" }}>
+          <div className="acts grid gap-2 mt-5" style={{ gridTemplateColumns: cur.opts ? `repeat(${Math.min(cur.opts.length, 5)}, 1fr)` : "1fr 1fr" }}>
             {(cur.opts || [cur.dev.below, cur.dev.above]).map((o, i) => {
               const isAns = result && o === cur.answer;
               const isPick = result && o === result.choice && !result.ok;
@@ -1828,7 +1864,7 @@ function logResult(skill, ok, extra = {}) {
   })();
 }
 const SKILLS = [["strategy", "Basic strategy"], ["deviation", "Deviations"], ["count", "Running count"], ["pairs", "Pair counting"], ["tc", "True count"], ["totals", "Hand totals"], ["play", "Live play"]];
-const fmtTC = (tc) => (tc >= 0 ? "+" : "−") + Math.abs(tc);
+const fmtTC = (tc) => (tc > 0 ? "+" + tc : tc < 0 ? "−" + Math.abs(tc) : "0"); // zero carries no sign
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 
 // ======================= blackjack engine =======================
@@ -2481,7 +2517,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           </div>
         )}
         {phase === "play" && (
-          <div className="grid gap-2 mt-2" style={{ gridTemplateColumns: `repeat(${rules.surrender ? 5 : 4}, 1fr)` }}>
+          <div className="acts grid gap-2 mt-2" style={{ gridTemplateColumns: `repeat(${rules.surrender ? 5 : 4}, 1fr)` }}>
             {["H", "S", "D", "P", ...(rules.surrender ? ["R"] : [])].map((a) => <button key={a} onClick={() => act(a)} disabled={!av[a]} className="opt rounded-xl py-3 text-sm font-medium" style={{ background: "rgba(var(--fg),.08)", color: "var(--ivory)", border: "1px solid rgba(var(--fg),.14)", opacity: av[a] ? 1 : .3 }}>{ACT[a]}</button>)}
           </div>
         )}
@@ -2689,7 +2725,7 @@ function TestRunner({ id, rules, onDone }) {
         <>
           <Table cards={q.cards} dealer={q.dealer} tc={q.tc} rcs={q.rcs} qkey={q.qkey} />
           <div className="flex justify-between text-xs mt-1 mono" style={{ color: "var(--muted)" }}><span>Dealer {upLabel(q.dealer.rank)}</span><span>{q.kind === "dev" ? q.dev.hand : q.hand}</span></div>
-          <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: q.opts ? `repeat(${q.opts.length}, 1fr)` : "1fr 1fr" }}>
+          <div className="acts grid gap-2 mt-3" style={{ gridTemplateColumns: q.opts ? `repeat(${q.opts.length}, 1fr)` : "1fr 1fr" }}>
             {(q.opts || [q.dev.below, q.dev.above]).map((o) => btn(o, q.opts ? ACT[o] : o))}
           </div>
         </>
@@ -2852,7 +2888,7 @@ function Assessment({ rules, bets, onDone, onCancel }) {
         <>
           <Table cards={q.cards} dealer={q.dealer} tc={q.kind === "dev" ? q.tc : undefined} rcs={q.rcs} qkey={q.qkey} />
           <div className="flex justify-between text-xs mt-1 mono" style={{ color: "var(--muted)" }}><span>Dealer {upLabel(q.dealer.rank)}</span><span>{q.kind === "dev" ? q.dev.hand : q.hand}</span></div>
-          <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: q.opts ? `repeat(${q.opts.length}, 1fr)` : "1fr 1fr" }}>
+          <div className="acts grid gap-2 mt-3" style={{ gridTemplateColumns: q.opts ? `repeat(${q.opts.length}, 1fr)` : "1fr 1fr" }}>
             {(q.opts || [q.dev.below, q.dev.above]).map((o) => optBtn(o, q.opts ? ACT[o] : o, () => record(o === q.answer)))}
           </div>
         </>
@@ -3072,11 +3108,11 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
         <text x={P.l} y={H - 4} fill="var(--muted)" style={{ font: "500 9px Inter" }}>0h</text>
         <text x={W - P.r} y={H - 4} textAnchor="end" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{fmtH(last.h)}</text>
       </svg>
-      <div className="flex items-center gap-4 text-[10px] mt-1" style={{ color: "var(--muted)" }}>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] mt-1" style={{ color: "var(--muted)" }}>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 2, background: "var(--brass)", display: "inline-block", borderRadius: 1 }} /> actual</span>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: "1.5px dashed rgba(var(--fg),.4)", display: "inline-block" }} /> expected</span>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 8, background: "rgba(var(--acc),.12)", display: "inline-block", borderRadius: 2 }} /> ±1 SD</span>
-        {onExpand && <button onClick={onExpand} className="ml-auto text-xs font-semibold" style={{ color: "var(--brass)" }}>Full screen ⤢</button>}
+        {onExpand && <button onClick={onExpand} className="ml-auto text-xs font-semibold whitespace-nowrap" style={{ color: "var(--brass)" }}>Full screen ⤢</button>}
       </div>
       {ddMed != null && (
         <div className="grid grid-cols-2 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
@@ -3111,7 +3147,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
   useEffect(() => { setSel(null); }, [range]);
   let ch = 0, cr = 0, ce = 0, cv = 0;
   const pts = [{ h: 0, i: 0, act: 0, exp: 0, sd: 0, s: null }].concat(list.map((s, k) => { const h = +s.hours || 0; ch += h; cr += s.result; ce += sessEv(s, evHour) * h; cv += Math.pow(sessSd(s, sdHour), 2) * h; return { h: ch, i: k + 1, act: cr, exp: ce, sd: Math.sqrt(cv), s }; }));
-  const ddE = useMemo(() => (list.length ? expectedDrawdown(list, mix, hph) : null), [range, sessions, mix, hph]); // eslint-disable-line
+  const ddE = useDeferred(list.length ? ddKey(list, mix, hph) : null, () => expectedDrawdown(list, mix, hph)) || null;
   const n = list.length, last = pts[pts.length - 1];
   const W = sz.w, H = sz.h, P = { l: 4, r: 44, t: 10, b: 22 };
   const cw = W - P.l - P.r, chh = H - P.t - P.b;
@@ -3663,7 +3699,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
     return sessions.filter((s) => new Date(s.date + "T12:00").getTime() >= since && (casino === "all" || casinoKey(s) === casino));
   }, [sessions, period, casino]);
   const st = useMemo(() => sessionStats(list, evHour, sdHour), [list, evHour, sdHour]);
-  const ddE = useMemo(() => (list.length > 1 && mix && mix.length ? expectedDrawdown(list, mix, hph) : null), [list, mix, hph]);
+  const ddE = useDeferred(list.length > 1 && mix && mix.length ? ddKey(list, mix, hph) : null, () => expectedDrawdown(list, mix, hph)) || null;
   const byCasino = useMemo(() => {
     const m = new Map();
     list.forEach((s) => { const k = casinoKey(s); const o = m.get(k) || { k, name: (s.where || "").trim() || "No casino", n: 0, h: 0, net: 0, exp: 0, last: s.date, heat: null }; o.n++; o.h += +s.hours || 0; o.net += s.result; o.exp += sessEv(s, evHour) * (+s.hours || 0); if (s.date >= o.last) o.last = s.date; if (s.heat === "backed") o.heat = { k: "backed", d: s.date }; else if (s.heat === "watched" && !o.heat) o.heat = { k: "watched", d: s.date }; m.set(k, o); });
@@ -4724,13 +4760,15 @@ function BetSpreadCalculator() {
 
   const edgesByCount = cal.e;
   const sessT = Math.min(48, Math.max(0, Number(sessHours) || 0));
-  const sess = useMemo(() => {
+  const sessBase = useMemo(() => {
     if (!(sessT > 0)) return null;
     const mT = r.evHour * sessT, sT = r.sdHour * Math.sqrt(sessT);
-    const dd = sessionDrawdown(r.rows, cal, sessT, rphEff);
     const fx = tailFix(shoeRounds(r.rf, bets, spotsMap, cal, rules.pen), sessT * rphEff);
-    return { exp: mT, down: sT > 0 ? PhiN(-mT / sT) : mT < 0 ? 1 : 0, c99: fx.c99 * sessionCash(0.01, r.evHour, r.sdHour, sessT), c95: fx.c95 * sessionCash(0.05, r.evHour, r.sdHour, sessT), ddMed: fx.d50 * dd.med, dd90: fx.d90 * dd.p90 };
+    return { exp: mT, down: sT > 0 ? PhiN(-mT / sT) : mT < 0 ? 1 : 0, c99: fx.c99 * sessionCash(0.01, r.evHour, r.sdHour, sessT), c95: fx.c95 * sessionCash(0.05, r.evHour, r.sdHour, sessT), fx };
   }, [r, cal, sessT, rphEff, bets, spotsMap, rules.pen]);
+  // the drawdown replay is the slow part: it follows a moment behind the rest instead of holding up every keystroke
+  const sessDd = useDeferred(sessT > 0 ? JSON.stringify([bets, spotsMap, r.evHour, r.sdHour, sessT, rphEff]) : null, () => sessionDrawdown(r.rows, cal, sessT, rphEff), true);
+  const sess = useMemo(() => (sessBase ? { ...sessBase, ddMed: sessDd ? sessBase.fx.d50 * sessDd.med : null, dd90: sessDd ? sessBase.fx.d90 * sessDd.p90 : null } : null), [sessBase, sessDd]);
   const mix = useMemo(() => mixOf(r.rows, cal), [r, cal]);
   const rorTarget = rorPct / 100;
   const [optResult, setOptResult] = useState(null);
@@ -4881,7 +4919,7 @@ function BetSpreadCalculator() {
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}>{money(Math.ceil(sess.c99 / 50) * 50)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · {money(Math.ceil(sess.c95 / 50) * 50)} for 95%</div></div>
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}>{sgnMoney(sess.exp)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Chance of a losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{Math.round(sess.down * 100)}%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>finish below where you started</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>−{money(Math.round(sess.ddMed / 25) * 25)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>peak to low · 1 in 10: −{money(Math.round(sess.dd90 / 25) * 25)}</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : "−" + money(Math.round(sess.ddMed / 25) * 25)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>peak to low{sess.dd90 == null ? "" : ` · 1 in 10: −${money(Math.round(sess.dd90 / 25) * 25)}`}</div></div>
               </div>
             ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
             <Info label="About these numbers">"Bring with you" covers the deepest you're likely to dip during the session, not just where you finish — including the extra swing from hot and cold shoes clustering, checked against full simulations. Drawdown is the biggest drop from a high point to a low within the session.</Info>
@@ -5001,7 +5039,7 @@ function BetSpreadCalculator() {
                     <div className="relative" style={{ paddingTop: 14 }}>
                       {r.evHour > 0 && (
                         <div className="absolute inset-x-0 z-10 pointer-events-none" style={{ bottom: `${(curPct * 64) / 100}px`, borderTop: "1px dashed rgba(var(--fg),.45)" }}>
-                          <span className="absolute right-0 mono" style={{ fontSize: 8, top: -11, color: "var(--ivory-d)", background: "var(--bg2)", padding: "0 3px", borderRadius: 3 }}>now ${r.evHour.toFixed(0)}</span>
+                          <span className="absolute right-0 mono" style={{ fontSize: 9, top: -11, color: "var(--ivory-d)", background: "var(--bg2)", padding: "0 3px", borderRadius: 3 }}>now ${r.evHour.toFixed(0)}</span>
                         </div>
                       )}
                       <div className="flex items-end gap-1" style={{ height: 64 }}>
