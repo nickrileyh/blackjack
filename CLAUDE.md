@@ -47,6 +47,7 @@ Rules to keep:
 ## Navigation and motion
 
 - Phone: bottom tab bar; desktop (1024px+): sidebar. Train has Strategy / Drills tabs. On Train and Live play the table comes first and stats sit below it.
+- **Keep pages plain** (Nick asks for simple, clean and sleek every time): the page header is the page name, the rules pill and the gear — no label above the name except today's date on Home. Explanations that aren't needed to use a page fold away behind `Info` ("How it works", "How to set it up", "About these numbers"), and secondary figures behind a "More …" link (Sessions shows four stats, with streak, average win/loss, upswing and swings behind "More stats"). Fold things away rather than delete them — every function stays.
 - The compact top bar (`TopBar`) appears on scroll and shows only the page title and rules pill. Section chips in it were tried and removed at Nick's request (he wants the app kept clean) — don't add extra navigation rows. The "Ramp ↓ · Your numbers ↓ …" jump pills at the top of Bet spread were removed for the same reason.
 - Desktop layout (1180px+): every page is up to 1120px wide and uses two columns through `.dgrid` / `.dcol` wrappers, which are `display: contents` below that width — so the phone order is simply the source order. `.dgrid.wl` is a wide-left split (table or main content left, stats and reference right); `.narrow` and `.segw` keep single cards and switches from stretching. `.deskonly` / `.notdesk` show or hide an element on wide screens.
 - Jump-to palette (`CommandPalette`, opened with ⌘K / Ctrl K, `/`, or the sidebar button): lists every page, drill and action — no theme rows (Nick removed those). When adding a page or drill, add it to `cmdItems` in `App`.
@@ -64,7 +65,7 @@ Rules to keep:
 - Small phones (320–370px) are checked: the bottom bar's seven tabs share the width (`.navbtn{flex:1 1 0;min-width:0}`, labels step down a size), the page title and rules pill shrink so they never touch, and rows of answer buttons carry the `acts` class (side padding, no wrapping). On touch screens small text links, steppers and round icon buttons get a larger invisible touch area (`@media (pointer:coarse)` in the `css` string) — keep new small controls inside those selectors.
 - A true count of zero prints as "0", never "+0" (`fmtTC`).
 - Rows that must fit a phone are checked at 320, 360, 375 and 390px, not just one size: a row of five answer buttons tightens below 390px (the `nth-last-child(n+5)` rule next to `.acts`), the bet table on Bet spread is `.btrow` (below 431px "Show frequencies" swaps the EV/round column for Freq % instead of adding a sixth column), the deviation list is `.devrow`, and the Fill chart play picker is `.chipseg.brushes`. Change their columns in the `css` string, not inline.
-- Sheets (`Sheet`) close four ways: the ×, a tap outside, Escape, and on a phone a drag down on the top of the sheet (`.sheetgrab`: the grab bar and title row; a short drag springs back). The game-rules dialog (`RulesModal`) closes without saving the same ways (×, outside tap, Escape) except on first run, when it must be answered.
+- Sheets (`Sheet`) close four ways: the ×, a tap outside, Escape, and on a phone a drag down on the top of the sheet (`.sheetgrab`: the grab bar and title row; a short drag springs back). Each of those plays a short exit (`.sheetwrap.out`, 170 ms) before the owner's `onClose` runs, so a sheet leaves the way it came in; if the owner keeps the sheet open after all, it comes back. A sheet the owner removes itself (a Save button) just goes. The game-rules dialog (`RulesModal`) closes without saving the same ways (×, outside tap, Escape) except on first run, when it must be answered.
 - Tapping into a number box selects its contents (one `focusin` listener in `App`), so typing replaces the old value. Give new number inputs `inputMode="numeric"` or `"decimal"` and they get it too.
 - The printing on the Live play felt fades back while cards are out (`.felt.busy .feltprint`) so it never fights the hand labels.
 - Sessions → Export CSV saves a file on a computer; on a phone it shares a real `.csv` file when the phone allows it, then falls back to sharing text, then to the clipboard.
@@ -121,6 +122,10 @@ is under 0.005% of a bet at a true count of −1, far inside their noise, so the
 charts (doubling 9 vs 2, splitting 6s vs 7 and so on) — expected, BJA's charts are for shoes, and the app deliberately
 uses one chart for every deck count. Soft 18 vs 2 in H17 ("0−": stand on a negative running count) came from that
 check; the BJA chart has no index there.
+
+## Checking the arithmetic
+
+`tools/checks/run.sh` builds the app with a few internal functions exported and runs `tools/checks/math-test.jsx` in Node: payouts (`settle`), hand values, the normal curve (`PhiN`), the chance of a dip (`pDip`, against a brute-force random walk), the calculator's formulas (EV, swing, risk of ruin against a simulated walk, N0, session bankroll) across deck counts and table sizes, and about 70 basic-strategy and count-play spot checks against the published charts. It prints "all N checks passed" or each failure; run it after touching any of those. It does not re-measure the edge tables — that is the simulator's job (above). Two things it found that are by design, not bugs: heads-up with a $0 bet at the starting count never plays a hand (nobody else moves the count), and 12 v 5, 12 v 6 and 13 v 3 have no count play because BJA's chart leaves them out.
 
 ## Casinos page
 

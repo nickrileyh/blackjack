@@ -290,6 +290,7 @@ html,body{background:var(--bg)}
 @media (max-width:370px){.shell>header{gap:8px}.shell>header h1{font-size:24px;white-space:nowrap}.shell>header .rulespill{font-size:11px;gap:3px;padding:6px 7px 6px 9px}.shell>header .rulespill svg{display:none}.shell>header .rulespill{padding-right:9px}}
 /* rows of answer buttons: labels keep a little air on both sides and never wrap, however many buttons share the row */
 .acts>button{padding-left:7px;padding-right:7px;white-space:nowrap}
+.acts>button{transition:transform .12s var(--ease),background-color .15s,border-color .15s,opacity .15s}.acts>button:active:not(:disabled){transform:scale(.97)}
 @media (max-width:420px){.acts{gap:6px}.acts>button.text-sm,.acts>button.text-base{font-size:13px}}
 @media (max-width:350px){.acts>button.text-sm,.acts>button.text-base{font-size:12px}.acts>button{padding-left:5px;padding-right:5px}}
 @media (max-width:389px){.acts:has(>button:nth-child(5)){gap:5px}.acts>button:first-child:nth-last-child(n+5),.acts>button:first-child:nth-last-child(n+5)~button{font-size:12.5px!important;padding-left:5px;padding-right:5px}}
@@ -424,6 +425,12 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 :root[data-theme="light"] .sidenav{background:rgba(255,255,255,.7);border-right-color:rgba(15,27,61,.08)}
 .sheet{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);border-top-left-radius:22px;border-top-right-radius:22px;border:1px solid rgba(var(--acc),.16);border-bottom:none;box-shadow:0 -20px 50px -10px rgba(0,0,0,.8);animation:sheetin .28s cubic-bezier(.2,.8,.2,1)}
 @keyframes sheetin{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.sheetwrap{animation:scrimin .22s var(--ease)}
+@keyframes scrimin{from{background-color:transparent}}
+.sheetwrap.out{animation:scrimout .17s var(--ease) forwards}
+.sheetwrap.out .sheet{animation:sheetout .17s cubic-bezier(.4,0,1,1) forwards}
+@keyframes scrimout{to{background-color:transparent}}
+@keyframes sheetout{to{transform:translateY(36px);opacity:0}}
 @media (max-width:389px){.chipseg.brushes button{padding-left:4px;padding-right:4px}}
 @media (max-width:350px){.chipseg.brushes{gap:2px;padding:3px}.chipseg.brushes button{padding-left:2px;padding-right:2px;font-size:11.5px}}
 .devrow{display:grid;align-items:center;gap:8px;padding:0 12px;grid-template-columns:minmax(80px,1fr) 78px 1fr 78px}
@@ -602,7 +609,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .burst i{position:absolute;left:50%;top:45%;width:5px;height:5px;border-radius:50%;background:var(--brass);opacity:0;animation:fly var(--t) ease-out forwards;animation-delay:var(--dl)}
 .burst i:nth-child(3n){background:var(--acc-hi)}.burst i:nth-child(4n){width:3px;height:3px}
 @keyframes fly{0%{opacity:1;transform:rotate(var(--a)) translateY(-6px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(-6px - var(--d))) scale(.3)}}
-@media (prefers-reduced-motion:reduce){.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -1547,13 +1554,12 @@ function Trainer({ rules, setRules }) {
       </>}
 
 
-      <section className="card p-5">
-        <div className="eyebrow mb-2">How it works</div>
-        <p className="text-sm" style={{ color: "var(--ivory-d)" }}>Hands you miss come back right away. Hands you get right come back less and less often until they're locked in.</p>
-        <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+      <section className="card px-5 py-4">
+        <div className="flex items-center justify-between gap-3">
           <span className="text-xs" style={{ color: "var(--muted)" }}>Progress is saved on this device.</span>
           <ConfirmLink label="Reset progress" confirm="Tap again — wipes trainer mastery" onConfirm={reset} />
         </div>
+        <Info label="How it works">Hands you miss come back right away. Hands you get right come back less and less often until they're locked in.</Info>
       </section>
       </div></div>
     </div>
@@ -3706,7 +3712,12 @@ function sessionStats(list, evHour, sdHour) {
   };
 }
 
-function Sheet({ title, onClose, children }) {
+function Sheet({ title, onClose: shut, children }) {
+  // closing plays a short exit first (.out), then tells the owner — so a sheet leaves the way it came in
+  const [out, setOut] = useState(false); const gone = useRef(false);
+  const live = useRef(true); useEffect(() => () => { live.current = false; }, []);
+  const leave = () => { shut(); setTimeout(() => { if (live.current) { gone.current = false; setOut(false); const el = box.current; if (el) { el.style.transition = ""; el.style.transform = ""; } } }, 80); };   // still here? the owner kept it open
+  const onClose = () => { if (gone.current) return; gone.current = true; if (noMotion()) { leave(); return; } setOut(true); setTimeout(leave, 170); };
   useEffect(() => {
     const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
     const k = (e) => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", k);
@@ -3720,10 +3731,10 @@ function Sheet({ title, onClose, children }) {
   const dEnd = (e) => {
     const d = drag.current; if (!d || d.id !== e.pointerId) return; drag.current = null;
     const fast = d.dy > 36 && d.dy / Math.max(1, e.timeStamp - d.t) > 0.55;
-    if (e.type !== "pointercancel" && (d.dy > 110 || fast)) { const el = box.current; settle(el ? el.offsetHeight : 600, 190); setTimeout(onClose, 170); } else if (d.dy) settle(0, 240);
+    if (e.type !== "pointercancel" && (d.dy > 110 || fast)) { const el = box.current; settle(el ? el.offsetHeight : 600, 190); if (!gone.current) { gone.current = true; setOut(true); setTimeout(leave, 170); } } else if (d.dy) settle(0, 240);
   };
   const ui = (
-    <div className="bj sheetwrap fixed inset-0 flex flex-col justify-end" style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} onClick={onClose} role="dialog" aria-label={title}>
+    <div className={"bj sheetwrap fixed inset-0 flex flex-col justify-end" + (out ? " out" : "")} style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} onClick={onClose} role="dialog" aria-label={title}>
       <div ref={box} className="sheet mx-auto w-full" style={{ maxWidth: "42rem", maxHeight: "92vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div className="sheetgrab" onPointerDown={dStart} onPointerMove={dMove} onPointerUp={dEnd} onPointerCancel={dEnd}>
         <div className="flex justify-center pt-2 pb-1"><span style={{ width: 38, height: 4, borderRadius: 4, background: "rgba(var(--fg),.18)" }} /></div>
@@ -3838,9 +3849,9 @@ function MonthBars({ months }) {
   );
 }
 
-function StatTile({ k, v, sub, tone }) {
+function StatTile({ k, v, sub, tone, enter }) {
   return (
-    <div className="rounded-2xl px-3.5 py-3" style={{ background: "rgba(var(--fg),.035)", border: "1px solid rgba(var(--fg),.05)" }}>
+    <div className={"rounded-2xl px-3.5 py-3" + (enter ? " rise" : "")} style={{ background: "rgba(var(--fg),.035)", border: "1px solid rgba(var(--fg),.05)" }}>
       <div className="text-[10.5px] font-semibold uppercase" style={{ color: "var(--muted)", letterSpacing: ".08em" }}>{k}</div>
       <div className="mono text-lg font-semibold mt-0.5" style={{ color: tone || "var(--ivory)" }}>{v}</div>
       {sub && <div className="text-[11px] leading-snug" style={{ color: "var(--muted)" }}>{sub}</div>}
@@ -3895,6 +3906,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
     return sessions.filter((s) => new Date(s.date + "T12:00").getTime() >= since && (casino === "all" || casinoKey(s) === casino));
   }, [sessions, period, casino]);
   const st = useMemo(() => sessionStats(list, evHour, sdHour), [list, evHour, sdHour]);
+  const [moreStats, setMoreStats] = useState(false);   // streak, average win/loss, upswing and swings sit behind "More stats"
   const ddE = useDeferred(list.length > 1 && mix && mix.length ? ddKey(list, mix, hph) : null, () => expectedDrawdown(list, mix, hph)) || null;
   const byCasino = useMemo(() => {
     const m = new Map();
@@ -4012,11 +4024,16 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
           <StatTile k="Worst session" v={st.worst ? sgnMoney(st.worst.result) : "—"} sub={st.worst ? `${dateShort(st.worst.date)}${st.worst.where ? " · " + st.worst.where : ""}` : ""} tone={st.worst && st.worst.result < 0 ? "var(--neg-l)" : undefined} />
           <StatTile k="Drawdown" v={st.mdd ? `−${money(Math.round(st.mdd))}` : "$0"} sub={ddE ? `median for your hours\u00a0−${money(Math.round(ddE.med / 25) * 25)}` : "biggest drop from a peak"} tone={ddE && st.mdd > ddE.med ? "var(--neg-l)" : undefined} />
           <StatTile k="From your peak" v={st.fromPeak > 0 ? `−${money(Math.round(st.fromPeak))}` : "At a high"} sub={st.fromPeak > 0 ? "below your best point" : "new high-water mark"} tone={st.fromPeak > 0 ? undefined : "var(--brass)"} />
-          <StatTile k="Streak" v={st.curStreak > 0 ? `${st.curStreak} W` : st.curStreak < 0 ? `${-st.curStreak} L` : "—"} sub={`longest ${st.longW} W · ${st.longL} L`} />
-          <StatTile k="Avg win / loss" v={`${st.wins ? shortMoney(st.avgWin) : "—"} / ${st.losses ? shortMoney(st.avgLoss) : "—"}`} sub={`${st.wins} won · ${st.losses} lost`} />
-          <StatTile k="Biggest upswing" v={st.mru ? `+${money(Math.round(st.mru))}` : "$0"} sub="low point to high point" />
-          <StatTile k="Your swings" v={st.n >= 5 ? `±${money(Math.round(st.realSd))}/hr` : "—"} sub={st.n >= 5 ? `model ±${money(Math.round(st.modelSd))}/hr${st.n < 20 ? " · rough until ~20 sessions" : ""}` : "after 5 sessions"} tone={st.n >= 5 && sdRatio > 1.35 ? "var(--neg-l)" : undefined} />
+          {moreStats && <>
+          <StatTile enter k="Streak" v={st.curStreak > 0 ? `${st.curStreak} W` : st.curStreak < 0 ? `${-st.curStreak} L` : "—"} sub={`longest ${st.longW} W · ${st.longL} L`} />
+          <StatTile enter k="Avg win / loss" v={`${st.wins ? shortMoney(st.avgWin) : "—"} / ${st.losses ? shortMoney(st.avgLoss) : "—"}`} sub={`${st.wins} won · ${st.losses} lost`} />
+          <StatTile enter k="Biggest upswing" v={st.mru ? `+${money(Math.round(st.mru))}` : "$0"} sub="low point to high point" />
+          <StatTile enter k="Your swings" v={st.n >= 5 ? `±${money(Math.round(st.realSd))}/hr` : "—"} sub={st.n >= 5 ? `model ±${money(Math.round(st.modelSd))}/hr${st.n < 20 ? " · rough until ~20 sessions" : ""}` : "after 5 sessions"} tone={st.n >= 5 && sdRatio > 1.35 ? "var(--neg-l)" : undefined} />
+          </>}
         </div>
+        <button type="button" onClick={() => setMoreStats((v) => !v)} aria-expanded={moreStats} className="flex items-center gap-1.5 text-[11.5px] font-semibold -mt-2 mb-4 px-1" style={{ color: "var(--muted)" }}>
+          {moreStats ? "Fewer stats" : "More stats"}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: moreStats ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
+        </button>
         {st.n >= 8 && sdRatio > 1.35 && <p className="text-[11px] -mt-2 mb-4 px-1" style={{ color: "var(--neg-l)" }}>Your results swing {Math.round((sdRatio - 1) * 100)}% more than your spread predicts. Common causes: betting above the ramp, extra hands, or wrong game settings (penetration, players).</p>}
         {lowCheck && (
           <section className="card p-4 mb-4">
@@ -4139,7 +4156,7 @@ function Backup() {
     try {
       const obj = JSON.parse(text); if (obj.app !== "blackjack-trainer" || !obj.data) throw new Error("bad");
       for (const k of Object.keys(obj.data)) if (BACKUP_KEYS.includes(k)) await window.storage.set(k, obj.data[k], false);
-      _logCache = null; setStatus("Restored. Reload the app to see everything.");
+      _logCache = null; setStatus("Restored. Reloading…"); setTimeout(() => { try { location.reload(); } catch (_) {} }, 900);
     } catch (_) { setStatus("That doesn't look like a backup from this app."); }
   };
   return (
@@ -4858,15 +4875,16 @@ function SyncCard() {
         {st.cfg?.token && <span className="text-[11px] font-semibold" style={{ color: "var(--brass)" }}>On</span>}
       </div>
       {!st.cfg?.token ? (<>
-        <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Keep your phone and computer on the same progress — sessions, spread, training and tests. Everything goes to a private Gist on your own GitHub account and nowhere else.</p>
-        <ol className="text-xs space-y-1.5 mb-3" style={{ color: "var(--ivory-d)" }}>
-          <li><b style={{ color: "var(--ivory)" }}>1.</b> <a href={SYNC_TOKEN_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 font-semibold" style={{ color: "var(--brass)" }}>Create a sync key on GitHub ↗</a> — keep “gist” ticked, set Expiration to “No expiration”, then tap Generate token and copy it.</li>
-          <li><b style={{ color: "var(--ivory)" }}>2.</b> Paste it here. Do your phone first, then your computer (same key or a new one — either works).</li>
-        </ol>
+        <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Keep your phone and computer on the same sessions, spread, training and tests. It all goes to a private Gist on your own GitHub account and nowhere else.</p>
         <div className="flex gap-2">
           <input className="in mono text-[12px] flex-1 min-w-0" placeholder="ghp_…" value={key} onChange={(e) => setKey(e.target.value)} autoCapitalize="off" autoCorrect="off" spellCheck={false} />
           <button className="btn shrink-0" style={{ width: "auto", padding: "0 16px" }} onClick={connect} disabled={busy || key.trim().length < 20}>{busy ? "Connecting…" : "Connect"}</button>
         </div>
+        <a href={SYNC_TOKEN_URL} target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-xs underline underline-offset-2 font-semibold" style={{ color: "var(--brass)" }}>Get a sync key on GitHub ↗</a>
+        <Info label="How to set it up">
+          <b style={{ color: "var(--ivory)" }}>1.</b> Open the link above. Keep “gist” ticked, set Expiration to “No expiration”, then tap Generate token and copy it.<br />
+          <b style={{ color: "var(--ivory)" }}>2.</b> Paste it in the box and tap Connect. Do your phone first, then your computer (the same key or a new one — either works).
+        </Info>
       </>) : (<>
         <div className="flex items-center gap-2 mt-2 mb-1">
           <span style={{ width: 8, height: 8, borderRadius: 9, background: dot, flex: "none" }} />
@@ -5114,7 +5132,7 @@ function BetSpreadCalculator() {
         {/* header */}
         <header className="mb-5 flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <div className="eyebrow mb-1.5">{({ progress: new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }), settings: "Preferences", calc: "Calculator", train: "Strategy & drills", count: "Strategy & drills", play: "Table simulation", sessions: "Casino log", casinos: "Scouting map", ask: "Assistant" })[tab]}</div>
+            {tab === "progress" && <div className="eyebrow mb-1.5">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>}
             <h1 className="leading-none font-semibold">{({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", ask: "Ask" })[tab]}</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
