@@ -54,6 +54,11 @@ Rules to keep:
 - Keep motion small and purposeful, and add anything new to the `prefers-reduced-motion` rule.
 - Small phones (320–370px) are checked: the bottom bar's seven tabs share the width (`.navbtn{flex:1 1 0;min-width:0}`, labels step down a size), the page title and rules pill shrink so they never touch, and rows of answer buttons carry the `acts` class (side padding, no wrapping). On touch screens small text links, steppers and round icon buttons get a larger invisible touch area (`@media (pointer:coarse)` in the `css` string) — keep new small controls inside those selectors.
 - A true count of zero prints as "0", never "+0" (`fmtTC`).
+- Rows that must fit a phone are checked at 320, 360, 375 and 390px, not just one size: a row of five answer buttons tightens below 390px (the `nth-last-child(n+5)` rule next to `.acts`), the bet table on Bet spread is `.btrow` (below 431px "Show frequencies" swaps the EV/round column for Freq % instead of adding a sixth column), the deviation list is `.devrow`, and the Fill chart play picker is `.chipseg.brushes`. Change their columns in the `css` string, not inline.
+- Sheets (`Sheet`) close four ways: the ×, a tap outside, Escape, and on a phone a drag down on the top of the sheet (`.sheetgrab`: the grab bar and title row; a short drag springs back). The game-rules dialog (`RulesModal`) closes without saving the same ways (×, outside tap, Escape) except on first run, when it must be answered.
+- Tapping into a number box selects its contents (one `focusin` listener in `App`), so typing replaces the old value. Give new number inputs `inputMode="numeric"` or `"decimal"` and they get it too.
+- The printing on the Live play felt fades back while cards are out (`.felt.busy .feltprint`) so it never fights the hand labels.
+- Sessions → Export CSV saves a file on a computer; on a phone it shares a real `.csv` file when the phone allows it, then falls back to sharing text, then to the clipboard.
 - **Nothing slow may run while a page opens or on a keystroke.** The drawdown replay (`drawdownFromMix`, up to three million rounds) goes through `useDeferred(key, fn, keep)`: it runs just after the screen paints, debounces itself while you type, and remembers answers by key. Its results are `undefined`/`null` until ready, so the UI must cope ("…"). Use the same hook for any new heavy sum.
 
 ## Live play

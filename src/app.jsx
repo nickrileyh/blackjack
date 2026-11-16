@@ -283,6 +283,8 @@ html,body{background:var(--bg)}
 .acts>button{padding-left:7px;padding-right:7px;white-space:nowrap}
 @media (max-width:420px){.acts{gap:6px}.acts>button.text-sm,.acts>button.text-base{font-size:13px}}
 @media (max-width:350px){.acts>button.text-sm,.acts>button.text-base{font-size:12px}.acts>button{padding-left:5px;padding-right:5px}}
+@media (max-width:389px){.acts:has(>button:nth-child(5)){gap:5px}.acts>button:first-child:nth-last-child(n+5),.acts>button:first-child:nth-last-child(n+5)~button{font-size:12.5px!important;padding-left:5px;padding-right:5px}}
+@media (max-width:350px){.acts:has(>button:nth-child(5)){gap:4px}.acts>button:first-child:nth-last-child(n+5),.acts>button:first-child:nth-last-child(n+5)~button{font-size:11.5px!important;padding-left:3px;padding-right:3px;letter-spacing:-.01em}}
 /* fingers: small text links, steppers and round icon buttons get a larger touch area than they show */
 @media (pointer:coarse){
 .iconbtn,.stepbtn,.bj button.underline:not(.absolute){position:relative}
@@ -385,7 +387,7 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 .sn-rules:hover{background:rgba(var(--fg),.06);border-color:rgba(var(--acc),.3)}
 .sheetwrap{justify-content:center!important;align-items:center;padding:40px}
 .sheetwrap .sheet{max-width:560px!important;max-height:min(86vh,860px)!important;border-radius:22px;border-bottom:1px solid rgba(var(--acc),.16);box-shadow:0 40px 90px -20px rgba(0,0,0,.75);animation:sheetpop .22s cubic-bezier(.2,.8,.2,1)}
-.sheetwrap .sheet>div:first-child{visibility:hidden;height:12px;padding:0}
+.sheetwrap .sheet>.sheetgrab>div:first-child{visibility:hidden;height:12px;padding:0}
 @keyframes sheetpop{from{transform:translateY(10px) scale(.98);opacity:0}to{transform:none;opacity:1}}
 @media (hover:hover){.card button.chippress:hover,.rulespill:hover,.iconbtn:hover{filter:brightness(1.12)}}
 }
@@ -407,6 +409,18 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 :root[data-theme="light"] .sidenav{background:rgba(255,255,255,.7);border-right-color:rgba(15,27,61,.08)}
 .sheet{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);border-top-left-radius:22px;border-top-right-radius:22px;border:1px solid rgba(var(--acc),.16);border-bottom:none;box-shadow:0 -20px 50px -10px rgba(0,0,0,.8);animation:sheetin .28s cubic-bezier(.2,.8,.2,1)}
 @keyframes sheetin{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@media (max-width:389px){.chipseg.brushes button{padding-left:4px;padding-right:4px}}
+@media (max-width:350px){.chipseg.brushes{gap:2px;padding:3px}.chipseg.brushes button{padding-left:2px;padding-right:2px;font-size:11.5px}}
+.devrow{display:grid;align-items:center;gap:8px;padding:0 12px;grid-template-columns:minmax(80px,1fr) 78px 1fr 78px}
+@media (max-width:400px){.devrow{grid-template-columns:minmax(0,1fr) 66px 34px 66px}.devrow>span{padding-left:5px;padding-right:5px}.devrow>div:first-child{min-width:0}.devrow>div:first-child>.text-sm{white-space:nowrap}.devrow .h-px{display:none}.devrow>div.flex{justify-content:center}}
+@media (max-width:350px){.devrow{gap:5px;padding:0 8px;grid-template-columns:minmax(0,1fr) 60px 30px 60px}.devrow>span{font-size:10.5px;padding-left:4px;padding-right:4px}.devrow>div:first-child{min-width:0}.devrow>div:first-child>.text-sm{font-size:12px;white-space:nowrap}.devrow .h-px{display:none}.devrow>div.flex{justify-content:center}}
+.btrow{display:grid;align-items:center;gap:8px;grid-template-columns:44px minmax(0,1fr) 44px 56px 66px}
+.btrow.freq{grid-template-columns:44px minmax(0,1fr) 44px 52px 56px 66px}
+@media (max-width:430px){.btrow{gap:6px;grid-template-columns:40px minmax(0,1fr) 40px 52px 58px}.btrow.freq{grid-template-columns:40px minmax(0,1fr) 40px 50px 52px}.btrow.freq>.evc{display:none}}
+@media (max-width:350px){.btrow,.btrow.freq{gap:5px;grid-template-columns:36px minmax(0,1fr) 36px 46px 50px}.btrow .tcl{font-size:12px}.btrow.eyebrow{font-size:9px!important;letter-spacing:.04em}.btrow .in.sm{padding-left:5px;padding-right:5px}}
+@media (max-width:350px){.card.rulesdlg{padding:14px}}
+.sheetgrab{touch-action:none}
+@media (min-width:1024px){.sheetgrab{touch-action:auto}}
 .navbtn:active{transform:scale(.94)}
 .chippress{transition:transform .13s var(--ease),background .18s,color .18s}
 .chippress:active{transform:scale(.96)}
@@ -487,7 +501,8 @@ input[type=range]{accent-color:var(--brass)}
 .dealt{animation:deal .5s cubic-bezier(.22,.9,.3,1) both;animation-delay:var(--d);transform-style:preserve-3d;backface-visibility:hidden;will-change:transform,opacity}
 .tbl{perspective:900px}
 .felt{isolation:isolate}
-.feltprint{position:absolute;left:50%;top:50%;width:min(100%,520px);transform:translate(-50%,-46%);z-index:-1;pointer-events:none;color:rgb(var(--fg));opacity:.15;overflow:visible}
+.feltprint{position:absolute;left:50%;top:50%;width:min(100%,520px);transform:translate(-50%,-46%);z-index:-1;pointer-events:none;color:rgb(var(--fg));opacity:.15;overflow:visible;transition:opacity .5s var(--ease)}
+.felt.busy .feltprint{opacity:.06}
 .feltprint .fp-l{fill:none;stroke:currentColor;stroke-width:.7;opacity:.8}
 .feltprint text{fill:currentColor;font-family:Inter,system-ui,sans-serif;font-weight:600}
 .feltprint .fp-t{font-size:12.5px;letter-spacing:.26em}
@@ -558,7 +573,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .burst i{position:absolute;left:50%;top:45%;width:5px;height:5px;border-radius:50%;background:var(--brass);opacity:0;animation:fly var(--t) ease-out forwards;animation-delay:var(--dl)}
 .burst i:nth-child(3n){background:var(--acc-hi)}.burst i:nth-child(4n){width:3px;height:3px}
 @keyframes fly{0%{opacity:1;transform:rotate(var(--a)) translateY(-6px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(-6px - var(--d))) scale(.3)}}
-@media (prefers-reduced-motion:reduce){.cmdk,.cmdk-wrap{animation:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -1042,7 +1057,7 @@ function Charts({ R, devs }) {
         <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>Hi-Lo indices from the Blackjack Apprenticeship {R.h17 ? "H17" : "S17"} chart{R.surrender ? ", surrender included" : ""}. Make the right-hand play once the true count reaches the index; otherwise play the left-hand one.</p>
         <div className="space-y-1.5">
           {devs.map((d) => (
-            <div key={d.id} className="grid items-center gap-2 rounded-xl px-3" style={{ gridTemplateColumns: "minmax(80px,1fr) 78px 1fr 78px", height: 44, background: "rgba(var(--fg),.04)" }}>
+            <div key={d.id} className="devrow rounded-xl" style={{ height: 44, background: "rgba(var(--fg),.04)" }}>
               <div>
                 <div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{d.name}</div>
                 {d.above === "R" && <div className="text-[10px]" style={{ color: "var(--muted)" }}>surrender</div>}
@@ -1098,7 +1113,7 @@ function FillChart({ R, devs }) {
           </div>
           <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>Pick a play, then tap the cells. Tap a filled cell with the same play to clear it.</p>
           <div className="sticky z-10 mb-4" style={{ top: "calc(env(safe-area-inset-top) + 8px)" }}>
-            <div className="chipseg" style={{ gridTemplateColumns: `repeat(${brushes.length}, 1fr)` }}>
+            <div className="chipseg brushes" style={{ gridTemplateColumns: `repeat(${brushes.length}, 1fr)` }}>
               {brushes.map((b) => (
                 <button key={b} onClick={() => setBrush(b)} className={brush === b ? "on" : ""} style={{ height: 40, background: brush === b ? ACOL[b] : undefined, color: brush === b ? (b === "D" ? "#1B1407" : "#fff") : undefined, fontWeight: 600 }}>{ANAME[b]}</button>
               ))}
@@ -1803,20 +1818,26 @@ function StartHint({ onGo }) {
 }
 // the less common table rules, as a short list (empty = the standard game)
 const advancedNotes = (r) => [dasOn(r) ? null : "no DAS", dblRule(r) === "any" ? null : `double ${dblRule(r).replace("-", "–")} only`, maxHandsOf(r) === 4 ? null : `split to ${maxHandsOf(r)}`, r.rsa ? "resplit aces" : null].filter(Boolean);
-function RulesModal({ rules, onSave, first }) {
+function RulesModal({ rules, onSave, onClose, first }) {
   const [draft, setDraft] = useState(rules);
   const [adv, setAdv] = useState(() => advancedNotes(rules).length > 0);
-  useEffect(() => { const prev = document.body.style.overflow; document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = prev; }; }, []);
+  const close = first ? null : onClose;
+  useEffect(() => {
+    const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
+    const k = (e) => { if (e.key === "Escape" && close) close(); }; window.addEventListener("keydown", k);
+    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", k); };
+  }, []); // eslint-disable-line
   const row = (label, control) => (
-    <div className="grid items-center gap-3" style={{ gridTemplateColumns: "1fr 190px" }}>
+    <div className="grid items-center gap-3" style={{ gridTemplateColumns: "minmax(72px,1fr) minmax(0,190px)" }}>
       <span className="text-sm" style={{ color: "var(--ivory-d)" }}>{label}</span>{control}
     </div>
   );
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(8,5,7,.78)", backdropFilter: "blur(6px)", paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
-      <div className="card rise w-full max-w-md p-5" style={{ background: "linear-gradient(180deg,var(--sheet1),var(--sheet2))", maxHeight: "92vh", overflowY: "auto" }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(8,5,7,.78)", backdropFilter: "blur(6px)", paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }} onClick={close || undefined} role="dialog" aria-label="Game rules">
+      <div className="card rulesdlg rise w-full max-w-md p-5 relative" style={{ background: "linear-gradient(180deg,var(--sheet1),var(--sheet2))", maxHeight: "92vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+        {close && <button onClick={close} aria-label="Close without saving" className="absolute rounded-full flex items-center justify-center" style={{ top: 14, right: 14, width: 32, height: 32, background: "rgba(var(--fg),.08)", color: "var(--ivory-d)", fontSize: 18 }}>×</button>}
         <div className="eyebrow mb-1">{first ? "Before you start" : "Game rules"}</div>
-        <div className="disp text-2xl font-semibold mb-1">What game do you play?</div>
+        <div className="disp text-2xl font-semibold mb-1" style={{ paddingRight: first ? 0 : 30 }}>What game do you play?</div>
         <p className="text-xs mb-5" style={{ color: "var(--ivory-d)" }}>These drive the charts, deviations, odds, and every drill. Change them any time from the top of the screen.</p>
         <div className="space-y-3">
           {row("Dealer on soft 17", <Seg value={!!draft.h17} options={[[false, "Stands"], [true, "Hits"]]} onChange={(v) => setDraft({ ...draft, h17: v })} />)}
@@ -2135,7 +2156,7 @@ function SpreadMini({ bets, tc }) {
     <section className="card p-4 mb-4">
       <div className="flex items-baseline justify-between mb-2.5">
         <div className="eyebrow">Your spread</div>
-        {now && <div className="mono text-xs" style={{ color: "var(--muted)" }}>at {LABEL(now.c)} bet <span style={{ color: now.b ? "var(--brass)" : "var(--ivory-d)" }}>{now.b ? money(now.b) : "nothing"}</span></div>}
+        {now && <div className="mono text-xs" style={{ color: "var(--muted)" }}>at {LABEL(now.c)} {now.b ? "bet " : ""}<span style={{ color: now.b ? "var(--brass)" : "var(--ivory-d)" }}>{now.b ? money(now.b) : "sit out"}</span></div>}
       </div>
       <div className="flex items-end gap-1" style={{ height: 52 }} aria-label="Your bet ramp">
         {rows.map((x) => { const on = x.c === here; return (
@@ -2465,7 +2486,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
             </button>
           </div>
         </div>
-        <div className="relative tbl felt cz-play px-4 pt-4 pb-4" style={{ minHeight: 300 }}>
+        <div className={"relative tbl felt cz-play px-4 pt-4 pb-4" + (phase === "bet" ? "" : " busy")} style={{ minHeight: 300 }}>
           <FeltPrint />
           {shuffled && <div className="absolute inset-0 flex items-center justify-center rounded-2xl z-10 rise" style={{ background: "rgba(0,0,0,.6)" }}><div className="disp text-2xl font-semibold" style={{ color: "var(--brass)" }}>Shuffling…</div></div>}
           <HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small {...dealAnim(1)} />
@@ -2477,12 +2498,12 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
 
         {/* the live numbers, attached to the table rather than floating in their own card */}
         <div className="mt-2.5 pb-2.5 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid var(--line)" }}>
-          <div>
+          <div className="shrink-0">
             <div className="eyebrow" style={{ fontSize: 9 }}>Bankroll</div>
             <div className="mono font-semibold" style={{ fontSize: 17 }}>{cash(bankAnim)}</div>
           </div>
-          {history.length > 1 && <div className="flex gap-1.5 flex-wrap justify-center" style={{ maxWidth: 140 }}>{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
-          <div className="text-right">
+          {history.length > 1 && <div className="flex gap-1.5 flex-wrap justify-center min-w-0" style={{ maxWidth: 140 }}>{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
+          <div className="text-right shrink-0 whitespace-nowrap">
             <div className="eyebrow" style={{ fontSize: 9 }}>{phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{sgnCash(lastNet)} this hand</span> : `Net · ${stats.hands} hand${stats.hands === 1 ? "" : "s"}`}</div>
             <div className="mono font-semibold" style={{ fontSize: 17, color: stats.net > 0 ? "var(--brass)" : stats.net < 0 ? "var(--neg-l)" : "var(--ivory)" }}>{sgnCash(netAnim)}</div>
           </div>
@@ -3529,13 +3550,25 @@ function Sheet({ title, onClose, children }) {
     const k = (e) => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", k);
     return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", k); };
   }, []); // eslint-disable-line
+  // on a phone the sheet's top (the grab bar and title) drags down to close it
+  const box = useRef(null), drag = useRef(null);
+  const settle = (dy, ms) => { const el = box.current; if (!el) return; el.style.transition = ms ? `transform ${ms}ms cubic-bezier(.2,.8,.2,1)` : "none"; el.style.transform = dy ? `translateY(${dy}px)` : ""; };
+  const dStart = (e) => { if (e.pointerType === "mouse" || e.target.closest("button,input,a") || window.innerWidth >= 1024) return; drag.current = { id: e.pointerId, y: e.clientY, t: e.timeStamp, dy: 0 }; };
+  const dMove = (e) => { const d = drag.current; if (!d || d.id !== e.pointerId) return; d.dy = Math.max(0, e.clientY - d.y); if (d.dy > 4) { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} settle(d.dy, 0); } };
+  const dEnd = (e) => {
+    const d = drag.current; if (!d || d.id !== e.pointerId) return; drag.current = null;
+    const fast = d.dy > 36 && d.dy / Math.max(1, e.timeStamp - d.t) > 0.55;
+    if (e.type !== "pointercancel" && (d.dy > 110 || fast)) { const el = box.current; settle(el ? el.offsetHeight : 600, 190); setTimeout(onClose, 170); } else if (d.dy) settle(0, 240);
+  };
   const ui = (
     <div className="bj sheetwrap fixed inset-0 flex flex-col justify-end" style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} onClick={onClose} role="dialog" aria-label={title}>
-      <div className="sheet mx-auto w-full" style={{ maxWidth: "42rem", maxHeight: "92vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+      <div ref={box} className="sheet mx-auto w-full" style={{ maxWidth: "42rem", maxHeight: "92vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+        <div className="sheetgrab" onPointerDown={dStart} onPointerMove={dMove} onPointerUp={dEnd} onPointerCancel={dEnd}>
         <div className="flex justify-center pt-2 pb-1"><span style={{ width: 38, height: 4, borderRadius: 4, background: "rgba(var(--fg),.18)" }} /></div>
         <div className="flex items-center justify-between px-5 pt-1 pb-3">
           <div className="text-lg font-semibold" style={{ letterSpacing: "-.01em" }}>{title}</div>
           <button onClick={onClose} aria-label="Close" className="rounded-full flex items-center justify-center" style={{ width: 32, height: 32, background: "rgba(var(--fg),.08)", color: "var(--ivory-d)", fontSize: 18 }}>×</button>
+        </div>
         </div>
         <div className="px-5" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 20px)" }}>{children}</div>
       </div>
@@ -3727,7 +3760,11 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
     const csv = rows.join("\n");
     // on a computer, save a real .csv file
     try { if (window.matchMedia && window.matchMedia("(pointer: fine)").matches) { const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); const a = document.createElement("a"); a.href = url; a.download = `blackjack-sessions-${localDay()}.csv`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000); setExportMsg("Saved blackjack-sessions.csv to your downloads."); return; } } catch (_) {}
-    try { if (navigator.share) { await navigator.share({ title: "Blackjack sessions", text: csv }); setExportMsg("Shared."); return; } } catch (_) {}
+    try {
+      const file = typeof File !== "undefined" ? new File([csv], `blackjack-sessions-${localDay()}.csv`, { type: "text/csv" }) : null;
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: "Blackjack sessions" }); setExportMsg("Shared as a .csv file."); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    try { if (navigator.share) { await navigator.share({ title: "Blackjack sessions", text: csv }); setExportMsg("Shared."); return; } } catch (e) { if (e && e.name === "AbortError") return; }
     try { await navigator.clipboard.writeText(csv); setExportMsg("Copied as CSV — paste into Sheets, Excel or Notes."); } catch (_) { setExportMsg("Couldn't copy on this device."); }
   };
 
@@ -3810,7 +3847,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
         <div className="grid grid-cols-2 gap-2 mb-4">
           <StatTile k="Best session" v={st.best ? sgnMoney(st.best.result) : "—"} sub={st.best ? `${dateShort(st.best.date)}${st.best.where ? " · " + st.best.where : ""}` : ""} tone="var(--brass)" />
           <StatTile k="Worst session" v={st.worst ? sgnMoney(st.worst.result) : "—"} sub={st.worst ? `${dateShort(st.worst.date)}${st.worst.where ? " · " + st.worst.where : ""}` : ""} tone={st.worst && st.worst.result < 0 ? "var(--neg-l)" : undefined} />
-          <StatTile k="Drawdown" v={st.mdd ? `−${money(Math.round(st.mdd))}` : "$0"} sub={ddE ? `median for your hours −${money(Math.round(ddE.med / 25) * 25)}` : "biggest drop from a peak"} tone={ddE && st.mdd > ddE.med ? "var(--neg-l)" : undefined} />
+          <StatTile k="Drawdown" v={st.mdd ? `−${money(Math.round(st.mdd))}` : "$0"} sub={ddE ? `median for your hours\u00a0−${money(Math.round(ddE.med / 25) * 25)}` : "biggest drop from a peak"} tone={ddE && st.mdd > ddE.med ? "var(--neg-l)" : undefined} />
           <StatTile k="From your peak" v={st.fromPeak > 0 ? `−${money(Math.round(st.fromPeak))}` : "At a high"} sub={st.fromPeak > 0 ? "below your best point" : "new high-water mark"} tone={st.fromPeak > 0 ? undefined : "var(--brass)"} />
           <StatTile k="Streak" v={st.curStreak > 0 ? `${st.curStreak} W` : st.curStreak < 0 ? `${-st.curStreak} L` : "—"} sub={`longest ${st.longW} W · ${st.longL} L`} />
           <StatTile k="Avg win / loss" v={`${st.wins ? shortMoney(st.avgWin) : "—"} / ${st.losses ? shortMoney(st.avgLoss) : "—"}`} sub={`${st.wins} won · ${st.losses} lost`} />
@@ -4647,6 +4684,15 @@ function SyncCard() {
 }
 let _curTab = null;
 export default function App() {
+  // tapping into a number box selects what's in it, so typing replaces the old value instead of adding to it
+  useEffect(() => {
+    const f = (e) => {
+      const t = e.target; if (!t || t.tagName !== "INPUT" || t.readOnly || !t.value) return;
+      const m = t.inputMode || t.getAttribute("inputmode"); if (!(t.type === "number" || m === "numeric" || m === "decimal")) return;
+      requestAnimationFrame(() => { if (document.activeElement !== t) return; try { t.setSelectionRange(0, t.value.length); } catch (_) { try { t.select(); } catch (__) {} } });
+    };
+    document.addEventListener("focusin", f); return () => document.removeEventListener("focusin", f);
+  }, []);
   const [gen, setGen] = useState(0);
   const [pending, setPending] = useState(null);
   const [toast, setToast] = useState(null);
@@ -4850,7 +4896,7 @@ function BetSpreadCalculator() {
   return (
     <RulesCtx.Provider value={rules}><div className="bj">
       <style>{css}</style>
-      {setupOpen && <RulesModal rules={rules} onSave={saveRules} first={firstRun} />}
+      {setupOpen && <RulesModal rules={rules} onSave={saveRules} onClose={() => setSetupOpen(false)} first={firstRun} />}
       {cmd && <CommandPalette items={cmdItems} onClose={() => setCmd(false)} />}
       <div className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
@@ -4916,7 +4962,7 @@ function BetSpreadCalculator() {
             </div>
             {sess ? (
               <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}>{money(Math.ceil(sess.c99 / 50) * 50)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · {money(Math.ceil(sess.c95 / 50) * 50)} for 95%</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}>{money(Math.ceil(sess.c99 / 50) * 50)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}>{sgnMoney(sess.exp)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Chance of a losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{Math.round(sess.down * 100)}%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>finish below where you started</div></div>
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : "−" + money(Math.round(sess.ddMed / 25) * 25)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>peak to low{sess.dd90 == null ? "" : ` · 1 in 10: −${money(Math.round(sess.dd90 / 25) * 25)}`}</div></div>
@@ -4984,20 +5030,19 @@ function BetSpreadCalculator() {
             </button>
           </div>
           <div className="grid gap-1.5">
-            <div className="grid items-center gap-2 px-1 eyebrow" style={{ gridTemplateColumns: `44px 1fr 44px ${showFreq ? "52px " : ""}56px 66px`, fontSize: 10 }}>
-              <span>TC</span><span>Bet</span><span className="text-center">Hands</span>{showFreq && <span className="text-right">Freq %</span>}<span className="text-right">Edge</span><span className="text-right">EV/round</span>
+            <div className={"btrow px-1 eyebrow" + (showFreq ? " freq" : "")} style={{ fontSize: 10 }}>
+              <span>TC</span><span>Bet</span><span className="text-center">Hands</span>{showFreq && <span className="text-right">Freq %</span>}<span className="text-right">Edge</span><span className="text-right evc">EV/round</span>
             </div>
             {r.rows.map((row) => (
-              <div key={row.c} className="grid items-center gap-2 rounded-xl px-1 py-1" style={{
-                gridTemplateColumns: `44px 1fr 44px ${showFreq ? "52px " : ""}56px 66px`,
+              <div key={row.c} className={"btrow rounded-xl px-1 py-1" + (showFreq ? " freq" : "")} style={{
                 background: row.edge > 0 ? "rgba(var(--acc),.05)" : "transparent",
               }}>
-                <span className="mono text-sm font-medium">{LABEL(row.c)}</span>
+                <span className="mono text-sm font-medium tcl">{LABEL(row.c)}</span>
                 <input className="in sm mono text-sm" type="number" inputMode="numeric" step={5} min={0} value={bets[row.c]} aria-label={`Bet at TC ${LABEL(row.c)}`} onChange={(e) => setBets({ ...bets, [row.c]: e.target.value === "" ? "" : Math.max(0, Number(e.target.value)) })} />
                 <button className="mono text-xs rounded-lg" style={{ height: 34, background: spotsMap[row.c] === 2 ? "var(--brass)" : "rgba(var(--fg),.07)", color: spotsMap[row.c] === 2 ? "var(--ink)" : "var(--muted)", fontWeight: 600, opacity: spotsMap[row.c] === 2 && seats >= 7 ? 0.5 : 1 }} aria-label={`Hands at ${LABEL(row.c)}`} onClick={() => setSpotsMap((m) => ({ ...m, [row.c]: m[row.c] === 2 ? 1 : 2 }))}>{spotsMap[row.c] === 2 ? "×2" : "×1"}</button>
                 {showFreq && <span className="mono text-xs text-right" style={{ color: "var(--ivory-d)" }}>{(row.f * 100).toFixed(row.f < 0.01 ? 2 : 1)}%</span>}
                 <span className="mono text-xs text-right" style={{ color: row.edge > 0 ? "var(--brass)" : "var(--rose)" }}>{(row.edge * 100).toFixed(2).replace("-", "−")}%</span>
-                <span className="mono text-xs text-right" style={{ color: row.evHand > 0 ? "var(--ivory)" : row.evHand < 0 ? "var(--rose)" : "var(--muted)" }}>{row.bet ? money(row.evHand, 2) : "—"}</span>
+                <span className="mono text-xs text-right evc" style={{ color: row.evHand > 0 ? "var(--ivory)" : row.evHand < 0 ? "var(--rose)" : "var(--muted)" }}>{row.bet ? money(row.evHand, 2) : "—"}</span>
               </div>
             ))}
           </div>
