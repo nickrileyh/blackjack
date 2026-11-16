@@ -71,6 +71,14 @@ function calRow(kind, key, pen) {
 // insurance. The no-insurance columns are measured directly; the count plays come off through the cover tables, where
 // each play's cost of being skipped was measured at every count (see src/cover.js).
 const devsOn = (R) => !R || R.devs !== false;
+// Props for a dimmed backdrop that closes its dialog on a tap outside. A press must START on the backdrop: dragging a
+// slider (or selecting text) inside the dialog and letting go outside it fires a click on the backdrop too, and that
+// must not close the dialog and lose what was typed.
+let bdDown = null; // the backdrop the current press started on (kept outside React so a re-render mid-press can't lose it)
+const backdrop = (close) => ({
+  onPointerDown: (e) => { bdDown = e.target === e.currentTarget ? e.currentTarget : null; },
+  onClick: (e) => { const ok = bdDown === e.currentTarget && e.target === e.currentTarget; bdDown = null; if (ok && close) close(e); },
+});
 function calFor(R, seats = 4) {
   if (devsOn(R)) return calBase(R, seats);
   const Rb = { ...R, devs: true, insurance: false };
@@ -386,7 +394,7 @@ html,body{background:var(--bg)}
 .dcol.o3>section:nth-of-type(1){animation-delay:.15s}.dcol.o3>section:nth-of-type(n+2){animation-delay:.2s}
 @media (min-width:1024px){
 html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) transparent}
-.bottom-nav,.hdrgear,.shell>header .rulespill{display:none!important}
+.bottom-nav,.hdrgear{display:none!important}
 .shell{--W:800px;--SN:248px;max-width:var(--W)!important;margin-left:calc(var(--SN) + max(40px,(100% - var(--SN) - var(--W))/2))!important;margin-right:40px!important;padding-left:0!important;padding-right:0!important;padding-top:44px!important;padding-bottom:56px!important}
 .shell>header h1{font-size:34px}
 .shell::before{content:"";position:fixed;top:-300px;right:-220px;width:780px;height:780px;border-radius:50%;background:radial-gradient(closest-side,rgba(var(--acc),.085),transparent 72%);pointer-events:none;z-index:-1}
@@ -1917,7 +1925,7 @@ function RulesModal({ rules, onSave, onClose, first }) {
     </div>
   );
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(8,5,7,.78)", backdropFilter: "blur(6px)", paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }} onClick={close || undefined} role="dialog" aria-label="Game rules">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(8,5,7,.78)", backdropFilter: "blur(6px)", paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }} {...backdrop(close)} role="dialog" aria-label="Game rules">
       <div className="card rulesdlg rise w-full max-w-md p-5 relative" style={{ background: "linear-gradient(180deg,var(--sheet1),var(--sheet2))", maxHeight: "92vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         {close && <button onClick={close} aria-label="Close without saving" className="absolute rounded-full flex items-center justify-center" style={{ top: 14, right: 14, width: 32, height: 32, background: "rgba(var(--fg),.08)", color: "var(--ivory-d)", fontSize: 18 }}>×</button>}
         <div className="eyebrow mb-1">{first ? "Before you start" : "Game rules"}</div>
@@ -3749,7 +3757,7 @@ function Sheet({ title, onClose: shut, children }) {
     if (e.type !== "pointercancel" && (d.dy > 110 || fast)) { const el = box.current; settle(el ? el.offsetHeight : 600, 190); if (!gone.current) { gone.current = true; setOut(true); setTimeout(leave, 170); } } else if (d.dy) settle(0, 240);
   };
   const ui = (
-    <div className={"bj sheetwrap fixed inset-0 flex flex-col justify-end" + (out ? " out" : "")} style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} onClick={onClose} role="dialog" aria-label={title}>
+    <div className={"bj sheetwrap fixed inset-0 flex flex-col justify-end" + (out ? " out" : "")} style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} {...backdrop(onClose)} role="dialog" aria-label={title}>
       <div ref={box} className="sheet mx-auto w-full" style={{ maxWidth: "42rem", maxHeight: "92vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div className="sheetgrab" onPointerDown={dStart} onPointerMove={dMove} onPointerUp={dEnd} onPointerCancel={dEnd}>
         <div className="flex justify-center pt-2 pb-1"><span style={{ width: 38, height: 4, borderRadius: 4, background: "rgba(var(--fg),.18)" }} /></div>
@@ -4531,7 +4539,7 @@ function CommandPalette({ items, onClose }) {
     else if (e.key === "Escape") { e.preventDefault(); onClose(); }
   };
   return (
-    <div className="cmdk-wrap" onClick={onClose} role="dialog" aria-label="Jump to">
+    <div className="cmdk-wrap" {...backdrop(onClose)} role="dialog" aria-label="Jump to">
       <div className="cmdk" onClick={(e) => e.stopPropagation()}>
         <div className="cmdk-in">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
