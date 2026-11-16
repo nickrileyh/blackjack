@@ -330,9 +330,15 @@ html,body{background:var(--bg)}
 @media (hover:hover) and (pointer:fine) and (min-width:700px){.kbdhint{display:block}}
 .kbdonly{display:none}
 @media (hover:hover) and (pointer:fine) and (min-width:700px){.kbdonly{display:block}}
-.keycap{min-width:38px;height:28px;padding:0 9px;border-radius:8px;font:600 12px Inter,system-ui,sans-serif;color:var(--ivory);background:rgba(var(--fg),.07);border:1px solid rgba(var(--fg),.14);border-bottom-width:2px;transition:background .15s,border-color .15s,color .15s}
+.keycap{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:28px;padding:0 9px;border-radius:8px;font:600 12px Inter,system-ui,sans-serif;color:var(--ivory);background:rgba(var(--fg),.07);border:1px solid rgba(var(--fg),.14);border-bottom-width:2px;transition:background .15s,border-color .15s,color .15s}
 .keycap[data-on="1"]{color:var(--brass);background:rgba(var(--acc),.12);border-color:rgba(var(--acc),.5);font-weight:500}
 .keycap:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.kbdlist{display:grid;grid-template-columns:1fr auto;gap:8px 16px;align-items:center}
+.shoe-w{position:relative;height:12px}
+.shoe-t{position:absolute;inset:0;border-radius:99px;background:var(--recess);overflow:hidden}
+.shoe-t i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,rgba(var(--acc),.45),var(--brass));transition:width .4s var(--ease)}
+.shoe-t u{position:absolute;top:0;bottom:0;width:1px;background:rgba(var(--fg),.2)}
+.shoe-c{position:absolute;top:-4px;height:20px;width:2px;margin-left:-1px;border-radius:2px;background:var(--rose);opacity:.7}
 @media (hover:hover){.keycap:hover{background:rgba(var(--fg),.11)}}
 .card.focuscard{background:linear-gradient(135deg,rgba(var(--acc),.12),rgba(var(--acc),.03) 55%,rgba(var(--fg),.03));border-color:rgba(var(--acc),.3)}
 :root[data-theme="light"] .card.focuscard{background:linear-gradient(135deg,rgba(30,63,168,.07),#FFFFFF 60%);border-color:rgba(30,63,168,.2)}
@@ -596,7 +602,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .burst i{position:absolute;left:50%;top:45%;width:5px;height:5px;border-radius:50%;background:var(--brass);opacity:0;animation:fly var(--t) ease-out forwards;animation-delay:var(--dl)}
 .burst i:nth-child(3n){background:var(--acc-hi)}.burst i:nth-child(4n){width:3px;height:3px}
 @keyframes fly{0%{opacity:1;transform:rotate(var(--a)) translateY(-6px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(-6px - var(--d))) scale(.3)}}
-@media (prefers-reduced-motion:reduce){.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -2251,6 +2257,48 @@ function SpreadMini({ bets, tc }) {
     </section>
   );
 }
+// Wide screens only: how far into the shoe you are, and — when the count is showing — the path the true count has taken.
+function ShoePanel({ shoe, dl, tc, showCount, trace }) {
+  const total = shoe.cards.length, pos = Math.min(shoe.pos, shoe.cut);
+  const nd = Math.max(1, Math.round(total / 52));
+  const left = Math.max(0, shoe.cut - pos);
+  const W = 300, H = 44, mid = H / 2, amp = mid - 4;
+  const CAP = Math.max(3, Math.ceil(Math.max(Math.abs(tc), ...trace.map((t) => Math.abs(t.tc)))));
+  const y = (v) => mid - (Math.max(-CAP, Math.min(CAP, v)) / CAP) * amp;
+  const line = trace.length > 1 ? trace.map((t, i) => `${i ? "L" : "M"}${((t.x / shoe.cut) * W).toFixed(1)} ${y(t.tc).toFixed(1)}`).join(" ") : null;
+  return (
+    <section className="card p-4 mb-4 deskonly">
+      <div className="flex items-baseline justify-between mb-3">
+        <div className="eyebrow">The shoe</div>
+        <div className="mono text-xs" style={{ color: "var(--muted)" }}>{dl.toFixed(1)} decks left</div>
+      </div>
+      <div className="shoe-w" role="img" aria-label={`Card ${pos} of ${shoe.cut}, cut card at ${shoe.cut}`}>
+        <div className="shoe-t"><i style={{ width: `${(pos / total) * 100}%` }} />{Array.from({ length: nd - 1 }, (_, i) => <u key={i} style={{ left: `${((i + 1) / nd) * 100}%` }} />)}</div>
+        <span className="shoe-c" style={{ left: `${(shoe.cut / total) * 100}%` }} />
+      </div>
+      <div className="flex justify-between mt-2 mono" style={{ fontSize: 10, color: "var(--muted)" }}>
+        <span>{pos - 1} seen</span><span>{left} to the cut card</span>
+      </div>
+      {showCount && (
+        <div className="mt-3.5 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <span className="eyebrow" style={{ fontSize: 9 }}>True count, this shoe</span>
+            <span className="mono text-xs" style={{ color: tc > 0 ? "var(--brass)" : tc < 0 ? "var(--neg-l)" : "var(--ivory-d)" }}>{fmtTC(tc)}</span>
+          </div>
+          <div className="relative">
+            <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" aria-hidden="true" style={{ display: "block", overflow: "visible" }}>
+              <line x1="0" y1={mid} x2={W} y2={mid} stroke="rgba(var(--fg),.18)" strokeWidth="1" strokeDasharray="3 4" vectorEffect="non-scaling-stroke" />
+              {line && <path d={line} fill="none" stroke="var(--brass)" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />}
+            </svg>
+            <span className="mono absolute left-0 top-0" style={{ fontSize: 9, color: "var(--muted)" }}>+{CAP}</span>
+            <span className="mono absolute left-0 bottom-0" style={{ fontSize: 9, color: "var(--muted)" }}>−{CAP}</span>
+          </div>
+          <div className="flex justify-between mono" style={{ fontSize: 9, color: "var(--muted)", marginTop: 3 }}><span>shuffle</span><span>cut card</span></div>
+        </div>
+      )}
+    </section>
+  );
+}
 const CHIP_COLORS = (v) => v < 25 ? ["#A83236", "#C4494E", "#F6EFE2"] : v < 100 ? ["#2E7D5B", "#3E9971", "#F6EFE2"] : v < 500 ? ["#26292F", "#3A3F48", "#F6EFE2"] : v < 1000 ? ["#5F3B92", "#7650AE", "#F6EFE2"] : ["#C9A24C", "#DDBA6B", "#1C1C1E"];
 function Info({ label, children }) {
   const [open, setOpen] = useState(false);
@@ -2539,6 +2587,22 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   // money ticks to its new value after each hand; the tween works in whole dollars, so settle on the exact figure (3:2 pays halves)
   const bankTw = useCountUp(bank, 450), netTw = useCountUp(stats.net, 450);
   const bankAnim = Math.abs(bankTw - bank) < 1 ? bank : bankTw, netAnim = Math.abs(netTw - stats.net) < 1 ? stats.net : netTw;
+
+  // one sample per ~1% of the shoe, for the desktop shoe panel's count line; a fresh shoe empties it
+  const [trace, setTrace] = useState([]);
+  useEffect(() => {
+    if (!shoe) return;
+    if (shoe.pos <= 1) { setTrace((t) => (t.length ? [] : t)); return; }
+    const dlv = Math.max(0.5, Math.round(((shoe.cards.length - shoe.pos) / 52) * 2) / 2);
+    const at = { x: shoe.pos, tc: Math.trunc(shoe.rc / dlv) };
+    setTrace((t) => {
+      const last = t[t.length - 1];
+      if (last && last.x > at.x) return [at];                                   // new shoe
+      if (last && at.x - last.x < Math.max(1, Math.round(shoe.cut / 100))) return t;
+      return [...t, at];
+    });
+  }, [shoe]);
+
   if (!shoe) return null;
   const dl = decksLeft(); const tc = Math.trunc(shoe.rc / dl);
   const dv = handValue(dealer); const h = hands[active]; const av = h ? available(h, active) : {};
@@ -2644,6 +2708,9 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
 
       {/* the ramp only points at the current count when the player has chosen to see the count — otherwise it would give it away */}
       <SpreadMini bets={bets} tc={showCount && shoe.pos > 1 ? tc : undefined} />
+
+      {/* the count line would give the count away, so it only draws when the count is already on show */}
+      <ShoePanel shoe={shoe} dl={dl} tc={tc} showCount={showCount} trace={trace} />
 
       {/* how you're doing: this session or every hand you've played */}
       {(all.hands > 0 || stats.hands > 0) && (
@@ -4389,6 +4456,44 @@ const NAV_ITEMS = [
   ["casinos", "Casinos", <><path d="M12 20.8s-6.6-5.9-6.6-10.9a6.6 6.6 0 0 1 13.2 0c0 5-6.6 10.9-6.6 10.9z" /><circle cx="12" cy="9.9" r="2.4" /></>],
   ["ask", "Ask", <><path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4.5 19.5l1.3-4.2A7.5 7.5 0 1 1 20 11.5z" /><path d="M9.5 11.5h.01M12.5 11.5h.01M15.5 11.5h.01" /></>],
 ];
+// The keyboard card (? on a computer). Live play's own keys are whatever they're currently bound to.
+function KeyRow({ label, keys }) {
+  return (<><span className="text-[13px]" style={{ color: "var(--ivory-d)" }}>{label}</span>
+    <span className="flex items-center gap-1.5 justify-end">{keys.map((k, i) => <Fragment key={i}>{i > 0 && <span className="text-[10px]" style={{ color: "var(--muted)" }}>or</span>}<span className="keycap" style={{ height: 25, minWidth: 32, fontSize: 11.5 }}>{k}</span></Fragment>)}</span></>);
+}
+function ShortcutsCard({ onClose, isMac, onPlay, rules }) {
+  useEffect(() => {
+    const k = (e) => { if (e.key === "Escape" || e.key === "?") { e.preventDefault(); onClose(); } };
+    window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
+  }, [onClose]);
+  const alt = isMac ? "⌥" : "Alt ", keys = playKeysOf(_playPrefs.keys);
+  const play = [["Hit", keys.H], ["Stand", keys.S], ["Double", keys.D], ["Split", keys.P], ...(rules && rules.surrender ? [["Surrender", keys.R]] : []), ["Next hand", "Enter"], ["Take insurance", keys.insY], ["No insurance", keys.insN]];
+  return (
+    <div className="cmdk-wrap" onClick={onClose} role="dialog" aria-label="Keyboard shortcuts">
+      <div className="cmdk" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+        <div className="cmdk-in"><span className="flex-1 font-semibold" style={{ color: "var(--ivory)", fontSize: 15 }}>Keyboard</span><kbd>esc</kbd></div>
+        <div className="cmdk-list" style={{ padding: "0 16px 14px" }}>
+          {onPlay && <>
+            <div className="cmdk-g" style={{ padding: "12px 0 7px" }}>At the table</div>
+            <div className="kbdlist">{play.map(([l, k]) => <KeyRow key={l} label={l} keys={[keyName(k)]} />)}</div>
+            <p className="text-[11px] mt-2.5" style={{ color: "var(--muted)" }}>Change these in the table's own settings, behind the gear.</p>
+          </>}
+          <div className="cmdk-g" style={{ padding: "16px 0 7px" }}>Anywhere</div>
+          <div className="kbdlist">
+            <KeyRow label="Jump to…" keys={[isMac ? "⌘K" : "Ctrl K", "/"]} />
+            <KeyRow label="This card" keys={["?"]} />
+            <KeyRow label="Close a sheet or dialog" keys={["Esc"]} />
+          </div>
+          <div className="cmdk-g" style={{ padding: "16px 0 7px" }}>Pages</div>
+          <div className="kbdlist">
+            {NAV_ITEMS.map(([k, l], i) => <KeyRow key={k} label={l} keys={[alt + (i + 1)]} />)}
+            <KeyRow label="Settings" keys={[alt + "8"]} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 // Jump-to palette (⌘K / Ctrl K / "/"): type a few letters, arrow to a row, Enter. Every page, drill and setting is in it.
 function CommandPalette({ items, onClose }) {
   const [q, setQ] = useState(""); const [at, setAt] = useState(0); const list = useRef(null);
@@ -4958,15 +5063,23 @@ function BetSpreadCalculator() {
   const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; const same = t === tab; setTab(t); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } try { window.scrollTo({ top: 0, behavior: same ? "smooth" : "auto" }); } catch (_) {} };
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
   const [cmd, setCmd] = useState(false);
+  const [help, setHelp] = useState(false);
   useEffect(() => {
     const k = (e) => {
       if (firstRun) return;
       const tag = (e.target?.tagName || "").toLowerCase(), typing = tag === "input" || tag === "textarea" || tag === "select";
       if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === "k") { e.preventDefault(); setCmd((v) => !v); }
       else if (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); setCmd(true); }
+      else if (e.key === "?" && !typing && !e.metaKey && !e.ctrlKey) { e.preventDefault(); setHelp((v) => !v); }
+      // Alt and a number jumps straight to a page: free on every keyboard, and never the digit a drill or the table is waiting for.
+      // Not while a sheet or the rules dialog is open (both lock the page's scroll) — the page behind them isn't the one being used.
+      else if (e.altKey && !e.metaKey && !e.ctrlKey && !typing && document.body.style.overflow !== "hidden" && /^Digit[1-8]$/.test(e.code || "")) {
+        const n = Number(e.code.slice(5)), to = n === 8 ? "settings" : (NAV_ITEMS[n - 1] || [])[0];
+        if (to) { e.preventDefault(); setCmd(false); setHelp(false); go(to); }
+      }
     };
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
-  }, [firstRun]);
+  }, [firstRun, tab]);
   const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
   const cmdItems = !cmd ? [] : [
     ["Pages", "Home", () => go("progress")],
@@ -4988,6 +5101,7 @@ function BetSpreadCalculator() {
     ["Actions", "Log a session", () => go("sessions", { log: true }), "add new result"],
     ["Actions", "Add a casino", () => { openCasinoAdd(); go("casinos", { add: true }); }, "map pin new"],
     ["Actions", "Change game rules", () => setSetupOpen(true), "decks h17 s17 surrender penetration", rulesShort(rules)],
+    ["Actions", "Keyboard shortcuts", () => setHelp(true), "keys hotkeys help"],
   ].map(([group, label, run, more, note]) => ({ group, label, run, more, note }));
 
   return (
@@ -4995,6 +5109,7 @@ function BetSpreadCalculator() {
       <style>{css}</style>
       {setupOpen && <RulesModal rules={rules} onSave={saveRules} onClose={() => setSetupOpen(false)} first={firstRun} />}
       {cmd && <CommandPalette items={cmdItems} onClose={() => setCmd(false)} />}
+      {help && <ShortcutsCard onClose={() => setHelp(false)} isMac={isMac} onPlay={tab === "play"} rules={rules} />}
       <div className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
         <header className="mb-5 flex items-end justify-between gap-3">
