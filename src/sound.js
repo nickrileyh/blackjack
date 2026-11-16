@@ -49,15 +49,15 @@ function audio() {
   } catch (_) { ctx = null; }
   return ctx;
 }
-// decode the recordings once. MP3 decoders differ in how much silence they leave at the front, so each clip is
-// measured and played from where its sound actually starts.
+// decode the recordings once. MP3 decoders differ in how much dead silence they leave at the front, so each clip is
+// played from where that silence ends — and only silence: a card's quiet slide before it lands must stay.
 function load() {
   const one = (b64) => new Promise((res) => {
     try {
       const bin = atob(b64), bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       const done = (buf) => {
         const d = buf.getChannelData(0); let pk = 0; for (let i = 0; i < d.length; i++) { const v = Math.abs(d[i]); if (v > pk) pk = v; }
-        let i0 = 0; while (i0 < d.length && Math.abs(d[i0]) < pk * 0.02) i0++;
+        let i0 = 0; while (i0 < d.length && Math.abs(d[i0]) < pk * 0.002) i0++;
         res({ buf, from: Math.max(0, i0 / buf.sampleRate - 0.003) });
       };
       const p = ctx.decodeAudioData(bytes.buffer, done, () => res(null));
@@ -73,7 +73,7 @@ if (typeof window !== "undefined") {
 }
 
 // ---- the recordings ----
-function clip(group, t, { gain = 1, rate = [0.97, 1.03] } = {}) {
+function clip(group, t, { gain = 1, rate = [0.985, 1.015] } = {}) {
   const set = clips[group]; if (!set || !set.length) return;      // still decoding (the first instant after the first tap): stay silent
   let i = Math.floor(Math.random() * set.length); if (set.length > 1 && i === lastClip[group]) i = (i + 1) % set.length;
   lastClip[group] = i;
