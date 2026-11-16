@@ -3749,7 +3749,25 @@ function Sheet({ title, onClose: shut, children }) {
   return typeof document !== "undefined" ? createPortal(ui, document.body) : ui;
 }
 
-function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onEditSpread }) {
+// desktop only: where one logged session landed against what its spread expected over its hours
+function SessionLuck({ s, evHour, sdHour }) {
+  const h = +s.hours || 0, exp = sessEv(s, evHour) * h, sd = sessSd(s, sdHour) * Math.sqrt(h);
+  if (!(h > 0) || !(sd > 0)) return null;
+  const z = (s.result - exp) / sd, p = PhiN(z), tone = p < 0.1 ? "var(--rose)" : p > 0.9 ? "var(--brass)" : "var(--ivory)";
+  return (
+    <div className="deskonly rounded-xl px-4 pt-3 pb-2.5 mb-4" style={{ background: "rgba(var(--fg),.035)" }}>
+      <div className="flex items-baseline justify-between">
+        <div className="eyebrow">How this session ran</div>
+        <div className="mono text-xs" style={{ color: "var(--muted)" }}>{z >= 0 ? "+" : "−"}{Math.abs(z).toFixed(2)} SD</div>
+      </div>
+      <div className="text-lg font-semibold mt-0.5" style={{ color: tone }}>{pctTxt(p)} percentile</div>
+      <p className="text-xs mt-0.5 mb-1.5" style={{ color: "var(--ivory-d)" }}>Over {fmtH(h)} the spread you played expects {sgnMoney(exp)} ± {shortMoney(sd)}. You finished {sgnMoney(s.result)}.</p>
+      <LuckGauge z={z} pct={p} />
+    </div>
+  );
+}
+
+function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onEditSpread, evHour, sdHour }) {
   const editing = !!initial;
   const [f, setF] = useState(() => initial
     ? { date: initial.date, where: initial.where || "", hours: String(initial.hours ?? ""), won: initial.result >= 0, result: String(Math.abs(initial.result)), notes: initial.notes || "", low: initial.low != null ? String(Math.abs(initial.low)) : "", seats: initial.seats || null, heat: initial.heat || "none" }
@@ -3766,6 +3784,7 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
   };
   return (
     <Sheet title={editing ? "Edit session" : "Log a session"} onClose={onClose}>
+      {editing && <SessionLuck s={initial} evHour={evHour} sdHour={sdHour} />}
       <div className="grid grid-cols-2 gap-2 mb-3">
         <label className="block"><span className="eyebrow block mb-1.5">Date</span><input className="in" type="date" value={f.date} onChange={(e) => set("date", e.target.value)} /></label>
         <label className="block"><span className="eyebrow block mb-1.5">Hours</span><input className="in mono" type="number" inputMode="decimal" step="0.25" placeholder="0" value={f.hours} onChange={(e) => set("hours", e.target.value)} /></label>
@@ -3806,6 +3825,49 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
       {!editing && <p className="text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Next you'll confirm the spread and rules you played.</p>}
     </Sheet>
   );
+}
+
+// Desktop only (Bet spread): the table minimums your bankroll supports at a chosen risk, and how long until the next one.
+// Your current spread is scaled to each table's minimum (every bet × table min ÷ your min), so EV grows by that factor and
+// variance by its square: the bankroll a risk of ruin needs is k · variance · −ln(risk) / (2 · EV).
+const TABLE_MINS = [5, 10, 15, 25, 50, 75, 100, 200, 500];
+const PLAN_RISKS = [[0.02, "2%"], [0.05, "5%"], [0.1, "10%"]];
+function BankrollPlan({ r, bankroll, minBet, bets }) {
+  const [risk, setRisk] = useState(0.05);
+  if (!(minBet > 0)) return null;
+  const top = Math.max(0, ...COUNTS.map((c) => +bets[c] || 0));
+  const card = (body) => <section className="card p-5 mb-4 deskonly"><div className="flex items-center justify-between gap-3 mb-3"><div className="eyebrow">Growing your bankroll</div><Seg small value={risk} options={PLAN_RISKS} onChange={setRisk} style={{ width: 170 }} /></div>{body}</section>;
+  if (!(r.evHour > 0)) return card(<p className="text-sm" style={{ color: "var(--ivory-d)" }}>This spread doesn't win, so there's nothing to grow into. Find a winning spread first.</p>);
+  const per = (r.sdHour * r.sdHour * -Math.log(risk)) / (2 * r.evHour); // bankroll needed per 1× of your current spread
+  const mins = [...new Set([...TABLE_MINS, minBet])].sort((a, b) => a - b);
+  const at = mins.indexOf(minBet), lo = mins.filter((m, i) => i < at && per * (m / minBet) <= bankroll).pop();
+  const levels = [...(lo != null ? [lo] : []), ...mins.slice(at, at + 4)].map((m) => { const k = m / minBet; return { m, k, need: per * k, ev: r.evHour * k, sd: r.sdHour * k, top: top * k }; });
+  // play the biggest table you qualify for until the bankroll reaches the next one, then move up
+  let b = bankroll, hrs = 0, odds = 1, play = levels.filter((l) => l.need <= bankroll).pop() || null;
+  levels.forEach((l) => {
+    if (l.need <= bankroll) { l.state = l === play ? "now" : "ok"; return; }
+    if (!play) { l.state = "short"; return; }
+    const th = (2 * play.ev) / (play.sd * play.sd);
+    odds *= (1 - Math.exp(-th * b)) / (1 - Math.exp(-th * l.need)); l.chance = odds;
+    hrs += (l.need - b) / play.ev; l.hrs = hrs; l.state = "later"; b = l.need; play = l;
+  });
+  const cur = levels.filter((l) => l.state === "now").pop();
+  return card(<>
+    <p className="text-sm mb-3" style={{ color: "var(--ivory-d)" }}>{cur ? <>Your {money(bankroll)} supports <span className="mono font-semibold" style={{ color: "var(--brass)" }}>${cur.m}</span> tables with your spread at {pct(risk, 0)} risk of ruin.</> : <>At {pct(risk, 0)} risk your {money(bankroll)} is short of even the ${levels[0].m} table with this spread.</>}</p>
+    <div className="grid text-[10px] font-semibold uppercase pb-1.5" style={{ gridTemplateColumns: "64px minmax(0,1fr) 72px 84px minmax(0,1.2fr)", gap: 10, color: "var(--muted)", letterSpacing: ".08em", borderBottom: "1px solid var(--line)" }}><span>Table</span><span>Bets</span><span className="text-right">Per hour</span><span className="text-right">Bankroll</span><span className="text-right">Getting there</span></div>
+    {levels.map((l) => (
+      <div key={l.m} className="grid items-center py-2" style={{ gridTemplateColumns: "64px minmax(0,1fr) 72px 84px minmax(0,1.2fr)", gap: 10, borderBottom: "1px solid var(--line)", opacity: l.state === "ok" ? 0.6 : 1 }}>
+        <span className="mono text-sm font-semibold" style={{ color: l.state === "now" ? "var(--brass)" : "var(--ivory)" }}>${l.m}</span>
+        <span className="mono text-xs" style={{ color: "var(--ivory-d)" }}>${l.m}–{shortMoney(l.top)}</span>
+        <span className="mono text-xs text-right">{money(l.ev)}</span>
+        <span className="mono text-xs text-right">{shortMoney(l.need)}</span>
+        <span className="text-xs text-right" style={{ color: l.state === "now" ? "var(--brass)" : l.state === "short" ? "var(--neg-l)" : "var(--ivory-d)" }}>
+          {l.state === "now" ? "You're here" : l.state === "ok" ? "Covered" : l.state === "short" ? `${shortMoney(l.need - bankroll)} short` : <>~{Math.round(l.hrs).toLocaleString()} h · <span className="mono">{Math.round(l.chance * 100)}%</span></>}
+        </span>
+      </div>
+    ))}
+    <Info label="How it works">Each row is your current spread scaled to that table's minimum, so every bet grows by the same factor. Bankroll is what that spread needs to hold risk of ruin at {pct(risk, 0)}. "Getting there" plays the biggest table you qualify for until you reach the next bankroll, then moves up: the hours are the expected hours of play from today, and the % is the chance of getting all the way to that row without going broke on the way. Luck can make it much faster or slower. If you lose, drop back a row rather than keep the bigger bets.</Info>
+  </>);
 }
 
 function LuckGauge({ z, pct }) {
@@ -4103,7 +4165,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
       </>}
       </div></div>
 
-      {sheet && <SessionSheet initial={sheet === "new" ? null : sheet} casinos={casinos} seats0={seats} onClose={() => setSheet(null)}
+      {sheet && <SessionSheet initial={sheet === "new" ? null : sheet} casinos={casinos} seats0={seats} evHour={evHour} sdHour={sdHour} onClose={() => setSheet(null)}
         onDelete={() => { saveSessions(sessions.filter((x) => x.id !== sheet.id)); setSheet(null); }}
         onEditSpread={sheet !== "new" ? () => { const sv = sheet; setSheet(null); setSpreadFor({ id: sv.id, cfg: sv.snap?.cfg || { ...cfgNow, seats: sv.seats || cfgNow.seats }, current: !sv.snap?.cfg, legacy: !sv.snap?.cfg }); } : null}
         onSave={(v) => {
@@ -5342,6 +5404,7 @@ function BetSpreadCalculator() {
             to bring risk of ruin down to {pct(Math.min(rorTarget, 0.2), 0)}.
           </div>
         </section>
+        <BankrollPlan r={r} bankroll={+bankroll || 0} minBet={+minBet || 0} bets={bets} />
         </div></div>
 
         <p className="text-[11px] mt-5 leading-relaxed" style={{ color: "var(--muted)" }}>
@@ -5393,6 +5456,6 @@ function BetSpreadCalculator() {
   );
 }
 // shared with src/casinos.jsx (the Casinos page lives in its own file)
-export { Sheet, Seg, ChipRow, ConfirmLink, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav };
+export { Sheet, Seg, ChipRow, ConfirmLink, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav, Info, money, shortMoney, fmtTC, pct };
 // used by the Ask tab (src/ask.jsx, src/aitools.js)
 export { COUNTS, calFor, compute, autoRph, roundFreqs, spotsAt, momentAt, optimizeSpread, optimizeForProfit, correctPlay, rulesLabel, pDip, PhiN, DEFAULT_RULES, DEFAULT_BETS, SKILLS, sessEv, sessSd, loadLog, sessionDrawdown, sessionCash };

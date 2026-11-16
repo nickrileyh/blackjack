@@ -5,6 +5,7 @@ import { useState, useMemo, useEffect, useRef, memo } from "react";
 import { Sheet, Seg, ChipRow, ConfirmLink, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav } from "./app.jsx";
 import { unpack, albersUsa, azimuthal, regionMap, countryMap, fitBox, regionAt } from "./casino-map.js";
 import { GEO_US, GEO_CA, GEO_WORLD, CASINO_ROWS, CASINO_INTEL } from "./casino-data.js";
+import { TableScoreCard, RotationCard } from "./planner.jsx";
 
 export const CAS_KEY = "bj-casinos-v1"; // your marks and your own casinos — backed up and synced
 const CAS_UI_KEY = "bj-casinos-ui"; // which country you were looking at — this device only
@@ -49,8 +50,8 @@ function linkSessions(sessions, all) {
     const t = tokens(o.name); let hit = aka.get(k) || (t.length ? exact.get(t.join(" ")) : null) || null;
     if (!hit && t.length) { const c = toks.filter(([, set]) => t.every((w) => set.has(w))); if (c.length === 1) hit = c[0][0]; }
     if (!hit) { loose.push({ key: k, name: o.name, n: o.list.length }); return; }
-    const st = by.get(hit.id) || { n: 0, h: 0, net: 0, last: "", backed: null, watched: false };
-    o.list.forEach((s) => { st.n++; st.h += +s.hours || 0; st.net += +s.result || 0; if (s.date > st.last) st.last = s.date; if (s.heat === "backed" && (!st.backed || s.date > st.backed)) st.backed = s.date; if (s.heat === "watched") st.watched = true; });
+    const st = by.get(hit.id) || { n: 0, h: 0, net: 0, last: "", backed: null, watched: false, dates: [], recs: [], lastHeat: null };
+    o.list.forEach((s) => { st.n++; st.h += +s.hours || 0; st.net += +s.result || 0; st.dates.push(s.date); st.recs.push({ date: s.date, h: +s.hours || 0 }); if (s.date >= st.last) { st.last = s.date; st.lastHeat = s.heat || null; } if (s.heat === "backed" && (!st.backed || s.date > st.backed)) st.backed = s.date; if (s.heat === "watched") st.watched = true; });
     by.set(hit.id, st);
   });
   return { by, loose: loose.sort((a, b) => b.n - a.n) };
@@ -650,6 +651,8 @@ export default function CasinosPage({ rules, onUseRules, go }) {
               </button>))}
           </section>
         )}
+        <RotationCard all={everything.all} onOpen={openCasino} />
+        <TableScoreCard casinos={everything.all} appRules={rules} onUseRules={onUseRules} />
       </div></div>
 
       {countrySheet && <CountrySheet value={cc} counts={countryCounts} onPick={pickCountry} onClose={() => setCountrySheet(false)} />}

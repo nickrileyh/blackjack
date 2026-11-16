@@ -70,6 +70,11 @@ Rules to keep:
 - Sessions → Export CSV saves a file on a computer; on a phone it shares a real `.csv` file when the phone allows it, then falls back to sharing text, then to the clipboard.
 - **Nothing slow may run while a page opens or on a keystroke.** The drawdown replay (`drawdownFromMix`, up to three million rounds) goes through `useDeferred(key, fn, keep)`: it waits until the page has finished animating in (about 1.1 s after it opens, so the sum never makes a chart trace stutter), debounces itself while you type, and remembers answers by key. Its results are `undefined`/`null` until ready, so the UI must cope ("…"). Use the same hook for any new heavy sum.
 
+## Other desktop-only pieces
+
+- Bet spread → `BankrollPlan` ("Growing your bankroll"): your current spread scaled to each table minimum (`TABLE_MINS`), the bankroll each needs at 2/5/10% risk of ruin, and the expected hours and chance of reaching each next level while playing the biggest table you already qualify for.
+- Sessions → tapping a session opens its sheet with `SessionLuck` on top: that one session's percentile against what its saved spread expected over its hours (`LuckGauge`).
+
 ## Sound
 
 The table sounds are **real recordings**: a card dealt, a chip bet and the shuffle come from Kenney's "Casino Audio" pack (CC0 — `tools/sounds/kenney/License.txt`). Nick rejected two rounds of synthesized card and chip sounds as fake, harsh and too many, so don't go back to synthesizing them.
@@ -141,6 +146,10 @@ How it works: the country button picks a country (US and Canada have lists and s
 Data: `bj-casinos-v1` (in `BACKUP_KEYS`, so it syncs) holds `{ marks: [...] }` — one record per casino Nick has touched (`status` been/backed, `backedOn`, `heat` 1–3, `games[]` each with the app's rule shape plus `label`/`min`/`max`/`tables`/`note`, `notes`, `aka[]`, `hidden`) and his own casinos (`custom: true` with `name`, `city`, `cc`, `st`, `lat`, `lon`). Every list item has an `id` so the sync merges them one by one. The casino sheet saves on close. Sessions are matched to casinos by name (`linkSessions`: an explicit `aka` link, then an exact name, then a name whose words fit exactly one casino); a session with heat "Backed off" marks its casino backed off on the map. Unmatched names are listed under "From your sessions" to be matched by hand. "Log a session" on a casino opens the Sessions sheet with that name (`go("sessions", { log: true, where })`), and "Practice this game in the app" sets the app's rules to that table.
 
 Scouting reports show at the top of a casino's sheet: three quick facts (tables, lowest 3:2 minimum, best game), then "Read the full report". "Add the reported game to mine" copies `best` into Nick's own games (a rule the report doesn't mention is taken as not offered). The "Reports" chip filters the map and list to casinos that have one, and list rows show the table count and minimum.
+
+**Desktop-only planners** (`src/planner.jsx`, below the list in the right column, inside `.deskonly` sections, so phones never see them — Nick asked for these on desktop only):
+- `RotationCard`: when each casino you've played is safe to go back to (`restOf`, rest days in `REST`: 7 after a visit, 21 at Medium heat / watched last visit / 3+ visits in 30 days, 45 at High heat, 180 after a back-off), ready casinos longest-rested first ("Next up"), and a warning when over half of the last 90 days' hours went to one casino. It reads `c.sess.dates`, `recs` and `lastHeat`, which `linkSessions` collects.
+- `TableScoreCard`: a table's rules, players, min and max → `scoreGame`, the optimizer's best spread under the bankroll, risk cap (`rorPct`), entry count and sit-out choice saved on Bet spread. Score 50 = the app's saved game, 100 = twice as good; Sit ≥ 55, Maybe 35–54, Walk below or when no spread fits the risk cap. Games saved on casinos can be loaded from its picker.
 
 Not built yet: reports shared between people using the app (needs an online home and a decision about what is public).
 
