@@ -64,7 +64,7 @@ static DevDef defs[]={
 {2,12,3,3,'H','S',-1},{3,12,2,2,'H','S',-1},{4,12,0,0,'H','S',-1,-1},{2,13,0,0,'H','S',-1},
 {2,9,1,1,'H','D',-1},{7,9,3,3,'H','D',-1},{6,8,2,2,'H','D',-1},
 {4,108,3,3,'S','D',-1},{5,108,1,1,'S','D',-1},{6,108,1,0,'S','D',-1,-1},{2,106,1,1,'H','D',-1},{2,107,1,0,'S','D',-1,-1},
-{8,16,4,4,'H','R',1},{9,16,-1,-1,'H','R',1},{9,15,2,2,'H','R',1},{10,15,0,0,'H','R',1,-1},{11,15,2,-1,'H','R',1}};
+{8,16,4,4,'H','R',1},{9,16,0,0,'H','R',1},{9,15,2,2,'H','R',1},{10,15,0,0,'H','R',1,-1},{11,15,2,-1,'H','R',1}};
 static void devinit(void){memset(dev,0,sizeof dev);{const char*e=getenv("A7V2");if(e){int a=NIL,b=0;sscanf(e,"%d,%d",&a,&b);defs[22].h17=a;defs[22].edge=b;}}int nd=sizeof defs/sizeof defs[0];for(int e=0;e<2;e++)for(int i=0;i<nd;i++){DevDef*d=&defs[i];int idx=H17?d->h17:d->s17;if(idx==NIL)continue;if(d->ls!=-1&&d->ls!=e)continue;Dev*v=&dev[e][d->up][d->key];v->ok=1;v->idx=idx;v->id=i;v->edge=(idx==0&&!getenv("NOEDGE"))?d->edge:0;v->above=d->above;v->below=d->below;}}
 
 static char hardRule(int t,int u,int sur){

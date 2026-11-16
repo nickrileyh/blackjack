@@ -729,7 +729,7 @@ const DEV_TABLE = [
   { id: "A6v2", name: "A,6 vs 2", hand: "A,6", up: 2, s17: 1, h17: 1, below: "H", above: "D" },
   { id: "A7v2", name: "A,7 vs 2", hand: "A,7", up: 2, s17: 1, h17: 0, edge: "-", below: "S", above: "D", note: "S17: basic strategy stands; double at +1 and up. H17: the double is basic strategy; stand on any negative running count (this H17 index was measured by the app's simulator — the BJA chart prints none)." },
   { id: "s16v8", name: "16 vs 8", hand: "Hard 16", up: 8, s17: 4, h17: 4, below: "H", above: "R", ls: true },
-  { id: "s16v9", name: "16 vs 9", hand: "Hard 16", up: 9, s17: -1, h17: -1, below: "H", above: "R", ls: true, note: "Basic strategy surrenders; hit at −2 and below." },
+  { id: "s16v9", name: "16 vs 9", hand: "Hard 16", up: 9, s17: 0, h17: 0, below: "H", above: "R", ls: true, note: "Basic strategy surrenders; hit at −1 and below (the BJA chart prints −1: below −1 is a hit, and a true count shown as −1 here is a count between −2 and −1)." },
   { id: "s15v9", name: "15 vs 9", hand: "Hard 15", up: 9, s17: 2, h17: 2, below: "H", above: "R", ls: true },
   { id: "s15v10", name: "15 vs 10", hand: "Hard 15", up: 10, s17: 0, h17: 0, edge: "-", below: "H", above: "R", ls: true, note: "Basic strategy surrenders; hit on any negative running count." },
   { id: "s15vA", name: "15 vs A", hand: "Hard 15", up: 11, s17: 2, h17: -1, below: "H", above: "R", ls: true },
