@@ -103,6 +103,25 @@ Keyboard shortcuts for the table are changeable in that same sheet, on a compute
 
 The app rounds true counts toward zero, so a true count of 0 covers running counts on both sides of zero. The plays the BJA charts print as "0+" (16 vs 10) and "0−" (12 vs 4, 15 vs 10 with surrender, and A,8 vs 6 in H17), plus A,7 vs 2 in H17 (0−, measured by the app's simulator — the BJA chart prints no index for it), turn on the **sign of the running count** instead: 0+ makes the play on any positive running count, 0− drops the basic play on any negative one, and a running count of exactly zero is basic strategy. They carry `edge: "+"` or `"-"` in `DEV_TABLE`; `devOver(d, tc, rc)` is the one place that decides whether a deviation's "above" play applies — use it, never `tc >= d.idx`. `correctPlay` takes the running count as `opts.rc` (Live play passes the shoe's); without it a true count of 0 is read as a running count of 0. `idxLabel(d)` prints "0+" / "0−", drills show the running count's sign beside a true count of 0 (`devDrillCount`, `rcs`), and the Ask tab's `correct_play` says so in `count_play`. 13 vs 2 (−1 on the chart: hit at −1 and below) is an ordinary index, stored as 0 and shown as −1 (see `chartIdx` below).
 
+## Deviations on or off
+
+Game rules → Advanced → **Deviations** (`rules.devs`, on unless it is exactly `false`; read it through `devsOn(R)`, since
+rules saved before the switch existed have no such field). Off means basic strategy on every hand: no count plays and
+no insurance.
+
+- **Calculator:** `calFor(R, seats)` is the one door. With deviations off it builds the no-insurance table (`calBase`,
+  the old `calFor` body) and takes every count play off through `coverCal(…, { skip_all_deviations: true })` from
+  `src/cover.js`, then marks the result `basicOnly`. Checked against six games played out with basic strategy only
+  (300 million rounds each): within about 2%. `coverCal` ignores deviation and insurance cover for rules that already
+  have deviations off, so the Ask tab can't take them off twice.
+- **Play:** `correctPlay` skips the count plays unless `opts.devs` is passed (the Ask tab's play lookup passes it and
+  adds a note). Live play grades on basic strategy and never wants insurance. `src/sim.js` deals the same way.
+- **Left alone on purpose:** the deviation list, drills and tests in Train stay available so they can still be practised.
+- The setting travels with the rules: it is in each session's saved game (the session editor has the same switch), in
+  `rulesLabel`, and at the end of the rules pill as "no dev". The pill now shortens with "…" instead of running under
+  the page title (`.rulespill .mono`), which also fixed long rule sets on small phones.
+- The Ask tab can set it per scenario: `rules.deviations: false`.
+
 ## Where the calculator's numbers come from
 
 `CALR` / `CALQ` / `CALD` / `CALX` at the top of `src/app.jsx` are measured tables, packed by `tools/sim/build_cal.py` from

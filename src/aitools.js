@@ -23,6 +23,7 @@ function resolve(base, ch = {}) {
   if (ch.rules && ch.rules.penetration != null) R.pen = ch.rules.penetration;
   if (ch.rules && ch.rules.blackjack_pays) R.bj65 = ch.rules.blackjack_pays === "6:5";
   if (ch.rules && ch.rules.double_on) R.dbl = ch.rules.double_on;
+  if (ch.rules && ch.rules.deviations != null) R.devs = !!ch.rules.deviations;
   if (ch.rules && ch.rules.split_to_hands) R.maxHands = ch.rules.split_to_hands;
   if (ch.rules && ch.rules.resplit_aces != null) R.rsa = !!ch.rules.resplit_aces;
   if (ch.rules && ch.rules.double_after_split != null) R.das = !!ch.rules.double_after_split;
@@ -80,7 +81,7 @@ export function evalScenario(base, ch = {}, opts = {}) {
   const ror = ev <= 0 ? 1 : Math.min(1, Math.exp((-2 * ev * B) / v)), n0 = ev > 0 ? v / (ev * ev) : Infinity;
   const played = COUNTS.filter((c) => sc.bets[c] > 0), lo = played.length ? Math.min(...played.map((c) => sc.bets[c])) : 0, hi = played.length ? Math.max(...played.map((c) => sc.bets[c] * spotsAt(c, sc.bets, sc.spotsMap, cal))) : 0;
   const out = {
-    name: ch.name || "scenario", rules: `${sc.R.decks} decks, ${rulesLabel(sc.R)}, ${sc.R.surrender ? "late surrender" : "no surrender"}, ${sc.R.insurance === false ? "never insures" : "insurance at +3"}, ${sc.R.pen}% penetration`,
+    name: ch.name || "scenario", rules: `${sc.R.decks} decks, ${rulesLabel(sc.R)}, ${sc.R.surrender ? "late surrender" : "no surrender"}, ${sc.R.devs === false ? "deviations off (basic strategy only, never insures)" : sc.R.insurance === false ? "never insures" : "insurance at +3"}, ${sc.R.pen}% penetration`,
     players_at_table: sc.seats, bankroll: B, rounds_per_hour: r0(rph),
     win_per_hour: r2(evHour), swing_per_hour_1sd: r0(sdHour), win_per_100_rounds: r2(ev * 100), edge_on_money_bet_pct: avgBet > 0 && r.playedFrac > 0 ? r3((100 * ev) / (avgBet * r.playedFrac)) : 0,
     risk_of_ruin_pct: ror >= 1 ? 100 : +(100 * ror).toPrecision(3), chance_to_double_bankroll_before_losing_it_pct: ev > 0 ? r1(100 / (1 + ror)) : null,
@@ -144,14 +145,14 @@ function optimize(base, a) {
 }
 
 function playLookup(base, a) {
-  const R = { ...base.rules, ...(a.rules || {}) }, rank = (x) => { const s = String(x).toUpperCase().trim(); return s === "A" || s === "11" || s === "1" ? 11 : ["K", "Q", "J", "T", "10"].includes(s) ? 10 : Math.max(2, Math.min(9, parseInt(s, 10) || 0)); };
+  const R = { ...base.rules, ...(a.rules || {}), ...(a.rules && a.rules.deviations != null ? { devs: !!a.rules.deviations } : {}) }, rank = (x) => { const s = String(x).toUpperCase().trim(); return s === "A" || s === "11" || s === "1" ? 11 : ["K", "Q", "J", "T", "10"].includes(s) ? 10 : Math.max(2, Math.min(9, parseInt(s, 10) || 0)); };
   const cards = (a.cards || []).map((c) => ({ rank: rank(c) })), up = rank(a.dealer_upcard), two = cards.length === 2;
   if (cards.length < 2) return { error: "Give the player's cards, for example [\"10\",\"6\"]." };
   const names = { H: "hit", S: "stand", D: "double", P: "split", R: "surrender" };
-  const one = (tc) => { const p = correctPlay(cards, up, tc, R, { canDouble: two && a.after_split !== true ? true : two && R.das !== false, canSplit: two && cards[0].rank === cards[1].rank, canSurrender: two && !!R.surrender && !a.after_split }); return names[p.act] || p.act; };
+  const one = (tc) => { const p = correctPlay(cards, up, tc, R, { canDouble: two && a.after_split !== true ? true : two && R.das !== false, canSplit: two && cards[0].rank === cards[1].rank, canSurrender: two && !!R.surrender && !a.after_split, devs: true }); return names[p.act] || p.act; };
   const tcs = a.true_count != null ? [Math.round(a.true_count)] : [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6], plays = tcs.map((t) => [t, one(t)]);
-  const d = correctPlay(cards, up, 0, R, { canDouble: two, canSplit: two && cards[0].rank === cards[1].rank, canSurrender: two && !!R.surrender }).dev;
-  return { rules: rulesLabel(R) + (R.surrender ? ", surrender" : ""), hand: (a.cards || []).join(","), dealer: String(a.dealer_upcard), ...(a.true_count != null ? { true_count: tcs[0], play: plays[0][1] } : { play_by_true_count: plays.map(([t, p]) => `${t > 0 ? "+" : ""}${t}${t === -3 ? " or lower" : t === 6 ? " or higher" : ""}: ${p}`) }), ...(d ? { count_play: d.edge ? `${d.name}: marked ${d.edge === "+" ? "0+" : "0−"} — it goes by the sign of the RUNNING count, not a true count of 0. ${d.edge === "+" ? `Make the play (${names[d.above]}) on any positive running count, even when the true count rounds to 0; at a running count of zero or below, ${names[d.below]}.` : `Drop the basic play and ${names[d.below]} on any negative running count, even when the true count rounds to 0; at zero or above, ${names[d.above]}.`} The true-count rows here treat 0 as a running count of exactly 0.` : `${d.idx <= 0 ? `${d.name}: the chart prints ${d.idx - 1 < 0 ? "−" : ""}${Math.abs(d.idx - 1)} — ${names[d.below]} at that true count and below, otherwise ${names[d.above]}` : `${d.name}: index +${d.idx} — ${names[d.above]} at that true count and above, otherwise ${names[d.below]}`}` } : { count_play: "none — basic strategy at every count" }), insurance: "take it at true count +3 or higher (any hand)" };
+  const d = correctPlay(cards, up, 0, R, { canDouble: two, canSplit: two && cards[0].rank === cards[1].rank, canSurrender: two && !!R.surrender, devs: true }).dev;
+  return { rules: rulesLabel(R) + (R.surrender ? ", surrender" : ""), hand: (a.cards || []).join(","), dealer: String(a.dealer_upcard), ...(a.true_count != null ? { true_count: tcs[0], play: plays[0][1] } : { play_by_true_count: plays.map(([t, p]) => `${t > 0 ? "+" : ""}${t}${t === -3 ? " or lower" : t === 6 ? " or higher" : ""}: ${p}`) }), ...(d ? { count_play: d.edge ? `${d.name}: marked ${d.edge === "+" ? "0+" : "0−"} — it goes by the sign of the RUNNING count, not a true count of 0. ${d.edge === "+" ? `Make the play (${names[d.above]}) on any positive running count, even when the true count rounds to 0; at a running count of zero or below, ${names[d.below]}.` : `Drop the basic play and ${names[d.below]} on any negative running count, even when the true count rounds to 0; at zero or above, ${names[d.above]}.`} The true-count rows here treat 0 as a running count of exactly 0.` : `${d.idx <= 0 ? `${d.name}: the chart prints ${d.idx - 1 < 0 ? "−" : ""}${Math.abs(d.idx - 1)} — ${names[d.below]} at that true count and below, otherwise ${names[d.above]}` : `${d.name}: index +${d.idx} — ${names[d.above]} at that true count and above, otherwise ${names[d.below]}`}` } : { count_play: "none — basic strategy at every count" }), insurance: "take it at true count +3 or higher (any hand)", ...(R.devs === false ? { note: "Deviations are switched off in the saved game rules (basic strategy only, no insurance): the calculator and Live play ignore the count plays shown here." } : {}) };
 }
 
 async function sessionStats(base, a) {
@@ -198,7 +199,7 @@ const makeScen = (av, flat) => ({
     bankroll: { type: "number" }, players_at_table: { type: "number", description: "1–7, the user included" }, rounds_per_hour: { type: "number", description: "Leave out to use the typical speed for the table size" },
     missed_raise_pct: { type: "number", description: "Percent of rounds where the user fails to put out the spread's bet and bets their smallest bet instead (distraction, or holding back while watched)" },
     extra_dollars_per_hour: { type: "number", description: "Money outside the cards per hour: tips are negative, comps or cashback positive. Comps aren't cash for bankroll purposes unless the user says so." },
-    rules: { type: "object", properties: { decks: { type: "number", enum: [1, 2, 4, 6, 8] }, h17: { type: "boolean" }, surrender: { type: "boolean" }, penetration: { type: "number", description: "% dealt, 50–90" }, blackjack_pays: { type: "string", enum: ["3:2", "6:5"] }, double_after_split: { type: "boolean" }, double_on: { type: "string", enum: ["any", "9-11", "10-11"] }, resplit_aces: { type: "boolean" }, split_to_hands: { type: "number", enum: [2, 3, 4] } } },
+    rules: { type: "object", properties: { decks: { type: "number", enum: [1, 2, 4, 6, 8] }, h17: { type: "boolean" }, surrender: { type: "boolean" }, penetration: { type: "number", description: "% dealt, 50–90" }, blackjack_pays: { type: "string", enum: ["3:2", "6:5"] }, double_after_split: { type: "boolean" }, double_on: { type: "string", enum: ["any", "9-11", "10-11"] }, resplit_aces: { type: "boolean" }, split_to_hands: { type: "number", enum: [2, 3, 4] }, deviations: { type: "boolean", description: "false = basic strategy on every hand: no count plays and no insurance (the Deviations switch in the game rules). Leave out to keep the saved setting." } } },
     cover: {
       type: "object", description: "Cover plays and playing/counting mistakes. Each was measured in the card simulator; they add together.",
       properties: {

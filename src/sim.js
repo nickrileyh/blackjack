@@ -24,7 +24,7 @@ const bucket = (tc) => (tc < -3 ? 0 : tc > 6 ? 9 : tc + 3);
 // 3 half-deck floored, 4 half-deck rounded to nearest); miss — share of cards the counter fails to count;
 // perShoe — reseed every shoe from its number, so two runs with different settings see the same shoes.
 export function makeGame(R, seats, seed = 12345, opts = {}) {
-  const DECKS = [1, 2, 4, 6, 8].includes(+R.decks) ? +R.decks : 6, H17 = !!R.h17, SUR = !!R.surrender, INS = R.insurance !== false;
+  const DECKS = [1, 2, 4, 6, 8].includes(+R.decks) ? +R.decks : 6, H17 = !!R.h17, SUR = !!R.surrender, DEVS = R.devs !== false, INS = DEVS && R.insurance !== false;   // devs off = basic strategy only: no count plays, no insurance
   const DAS = R.das !== false, DBL = R.dbl === "9-11" ? 1 : R.dbl === "10-11" ? 2 : 0, RSA = !!R.rsa, MAXH = +R.maxHands === 2 || +R.maxHands === 3 ? +R.maxHands : 4, BJP = R.bj65 ? 1.2 : 1.5;
   const NOTH = Math.min(6, Math.max(0, Math.round(+seats || 1) - 1));
   const N = 52 * DECKS, shoe = new Int8Array(N), cut = Math.floor((Math.min(90, Math.max(50, +R.pen || 75)) / 100) * N);
@@ -44,7 +44,7 @@ export function makeGame(R, seats, seed = 12345, opts = {}) {
     : () => { const rem = (lim - pos) / 52; let r; if (TCM === 1) { r = Math.floor(rem + 0.5); if (r < 1) r = 1; } else if (TCM === 2) { r = rem; if (r < 0.25) r = 0.25; } else { r = Math.floor(rem * 2 + 0.5) / 2; if (r < 0.5) r = 0.5; } const t = rc / r; return TCM === 3 ? Math.floor(t) : TCM === 4 ? Math.floor(t + 0.5) : Math.trunc(t); };
   // deviations for these rules: dev[sur?1:0][up][key]
   const dev = [{}, {}];
-  DEV_DEFS.forEach(([up, key, s17, h17, below, above, ls, edge]) => { const idx = H17 ? h17 : s17; if (idx === NIL) return; for (let e = 0; e < 2; e++) { if (ls !== -1 && ls !== e) continue; dev[e][up * 256 + key] = [idx, above, below, idx === 0 ? edge || 0 : 0]; } });
+  if (DEVS) DEV_DEFS.forEach(([up, key, s17, h17, below, above, ls, edge]) => { const idx = H17 ? h17 : s17; if (idx === NIL) return; for (let e = 0; e < 2; e++) { if (ls !== -1 && ls !== e) continue; dev[e][up * 256 + key] = [idx, above, below, idx === 0 ? edge || 0 : 0]; } });
   const hardRule = (t, u, sur) => {
     if (t >= 18) return "S"; if (t === 17) return u === 11 && H17 && sur ? "R" : "S";
     if (t === 16) return u <= 6 ? "S" : sur && u >= 9 ? "R" : "H";

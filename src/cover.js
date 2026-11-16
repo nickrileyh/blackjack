@@ -94,6 +94,13 @@ export function deviationCatalog(R) {
 export function coverCal(cal, R, cover, shift) {
   const applied = [], skipped = [], approx = [];
   if (!cover || !Object.keys(cover).length) return { cal, applied, skipped, approx };
+  // "Deviations: off" in the game rules already is basic strategy with no insurance (calFor in app.jsx took the count
+  // plays off through this same function), so a cover that skips or forces them has nothing left to change
+  if (R && R.devs === false && (cover.skip_all_deviations || (cover.deviations || []).length || (cover.insurance && cover.insurance !== "normal"))) {
+    cover = { ...cover }; delete cover.skip_all_deviations; delete cover.deviations; delete cover.insurance;
+    skipped.push("count plays and insurance (deviations are switched off in these rules, so the numbers are already basic strategy with no insurance)");
+    if (!Object.keys(cover).length) return { cal, applied, skipped, approx };
+  }
   const T = tablesFor(R, cal.seats);
   if (!T) return { cal, applied, skipped: ["cover-play data isn't loaded"], approx };
   const out = { ...cal, e: { ...cal.e }, m2: { ...cal.m2 }, c12: { ...cal.c12 } };

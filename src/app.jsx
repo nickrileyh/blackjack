@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { AskPage, AskKeyCard, AskDot } from "./ask.jsx";
 import CasinosPage, { openCasinoAdd } from "./casinos.jsx";
 import { sfx, soundPrefs, setSoundPrefs } from "./sound.js";
+import { coverCal } from "./cover.js";
 
 // ---------- model ----------
 const COUNTS = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
@@ -65,7 +66,16 @@ function calRow(kind, key, pen) {
   const a = deq((lo - 50) / 5), b = deq((lo - 45) / 5);
   return a.map((v, i) => v * (1 - w) + b[i] * w);
 }
+// "Deviations: off" in the game rules (R.devs === false) is basic strategy on every hand: no count plays and no
+// insurance. The no-insurance columns are measured directly; the count plays come off through the cover tables, where
+// each play's cost of being skipped was measured at every count (see src/cover.js).
+const devsOn = (R) => !R || R.devs !== false;
 function calFor(R, seats = 4) {
+  if (devsOn(R)) return calBase(R, seats);
+  const Rb = { ...R, devs: true, insurance: false };
+  return { ...coverCal(calBase(Rb, seats), Rb, { skip_all_deviations: true }).cal, basicOnly: true };
+}
+function calBase(R, seats = 4) {
   const decks = [1, 2, 4, 6, 8].includes(R.decks) ? R.decks : 6;
   const st = Math.min(7, Math.max(1, Math.round(Number(seats) || 4)));
   const o = st - 1, ins = R.insurance !== false;
@@ -324,6 +334,8 @@ html,body{background:var(--bg)}
 .iconbtn[aria-pressed="true"]{color:var(--brass);border-color:rgba(var(--acc),.45);background:rgba(var(--acc),.12)}
 .rulespill{display:flex;align-items:center;gap:6px;font-size:12px;padding:7px 10px 7px 12px;border-radius:999px;color:var(--ivory-d);background:rgba(var(--fg),.05);border:1px solid rgba(var(--acc),.22);transition:background .15s,transform .13s}
 .rulespill:active{transform:scale(.96)}
+.rulespill{min-width:0;max-width:100%}
+.rulespill .mono{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rulespill svg{color:var(--brass)}
 .sidenav{display:none}
 .kbdhint{display:none}
@@ -1861,11 +1873,11 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
 }
 
 const RULES_KEY = "bj-rules-v1";
-const DEFAULT_RULES = { h17: false, surrender: true, insurance: true, decks: 6, pen: 75, das: true, dbl: "any", bj65: false, rsa: false, maxHands: 4 };
+const DEFAULT_RULES = { h17: false, surrender: true, insurance: true, decks: 6, pen: 75, das: true, dbl: "any", bj65: false, rsa: false, maxHands: 4, devs: true };
 const rulesLabel = (r) => [r.h17 ? "H17" : "S17", r.bj65 ? "6:5 blackjack" : "3:2", dasOn(r) ? "DAS" : "no DAS", dblRule(r) === "any" ? "double any 2" : `double ${dblRule(r).replace("-", "–")} only`,
-  r.surrender ? "LS" : "no surrender", `split to ${maxHandsOf(r)}`, ...(r.rsa ? ["resplit aces"] : []), r.insurance ? "insurance" : "no insurance", `${r.decks}D ${r.pen}%`].join(" · ");
+  r.surrender ? "LS" : "no surrender", `split to ${maxHandsOf(r)}`, ...(r.rsa ? ["resplit aces"] : []), r.insurance ? "insurance" : "no insurance", ...(devsOn(r) ? [] : ["basic strategy only (no deviations)"]), `${r.decks}D ${r.pen}%`].join(" · ");
 // the short version for the pill at the top: only what matters most at a glance
-const rulesShort = (r) => `${r.decks}D · ${r.h17 ? "H17" : "S17"}${r.surrender ? " · LS" : ""}${r.bj65 ? " · 6:5" : ""}${dasOn(r) ? "" : " · NDAS"}${dblRule(r) === "any" ? "" : dblRule(r) === "9-11" ? " · D9" : " · D10"} · ${r.pen}%`;
+const rulesShort = (r) => `${r.decks}D · ${r.h17 ? "H17" : "S17"}${r.surrender ? " · LS" : ""}${r.bj65 ? " · 6:5" : ""}${dasOn(r) ? "" : " · NDAS"}${dblRule(r) === "any" ? "" : dblRule(r) === "9-11" ? " · D9" : " · D10"} · ${r.pen}%${devsOn(r) ? "" : " · no dev"}`;
 const HINT_KEY = "bj-hint-v1";
 function StartHint({ onGo }) {
   const [show, setShow] = useState(false);
@@ -1888,7 +1900,7 @@ function StartHint({ onGo }) {
   );
 }
 // the less common table rules, as a short list (empty = the standard game)
-const advancedNotes = (r) => [dasOn(r) ? null : "no DAS", dblRule(r) === "any" ? null : `double ${dblRule(r).replace("-", "–")} only`, maxHandsOf(r) === 4 ? null : `split to ${maxHandsOf(r)}`, r.rsa ? "resplit aces" : null].filter(Boolean);
+const advancedNotes = (r) => [dasOn(r) ? null : "no DAS", dblRule(r) === "any" ? null : `double ${dblRule(r).replace("-", "–")} only`, maxHandsOf(r) === 4 ? null : `split to ${maxHandsOf(r)}`, r.rsa ? "resplit aces" : null, devsOn(r) ? null : "no deviations"].filter(Boolean);
 function RulesModal({ rules, onSave, onClose, first }) {
   const [draft, setDraft] = useState(rules);
   const [adv, setAdv] = useState(() => advancedNotes(rules).length > 0);
@@ -1921,7 +1933,7 @@ function RulesModal({ rules, onSave, onClose, first }) {
         <button onClick={() => setAdv((v) => !v)} aria-expanded={adv} className="w-full flex items-center justify-between gap-3 mt-5 py-2.5" style={{ borderTop: "1px solid var(--line)" }}>
           <span className="text-left">
             <span className="block text-sm font-semibold" style={{ color: "var(--ivory)" }}>Advanced</span>
-            <span className="block text-[11px]" style={{ color: advancedNotes(draft).length ? "var(--brass)" : "var(--muted)" }}>{advancedNotes(draft).length ? advancedNotes(draft).join(" · ") : "Doubling and splitting — standard"}</span>
+            <span className="block text-[11px]" style={{ color: advancedNotes(draft).length ? "var(--brass)" : "var(--muted)" }}>{advancedNotes(draft).length ? advancedNotes(draft).join(" · ") : "Doubling, splitting, deviations — standard"}</span>
           </span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)", transform: adv ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
         </button>
@@ -1930,6 +1942,8 @@ function RulesModal({ rules, onSave, onClose, first }) {
           {row("Double after split", <Seg value={dasOn(draft)} options={[[false, "No"], [true, "Yes"]]} onChange={(v) => setDraft({ ...draft, das: v })} />)}
           {row("Split up to (hands)", <Seg value={maxHandsOf(draft)} options={[[2, "2"], [3, "3"], [4, "4"]]} onChange={(v) => setDraft({ ...draft, maxHands: v })} />)}
           {row("Resplit aces", <Seg value={!!draft.rsa} options={[[false, "No"], [true, "Yes"]]} onChange={(v) => setDraft({ ...draft, rsa: v })} />)}
+          {row("Deviations", <Seg value={devsOn(draft)} options={[[false, "Off"], [true, "On"]]} onChange={(v) => setDraft({ ...draft, devs: v })} />)}
+          {!devsOn(draft) && <p className="text-[11px]" style={{ color: "var(--muted)" }}>Basic strategy on every hand: no count plays and no insurance. The calculator and Live play follow this; the deviation drills stay available.</p>}
           <button className="text-[11px] underline underline-offset-2" style={{ color: "var(--muted)" }} onClick={() => setDraft({ ...draft, das: true, dbl: "any", maxHands: 4, rsa: false })}>Reset to standard</button>
         </div>}
         <p className="text-[11px] mt-4" style={{ color: "var(--muted)" }}>Strategy follows the Blackjack Apprenticeship {draft.h17 ? "H17" : "S17"} chart{dasOn(draft) ? "" : " for no double after split"}{dblRule(draft) === "any" ? "" : `, with doubles only on ${dblRule(draft).replace("-", "–")}`}. Split aces get one card each. The dealer peeks for blackjack.{draft.bj65 ? " 6 to 5 blackjack costs about 1.4% — avoid it if you can." : ""}</p>
@@ -1981,7 +1995,7 @@ function correctPlay(cards, up, tc, R, opts) {
   else if (hv.soft && hv.total === 12) { base = canSplit && cards.length === 2 ? "P" : "H"; key = "A,A"; }
   else { base = hardRule(Math.min(hv.total, 21), up, Rx); key = `Hard ${hv.total}`; }
   let act = base, dev = null;
-  for (const d of devsFor(Rx)) {
+  for (const d of devsOn(R) || opts.devs ? devsFor(Rx) : []) {
     if (d.id === "ins" || d.up !== up || d.hand !== key) continue;
     if (d.above === "P" && !canSplit) continue;
     act = devOver(d, tc, opts.rc) ? d.above : d.below; dev = d; break;
@@ -2462,8 +2476,8 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     resolvePeek(p, d, v, false);
   };
   const takeInsurance = (yes) => {
-    const tc = tcNow(); const ok = yes === (tc >= 3);
-    if (!ok) { sfx("wrong"); hm.current++; setMistakes((m) => [...m, { kind: "insurance", tc, you: yes ? "Take" : "Decline", correct: tc >= 3 ? "Take" : "Decline", hand: stats.hands + 1 }]); setMsg({ ok: false, title: tc >= 3 ? `Take insurance at ${fmtTC(tc)}.` : `No insurance at ${fmtTC(tc)}.`, body: "The index is +3." }); }
+    const tc = tcNow(); const want = devsOn(rules) && tc >= 3; const ok = yes === want;
+    if (!ok) { sfx("wrong"); hm.current++; setMistakes((m) => [...m, { kind: "insurance", tc, you: yes ? "Take" : "Decline", correct: want ? "Take" : "Decline", hand: stats.hands + 1 }]); setMsg({ ok: false, title: want ? `Take insurance at ${fmtTC(tc)}.` : `No insurance at ${fmtTC(tc)}.`, body: devsOn(rules) ? "The index is +3." : "Deviations are off in the game rules, so you never insure." }); }
     setInsured(yes);
     resolvePeek(hands[0].cards, dealer, bet, yes);
   };
@@ -3642,7 +3656,7 @@ function SpreadSheet({ cfg0, current, legacy, session, others = 0, onUse, onUseA
             <input type="range" min={50} max={90} step={1} value={cfg.rules.pen} onChange={(e) => setR("pen", +e.target.value)} className="w-full mt-1" aria-label="Penetration" /></div>
           <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Blackjack pays</span><div className="chipseg mt-1">{[[false, "3 to 2"], [true, "6 to 5"]].map(([v, l]) => <button key={l} type="button" className={!!cfg.rules.bj65 === v ? "on" : ""} onClick={() => setR("bj65", v)}>{l}</button>)}</div></div>
           <button type="button" onClick={() => setAdv((v) => !v)} aria-expanded={adv} className="w-full flex items-center justify-between gap-3 py-1.5 text-left">
-            <span><span className="block text-xs font-semibold" style={{ color: "var(--ivory)" }}>Advanced rules</span><span className="block text-[11px]" style={{ color: advancedNotes(cfg.rules).length ? "var(--brass)" : "var(--muted)" }}>{advancedNotes(cfg.rules).length ? advancedNotes(cfg.rules).join(" · ") : "Doubling and splitting — standard"}</span></span>
+            <span><span className="block text-xs font-semibold" style={{ color: "var(--ivory)" }}>Advanced rules</span><span className="block text-[11px]" style={{ color: advancedNotes(cfg.rules).length ? "var(--brass)" : "var(--muted)" }}>{advancedNotes(cfg.rules).length ? advancedNotes(cfg.rules).join(" · ") : "Doubling, splitting, deviations — standard"}</span></span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)", transform: adv ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
           </button>
           {adv && <div className="space-y-3 rise">
@@ -3652,6 +3666,7 @@ function SpreadSheet({ cfg0, current, legacy, session, others = 0, onUse, onUseA
               <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Resplit aces</span><div className="chipseg mt-1">{[[false, "No"], [true, "Yes"]].map(([v, l]) => <button key={l} type="button" className={!!cfg.rules.rsa === v ? "on" : ""} onClick={() => setR("rsa", v)}>{l}</button>)}</div></div>
             </div>
             <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Split up to (hands)</span><div className="chipseg mt-1" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>{[2, 3, 4].map((v) => <button key={v} type="button" className={maxHandsOf(cfg.rules) === v ? "on" : ""} onClick={() => setR("maxHands", v)}>{v}</button>)}</div></div>
+            <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Deviations</span><div className="chipseg mt-1">{[[false, "Off"], [true, "On"]].map(([v, l]) => <button key={l} type="button" className={devsOn(cfg.rules) === v ? "on" : ""} onClick={() => setR("devs", v)}>{l}</button>)}</div></div>
           </div>}
           <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Players at the table (you included)</span>
             <div className="chipseg mt-1" style={{ gridTemplateColumns: "repeat(7,1fr)" }}>{[1, 2, 3, 4, 5, 6, 7].map((k) => <button key={k} type="button" className={cfg.seats === k ? "on" : ""} onClick={() => setCfg((o) => ({ ...o, seats: k }))}>{k}</button>)}</div></div>
@@ -5148,12 +5163,12 @@ function BetSpreadCalculator() {
       <div className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
         <header className="mb-5 flex items-end justify-between gap-3">
-          <div className="min-w-0">
+          <div className="shrink-0">
             {tab === "progress" && <div className="eyebrow mb-1.5">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>}
             <h1 className="leading-none font-semibold">{({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", ask: "Ask" })[tab]}</h1>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => setSetupOpen(true)} className="rulespill shrink-0" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
+          <div className="flex items-center gap-2 min-w-0">
+            <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
             <span className="mono">{rulesShort(rules)}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
           </button>
@@ -5265,7 +5280,7 @@ function BetSpreadCalculator() {
             <Field label="Table minimum" prefix="$" value={minBet} onChange={setMinBet} step={5} />
             <Field label="Table maximum" prefix="$" value={maxBet} onChange={setMaxBet} step={50} hint={maxBet !== "" && +maxBet < (+minBet || 0) ? "Below the minimum — the optimizer will use the minimum" : maxBet === "" ? "No max — the optimizer won't cap your bets" : undefined} />
           </div>
-          <Info label="Where these numbers come from">Edges and swings come from {CAL_ROUNDS(rules.decks, seats)} million simulated rounds of {rules.decks}-deck {rules.h17 ? "H17" : "S17"}{rules.surrender ? " with surrender" : ""} with {seats === 1 ? "you alone at the table" : rules.decks >= 6 ? "other players at the table" : `${seats} players at the table`}, and count frequencies from separate runs for your table size, at {rules.pen}% penetration, played with BJA strategy, the Illustrious 18{rules.surrender ? " and Fab 4" : ""}. Assumes accurate counting and play.</Info>
+          <Info label="Where these numbers come from">Edges and swings come from {CAL_ROUNDS(rules.decks, seats)} million simulated rounds of {rules.decks}-deck {rules.h17 ? "H17" : "S17"}{rules.surrender ? " with surrender" : ""} with {seats === 1 ? "you alone at the table" : rules.decks >= 6 ? "other players at the table" : `${seats} players at the table`}, and count frequencies from separate runs for your table size, at {rules.pen}% penetration, played with BJA strategy, the Illustrious 18{rules.surrender ? " and Fab 4" : ""}. Assumes accurate counting and play.{devsOn(rules) ? "" : " Deviations are off in the game rules, so these numbers are for basic strategy on every hand: no count plays and no insurance."}</Info>
         </section>
 
         </div><div className="dcol o3">
