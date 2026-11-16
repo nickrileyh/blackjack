@@ -281,6 +281,12 @@ html,body{background:var(--bg)}
 .kbdhint{display:none}
 .kbdhint b{font-weight:600;color:var(--ivory-d);font-family:inherit}
 @media (hover:hover) and (pointer:fine) and (min-width:700px){.kbdhint{display:block}}
+.kbdonly{display:none}
+@media (hover:hover) and (pointer:fine) and (min-width:700px){.kbdonly{display:block}}
+.keycap{min-width:38px;height:28px;padding:0 9px;border-radius:8px;font:600 12px Inter,system-ui,sans-serif;color:var(--ivory);background:rgba(var(--fg),.07);border:1px solid rgba(var(--fg),.14);border-bottom-width:2px;transition:background .15s,border-color .15s,color .15s}
+.keycap[data-on="1"]{color:var(--brass);background:rgba(var(--acc),.12);border-color:rgba(var(--acc),.5);font-weight:500}
+.keycap:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+@media (hover:hover){.keycap:hover{background:rgba(var(--fg),.11)}}
 .card.focuscard{background:linear-gradient(135deg,rgba(var(--acc),.12),rgba(var(--acc),.03) 55%,rgba(var(--fg),.03));border-color:rgba(var(--acc),.3)}
 :root[data-theme="light"] .card.focuscard{background:linear-gradient(135deg,rgba(30,63,168,.07),#FFFFFF 60%);border-color:rgba(30,63,168,.2)}
 .shell section[id^="sp-"]{scroll-margin-top:68px}
@@ -620,9 +626,12 @@ const pairRule = (c, u, R) => {
 };
 // Deviations (Hi-Lo). "above" is the play at or over the index, "below" is the play under it.
 // s17 / h17 give the index for each rule; null = no deviation in that game. ls: true = only with late surrender, false = only without it.
+// edge marks the plays the BJA charts print as "0+" and "0−": they turn on the SIGN OF THE RUNNING COUNT, not on a true count of 0
+// (which, rounded toward zero, covers running counts on both sides). "+" = make the play on any positive running count;
+// "-" = drop the basic play on any negative running count. See devOver.
 const DEV_TABLE = [
   { id: "ins", name: "Insurance", hand: "Any hand", up: 11, s17: 3, h17: 3, below: "No insurance", above: "Take insurance", note: "The most valuable index by far." },
-  { id: "16v10", name: "16 vs 10", hand: "Hard 16", up: 10, s17: 0, h17: 0, below: "H", above: "S", ls: false },
+  { id: "16v10", name: "16 vs 10", hand: "Hard 16", up: 10, s17: 0, h17: 0, edge: "+", below: "H", above: "S", ls: false, note: "Stand on any positive running count. At a running count of zero or below, hit." },
   { id: "16v9", name: "16 vs 9", hand: "Hard 16", up: 9, s17: 4, h17: 4, below: "H", above: "S", ls: false },
   { id: "16vA", name: "16 vs A", hand: "Hard 16", up: 11, s17: null, h17: 3, below: "H", above: "S", ls: false },
   { id: "15v10", name: "15 vs 10", hand: "Hard 15", up: 10, s17: 4, h17: 4, below: "H", above: "S", ls: false },
@@ -635,20 +644,20 @@ const DEV_TABLE = [
   { id: "11vA", name: "11 vs A", hand: "Hard 11", up: 11, s17: 1, h17: null, below: "H", above: "D" },
   { id: "12v2", name: "12 vs 2", hand: "Hard 12", up: 2, s17: 3, h17: 3, below: "H", above: "S" },
   { id: "12v3", name: "12 vs 3", hand: "Hard 12", up: 3, s17: 2, h17: 2, below: "H", above: "S" },
-  { id: "12v4", name: "12 vs 4", hand: "Hard 12", up: 4, s17: 0, h17: 0, below: "H", above: "S", note: "Basic strategy stands; hit at any negative count." },
+  { id: "12v4", name: "12 vs 4", hand: "Hard 12", up: 4, s17: 0, h17: 0, edge: "-", below: "H", above: "S", note: "Basic strategy stands; hit on any negative running count." },
   { id: "13v2", name: "13 vs 2", hand: "Hard 13", up: 2, s17: 0, h17: 0, below: "H", above: "S", note: "Basic strategy stands; hit at −1 and below." },
   { id: "9v2", name: "9 vs 2", hand: "Hard 9", up: 2, s17: 1, h17: 1, below: "H", above: "D" },
   { id: "9v7", name: "9 vs 7", hand: "Hard 9", up: 7, s17: 3, h17: 3, below: "H", above: "D" },
   { id: "8v6", name: "8 vs 6", hand: "Hard 8", up: 6, s17: 2, h17: 2, below: "H", above: "D" },
   { id: "A8v4", name: "A,8 vs 4", hand: "A,8", up: 4, s17: 3, h17: 3, below: "S", above: "D" },
   { id: "A8v5", name: "A,8 vs 5", hand: "A,8", up: 5, s17: 1, h17: 1, below: "S", above: "D" },
-  { id: "A8v6", name: "A,8 vs 6", hand: "A,8", up: 6, s17: 1, h17: 0, below: "S", above: "D", note: "In H17 the double is basic strategy; stand at any negative count." },
+  { id: "A8v6", name: "A,8 vs 6", hand: "A,8", up: 6, s17: 1, h17: 0, edge: "-", below: "S", above: "D", note: "In H17 the double is basic strategy; stand on any negative running count." },
   { id: "A6v2", name: "A,6 vs 2", hand: "A,6", up: 2, s17: 1, h17: 1, below: "H", above: "D" },
   { id: "A7v2", name: "A,7 vs 2", hand: "A,7", up: 2, s17: 1, h17: null, below: "S", above: "D", note: "S17 only — basic strategy stands; double at +1 and up. In H17 the double is already basic strategy." },
   { id: "s16v8", name: "16 vs 8", hand: "Hard 16", up: 8, s17: 4, h17: 4, below: "H", above: "R", ls: true },
   { id: "s16v9", name: "16 vs 9", hand: "Hard 16", up: 9, s17: -1, h17: -1, below: "H", above: "R", ls: true, note: "Basic strategy surrenders; hit at −2 and below." },
   { id: "s15v9", name: "15 vs 9", hand: "Hard 15", up: 9, s17: 2, h17: 2, below: "H", above: "R", ls: true },
-  { id: "s15v10", name: "15 vs 10", hand: "Hard 15", up: 10, s17: 0, h17: 0, below: "H", above: "R", ls: true, note: "Basic strategy surrenders; hit at any negative count." },
+  { id: "s15v10", name: "15 vs 10", hand: "Hard 15", up: 10, s17: 0, h17: 0, edge: "-", below: "H", above: "R", ls: true, note: "Basic strategy surrenders; hit on any negative running count." },
   { id: "s15vA", name: "15 vs A", hand: "Hard 15", up: 11, s17: 2, h17: -1, below: "H", above: "R", ls: true },
 ];
 // a deviation that doubles only exists if the table lets you double that hand
@@ -663,8 +672,21 @@ function devsFor(R) {
     .filter((d) => (R.h17 ? d.h17 : d.s17) !== null)
     .filter((d) => d.ls === undefined || d.ls === !!R.surrender)
     .filter((d) => R.insurance || d.id !== "ins")
-    .map((d) => ({ ...d, idx: R.h17 ? d.h17 : d.s17 }));
+    .map((d) => { const idx = R.h17 ? d.h17 : d.s17; return { ...d, idx, edge: idx === 0 ? d.edge : undefined }; });
 }
+// Is the count high enough for a deviation's "above" play? rc is the running count when it's known. Without it, a true
+// count of 0 is read as a running count of exactly 0, which is basic strategy for both kinds of running-count play.
+const devOver = (d, tc, rc) => { if (!d.edge || tc !== 0) return tc >= d.idx; const s = rc == null ? 0 : Math.sign(rc); return d.edge === "+" ? s > 0 : s >= 0; };
+const idxLabel = (d) => (d.edge === "+" ? "0+" : d.edge === "-" ? "0−" : fmtTC(d.idx));
+const edgeRule = (d) => (d.edge === "+" ? `${ACT[d.above].toLowerCase()} on any positive running count, otherwise ${ACT[d.below].toLowerCase()}` : `${ACT[d.below].toLowerCase()} on any negative running count, otherwise ${ACT[d.above].toLowerCase()}`);
+// The count a drill shows for a running-count play: hi = a count where you make the "above" play. rcs is the sign of the
+// running count, shown beside a true count of 0. Returns null for ordinary index plays (callers keep their own spread).
+const devDrillCount = (d, hi) => {
+  if (!d.edge) return null; const r = Math.random();
+  if (d.edge === "+") return hi ? (r < 0.6 ? { tc: 0, rcs: 1 } : { tc: 1 }) : r < 0.45 ? { tc: 0, rcs: -1 } : r < 0.75 ? { tc: 0, rcs: 0 } : { tc: -1 };
+  return hi ? (r < 0.4 ? { tc: 0, rcs: 1 } : r < 0.7 ? { tc: 0, rcs: 0 } : { tc: 1 }) : r < 0.65 ? { tc: 0, rcs: -1 } : { tc: -1 };
+};
+const rcsWord = (n) => (n > 0 ? "positive" : n < 0 ? "negative" : "zero");
 
 function buildDeck(R) {
   const cards = [];
@@ -819,7 +841,7 @@ function FeltPrint() {
   );
 }
 
-function Table({ cards, dealer, tc, qkey, leaving }) {
+function Table({ cards, dealer, tc, rcs, qkey, leaving }) {
   return (
     <div className={"relative tbl felt cz-train px-4 pt-5 pb-4 " + (leaving ? "leave" : "")}>
       <FeltPrint />
@@ -844,7 +866,7 @@ function Table({ cards, dealer, tc, qkey, leaving }) {
       </div>
       {tc !== undefined && (
         <div className="absolute left-4 bottom-4 rounded-lg px-3 py-1.5 mono text-sm" style={{ background: "rgba(0,0,0,.55)", border: "1px solid rgba(var(--acc),.4)" }}>
-          TC <span style={{ color: "var(--brass)" }}>{fmtTC(tc)}</span>
+          TC <span style={{ color: "var(--brass)" }}>{rcs != null && tc === 0 ? "0" : fmtTC(tc)}</span>{rcs != null && <span style={{ color: "var(--ivory-d)" }}> · running count <span style={{ color: "var(--brass)" }}>{rcsWord(rcs)}</span></span>}
         </div>
       )}
     </div>
@@ -992,7 +1014,7 @@ function Charts({ R, devs }) {
               <span className="text-[11px] px-2 py-1 rounded-md text-center" style={{ background: ACOL[d.below] || "rgba(var(--fg),.08)", color: d.below === "D" ? "#1B1407" : "var(--ivory)", opacity: .75 }}>{(ANAME[d.below] || d.below).replace("No insurance","Skip")}</span>
               <div className="flex items-center gap-1">
                 <div className="h-px flex-1" style={{ background: "rgba(var(--fg),.2)" }} />
-                <span className="mono text-sm font-semibold px-1.5 py-0.5 rounded" style={{ background: "var(--recess)", color: "var(--brass)" }}>{fmtTC(d.idx)}</span>
+                <span className="mono text-sm font-semibold px-1.5 py-0.5 rounded" style={{ background: "var(--recess)", color: "var(--brass)" }}>{idxLabel(d)}</span>
                 <div className="h-px flex-1" style={{ background: "rgba(var(--fg),.2)" }} />
               </div>
               <span className="text-[11px] px-2 py-1 rounded-md font-semibold text-center" style={{ background: ACOL[d.above] || "var(--brass)", color: d.above === "D" || !ACOL[d.above] ? "var(--ink)" : "#fff" }}>{(ANAME[d.above] || d.above).replace("Take insurance","Insure")}</span>
@@ -1090,7 +1112,7 @@ function FillChart({ R, devs }) {
                   <div className="grid items-center gap-2" style={{ gridTemplateColumns: "1fr 88px" }}>
                     <div>
                       <div className="text-sm font-semibold">{d.name}</div>
-                      {checked && !(idxOk && actOk) && <div className="text-[11px] mono" style={{ color: "var(--neg-l)" }}>{fmtTC(d.idx)} · {ANAME[d.above] || d.above}</div>}
+                      {checked && !(idxOk && actOk) && <div className="text-[11px] mono" style={{ color: "var(--neg-l)" }}>{idxLabel(d)} · {ANAME[d.above] || d.above}</div>}
                     </div>
                     <input className="in sm mono" type="number" inputMode="numeric" placeholder="idx" value={v.idx ?? ""} disabled={checked} onChange={(e) => setDev({ ...dev, [d.id]: { ...v, idx: e.target.value } })} style={{ textAlign: "center", borderColor: checked ? (idxOk ? "var(--brass)" : "var(--rose)") : undefined }} />
                   </div>
@@ -1207,9 +1229,11 @@ function Trainer({ rules, setRules }) {
     if (!c) return c;
     const up = c.kind === "dev" ? c.dev.up : c.up;
     let tc;
-    if (c.kind === "dev") tc = c.side === "lo" ? c.dev.idx - 1 - (Math.random() < 0.3 ? 1 : 0) : c.dev.idx + (Math.random() < 0.5 ? 0 : 1);
+    const e = c.kind === "dev" ? devDrillCount(c.dev, c.side !== "lo") : null;
+    if (e) tc = e.tc;
+    else if (c.kind === "dev") tc = c.side === "lo" ? c.dev.idx - 1 - (Math.random() < 0.3 ? 1 : 0) : c.dev.idx + (Math.random() < 0.5 ? 0 : 1);
     else if (mode === "mixed") tc = Math.floor(Math.random() * 6) - 2;
-    return { ...c, tc, cards: handToCards(c), dealer: { rank: up, suit: rs() }, qkey: Math.random().toString(36).slice(2) };
+    return { ...c, tc, rcs: e ? e.rcs : undefined, cards: handToCards(c), dealer: { rank: up, suit: rs() }, qkey: Math.random().toString(36).slice(2) };
   };
   const poolVer = useMemo(() => Math.random(), [pool]);
   useEffect(() => {
@@ -1266,11 +1290,12 @@ function Trainer({ rules, setRules }) {
   const why = (c) => {
     const u = c.up, a = c.answer;
     if (c.kind === "dev") {
-      const d = c.dev, over = c.tc >= d.idx;
-      const idx = `${fmtTC(d.idx)}`;
+      const d = c.dev, over = devOver(d, c.tc, c.rcs ?? c.tc);
+      const idx = idxLabel(d);
       if (d.id === "ins") return over ? `TC is at +3 or more, so over a third of the remaining cards are tens. Insurance pays.` : `Below +3 there aren't enough tens left. Skip it.`;
       const reason = d.above === "S" ? "more tens are left, so the dealer busts more and you bust more if you hit" : d.above === "D" ? "more tens are left, so your double lands a big card more often" : d.above === "P" ? "more tens are left — two 20s beat one when the dealer is weak" : "more tens are left, so you lose this hand too often to play it out";
       const basicIsAbove = ["12v4", "13v2", "s16v9", "s15v10"].includes(d.id) || (d.id === "A8v6" && rules.h17) || (d.id === "s15vA" && rules.h17);
+      if (d.edge) return `${d.name} is marked ${idx}: it goes by the running count, not a true count of zero — ${edgeRule(d)}. ${over ? (d.edge === "+" ? "Yours is positive, so make the play." : "Yours isn't negative, so the basic play stands.") : (d.edge === "+" ? "Yours isn't positive, so play basic strategy." : "Yours is negative, so back off the basic play.")}`;
       if (over) return `Index is ${idx}. You're at or above it — ${reason}.`;
       return basicIsAbove ? `Index is ${idx}. The count is under it, so you back off the basic play and ${ACT[d.below].toLowerCase()}.` : `Index is ${idx}. You're under it, so play basic strategy.`;
     }
@@ -1337,7 +1362,7 @@ function Trainer({ rules, setRules }) {
             <span>{session.right}/{session.asked} this session{streak >= 2 ? <> · <span style={{ color: "var(--brass)" }}>{streak} in a row</span></> : null}</span>
             <span>{mastered}/{pool.length} locked in</span>
           </div>
-          <Table cards={cur.cards} dealer={cur.dealer} tc={cur.tc} qkey={cur.qkey} leaving={leaving} />
+          <Table cards={cur.cards} dealer={cur.dealer} tc={cur.tc} rcs={cur.rcs} qkey={cur.qkey} leaving={leaving} />
           <div className="flex justify-between text-xs mt-1 mono" style={{ color: "var(--muted)" }}>
             <span>Dealer {upLabel(cur.kind === "dev" ? cur.dev.up : cur.up)}</span>
             <span>{cur.kind === "dev" ? cur.dev.hand : cur.hand}</span>
@@ -1395,7 +1420,7 @@ function Trainer({ rules, setRules }) {
           <div className="eyebrow mb-3">Your weak spots</div>
           {weakest.map((c) => (
             <div key={c.id} className="flex justify-between text-sm py-1.5" style={{ borderBottom: "1px solid rgba(var(--fg),.08)" }}>
-              <span>{c.kind === "dev" ? `${c.dev.name} ${c.side === "hi" ? "at/above" : "below"} ${fmtTC(c.dev.idx)}` : `${c.hand} vs ${upLabel(c.up)}`}</span>
+              <span>{c.kind === "dev" ? `${c.dev.name} ${c.side === "hi" ? "at/above" : "below"} ${idxLabel(c.dev)}` : `${c.hand} vs ${upLabel(c.up)}`}</span>
               <span className="mono" style={{ color: "var(--muted)" }}>{c.opts ? label(c.answer) : c.answer} · {prog[c.id].wrong}✕</span>
             </div>
           ))}
@@ -1829,7 +1854,7 @@ function correctPlay(cards, up, tc, R, opts) {
   for (const d of devsFor(Rx)) {
     if (d.id === "ins" || d.up !== up || d.hand !== key) continue;
     if (d.above === "P" && !canSplit) continue;
-    act = tc >= d.idx ? d.above : d.below; dev = d; break;
+    act = devOver(d, tc, opts.rc) ? d.above : d.below; dev = d; break;
   }
   if (act === "D" && !canDouble) act = hv.soft && (hv.total === 18 || hv.total === 19) ? "S" : "H";
   if (act === "P" && !canSplit) act = hardRule(hv.total, up, Rx);
@@ -1984,6 +2009,45 @@ function TCDrill({ decks }) {
 // ======================= live play =======================
 const PLAY_KEY = "bj-play-v1";
 const PLAY_PREFS_DEF = { totals: true, count: false, checkEvery: 5, auto: false, speed: 1 };
+// Live play's keyboard shortcuts, changeable in Table settings on a computer. Stored as e.key in lower case.
+// Enter and Space always deal the next hand as well, whatever "next" is set to.
+const PLAY_KEYS_DEF = { H: "h", S: "s", D: "d", P: "p", R: "r", next: "n", insY: "y", insN: "n" };
+const PLAY_KEY_ROWS = [["H", "Hit"], ["S", "Stand"], ["D", "Double"], ["P", "Split"], ["R", "Surrender"], ["next", "Next hand"], ["insY", "Take insurance"], ["insN", "No insurance"]];
+// keys that are live at the same moment must differ: the five plays share one moment, the two insurance answers another
+const PLAY_KEY_GROUPS = [["H", "S", "D", "P", "R"], ["next"], ["insY", "insN"]];
+const playKeysOf = (k) => { const o = { ...PLAY_KEYS_DEF }; if (k && typeof k === "object") Object.keys(o).forEach((a) => { if (typeof k[a] === "string" && k[a]) o[a] = k[a]; }); return o; };
+const keyName = (k) => ({ " ": "Space", enter: "Enter", arrowleft: "←", arrowright: "→", arrowup: "↑", arrowdown: "↓", backspace: "⌫", delete: "Del" }[k] || (k.length === 1 ? k.toUpperCase() : k.charAt(0).toUpperCase() + k.slice(1)));
+// One row per shortcut: click a key, press the new one. Taking a key another action in the same group uses swaps the two.
+function KeyBinder({ keys, onChange }) {
+  const [cap, setCap] = useState(null);
+  useEffect(() => {
+    if (!cap) return;
+    const on = (e) => {
+      e.preventDefault(); e.stopPropagation(); // keep the key from the table, the sheet and the Jump-to palette while it's being picked
+      const k = e.key.toLowerCase();
+      if (k === "escape") { setCap(null); return; }
+      if (["shift", "control", "alt", "meta", "tab", "capslock", "dead", "unidentified"].includes(k)) return;
+      const next = { ...keys }, group = PLAY_KEY_GROUPS.find((g) => g.includes(cap)) || [], other = group.find((a) => a !== cap && keys[a] === k);
+      if (other) next[other] = keys[cap];
+      next[cap] = k; onChange(next); setCap(null);
+    };
+    window.addEventListener("keydown", on, true); return () => window.removeEventListener("keydown", on, true);
+  }, [cap, keys]); // eslint-disable-line
+  const changed = PLAY_KEY_ROWS.some(([a]) => keys[a] !== PLAY_KEYS_DEF[a]);
+  return (
+    <div className="kbdonly mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+      <div className="flex items-baseline justify-between mb-2"><span className="text-sm" style={{ color: "var(--ivory)" }}>Keyboard</span>{changed ? <button type="button" onClick={() => { setCap(null); onChange({ ...PLAY_KEYS_DEF }); }} className="text-[11px] underline underline-offset-2" style={{ color: "var(--muted)" }}>Reset keys</button> : <span className="text-[11px]" style={{ color: "var(--muted)" }}>click a key to change it</span>}</div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+        {PLAY_KEY_ROWS.map(([a, label]) => (
+          <div key={a} className="flex items-center justify-between gap-2">
+            <span className="text-[13px] truncate" style={{ color: "var(--ivory-d)" }}>{label}</span>
+            <button type="button" onClick={() => setCap(cap === a ? null : a)} aria-label={`${label}: ${keyName(keys[a])}. Change`} className="keycap" data-on={cap === a ? "1" : "0"}>{cap === a ? "press a key" : keyName(keys[a])}</button>
+          </div>))}
+      </div>
+      <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Enter and Space always deal the next hand too. Esc cancels a change.</p>
+    </div>
+  );
+}
 const DEAL_SPEEDS = [[0.5, "Snappy"], [0.75, "Quick"], [1, "Normal"], [1.3, "Easy"], [1.7, "Relaxed"]]; // dealing speed slider stops
 const PLAYALL_KEY = "bj-playall-v1";
 const readAll = (raw) => { let d = {}; try { d = JSON.parse(raw) || {}; } catch (_) {} const pts = Array.isArray(d.pts) ? d.pts.filter(isObj) : []; return { ...PLAYALL_DEF, ...d, pts }; };
@@ -2119,15 +2183,16 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const [checkEvery, setCheckEvery] = useState(_playPrefs.checkEvery); // hands between count checks; 0 = never
   const [autoNext, setAutoNext] = useState(_playPrefs.auto);
   const [speed, setSpeed] = useState(_playPrefs.speed);                // 0.55 fast … 1.5 relaxed, multiplies every deal timing
+  const [keys, setKeys] = useState(() => playKeysOf(_playPrefs.keys));   // keyboard shortcuts (see PLAY_KEYS_DEF)
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   useEffect(() => { (async () => {
     try { const r = await window.storage.get(PLAY_KEY, false); if (r?.value) { const d = { ...PLAY_PREFS_DEF, ...JSON.parse(r.value) };
-      setShowTotals(!!d.totals); setShowCount(!!d.count); setCheckEvery(d.checkEvery); setAutoNext(!!d.auto); setSpeed(d.speed); } } catch (_) {}
+      setShowTotals(!!d.totals); setShowCount(!!d.count); setCheckEvery(d.checkEvery); setAutoNext(!!d.auto); setSpeed(d.speed); setKeys(playKeysOf(d.keys)); } } catch (_) {}
     setPrefsLoaded(true); })(); }, []);
   useEffect(() => {
-    _playPrefs = { totals: showTotals, count: showCount, checkEvery, auto: autoNext, speed };
+    _playPrefs = { totals: showTotals, count: showCount, checkEvery, auto: autoNext, speed, keys };
     if (prefsLoaded) { try { window.storage.set(PLAY_KEY, JSON.stringify(_playPrefs), false); } catch (_) {} }
-  }, [showTotals, showCount, checkEvery, autoNext, speed, prefsLoaded]);
+  }, [showTotals, showCount, checkEvery, autoNext, speed, keys, prefsLoaded]);
   const ms = (x) => Math.round(x * speed);
   const speedIdx = Math.max(0, DEAL_SPEEDS.findIndex(([v]) => Math.abs(v - speed) < 0.01));
   const [shuffled, setShuffled] = useState(false);
@@ -2232,12 +2297,13 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     if (phase !== "play") return;
     const h = hands[active]; const av = available(h, active); if (!av[a]) return;
     const up = dealer[0].rank; const tc = tcNow();
-    const cp = correctPlay(h.cards, up, tc, rules, { canDouble: av.D, canSplit: av.P, canSurrender: av.R });
-    const ok = a === cp.act;
+    const rc = sh.current.rc;
+    const cp = correctPlay(h.cards, up, tc, rules, { canDouble: av.D, canSplit: av.P, canSurrender: av.R, rc });
+    const ok = a === cp.act, byRc = cp.dev && cp.dev.edge && tc === 0; // a 0+ / 0− play decided by the running count's sign
     if (!ok) {
       hm.current++;
       setMistakes((m) => [...m, { kind: "play", hand: stats.hands + 1, key: cp.key, up, tc, you: a, correct: cp.act, dev: cp.dev?.name }]);
-      setMsg({ ok: false, title: `${ACT[cp.act]} ${cp.key} vs ${upLabel(up)}${cp.dev ? ` at ${fmtTC(tc)}` : ""}.`, body: cp.dev ? `${cp.dev.name} index is ${fmtTC(cp.dev.idx)}; the count is ${fmtTC(tc)}.` : "Basic strategy." });
+      setMsg({ ok: false, title: `${ACT[cp.act]} ${cp.key} vs ${upLabel(up)}${byRc ? ` on a running count of ${fmtTC(rc).replace("+0", "0")}` : cp.dev ? ` at ${fmtTC(tc)}` : ""}.`, body: byRc ? `${cp.dev.name} goes by the running count: ${edgeRule(cp.dev)}.` : cp.dev ? `${cp.dev.name} index is ${idxLabel(cp.dev)}; the count is ${fmtTC(tc)}.` : "Basic strategy." });
     } else setMsg(null);
     let hs = hands.map((x) => ({ ...x, cards: [...x.cards] })); let cur = hs[active];
         if (a === "H") { cur.cards.push(draw()); const v = handValue(cur.cards); if (v.bust || v.total === 21) cur.done = true; }
@@ -2309,9 +2375,11 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
       const tag = (e.target?.tagName || "").toLowerCase();
       // Enter still submits the count you just typed; every other shortcut stays out of text fields
       if (tag === "input" || tag === "textarea") { if (phase === "check" && k === "enter") { e.preventDefault(); checkCount(); } return; }
-      if (phase === "play" && ["h", "s", "d", "p", "r"].includes(k)) act(k.toUpperCase());
-      else if (phase === "result" && (k === "enter" || k === " " || k === "n")) { e.preventDefault(); nextHand(); }
-      else if (phase === "insurance" && (k === "y" || k === "n")) takeInsurance(k === "y");
+      if (setupOpen) return; // the settings sheet is open: keys belong to it, not the table
+      const play = phase === "play" ? ["H", "S", "D", "P", "R"].find((a) => keys[a] === k) : null;
+      if (play) { e.preventDefault(); act(play); }
+      else if (phase === "result" && (k === "enter" || k === " " || k === keys.next)) { e.preventDefault(); nextHand(); }
+      else if (phase === "insurance" && (k === keys.insY || k === keys.insN)) { e.preventDefault(); takeInsurance(k === keys.insY); }
       else if (phase === "check" && k === "enter") checkCount();
     };
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
@@ -2409,7 +2477,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <div className="mt-2 rise">
             <div className="text-center mb-3"><div className="eyebrow">Insurance</div><div className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>The dealer shows an ace. Take it?</div></div>
             <div className="grid grid-cols-2 gap-2"><button className="btn ghost" onClick={() => takeInsurance(false)}>No insurance</button><button className="btn" onClick={() => takeInsurance(true)}>Take insurance</button></div>
-            <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>N</b> no · <b>Y</b> take it</div>
+            <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>{keyName(keys.insN)}</b> no · <b>{keyName(keys.insY)}</b> take it</div>
           </div>
         )}
         {phase === "play" && (
@@ -2418,7 +2486,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           </div>
         )}
         {phase === "result" && <button className="btn mt-2" onClick={nextHand}>Next hand</button>}
-        {(phase === "play" || phase === "result") && <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>H</b> hit · <b>S</b> stand · <b>D</b> double · <b>P</b> split{rules.surrender ? <> · <b>R</b> surrender</> : null} · <b>Enter</b> next hand</div>}
+        {(phase === "play" || phase === "result") && <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>{keyName(keys.H)}</b> hit · <b>{keyName(keys.S)}</b> stand · <b>{keyName(keys.D)}</b> double · <b>{keyName(keys.P)}</b> split{rules.surrender ? <> · <b>{keyName(keys.R)}</b> surrender</> : null} · <b>Enter</b> next hand</div>}
         {phase === "dealing" && <div className="mt-2" style={{ height: 52 }} />}
         {phase === "check" && (
           <div className="mt-2 rise">
@@ -2494,6 +2562,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <input type="range" min={0} max={DEAL_SPEEDS.length - 1} step={1} value={speedIdx} onChange={(e) => setSpeed(DEAL_SPEEDS[Number(e.target.value)][0])} className="w-full mt-1" aria-label="Dealing speed" />
           <div className="flex justify-between -mt-1" style={{ fontSize: 10, color: "var(--muted)" }}><span>faster</span><span>slower</span></div>
         </div>
+        <KeyBinder keys={keys} onChange={setKeys} />
         <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
           <span className="text-[11px]" style={{ color: "var(--muted)" }}>Mistakes are flagged but the hand plays on, like a real table.</span>
           <ConfirmLink label="New session" confirm="Tap again to restart" onConfirm={reset} className="ml-3 whitespace-nowrap" />
@@ -2551,7 +2620,7 @@ function TestRunner({ id, rules, onDone }) {
     if (id === "strategy") {
       const deck = buildDeck(rules), devs = devsFor(rules); const out = [];
       for (let i = 0; i < 100; i++) {
-        if (i % 3 === 2 && devs.length) { const d = devs[rnd(0, devs.length - 1)]; const side = Math.random() < 0.5; const tc = side ? d.idx + rnd(0, 1) : d.idx - rnd(1, 2); out.push({ kind: "dev", dev: d, tc, answer: side ? d.above : d.below, opts: d.id === "ins" ? null : ["H", "S", "D", ...(d.hand === "10,10" ? ["P"] : []), ...(rules.surrender ? ["R"] : [])] }); }
+        if (i % 3 === 2 && devs.length) { const d = devs[rnd(0, devs.length - 1)]; const side = Math.random() < 0.5; const e = devDrillCount(d, side); const tc = e ? e.tc : side ? d.idx + rnd(0, 1) : d.idx - rnd(1, 2); out.push({ kind: "dev", dev: d, tc, rcs: e ? e.rcs : undefined, answer: side ? d.above : d.below, opts: d.id === "ins" ? null : ["H", "S", "D", ...(d.hand === "10,10" ? ["P"] : []), ...(rules.surrender ? ["R"] : [])] }); }
         else { const c = deck[rnd(0, deck.length - 1)]; out.push({ ...c, kind: "basic", tc: rnd(-2, 2) }); }
       }
       return out.map((c) => ({ ...c, cards: handToCards(c), dealer: { rank: c.kind === "dev" ? c.dev.up : c.up, suit: rs() }, qkey: Math.random().toString(36).slice(2) }));
@@ -2618,7 +2687,7 @@ function TestRunner({ id, rules, onDone }) {
       )}
       {id === "strategy" && q && (
         <>
-          <Table cards={q.cards} dealer={q.dealer} tc={q.tc} qkey={q.qkey} />
+          <Table cards={q.cards} dealer={q.dealer} tc={q.tc} rcs={q.rcs} qkey={q.qkey} />
           <div className="flex justify-between text-xs mt-1 mono" style={{ color: "var(--muted)" }}><span>Dealer {upLabel(q.dealer.rank)}</span><span>{q.kind === "dev" ? q.dev.hand : q.hand}</span></div>
           <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: q.opts ? `repeat(${q.opts.length}, 1fr)` : "1fr 1fr" }}>
             {(q.opts || [q.dev.below, q.dev.above]).map((o) => btn(o, q.opts ? ACT[o] : o))}
@@ -2647,7 +2716,7 @@ function TestResult({ r, id, onBack }) {
         <div className="mt-3"><div className="eyebrow mb-2" style={{ fontSize: 10 }}>Misses</div>
           <div className="space-y-1">{r.extra.fails.slice(0, 10).map((f, i) => (
             <div key={i} className="text-xs rounded-lg px-3 py-1.5" style={{ background: "rgba(var(--neg),.08)", color: "var(--ivory-d)" }}>
-              {id === "strategy" && <>{f.q.kind === "dev" ? `${f.q.dev.name} at ${fmtTC(f.q.tc)}` : `${f.q.hand} vs ${upLabel(f.q.up)}`} — you {(ACT[f.v] || f.v).toLowerCase()}, <b style={{ color: "var(--ivory)" }}>{(ACT[f.q.answer] || f.q.answer).toLowerCase()}</b></>}
+              {id === "strategy" && <>{f.q.kind === "dev" ? `${f.q.dev.name} at ${fmtTC(f.q.tc)}${f.q.rcs != null ? `, running count ${rcsWord(f.q.rcs)}` : ""}` : `${f.q.hand} vs ${upLabel(f.q.up)}`} — you {(ACT[f.v] || f.v).toLowerCase()}, <b style={{ color: "var(--ivory)" }}>{(ACT[f.q.answer] || f.q.answer).toLowerCase()}</b></>}
               {id === "tc" && <>{fmtTC(f.q.rc)} ÷ {f.q.left} — you {fmtTC(f.v)}, <b style={{ color: "var(--ivory)" }}>{fmtTC(f.q.tc)}</b></>}
             </div>))}</div></div>
       )}
@@ -2721,9 +2790,9 @@ function Assessment({ rules, bets, onDone, onCancel }) {
     const pickN = (arr, n) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n); };
     const strat = pickN(deck, 20).map((c) => ({ ...c, kind: "basic", cards: handToCards({ ...c, kind: "basic" }), dealer: { rank: c.up, suit: rs() }, qkey: Math.random().toString(36).slice(2) }));
     const dev = pickN(devs, Math.min(12, devs.length)).map((d) => {
-      const side = Math.random() < 0.5; const tc = side ? d.idx + (Math.random() < 0.5 ? 0 : 1) : d.idx - 1 - (Math.random() < 0.3 ? 1 : 0);
+      const side = Math.random() < 0.5; const e = devDrillCount(d, side); const tc = e ? e.tc : side ? d.idx + (Math.random() < 0.5 ? 0 : 1) : d.idx - 1 - (Math.random() < 0.3 ? 1 : 0);
       const opts = d.id === "ins" ? null : ["H", "S", "D", ...(d.hand === "10,10" ? ["P"] : []), ...(rules.surrender ? ["R"] : [])];
-      return { kind: "dev", dev: d, tc, answer: side ? d.above : d.below, opts, cards: handToCards({ kind: "dev", dev: d }), dealer: { rank: d.up, suit: rs() }, qkey: Math.random().toString(36).slice(2) };
+      return { kind: "dev", dev: d, tc, rcs: e ? e.rcs : undefined, answer: side ? d.above : d.below, opts, cards: handToCards({ kind: "dev", dev: d }), dealer: { rank: d.up, suit: rs() }, qkey: Math.random().toString(36).slice(2) };
     });
     const tcs = Array.from({ length: 8 }, () => { const left = Math.max(0.5, rnd(1, rules.decks * 2 - 1) / 2); const rc = rnd(-Math.round(5 * left) - 2, Math.round(7 * left) + 2); return { rc, left, tc: Math.trunc(rc / left) }; });
     return { strategy: strat, deviation: dev, tc: tcs };
@@ -2781,7 +2850,7 @@ function Assessment({ rules, bets, onDone, onCancel }) {
 
       {(stage.id === "strategy" || stage.id === "deviation") && q && (
         <>
-          <Table cards={q.cards} dealer={q.dealer} tc={q.kind === "dev" ? q.tc : undefined} qkey={q.qkey} />
+          <Table cards={q.cards} dealer={q.dealer} tc={q.kind === "dev" ? q.tc : undefined} rcs={q.rcs} qkey={q.qkey} />
           <div className="flex justify-between text-xs mt-1 mono" style={{ color: "var(--muted)" }}><span>Dealer {upLabel(q.dealer.rank)}</span><span>{q.kind === "dev" ? q.dev.hand : q.hand}</span></div>
           <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: q.opts ? `repeat(${q.opts.length}, 1fr)` : "1fr 1fr" }}>
             {(q.opts || [q.dev.below, q.dev.above]).map((o) => optBtn(o, q.opts ? ACT[o] : o, () => record(o === q.answer)))}

@@ -61,6 +61,12 @@ Page order: the table card (felt, then the bankroll/net strip, then the controls
 
 All-time hands, money, clean rate, count checks and a per-hand money list live in `PLAYALL_KEY`, which is in `BACKUP_KEYS` so it syncs: the counter names are in `SYNC_COUNTERS` so two devices' totals add up, and the money list is `{id, n}` per hand so their hands merge; `syncTidy` sorts and thins it (`thinPts` adds neighbouring hands together past 600 points). It saves every tenth hand and on pagehide/visibilitychange, never once per hand, and reloads itself on `bj-sync-applied`. Wipe it from Settings → Reset skill results.
 
+Keyboard shortcuts for the table are changeable in that same sheet, on a computer only (`.kbdonly`, same media rule as `.kbdhint`): `KeyBinder` edits `keys` (defaults in `PLAY_KEYS_DEF`, saved with the other prefs in `PLAY_KEY`). Keys live at the same moment must differ (`PLAY_KEY_GROUPS`), so taking another action's key swaps the two. Enter and Space always deal the next hand. The key hints under the table read from `keys`, and the table ignores keys while the settings sheet is open.
+
+## Count plays that go by the running count (0+ and 0−)
+
+The app rounds true counts toward zero, so a true count of 0 covers running counts on both sides of zero. The plays the BJA charts print as "0+" (16 vs 10) and "0−" (12 vs 4, 15 vs 10 with surrender, and A,8 vs 6 in H17) turn on the **sign of the running count** instead: 0+ makes the play on any positive running count, 0− drops the basic play on any negative one, and a running count of exactly zero is basic strategy. They carry `edge: "+"` or `"-"` in `DEV_TABLE`; `devOver(d, tc, rc)` is the one place that decides whether a deviation's "above" play applies — use it, never `tc >= d.idx`. `correctPlay` takes the running count as `opts.rc` (Live play passes the shoe's); without it a true count of 0 is read as a running count of 0. `idxLabel(d)` prints "0+" / "0−", drills show the running count's sign beside a true count of 0 (`devDrillCount`, `rcs`), and the Ask tab's `correct_play` says so in `count_play`. 13 vs 2 (−1) is an ordinary index and is unchanged.
+
 ## Casinos page
 
 A sixth tab (`casinos`): a built-in, offline map of casinos with Nick's own scouting notes. It lives in its own files so work on it doesn't collide with `app.jsx`:
