@@ -13,8 +13,8 @@ const HKEY = (key) => (key === 200 ? "TT" : key > 100 ? `A${key - 100}` : String
 const ACT = { H: "hit", S: "stand", D: "double", P: "split", R: "surrender" };
 
 // The count plays (Illustrious 18 + Fab 4), with the id the simulator knows them by.
-export const DEVIATIONS = DEV_DEFS.map(([up, key, s17, h17, below, above, ls], i) => ({
-  n: i, id: `${HKEY(key)}v${UP(up)}${ls === 1 ? "_sur" : ""}`, hand: HAND(key), up: UP(up), s17: s17 === 9999 ? null : s17, h17: h17 === 9999 ? null : h17, below, above, surrenderOnly: ls === 1, noSurrenderOnly: ls === 0,
+export const DEVIATIONS = DEV_DEFS.map(([up, key, s17, h17, below, above, ls, edge], i) => ({
+  edge: edge || 0, n: i, id: `${HKEY(key)}v${UP(up)}${ls === 1 ? "_sur" : ""}`, hand: HAND(key), up: UP(up), s17: s17 === 9999 ? null : s17, h17: h17 === 9999 ? null : h17, below, above, surrenderOnly: ls === 1, noSurrenderOnly: ls === 0,
 }));
 export const INSURANCE_MODES = { always: 1, tc1: 2, tc2: 3, tc4: 4, tc5: 5, even_money_always: 7, good_hands_always: 8 };
 export const HABITS = {
@@ -85,7 +85,8 @@ const dblAllowed = (R, key) => { const d = R.dbl === "9-11" ? 1 : R.dbl === "10-
 export function deviationCatalog(R) {
   return DEVIATIONS.filter((d) => (R.h17 ? d.h17 : d.s17) != null && (d.surrenderOnly ? !!R.surrender : true) && (d.above !== "D" || dblAllowed(R, DEV_DEFS[d.n][1]))).map((d) => {
     const idx = R.h17 ? d.h17 : d.s17;
-    return { id: d.id, hand: d.hand, dealer: d.up, index: idx, play: `${ACT[d.above]} at true count ${idx >= 0 ? "+" : ""}${idx} or higher, otherwise ${ACT[d.below]}`, ...(d.surrenderOnly ? { needs: "surrender, first two cards" } : {}), ...(d.noSurrenderOnly && R.surrender ? { note: "used when surrender isn't available (after a hit)" } : {}) };
+    const play = idx === 0 && d.edge ? (d.edge > 0 ? `${ACT[d.above]} on any positive running count, otherwise ${ACT[d.below]}` : `${ACT[d.below]} on any negative running count, otherwise ${ACT[d.above]}`) : `${ACT[d.above]} at true count ${idx > 0 ? "+" : idx < 0 ? "−" : ""}${Math.abs(idx)} or higher, otherwise ${ACT[d.below]}`;
+    return { id: d.id, hand: d.hand, dealer: d.up, index: idx === 0 && d.edge ? (d.edge > 0 ? "0+" : "0−") : idx, play, ...(d.surrenderOnly ? { needs: "surrender, first two cards" } : {}), ...(d.noSurrenderOnly && R.surrender ? { note: "used when surrender isn't available (after a hit)" } : {}) };
   });
 }
 
@@ -108,6 +109,7 @@ export function coverCal(cal, R, cover, shift) {
     if (d.above === "D" && !dblAllowed(R, key)) { if (solo) skipped.push(`${d.id} (this table doesn't allow that double, so the play doesn't exist here)`); return; }
     const r = T.by(nm);
     if (r) { add(r); nAll++; if (solo) applied.push(`${d.id}: ${m === 1 ? "basic strategy only" : m === 2 ? `always ${ACT[d.above]}` : `always ${ACT[d.below]}`}`); }
+    else if ((R.h17 ? d.h17 : d.s17) != null && (!d.surrenderOnly || R.surrender)) { if (solo) approx.push(`${d.id} is a count play here, but what it costs to skip or force it hasn't been measured (it comes up rarely and is worth very little, so the numbers barely move)`); }
     else if (solo) skipped.push(`${d.id} (not a play for these rules)`);
   });
   if (cover.skip_all_deviations) applied.push(`all ${nAll} count plays skipped (basic strategy only; insurance is set separately)`);

@@ -94,7 +94,24 @@ Keyboard shortcuts for the table are changeable in that same sheet, on a compute
 
 ## Count plays that go by the running count (0+ and 0−)
 
-The app rounds true counts toward zero, so a true count of 0 covers running counts on both sides of zero. The plays the BJA charts print as "0+" (16 vs 10) and "0−" (12 vs 4, 15 vs 10 with surrender, and A,8 vs 6 in H17) turn on the **sign of the running count** instead: 0+ makes the play on any positive running count, 0− drops the basic play on any negative one, and a running count of exactly zero is basic strategy. They carry `edge: "+"` or `"-"` in `DEV_TABLE`; `devOver(d, tc, rc)` is the one place that decides whether a deviation's "above" play applies — use it, never `tc >= d.idx`. `correctPlay` takes the running count as `opts.rc` (Live play passes the shoe's); without it a true count of 0 is read as a running count of 0. `idxLabel(d)` prints "0+" / "0−", drills show the running count's sign beside a true count of 0 (`devDrillCount`, `rcs`), and the Ask tab's `correct_play` says so in `count_play`. 13 vs 2 (−1) is an ordinary index and is unchanged.
+The app rounds true counts toward zero, so a true count of 0 covers running counts on both sides of zero. The plays the BJA charts print as "0+" (16 vs 10) and "0−" (12 vs 4, 15 vs 10 with surrender, and A,8 vs 6 in H17), plus A,7 vs 2 in H17 (0−, measured by the app's simulator — the BJA chart prints no index for it), turn on the **sign of the running count** instead: 0+ makes the play on any positive running count, 0− drops the basic play on any negative one, and a running count of exactly zero is basic strategy. They carry `edge: "+"` or `"-"` in `DEV_TABLE`; `devOver(d, tc, rc)` is the one place that decides whether a deviation's "above" play applies — use it, never `tc >= d.idx`. `correctPlay` takes the running count as `opts.rc` (Live play passes the shoe's); without it a true count of 0 is read as a running count of 0. `idxLabel(d)` prints "0+" / "0−", drills show the running count's sign beside a true count of 0 (`devDrillCount`, `rcs`), and the Ask tab's `correct_play` says so in `count_play`. 13 vs 2 (−1) is an ordinary index and is unchanged.
+
+## Where the calculator's numbers come from
+
+`CALR` / `CALQ` / `CALD` / `CALX` at the top of `src/app.jsx` are measured tables, packed by `tools/sim/build_cal.py` from
+the simulator in `tools/sim/table_sim.c` (64 billion rounds in all; the README there lists what each part is and how to
+re-run it). Don't edit those lines by hand. Three things must say the same thing whenever a play or an index changes:
+`DEV_TABLE` in `src/app.jsx`, `DEV_DEFS` in `src/sim.js`, and `defs[]` in `tools/sim/table_sim.c` (same order — the
+position is the play's id in the cover data). `CAL_ROUNDS` and the Settings paragraph state the round counts; keep them
+true if tables are re-run.
+
+The simulator's `audit` mode checked every basic strategy cell and every count play in all 20 games (5 deck counts ×
+H17/S17 × surrender). With 4, 6 and 8 decks every cell and index holds, with one exception still open: surrendering
+16 vs 9 at a true count of −1 loses to hitting (the app surrenders at −1 and hits at −2; the cards say hit at −1 too —
+Nick has been asked to check his BJA chart before it changes). With 1 and 2 decks several plays differ from the shoe
+charts (doubling 9 vs 2, splitting 6s vs 7 and so on) — expected, BJA's charts are for shoes, and the app deliberately
+uses one chart for every deck count. Soft 18 vs 2 in H17 ("0−": stand on a negative running count) came from that
+check; the BJA chart has no index there.
 
 ## Casinos page
 

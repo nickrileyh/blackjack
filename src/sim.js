@@ -6,15 +6,17 @@
 // To keep the answer exact rather than noisy, every policy is scored on the SAME dealt rounds with the measured
 // per-count edge and variance, and reported relative to the plain spread on those same rounds.
 const NIL = 9999;
-// identical to the simulator's table (key: hard total, 100+k for soft A-k, 200 for 10,10) — index = deviation id
+// identical to the simulator's table (key: hard total, 100+k for soft A-k, 200 for 10,10) — index = deviation id.
+// Eighth field: 1 = a "0+" play (made only on a positive running count), -1 = a "0−" play (dropped only on a negative one);
+// it applies when the index for these rules is 0, exactly as the app's own decision function plays them.
 export const DEV_DEFS = [
-  [10, 16, 0, 0, "H", "S", 0], [9, 16, 4, 4, "H", "S", 0], [11, 16, NIL, 3, "H", "S", 0], [10, 15, 4, 4, "H", "S", 0], [11, 15, NIL, 5, "H", "S", 0],
+  [10, 16, 0, 0, "H", "S", 0, 1], [9, 16, 4, 4, "H", "S", 0], [11, 16, NIL, 3, "H", "S", 0], [10, 15, 4, 4, "H", "S", 0], [11, 15, NIL, 5, "H", "S", 0],
   [4, 200, 6, 6, "S", "P", -1], [5, 200, 5, 5, "S", "P", -1], [6, 200, 4, 4, "S", "P", -1],
   [10, 10, 4, 4, "H", "D", -1], [11, 10, 4, 3, "H", "D", -1], [11, 11, 1, NIL, "H", "D", -1],
-  [2, 12, 3, 3, "H", "S", -1], [3, 12, 2, 2, "H", "S", -1], [4, 12, 0, 0, "H", "S", -1], [2, 13, 0, 0, "H", "S", -1],
+  [2, 12, 3, 3, "H", "S", -1], [3, 12, 2, 2, "H", "S", -1], [4, 12, 0, 0, "H", "S", -1, -1], [2, 13, 0, 0, "H", "S", -1],
   [2, 9, 1, 1, "H", "D", -1], [7, 9, 3, 3, "H", "D", -1], [6, 8, 2, 2, "H", "D", -1],
-  [4, 108, 3, 3, "S", "D", -1], [5, 108, 1, 1, "S", "D", -1], [6, 108, 1, 0, "S", "D", -1], [2, 106, 1, 1, "H", "D", -1], [2, 107, 1, NIL, "S", "D", -1],
-  [8, 16, 4, 4, "H", "R", 1], [9, 16, -1, -1, "H", "R", 1], [9, 15, 2, 2, "H", "R", 1], [10, 15, 0, 0, "H", "R", 1], [11, 15, 2, -1, "H", "R", 1],
+  [4, 108, 3, 3, "S", "D", -1], [5, 108, 1, 1, "S", "D", -1], [6, 108, 1, 0, "S", "D", -1, -1], [2, 106, 1, 1, "H", "D", -1], [2, 107, 1, 0, "S", "D", -1, -1],
+  [8, 16, 4, 4, "H", "R", 1], [9, 16, -1, -1, "H", "R", 1], [9, 15, 2, 2, "H", "R", 1], [10, 15, 0, 0, "H", "R", 1, -1], [11, 15, 2, -1, "H", "R", 1],
 ];
 const bucket = (tc) => (tc < -3 ? 0 : tc > 6 ? 9 : tc + 3);
 
@@ -42,7 +44,7 @@ export function makeGame(R, seats, seed = 12345, opts = {}) {
     : () => { const rem = (lim - pos) / 52; let r; if (TCM === 1) { r = Math.floor(rem + 0.5); if (r < 1) r = 1; } else if (TCM === 2) { r = rem; if (r < 0.25) r = 0.25; } else { r = Math.floor(rem * 2 + 0.5) / 2; if (r < 0.5) r = 0.5; } const t = rc / r; return TCM === 3 ? Math.floor(t) : TCM === 4 ? Math.floor(t + 0.5) : Math.trunc(t); };
   // deviations for these rules: dev[sur?1:0][up][key]
   const dev = [{}, {}];
-  DEV_DEFS.forEach(([up, key, s17, h17, below, above, ls]) => { const idx = H17 ? h17 : s17; if (idx === NIL) return; for (let e = 0; e < 2; e++) { if (ls !== -1 && ls !== e) continue; dev[e][up * 256 + key] = [idx, above, below]; } });
+  DEV_DEFS.forEach(([up, key, s17, h17, below, above, ls, edge]) => { const idx = H17 ? h17 : s17; if (idx === NIL) return; for (let e = 0; e < 2; e++) { if (ls !== -1 && ls !== e) continue; dev[e][up * 256 + key] = [idx, above, below, idx === 0 ? edge || 0 : 0]; } });
   const hardRule = (t, u, sur) => {
     if (t >= 18) return "S"; if (t === 17) return u === 11 && H17 && sur ? "R" : "S";
     if (t === 16) return u <= 6 ? "S" : sur && u >= 9 ? "R" : "H";
@@ -74,7 +76,7 @@ export function makeGame(R, seats, seed = 12345, opts = {}) {
     else if (soft && tot === 12) base = canP && h.n === 2 ? "P" : "H";
     else { base = hardRule(tot > 21 ? 21 : tot, up, sur); key = tot; }
     let act = base;
-    if (usedev && key) { const d = dev[sur ? 1 : 0][up * 256 + key]; if (d && !(d[1] === "P" && !canP)) act = tc >= d[0] ? d[1] : d[2]; }
+    if (usedev && key) { const d = dev[sur ? 1 : 0][up * 256 + key]; if (d && !(d[1] === "P" && !canP)) act = (d[3] && tc === 0 ? (d[3] > 0 ? rc > 0 : rc >= 0) : tc >= d[0]) ? d[1] : d[2]; }
     if (act === "D" && !canD) act = soft && (tot === 18 || tot === 19) ? "S" : "H";
     if (act === "P" && !canP) act = hardRule(tot, up, sur);
     if (act === "R" && !canS) act = "H";
