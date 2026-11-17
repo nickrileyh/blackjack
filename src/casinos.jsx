@@ -2,7 +2,7 @@
 // Lives in its own file (with casino-map.js and casino-data.js) so work here doesn't collide with app.jsx.
 // Shared controls come from app.jsx; they are only touched inside components, never while this file loads.
 import { useState, useMemo, useEffect, useRef, memo } from "react";
-import { Sheet, Seg, ChipRow, ConfirmLink, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav } from "./app.jsx";
+import { Sheet, Seg, ChipRow, ConfirmLink, More, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav } from "./app.jsx";
 import { unpack, albersUsa, azimuthal, regionMap, countryMap, fitBox, regionAt } from "./casino-map.js";
 import { GEO_US, GEO_CA, GEO_WORLD, CASINO_ROWS, CASINO_INTEL } from "./casino-data.js";
 import { TableScoreCard, useCasinoScores, scoreTone, wideScreen } from "./planner.jsx";
@@ -349,7 +349,7 @@ function GameEditor({ g, set, onRemove, onUse, used }) {
         {row("Double after split", <Seg value={dasOn(R)} options={[[false, "No"], [true, "Yes"]]} onChange={(v) => setR("das", v)} />)}
         {row(<>Penetration <span className="mono" style={{ color: "var(--brass)" }}>{R.pen}%</span></>, <input type="range" min={50} max={90} step={5} value={R.pen} onChange={(e) => setR("pen", Number(e.target.value))} aria-label="Penetration" />)}
       </div>
-      <button type="button" onClick={() => setMore(!more)} className="text-xs font-semibold mt-4 mb-1" style={{ color: "var(--brass)" }} aria-expanded={more}>{more ? "Fewer rules ▴" : "More rules — doubling, splitting ▾"}</button>
+      <More open={more} onClick={() => setMore(!more)} className="mt-4 mb-1">{more ? "Fewer rules" : "More rules — doubling, splitting"}</More>
       {more && <div className="space-y-3 mt-2 rise">
         {row("Double on", <Seg value={dblRule(R)} options={[["any", "Any 2"], ["9-11", "9–11"], ["10-11", "10–11"]]} onChange={(v) => setR("dbl", v)} />)}
         {row("Split up to (hands)", <Seg value={maxHandsOf(R)} options={[[2, "2"], [3, "3"], [4, "4"]]} onChange={(v) => setR("maxHands", v)} />)}
@@ -387,7 +387,7 @@ function IntelBlock({ intel, onCopy, copied }) {
         {intel.best && intel.best.decks && onCopy && <button type="button" className="btn ghost" style={{ fontSize: 14, padding: "10px 12px" }} onClick={onCopy} disabled={copied}>{copied ? "Added to your games ✓" : "Add the reported game to mine"}</button>}
         {intel.src && intel.src.length > 0 && <div className="text-[11px] pt-2.5" style={{ borderTop: "1px solid var(--line)", color: "var(--muted)" }}>Sources: {intel.src.map(([l, u], i) => <span key={u + i}>{i ? " · " : ""}<a className="clink" href={u} target="_blank" rel="noopener noreferrer">{l}</a></span>)}</div>}
         <p className="text-[11px]" style={{ color: "var(--muted)" }}>Gathered from public reports. Casinos change rules, limits and table counts often — trust what you see on the floor.</p>
-      </div> : <button type="button" onClick={() => setOpen(true)} className="text-xs font-semibold mt-3" style={{ color: "var(--brass)" }} aria-expanded={false}>Read the full report ▾</button>}
+      </div> : <More open={false} onClick={() => setOpen(true)} className="mt-3">Read the full report</More>}
     </div>
   );
 }
@@ -427,7 +427,7 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
     <Sheet title={c.custom ? d.name || "Your casino" : c.name} onClose={close}>
       <div className="flex items-center justify-between gap-3 -mt-2 mb-4">
         <span className="text-xs min-w-0 truncate" style={{ color: "var(--muted)" }}>{place || "Your own pin"}</span>
-        <a className="text-xs font-semibold shrink-0" style={{ color: "var(--brass)" }} href={mapsUrl({ ...c, name: d.name })} target="_blank" rel="noopener noreferrer">Directions ↗</a>
+        <a className="text-xs font-semibold shrink-0 lnk" style={{ color: "var(--brass)" }} href={mapsUrl({ ...c, name: d.name })} target="_blank" rel="noopener noreferrer">Directions ↗</a>
       </div>
       {c.custom && <div className="grid grid-cols-2 gap-2 mb-4">
         <label className="block"><span className="eyebrow block mb-1.5">Name</span><input className="in" value={d.name} onChange={(e) => set({ name: e.target.value })} /></label>
@@ -447,7 +447,7 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
       <span className="eyebrow block mb-1.5">Heat</span>
       <div className="chipseg mb-1" role="group" aria-label="Heat" style={{ gridTemplateColumns: "repeat(3, minmax(0,1fr))" }}>{HEATS.map(([v, l]) => <button key={v} type="button" className={d.heat === v ? "on" : ""} aria-pressed={d.heat === v} onClick={() => set({ heat: d.heat === v ? 0 : v })} style={{ height: 36 }}>{l}</button>)}</div>
       <p className="text-[11px] mb-4" style={{ color: "var(--muted)" }}>How closely they watch counters. Tap again to clear.</p>
-      <div className="flex items-baseline justify-between mb-1.5"><span className="eyebrow">Games</span>{d.games.length > 0 && <button type="button" onClick={addGame} className="text-xs font-semibold" style={{ color: "var(--brass)" }}>+ Add a game</button>}</div>
+      <div className="flex items-baseline justify-between mb-1.5"><span className="eyebrow">Games</span>{d.games.length > 0 && <button type="button" onClick={addGame} className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }}>+ Add a game</button>}</div>
       {d.games.length ? <div className="cbox mb-4" style={{ padding: "2px 10px" }}>{d.games.map((g) => (
         <button key={g.id} type="button" className="crow" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }} onClick={() => setEdit(g.id)}>
           <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{g.label || "Blackjack"}</span><span className="block text-[11px] mono truncate" style={{ color: "var(--muted)" }}>{gameLine(g)}</span></span>
@@ -457,7 +457,7 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
       <label className="block mb-4"><span className="eyebrow block mb-1.5">Notes</span><textarea className="in" rows={3} placeholder="Which pits, shift changes, who to avoid, what's in the high-limit room…" value={d.notes} onChange={(e) => set({ notes: e.target.value })} style={{ fontSize: 15, lineHeight: 1.45, resize: "vertical" }} /></label>
       <button className="btn" onClick={close}>Done</button>
       <div className="flex items-center justify-center gap-5 mt-3">
-        {c.custom && <button type="button" onClick={() => { close(); onMove(); }} className="text-xs underline underline-offset-2" style={{ color: "var(--muted)", fontSize: 13 }}>Move the pin</button>}
+        {c.custom && <button type="button" onClick={() => { close(); onMove(); }} className="text-xs underline underline-offset-2 lnk" style={{ color: "var(--muted)", fontSize: 13 }}>Move the pin</button>}
         <ConfirmLink label={c.custom ? "Delete this casino" : "Hide from my map"} confirm={c.custom ? "Tap again to delete" : "Tap again to hide"} onConfirm={() => { dirty.current = false; onRemove(); }} style={{ fontSize: 13 }} />
       </div>
     </Sheet>
@@ -646,12 +646,12 @@ export default function CasinosPage({ rules, onUseRules, go }) {
             {!searching && list.length > 0 && <div className="mono text-xs" style={{ color: "var(--muted)" }}>{list.length}</div>}
           </div>
           {shown.map((c) => <CasinoRow key={c.id} c={c} place={searching || !focus ? [c.city, c.st].filter(Boolean).join(", ") : placeOf(c)} onOpen={openCasino} score={scores.get(c)} />)}
-          {list.length > shown.length && <button onClick={() => setMore(true)} className="w-full text-xs font-semibold py-2.5" style={{ color: "var(--brass)" }}>Show all {list.length}</button>}
+          {list.length > shown.length && <button onClick={() => setMore(true)} className="w-full text-xs font-semibold py-2.5 lnk" style={{ color: "var(--brass)" }}>Show all {list.length}</button>}
           {!list.length && (emptyAll
             ? <div className="text-center py-6"><div className="text-sm font-semibold">{counts.all ? "Mark where you've played" : `No casinos listed for ${cname} yet`}</div><p className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{counts.all ? `${map.hasRegions ? (cc === "USA" ? "Tap a state on the map" : "Tap a province on the map") : "Tap a pin on the map"} or search by name. Casinos you've been to, been backed off from or written notes on collect here.` : "Add the ones you play with “+ Add casino”, then tap the map where each one is."}</p></div>
             : <p className="text-sm text-center py-6" style={{ color: "var(--muted)" }}>{searching ? `Nothing in ${cname} matches “${q.trim()}”.` : focus ? (filter === "all" ? `No casinos with blackjack tables listed in ${map.names[focus] || focus}.` : filter === "intel" ? `No scouting reports for ${map.names[focus] || focus} yet.` : `None in ${map.names[focus] || focus} yet.`) : filter === "backed" ? "You haven't been backed off anywhere. Long may it last." : filter === "intel" ? "No scouting reports here yet." : "Nowhere marked yet."}</p>)}
-          {(searching || focus) && !list.length && <div className="text-center -mt-2 mb-1"><button className="text-xs font-semibold" style={{ color: "var(--brass)" }} onClick={() => startAdd(searching ? q.trim() : "")}>+ Add {searching ? `“${q.trim()}”` : "a casino here"}</button></div>}
-          {hiddenN > 0 && !searching && <div className="text-center mt-2"><button className="text-xs underline underline-offset-2" style={{ color: "var(--muted)" }} onClick={() => setShowHidden(!showHidden)}>{showHidden ? "Stop showing hidden casinos" : `${hiddenN} hidden — show`}</button></div>}
+          {(searching || focus) && !list.length && <div className="text-center -mt-2 mb-1"><button className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => startAdd(searching ? q.trim() : "")}>+ Add {searching ? `“${q.trim()}”` : "a casino here"}</button></div>}
+          {hiddenN > 0 && !searching && <div className="text-center mt-2"><button className="text-xs underline underline-offset-2 lnk" style={{ color: "var(--muted)" }} onClick={() => setShowHidden(!showHidden)}>{showHidden ? "Stop showing hidden casinos" : `${hiddenN} hidden — show`}</button></div>}
         </section>
         {everything.loose.length > 0 && !searching && (
           <section className="card p-5 mb-4">

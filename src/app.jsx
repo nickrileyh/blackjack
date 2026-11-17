@@ -177,7 +177,9 @@ function mixOf(rows, cal) {
 // Peak-to-trough drawdown: replay the sessions round by round. Each round lands in a count bucket at its real
 // frequency and you bet what that session's spread said there. Very long histories are replayed in blocks of rounds.
 // Checked against the full blackjack simulator: median drawdown within 3% at 2, 6 and 20 hours.
-function drawdownFromMix(parts, maxPaths = 1500) {
+// The replay itself, in steps: it hands back control after every path, so useDeferred can run it a slice at a time and
+// the page never freezes while it works. drawdownFromMix runs the same steps straight through (same paths, same answer).
+function* drawdownSteps(parts, maxPaths = 1500) {
   const segs = []; let total = 0;
   parts.forEach((p) => {
     const rounds = Math.round(p.rounds || 0);
@@ -214,10 +216,12 @@ function drawdownFromMix(parts, maxPaths = 1500) {
       }
     }
     dds[p] = dd;
+    yield;
   }
   dds.sort();
   return { med: dds[Math.floor(paths * 0.5)], p90: dds[Math.floor(paths * 0.9)] };
 }
+function drawdownFromMix(parts, maxPaths) { const it = drawdownSteps(parts, maxPaths); let r; do r = it.next(); while (!r.done); return r.value; }
 // The drawdown replay deals up to three million rounds, far too slow to run while a page is opening or on every keystroke.
 // useDeferred runs such a sum shortly after the screen has painted (so typing debounces itself) and remembers the answer by
 // key, so coming back to a page is instant. It returns undefined until the first answer is in; with keep, the last answer
@@ -234,20 +238,23 @@ function useDeferred(key, fn, keep) {
     // while the page is still animating in, wait for it to finish: a heavy sum in the middle of a trace makes it stutter
     const now = performance.now(); if (!opened.current) opened.current = now;
     const wait = Math.max(90, 1100 - (now - opened.current));
-    const id = setTimeout(() => { const r = f.current(); if (_deferred.size > 60) _deferred.clear(); _deferred.set(key, r); setV(r); }, wait);
+    const done = (r) => { if (_deferred.size > 60) _deferred.clear(); _deferred.set(key, r); setV(r); };
+    // a sum that comes in steps (a generator) is worked a few milliseconds at a time, so taps and scrolling stay live
+    const slice = (it) => { const t = performance.now(); let s; do s = it.next(); while (!s.done && performance.now() - t < 6); if (s.done) done(s.value); else id = setTimeout(() => slice(it), 0); };
+    let id = setTimeout(() => { const r = f.current(); if (r && typeof r.next === "function") slice(r); else done(r); }, wait);
     return () => clearTimeout(id);
   }, [key]); // eslint-disable-line
   return key == null ? undefined : v;
 }
 const ddKey = (list, mix, hph) => JSON.stringify([list.map((x) => [x.hours, x.snap ? [x.snap.hph, x.snap.mix] : 0]), mix, hph]);
-function sessionDrawdown(rows, cal, hours, hph) {
-  return drawdownFromMix([{ mix: mixOf(rows, cal), rounds: Math.round(hours * hph) }], 2000);
-}
+const sessionParts = (rows, cal, hours, hph) => [{ mix: mixOf(rows, cal), rounds: Math.round(hours * hph) }];
+function sessionDrawdown(rows, cal, hours, hph) { return drawdownFromMix(sessionParts(rows, cal, hours, hph), 2000); }
 // Each logged session keeps the spread it was played under: s.snap = { ev, sd, hph, mix }.
 const sessEv = (s, fallback) => (s && s.snap && Number.isFinite(s.snap.ev) ? s.snap.ev : fallback || 0);
 const sessSd = (s, fallback) => (s && s.snap && Number.isFinite(s.snap.sd) ? s.snap.sd : fallback || 0);
 function expectOf(list, ev, sd) { let h = 0, e = 0, v = 0; (list || []).forEach((s) => { const hh = +s.hours || 0; h += hh; e += sessEv(s, ev) * hh; v += Math.pow(sessSd(s, sd), 2) * hh; }); return { h, exp: e, sd: Math.sqrt(v) }; }
-function expectedDrawdown(list, mix, hph) { return drawdownFromMix((list || []).map((s) => ({ rounds: (+s.hours || 0) * ((s.snap && s.snap.hph) || hph || 100), mix: (s.snap && s.snap.mix) || mix }))); }
+const expectedParts = (list, mix, hph) => (list || []).map((s) => ({ rounds: (+s.hours || 0) * ((s.snap && s.snap.hph) || hph || 100), mix: (s.snap && s.snap.mix) || mix }));
+function expectedDrawdown(list, mix, hph) { return drawdownFromMix(expectedParts(list, mix, hph)); }
 const momentAt = (cal, c, sp) => (sp === 2 ? 2 * cal.m2[c] + 2 * cal.c12[c] : cal.m2[c]); // E[x²] per unit² for the round
 function compute({ bankroll, handsPerHour, bets, cal, spotsMap = {} }) {
   const { rf, de } = patternOf(bets, spotsMap, cal);
@@ -347,7 +354,7 @@ html,body{background:var(--bg)}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--ivory);box-shadow:0 2px 6px rgba(0,0,0,.5);transition:transform .22s var(--ease)}
 .switch.on{background:var(--brass)}
 .switch.on::after{transform:translateX(18px);background:var(--seg-hi)}
-.qa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:76px;border-radius:16px;background:rgba(var(--fg),.04);border:1px solid rgba(var(--acc),.12);font-size:11.5px;font-weight:600;color:var(--ivory-d);transition:transform .13s var(--ease),background .15s}
+.qa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:76px;border-radius:16px;background:rgba(var(--fg),.04);border:1px solid rgba(var(--acc),.12);font-size:11.5px;font-weight:600;color:var(--ivory-d);transition:transform .13s var(--ease),background .2s var(--ease),border-color .2s var(--ease),color .2s var(--ease)}
 .qa:active{transform:scale(.95);background:rgba(var(--acc),.1)}
 .qa svg{color:var(--brass)}
 .iconbtn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;color:var(--ivory-d);background:rgba(var(--fg),.05);border:1px solid rgba(var(--fg),.1);transition:transform .13s,background .15s,color .15s}
@@ -451,7 +458,7 @@ html.scrolled .pillrail .rulespill{font-size:11px;padding:5px 9px 5px 11px}
 .sheetwrap .sheet{max-width:560px!important;max-height:min(86vh,860px)!important;border-radius:22px;border-bottom:1px solid rgba(var(--acc),.16);box-shadow:0 40px 90px -20px rgba(0,0,0,.75);animation:sheetpop .22s cubic-bezier(.2,.8,.2,1)}
 .sheetwrap .sheet>.sheetgrab>div:first-child{visibility:hidden;height:12px;padding:0}
 @keyframes sheetpop{from{transform:translateY(10px) scale(.98);opacity:0}to{transform:none;opacity:1}}
-@media (hover:hover){.card button.chippress:hover,.rulespill:hover,.iconbtn:hover{filter:brightness(1.12)}}
+@media (hover:hover){.card button.chippress:hover,.rulespill:hover,.iconbtn:hover{filter:brightness(var(--hov))}}
 }
 @media (min-width:1180px){
 .shell{--W:1120px}
@@ -465,7 +472,7 @@ html.scrolled .pillrail .rulespill{font-size:11px;padding:5px 9px 5px 11px}
 .homechart{width:100%;height:120px;margin-top:18px}
 .dgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px;align-items:start}
 .dgrid.solo{display:block}
-.dgrid.two{grid-template-rows:auto 1fr}.dgrid.two>.dcol.o2{grid-column:2;grid-row:1 / span 2}.dgrid.two>.dcol.cont{grid-column:1;grid-row:2}
+.dgrid.two{grid-template-rows:auto 1fr}.dgrid.two>.dcol:first-child{grid-column:1;grid-row:1 / span 2}.dgrid.two>.dcol.o2{grid-column:2;grid-row:1}.dgrid.two>.dcol.cont{grid-column:2;grid-row:2}
 .dcol{display:block;min-width:0}
 .dcol>:first-child>.card:first-child{margin-top:0}
 }
@@ -810,6 +817,34 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 .sheet,.cmdk,.card.rulesdlg{background:radial-gradient(120% 70% at 0% 0%,var(--gl-sheen),transparent 60%),linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.02) 55%),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 58%,transparent),color-mix(in srgb,var(--sheet2) 72%,transparent) 55%);-webkit-backdrop-filter:blur(30px) saturate(1.9) brightness(1.12);backdrop-filter:blur(30px) saturate(1.9) brightness(1.12)}
 :root[data-theme="light"] .sheet,:root[data-theme="light"] .cmdk,:root[data-theme="light"] .card.rulesdlg{background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(255,255,255,.7));-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8)}
 }
+/* ---- hover, press and focus: one kit (Nick: everything you can click reacts, and reacts the same way).
+   Hover only where there is a pointer. The first hover rule is the safety net: any button or link without a look of
+   its own shifts a touch, lighter on the dark themes and darker on the light ones (--hov). Text links (.lnk, .underline)
+   shift further (--hov-t): thin text needs more to show. A full-width row gets the faint wash list rows have (.rowh),
+   a tile a brighter face and border (.qa), a card that is one big button a brighter rim (.cardbtn). The safety-net
+   rules carry almost no specificity, so a control's own hover or focus rule always wins. Give a new text link .lnk, a
+   new full-width row .rowh; anything else is covered without a class. */
+:root{--hov:1.14;--hov-t:1.5}
+:root[data-theme="light"]{--hov:.95;--hov-t:.55}
+:root[data-theme="light"] .felt{--hov:1.14;--hov-t:1.5}
+:where(button,a[href],[role=button],[role=tab],summary):focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.lnk:active,button.underline:active,a.underline:active{opacity:.6}
+.rowh{border-radius:8px}
+.rowh:active{background:rgba(var(--fg),.05);box-shadow:0 0 0 6px rgba(var(--fg),.05)}
+.cardbtn:active{opacity:.8}
+@media (hover:hover){
+:where(button,a[href],[role=button]){transition:filter .2s var(--ease),color .2s var(--ease),background-color .2s var(--ease),border-color .2s var(--ease),opacity .2s var(--ease)}
+:where(button,a[href],[role=button]):where(:not(:disabled):not(.on):not([aria-selected="true"])):hover{filter:brightness(var(--hov))}
+button.lnk:hover,a.lnk:hover,button.underline:hover,a.underline:hover{filter:brightness(var(--hov-t))}
+.qa:hover{background:rgba(var(--fg),.075);border-color:rgba(var(--acc),.34);color:var(--ivory)}
+.rowh{transition:background-color .2s var(--ease),box-shadow .2s var(--ease)}
+.rowh:hover{filter:none;background:rgba(var(--fg),.04);box-shadow:0 0 0 6px rgba(var(--fg),.04)}
+.card:has(>.cardbtn:hover){border-color:rgba(var(--acc),.42)}
+.seat circle{transition:stroke .2s var(--ease)}
+.seat:hover circle+circle{stroke:var(--brass)}
+input[type=range]::-webkit-slider-thumb{transition:filter .2s var(--ease)}
+input[type=range]:hover::-webkit-slider-thumb{filter:brightness(1.12)}
+}
 /* on a phone a sheet floats: inset from the screen edges, round all the way round */
 @media (max-width:1023px){
 .sheetwrap{padding:0 8px max(8px,calc(env(safe-area-inset-bottom) - 16px))}
@@ -907,7 +942,7 @@ function SeatPicker({ seats, onChange, twoHands }) {
         {pts.map(([x, y], i) => {
           const you = i === seats - 1, taken = i < seats - 1, second = extra && i === seats;
           return (
-            <g key={i} onClick={() => onChange(i + 1)} style={{ cursor: "pointer" }}>
+            <g key={i} className="seat" onClick={() => onChange(i + 1)} style={{ cursor: "pointer" }}>
               <circle cx={x} cy={y} r={16} fill="transparent" />
               <circle cx={x} cy={y} r={10.5} fill={you ? "var(--brass)" : taken ? "rgba(var(--fg),.5)" : second ? "rgba(var(--acc),.18)" : "transparent"} stroke={you || second ? "var(--brass)" : taken ? "rgba(var(--fg),.5)" : "rgba(var(--fg),.22)"} strokeWidth="1.4" strokeDasharray={second ? "3 2.5" : undefined} />
               {you && <text x={x} y={y + 3} textAnchor="middle" fontSize="7.5" fontWeight="700" fill="var(--ink)" style={{ letterSpacing: ".04em" }}>YOU</text>}
@@ -1992,7 +2027,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
         <section className="card p-5 mb-4 rise">
           <div className="eyebrow mb-3">Drill</div>
           <Seg value={mode} options={[["cards", "One card"], ["pairs", "Two at a time"], ["hands", "Table rounds"]]} onChange={(m) => { setMode(m); setAmount(m !== "hands" ? 52 : 6); }} style={{ marginBottom: 6 }} />
-          <button onClick={() => setOpts((v) => { _drillOpts = !v; return !v; })} aria-expanded={opts} className="w-full flex items-center justify-between gap-3 py-2.5">
+          <button onClick={() => setOpts((v) => { _drillOpts = !v; return !v; })} aria-expanded={opts} className="rowh w-full flex items-center justify-between gap-3 py-2.5">
             <span className="text-left min-w-0">
               <span className="block text-sm font-medium" style={{ color: "var(--ivory)" }}>Options</span>
               <span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{decks} deck{decks > 1 ? "s" : ""} · cut {pen}% · {speed}s a card · {amount} {mode !== "hands" ? "cards" : "rounds"}{mode === "hands" ? ` · ${spots} player${spots > 1 ? "s" : ""}` : ""}{askTC ? " · true count too" : ""}{carry ? " · count carries over" : ""}</span>
@@ -2113,7 +2148,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
                 <div className="text-xs mt-2" style={{ color: "var(--muted)" }}>{result.counts.lo} low (+1) · {result.counts.hi} high (−1) · {result.counts.neu} neutral{carry && stateRef.current.startRc ? ` · carried in ${fmtTC(stateRef.current.startRc)}` : ""} · {result.remaining.toFixed(1)} decks left</div>
               </div>
               {result.ok && SPEEDS.findIndex(([v]) => v === speed) < SPEEDS.length - 1 && stats.drills >= 2 && (() => { const ni = SPEEDS.findIndex(([v]) => v === speed) + 1; return (
-                <button className="block mx-auto mt-3 text-xs font-semibold" style={{ color: "var(--brass)" }} onClick={() => setSpeed(SPEEDS[ni][0])}>Clean at this pace — step up to {SPEEDS[ni][1]} ›</button>
+                <button className="block mx-auto mt-3 text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => setSpeed(SPEEDS[ni][0])}>Clean at this pace — step up to {SPEEDS[ni][1]} ›</button>
               ); })()}
               {!result.ok && (
                 <div className="mt-3">
@@ -2142,7 +2177,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
         </div>
         <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
           <span className="text-xs" style={{ color: "var(--muted)" }}>Work up to 0.5s per card with zero misses before you play.</span>
-          <button onClick={newShoe} className="text-xs underline underline-offset-2 whitespace-nowrap shrink-0 ml-3" style={{ color: "var(--muted)" }}>New shoe</button>
+          <button onClick={newShoe} className="text-xs underline underline-offset-2 whitespace-nowrap shrink-0 ml-3 lnk" style={{ color: "var(--muted)" }}>New shoe</button>
         </div>
       </section>
       {/* lifetime stats — below the drill */}
@@ -2184,7 +2219,7 @@ function StartHint({ onGo }) {
         <div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>New here? Find your level first.</div>
         <div className="text-xs mt-0.5" style={{ color: "var(--ivory-d)" }}>A 5-minute assessment builds your daily practice plan.</div>
       </div>
-      <button className="text-sm font-semibold whitespace-nowrap" style={{ color: "var(--brass)" }} onClick={() => { dismiss(); onGo(); }}>Begin ›</button>
+      <button className="text-sm font-semibold whitespace-nowrap lnk" style={{ color: "var(--brass)" }} onClick={() => { dismiss(); onGo(); }}>Begin ›</button>
       <button onClick={dismiss} aria-label="Dismiss" className="text-lg leading-none px-1" style={{ color: "var(--muted)" }}>×</button>
     </div>
   );
@@ -2222,7 +2257,7 @@ function RulesModal({ rules, onSave, onClose, first }) {
           {row(<>Penetration <span className="mono" style={{ color: "var(--brass)" }}>{draft.pen}%</span></>, <input type="range" min={50} max={90} step={5} value={draft.pen} onChange={(e) => setDraft({ ...draft, pen: Number(e.target.value) })} aria-label="Penetration" />)}
           {row("Blackjack pays", <Seg value={!!draft.bj65} options={[[false, "3 to 2"], [true, "6 to 5"]]} onChange={(v) => setDraft({ ...draft, bj65: v })} />)}
         </div>
-        <button onClick={() => setAdv((v) => !v)} aria-expanded={adv} className="w-full flex items-center justify-between gap-3 mt-5 py-2.5" style={{ borderTop: "1px solid var(--line)" }}>
+        <button onClick={() => setAdv((v) => !v)} aria-expanded={adv} className="rowh w-full flex items-center justify-between gap-3 mt-5 py-2.5" style={{ borderTop: "1px solid var(--line)" }}>
           <span className="text-left">
             <span className="block text-sm font-semibold" style={{ color: "var(--ivory)" }}>Advanced</span>
             <span className="block text-[11px]" style={{ color: advancedNotes(draft).length ? "var(--brass)" : "var(--muted)" }}>{advancedNotes(draft).length ? advancedNotes(draft).join(" · ") : "Doubling, splitting, deviations — standard"}</span>
@@ -2236,7 +2271,7 @@ function RulesModal({ rules, onSave, onClose, first }) {
           {row("Resplit aces", <Seg value={!!draft.rsa} options={[[false, "No"], [true, "Yes"]]} onChange={(v) => setDraft({ ...draft, rsa: v })} />)}
           {row("Deviations", <Seg value={devsOn(draft)} options={[[false, "Off"], [true, "On"]]} onChange={(v) => setDraft({ ...draft, devs: v })} />)}
           {!devsOn(draft) && <p className="text-[11px]" style={{ color: "var(--muted)" }}>Basic strategy on every hand: no count plays and no insurance. The calculator and Live play follow this; the deviation drills stay available.</p>}
-          <button className="text-[11px] underline underline-offset-2" style={{ color: "var(--muted)" }} onClick={() => setDraft({ ...draft, das: true, dbl: "any", maxHands: 4, rsa: false })}>Reset to standard</button>
+          <button className="text-[11px] underline underline-offset-2 lnk" style={{ color: "var(--muted)" }} onClick={() => setDraft({ ...draft, das: true, dbl: "any", maxHands: 4, rsa: false })}>Reset to standard</button>
         </div>}
         <p className="text-[11px] mt-4" style={{ color: "var(--muted)" }}>Strategy follows the Blackjack Apprenticeship {draft.h17 ? "H17" : "S17"} chart{dasOn(draft) ? "" : " for no double after split"}{dblRule(draft) === "any" ? "" : `, with doubles only on ${dblRule(draft).replace("-", "–")}`}. Split aces get one card each. The dealer peeks for blackjack.{draft.bj65 ? " 6 to 5 blackjack costs about 1.4% — avoid it if you can." : ""}</p>
         <button className="btn mt-5" onClick={() => onSave(draft)}>{first ? "Start" : "Save"}</button>
@@ -2420,7 +2455,7 @@ function HandTotals() {
       </div>
       <div className="mt-4" style={{ minHeight: 76 }}>
         {result && <Feedback ok={result.ok} title={result.ok ? `${hv.total}${hv.soft ? " (soft)" : ""} · ${(result.ms / 1000).toFixed(2)}s` : `It's ${hv.total}${hv.soft ? ", soft" : ""} — you said ${result.v}.`} body={!result.ok && hv.soft ? "The ace counts as 11 here." : undefined} />}
-        {sess.streak >= 8 && n < 5 && <button className="block mx-auto mt-2 text-xs font-semibold" style={{ color: "var(--brass)" }} onClick={() => { setN(n + 1); next(n + 1); setSess((s2) => ({ ...s2, streak: 0 })); }}>×{sess.streak} clean — step up to {n + 1} cards ›</button>}
+        {sess.streak >= 8 && n < 5 && <button className="block mx-auto mt-2 text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => { setN(n + 1); next(n + 1); setSess((s2) => ({ ...s2, streak: 0 })); }}>×{sess.streak} clean — step up to {n + 1} cards ›</button>}
       </div>
     </section>
   );
@@ -2493,7 +2528,7 @@ function KeyBinder({ keys, onChange }) {
   const changed = PLAY_KEY_ROWS.some(([a]) => keys[a] !== PLAY_KEYS_DEF[a]);
   return (
     <div className="kbdonly mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
-      <div className="flex items-baseline justify-between mb-2"><span className="text-sm" style={{ color: "var(--ivory)" }}>Keyboard</span>{changed ? <button type="button" onClick={() => { setCap(null); onChange({ ...PLAY_KEYS_DEF }); }} className="text-[11px] underline underline-offset-2" style={{ color: "var(--muted)" }}>Reset keys</button> : <span className="text-[11px]" style={{ color: "var(--muted)" }}>click a key to change it</span>}</div>
+      <div className="flex items-baseline justify-between mb-2"><span className="text-sm" style={{ color: "var(--ivory)" }}>Keyboard</span>{changed ? <button type="button" onClick={() => { setCap(null); onChange({ ...PLAY_KEYS_DEF }); }} className="text-[11px] underline underline-offset-2 lnk" style={{ color: "var(--muted)" }}>Reset keys</button> : <span className="text-[11px]" style={{ color: "var(--muted)" }}>click a key to change it</span>}</div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
         {PLAY_KEY_ROWS.map(([a, label]) => (
           <div key={a} className="flex items-center justify-between gap-2">
@@ -2612,11 +2647,19 @@ function ShoePanel({ shoe, dl, tc, showCount, trace }) {
   );
 }
 const CHIP_COLORS = (v) => v < 25 ? ["#A83236", "#C4494E", "#F6EFE2"] : v < 100 ? ["#2E7D5B", "#3E9971", "#F6EFE2"] : v < 500 ? ["#26292F", "#3A3F48", "#F6EFE2"] : v < 1000 ? ["#5F3B92", "#7650AE", "#F6EFE2"] : ["#C9A24C", "#DDBA6B", "#1C1C1E"];
+// the one "More …" link (Nick: fold secondary things away): accent text and a chevron that turns over when open
+function More({ open, onClick, className = "", children }) {
+  return (
+    <button type="button" onClick={onClick} aria-expanded={!!open} className={"flex items-center gap-1.5 text-xs font-semibold lnk " + className} style={{ color: "var(--brass)" }}>
+      {children}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
+    </button>
+  );
+}
 function Info({ label, children }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="mt-3">
-      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex items-center gap-1.5 text-[11.5px] font-semibold" style={{ color: "var(--muted)" }}>
+      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex items-center gap-1.5 text-[11.5px] font-semibold lnk" style={{ color: "var(--muted)" }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 7.6v.1" /></svg>
         {label}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
       </button>
@@ -2626,7 +2669,7 @@ function Info({ label, children }) {
 }
 function Toggle({ label, sub, on, onChange }) {
   return (
-    <button type="button" role="switch" aria-checked={!!on} onClick={() => onChange(!on)} className="w-full flex items-center justify-between gap-3 text-left">
+    <button type="button" role="switch" aria-checked={!!on} onClick={() => onChange(!on)} className="rowh w-full flex items-center justify-between gap-3 text-left">
       <span className="min-w-0"><span className="block text-sm" style={{ color: "var(--ivory)" }}>{label}</span>{sub && <span className="block text-[11px]" style={{ color: "var(--muted)" }}>{sub}</span>}</span>
       <span className={"switch" + (on ? " on" : "")} />
     </button>
@@ -3220,7 +3263,7 @@ function TestRunner({ id, rules, onDone }) {
           </div>
         </>
       )}
-      <button onClick={() => onDone(null)} className="text-xs underline underline-offset-2 mt-4" style={{ color: "var(--muted)" }}>Abandon test</button>
+      <button onClick={() => onDone(null)} className="text-xs underline underline-offset-2 mt-4 lnk" style={{ color: "var(--muted)" }}>Abandon test</button>
     </section>
   );
 }
@@ -3401,7 +3444,7 @@ function Assessment({ rules, bets, onDone, onCancel }) {
           <div className="grid grid-cols-3 gap-2 mt-3">{Array.from({ length: 9 }, (_, i) => q.tc - 4 + i).map((v) => optBtn(v, fmtTC(v), () => record(v === q.tc)))}</div>
         </>
       )}
-      <button onClick={onCancel} className="text-xs underline underline-offset-2 mt-4" style={{ color: "var(--muted)" }}>Cancel — nothing is saved</button>
+      <button onClick={onCancel} className="text-xs underline underline-offset-2 mt-4 lnk" style={{ color: "var(--muted)" }}>Cancel — nothing is saved</button>
     </section>
   );
 }
@@ -3433,7 +3476,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
     <>
       {testBest && (
         <section className="card p-5 mb-4">
-          <button onClick={() => go && go("count", { drill: "tests" })} className="w-full text-left">
+          <button onClick={() => go && go("count", { drill: "tests" })} className="cardbtn w-full text-left">
             <div className="flex items-baseline justify-between mb-3">
               <div className="eyebrow">Casino-ready tests</div>
               <span className="mono text-xs" style={{ color: "var(--brass)" }}>{TEST_DEFS.filter((t) => testBest[t.id]?.pass).length}/{TEST_DEFS.length} passed ›</span>
@@ -3451,7 +3494,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
 
       {sess && (
         <section className="card p-5 mb-4">
-          <button onClick={() => openSessions && openSessions()} className="w-full text-left">
+          <button onClick={() => openSessions && openSessions()} className="cardbtn w-full text-left">
             <div className="flex items-baseline justify-between mb-1">
               <div className="eyebrow">Sessions</div>
               <span className="mono text-xs" style={{ color: "var(--muted)" }}>{sess.length ? `${sess.length} session${sess.length > 1 ? "s" : ""} ›` : "log one ›"}</span>
@@ -3524,7 +3567,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
         </div>
         <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
           <span className="text-[11px]" style={{ color: "var(--muted)" }}>{daysOld >= 7 ? "It's been a week — retake to refresh your plan." : "Retake weekly to track the trend."}</span>
-          <button onClick={() => setRunning(true)} className="text-xs font-semibold whitespace-nowrap ml-3" style={{ color: "var(--brass)" }}>Retake</button>
+          <button onClick={() => setRunning(true)} className="text-xs font-semibold whitespace-nowrap ml-3 lnk" style={{ color: "var(--brass)" }}>Retake</button>
         </div>
       </section>
 
@@ -3605,7 +3648,7 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 2, background: "var(--brass)", display: "inline-block", borderRadius: 1 }} /> actual</span>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: "1.5px dashed rgba(var(--fg),.4)", display: "inline-block" }} /> expected</span>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 8, background: "rgba(var(--acc),.12)", display: "inline-block", borderRadius: 2 }} /> ±1 SD</span>
-        {onExpand && <button onClick={onExpand} className="ml-auto text-xs font-semibold whitespace-nowrap" style={{ color: "var(--brass)" }}>Full screen ⤢</button>}
+        {onExpand && <button onClick={onExpand} className="ml-auto text-xs font-semibold whitespace-nowrap lnk" style={{ color: "var(--brass)" }}>Full screen ⤢</button>}
       </div>
       {ddMed != null && (
         <div className="grid grid-cols-2 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
@@ -3640,7 +3683,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
   useEffect(() => { setSel(null); }, [range]);
   let ch = 0, cr = 0, ce = 0, cv = 0;
   const pts = [{ h: 0, i: 0, act: 0, exp: 0, sd: 0, s: null }].concat(list.map((s, k) => { const h = +s.hours || 0; ch += h; cr += s.result; ce += sessEv(s, evHour) * h; cv += Math.pow(sessSd(s, sdHour), 2) * h; return { h: ch, i: k + 1, act: cr, exp: ce, sd: Math.sqrt(cv), s }; }));
-  const ddE = useDeferred(list.length ? ddKey(list, mix, hph) : null, () => expectedDrawdown(list, mix, hph)) || null;
+  const ddE = useDeferred(list.length ? ddKey(list, mix, hph) : null, () => drawdownSteps(expectedParts(list, mix, hph))) || null;
   const n = list.length, last = pts[pts.length - 1];
   const W = sz.w, H = sz.h, P = { l: 4, r: 44, t: 10, b: 22 };
   const cw = W - P.l - P.r, chh = H - P.t - P.b;
@@ -3691,7 +3734,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {picked && <button onClick={() => setSel(null)} className="text-xs font-semibold" style={{ color: "var(--brass)" }}>Latest</button>}
+          {picked && <button onClick={() => setSel(null)} className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }}>Latest</button>}
           <button onClick={onClose} aria-label="Close" className="rounded-full flex items-center justify-center" style={{ width: 34, height: 34, background: "rgba(var(--fg),.08)", color: "var(--ivory-d)", fontSize: 18 }}>×</button>
         </div>
       </div>
@@ -3747,7 +3790,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
       {/* range tabs */}
       <div className="flex justify-center gap-6 mt-2">
         {[["10", "10"], ["30", "30"], ["all", "All"]].map(([k, l]) => (
-          <button key={k} onClick={() => setRange(k)} className="relative text-xs font-semibold" style={{ padding: "6px 4px", color: range === k ? "var(--ivory)" : "var(--muted)" }}>
+          <button key={k} onClick={() => setRange(k)} className="relative text-xs font-semibold lnk" style={{ padding: "6px 4px", color: range === k ? "var(--ivory)" : "var(--muted)" }}>
             {l}{range === k && <span className="absolute left-1/2 -translate-x-1/2" style={{ bottom: 0, width: 4, height: 4, borderRadius: 4, background: "var(--brass)" }} />}
           </button>))}
       </div>
@@ -3948,7 +3991,7 @@ function SpreadSheet({ cfg0, current, legacy, session, others = 0, onUse, onUseA
           <div><div className="flex justify-between text-xs"><span style={{ color: "var(--ivory-d)" }}>Penetration</span><span className="mono" style={{ color: "var(--brass)" }}>{cfg.rules.pen}%</span></div>
             <input type="range" min={50} max={90} step={1} value={cfg.rules.pen} onChange={(e) => setR("pen", +e.target.value)} className="w-full mt-1" aria-label="Penetration" /></div>
           <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Blackjack pays</span><div className="chipseg mt-1">{[[false, "3 to 2"], [true, "6 to 5"]].map(([v, l]) => <button key={l} type="button" className={!!cfg.rules.bj65 === v ? "on" : ""} onClick={() => setR("bj65", v)}>{l}</button>)}</div></div>
-          <button type="button" onClick={() => setAdv((v) => !v)} aria-expanded={adv} className="w-full flex items-center justify-between gap-3 py-1.5 text-left">
+          <button type="button" onClick={() => setAdv((v) => !v)} aria-expanded={adv} className="rowh w-full flex items-center justify-between gap-3 py-1.5 text-left">
             <span><span className="block text-xs font-semibold" style={{ color: "var(--ivory)" }}>Advanced rules</span><span className="block text-[11px]" style={{ color: advancedNotes(cfg.rules).length ? "var(--brass)" : "var(--muted)" }}>{advancedNotes(cfg.rules).length ? advancedNotes(cfg.rules).join(" · ") : "Doubling, splitting, deviations — standard"}</span></span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)", transform: adv ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
           </button>
@@ -3983,7 +4026,7 @@ function SpreadSheet({ cfg0, current, legacy, session, others = 0, onUse, onUseA
         <button className="btn ghost mt-2" onClick={() => onUseAll(snap)}>Save for all {others + 1} sessions at {session?.where}</button>
         <p className="text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Sets this spread and these rules on every session logged at {session?.where}. Each one keeps its own hours and players at the table.</p>
       </>)}
-      {edit && <button className="w-full text-xs font-semibold mt-3" style={{ color: "var(--muted)" }} onClick={() => { setCfg(JSON.parse(JSON.stringify(cfg0))); setEdit(false); }}>Reset</button>}
+      {edit && <button className="w-full text-xs font-semibold mt-3 lnk" style={{ color: "var(--muted)" }} onClick={() => { setCfg(JSON.parse(JSON.stringify(cfg0))); setEdit(false); }}>Reset</button>}
     </Sheet>
   );
 }
@@ -4110,7 +4153,7 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
         <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24, color: amt ? (f.won ? "var(--brass)" : "var(--neg-l)") : undefined }} type="number" inputMode="decimal" placeholder="0" value={f.result} onChange={(e) => set("result", e.target.value)} /></div>
       </div>
       <input className="in mb-3" placeholder="Notes — heat, rules, mistakes you noticed" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
-      <button type="button" onClick={() => setMore(!more)} className="text-xs font-semibold mb-3" style={{ color: "var(--brass)" }} aria-expanded={more}>{more ? "Fewer details ▴" : "More details — lowest point, table, heat ▾"}</button>
+      <More open={more} onClick={() => setMore(!more)} className="mb-3">{more ? "Fewer details" : "More details — lowest point, table, heat"}</More>
       {more && (
         <div className="rounded-xl p-3 mb-4 space-y-3 rise" style={{ background: "rgba(var(--fg),.035)" }}>
           <label className="block"><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Lowest point during the session</span>
@@ -4234,7 +4277,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
   }, [sessions, period, casino]);
   const st = useMemo(() => sessionStats(list, evHour, sdHour), [list, evHour, sdHour]);
   const [moreStats, setMoreStats] = useState(false);   // streak, average win/loss, upswing and swings sit behind "More stats"
-  const ddE = useDeferred(list.length > 1 && mix && mix.length ? ddKey(list, mix, hph) : null, () => expectedDrawdown(list, mix, hph)) || null;
+  const ddE = useDeferred(list.length > 1 && mix && mix.length ? ddKey(list, mix, hph) : null, () => drawdownSteps(expectedParts(list, mix, hph))) || null;
   const byCasino = useMemo(() => {
     const m = new Map();
     list.forEach((s) => { const k = casinoKey(s); const o = m.get(k) || { k, name: (s.where || "").trim() || "No casino", n: 0, h: 0, net: 0, exp: 0, last: s.date, heat: null }; o.n++; o.h += +s.hours || 0; o.net += s.result; o.exp += sessEv(s, evHour) * (+s.hours || 0); if (s.date >= o.last) o.last = s.date; if (s.heat === "backed") o.heat = { k: "backed", d: s.date }; else if (s.heat === "watched" && !o.heat) o.heat = { k: "watched", d: s.date }; m.set(k, o); });
@@ -4362,9 +4405,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
           <StatTile enter k="Your swings" v={st.n >= 5 ? `±${money(Math.round(st.realSd))}/hr` : "—"} sub={st.n >= 5 ? `model ±${money(Math.round(st.modelSd))}/hr${st.n < 20 ? " · rough until ~20 sessions" : ""}` : "after 5 sessions"} tone={st.n >= 5 && sdRatio > 1.35 ? "var(--neg-l)" : undefined} />
           </>}
         </div>
-        <button type="button" onClick={() => setMoreStats((v) => !v)} aria-expanded={moreStats} className="flex items-center gap-1.5 text-[11.5px] font-semibold -mt-2 mb-4 px-1" style={{ color: "var(--muted)" }}>
-          {moreStats ? "Fewer stats" : "More stats"}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: moreStats ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
-        </button>
+        <More open={moreStats} onClick={() => setMoreStats((v) => !v)} className="-mt-2 mb-4 px-1">{moreStats ? "Fewer stats" : "More stats"}</More>
         {st.n >= 8 && sdRatio > 1.35 && <p className="text-[11px] -mt-2 mb-4 px-1" style={{ color: "var(--neg-l)" }}>Your results swing {Math.round((sdRatio - 1) * 100)}% more than your spread predicts. Common causes: betting above the ramp, extra hands, or wrong game settings (penetration, players).</p>}
         {lowCheck && (
           <section className="card p-4 mb-4">
@@ -4382,7 +4423,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
             <div className="eyebrow mb-3">By casino</div>
             <div className="space-y-2.5">
               {byCasino.map((c) => (
-                <button key={c.k} onClick={() => setCasino(casino === c.k ? "all" : c.k)} className="w-full text-left grid items-center gap-2" style={{ gridTemplateColumns: "1fr auto" }}>
+                <button key={c.k} onClick={() => setCasino(casino === c.k ? "all" : c.k)} className="rowh w-full text-left grid items-center gap-2" style={{ gridTemplateColumns: "1fr auto" }}>
                   <div className="min-w-0">
                     <div className="text-sm font-semibold truncate flex items-center gap-1.5">{c.name}{c.heat && <span className="text-[10px] font-semibold rounded-full px-1.5 py-px" style={{ background: c.heat.k === "backed" ? "rgba(var(--neg),.18)" : "rgba(var(--acc),.15)", color: c.heat.k === "backed" ? "var(--neg-l)" : "var(--brass)" }}>{c.heat.k === "backed" ? `backed off ${dateShort(c.heat.d)}` : "heat"}</span>}</div>
                     <div className="text-[11px]" style={{ color: "var(--muted)" }}>{c.n} session{c.n === 1 ? "" : "s"} · {fmtH(c.h)} · {c.h > 0 ? `${sgnMoney(c.net / c.h)}/hr` : ""} · last {dateShort(c.last)}</div>
@@ -4409,7 +4450,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
 
         {/* history */}
         <section className="card p-5 mb-4">
-          <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">History</div><button onClick={exportCsv} className="text-xs font-semibold" style={{ color: "var(--brass)" }}>Export CSV</button></div>
+          <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">History</div><button onClick={exportCsv} className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }}>Export CSV</button></div>
           {exportMsg && <div className="text-xs mb-2" style={{ color: "var(--brass)" }}>{exportMsg}</div>}
           {groups.map((g) => { const mt = monthTot(g.k); return (
             <div key={g.k} className="mb-3">
@@ -4429,7 +4470,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
                   </button>))}
               </div>
             </div>); })}
-          {list.length > 12 && <button onClick={() => setShowAll(!showAll)} className="w-full text-xs font-semibold py-2" style={{ color: "var(--brass)" }}>{showAll ? "Show fewer" : `Show all ${list.length}`}</button>}
+          {list.length > 12 && <button onClick={() => setShowAll(!showAll)} className="w-full text-xs font-semibold py-2 lnk" style={{ color: "var(--brass)" }}>{showAll ? "Show fewer" : `Show all ${list.length}`}</button>}
           <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Tap a session to edit it or change the spread it was played with.</p>
         </section>
       </>}
@@ -4846,8 +4887,10 @@ function CommandPalette({ items, onClose }) {
 function TopBar({ title, children }) {
   const [show, setShow] = useState(false);
   useEffect(() => { const f = () => { const on = window.scrollY > 64; setShow(on); document.documentElement.classList.toggle("scrolled", on); }; f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
+  // while it is tucked away the keyboard must not land on it (Tab used to stop on an invisible title first)
+  const bar = useRef(null); useEffect(() => { if (bar.current) bar.current.inert = !show; }, [show]);
   return (
-    <div className={"topbar" + (show ? " show" : "")} aria-hidden={!show}>
+    <div ref={bar} className={"topbar" + (show ? " show" : "")} aria-hidden={!show}>
       <div className="mx-auto flex items-center justify-between gap-3" style={{ maxWidth: "42rem" }}>
         <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[15px] font-semibold truncate" style={{ letterSpacing: "-.01em" }}>{title}</button>
         {children}
@@ -4881,7 +4924,7 @@ function ThemePicker() {
 }
 function SettingsPage({ rules, onRules, seats, go }) {
   const Row = ({ title, sub, onClick, right }) => (
-    <button onClick={onClick} className="w-full flex items-center justify-between gap-3 py-3 text-left" style={{ borderTop: "1px solid var(--line)" }}>
+    <button onClick={onClick} className="rowh w-full flex items-center justify-between gap-3 py-3 text-left" style={{ borderTop: "1px solid var(--line)" }}>
       <span className="min-w-0"><span className="block text-sm" style={{ color: "var(--ivory)" }}>{title}</span>{sub && <span className="block text-xs mt-0.5" style={{ color: "var(--muted)" }}>{sub}</span>}</span>
       <span className="flex items-center gap-1 text-xs font-semibold shrink-0" style={{ color: "var(--brass)" }}>{right}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></span>
     </button>
@@ -5174,7 +5217,7 @@ function SyncCard() {
           <input className="in mono text-[12px] flex-1 min-w-0" placeholder="ghp_…" value={key} onChange={(e) => setKey(e.target.value)} autoCapitalize="off" autoCorrect="off" spellCheck={false} />
           <button className="btn shrink-0" style={{ width: "auto", padding: "0 16px" }} onClick={connect} disabled={busy || key.trim().length < 20}>{busy ? "Connecting…" : "Connect"}</button>
         </div>
-        <a href={SYNC_TOKEN_URL} target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-xs underline underline-offset-2 font-semibold" style={{ color: "var(--brass)" }}>Get a sync key on GitHub ↗</a>
+        <a href={SYNC_TOKEN_URL} target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-xs underline underline-offset-2 font-semibold lnk" style={{ color: "var(--brass)" }}>Get a sync key on GitHub ↗</a>
         <Info label="How to set it up">
           <b style={{ color: "var(--ivory)" }}>1.</b> Open the link above. Keep “gist” ticked, set Expiration to “No expiration”, then tap Generate token and copy it.<br />
           <b style={{ color: "var(--ivory)" }}>2.</b> Paste it in the box and tap Connect. Do your phone first, then your computer (the same key or a new one — either works).
@@ -5345,7 +5388,7 @@ function BetSpreadCalculator() {
     return { exp: mT, down: sT > 0 ? PhiN(-mT / sT) : mT < 0 ? 1 : 0, c99: fx.c99 * sessionCash(0.01, r.evHour, r.sdHour, sessT), c95: fx.c95 * sessionCash(0.05, r.evHour, r.sdHour, sessT), fx };
   }, [r, cal, sessT, rphEff, bets, spotsMap, rules.pen]);
   // the drawdown replay is the slow part: it follows a moment behind the rest instead of holding up every keystroke
-  const sessDd = useDeferred(sessT > 0 ? JSON.stringify([bets, spotsMap, r.evHour, r.sdHour, sessT, rphEff]) : null, () => sessionDrawdown(r.rows, cal, sessT, rphEff), true);
+  const sessDd = useDeferred(sessT > 0 ? JSON.stringify([bets, spotsMap, r.evHour, r.sdHour, sessT, rphEff]) : null, () => drawdownSteps(sessionParts(r.rows, cal, sessT, rphEff), 2000), true);
   const sess = useMemo(() => (sessBase ? { ...sessBase, ddMed: sessDd ? sessBase.fx.d50 * sessDd.med : null, dd90: sessDd ? sessBase.fx.d90 * sessDd.p90 : null } : null), [sessBase, sessDd]);
   const mix = useMemo(() => mixOf(r.rows, cal), [r, cal]);
   // your own spread as this page prices it, for the Plan tab's bankroll side
@@ -5575,7 +5618,7 @@ function BetSpreadCalculator() {
         <section id="sp-bets" className="card p-5 mb-4">
           <div className="flex items-center justify-between mb-3">
             <div className="eyebrow">Bet at each true count</div>
-            <button onClick={() => setShowFreq((s) => !s)} className="text-xs underline underline-offset-2" style={{ color: "var(--muted)" }}>
+            <button onClick={() => setShowFreq((s) => !s)} className="text-xs underline underline-offset-2 lnk" style={{ color: "var(--muted)" }}>
               {showFreq ? "Hide frequencies" : "Show frequencies"}
             </button>
           </div>
@@ -5763,6 +5806,6 @@ function BetSpreadCalculator() {
   );
 }
 // shared with src/casinos.jsx (the Casinos page lives in its own file)
-export { Sheet, Seg, ChipRow, ConfirmLink, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav, Info, money, shortMoney, fmtTC, pct };
+export { Sheet, Seg, ChipRow, ConfirmLink, More, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav, Info, money, shortMoney, fmtTC, pct };
 // used by the Plan tab (src/planner.jsx) and the arithmetic checks
 export { tailFix, shoeRounds, useDeferred, COUNTS, calFor, compute, autoRph, roundFreqs, spotsAt, momentAt, optimizeSpread, optimizeForProfit, correctPlay, rulesLabel, pDip, PhiN, DEFAULT_RULES, DEFAULT_BETS, SKILLS, sessEv, sessSd, loadLog, sessionDrawdown, sessionCash };

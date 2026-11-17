@@ -4,7 +4,7 @@
 //  - PlanPage (the Plan tab): the casino rotation and the bankroll growth plan.
 // Like casinos.jsx, nothing from app.jsx may be used while this file loads — only inside functions.
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Sheet, compute, sessionCash, tailFix, shoeRounds, useDeferred, Seg, Info, rulesShort, money, shortMoney, sgnMoney, fmtTC, pct, COUNTS, calFor, autoRph, roundFreqs, optimizeSpread, DEFAULT_RULES } from "./app.jsx";
+import { Sheet, More, compute, sessionCash, tailFix, shoeRounds, useDeferred, Seg, Info, rulesShort, money, shortMoney, sgnMoney, fmtTC, pct, COUNTS, calFor, autoRph, roundFreqs, optimizeSpread, DEFAULT_RULES } from "./app.jsx";
 import { loadCasinoAll, openCasinoId } from "./casinos.jsx";
 
 // what is saved on this device about the game and the spread
@@ -131,7 +131,7 @@ export function TableScoreCard({ casinos, onUseRules, appRules }) {
             <div className="eyebrow mt-3 mb-1" style={{ fontSize: 9.5 }}>{out.infeasible ? "Safest bets here" : "Best bets here"}</div>
             <div className="flex flex-wrap gap-1.5">{spreadLine(out.bets).map(([k, v]) => <span key={k} className="rounded-lg px-2 py-1 text-[11px]" style={{ background: "rgba(var(--fg),.05)", color: "var(--ivory-d)" }}><span className="mono" style={{ color: "var(--muted)" }}>{k}</span> <span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{v}</span></span>)}</div>
           </>}
-          {onUseRules && <button type="button" className="text-xs font-semibold mt-3" style={{ color: "var(--brass)" }} onClick={() => onUseRules({ ...appRules, ...R })}>Practice this game in the app ›</button>}
+          {onUseRules && <button type="button" className="text-xs font-semibold mt-3 lnk" style={{ color: "var(--brass)" }} onClick={() => onUseRules({ ...appRules, ...R })}>Practice this game in the app ›</button>}
         </div>
       )}
       <Info label="About the score">What this table is worth to you with the bankroll you have now: its dollars an hour, playing every hand with the best bets your bankroll allows, weighed by its risk of ruin against your {setup ? setup.rorPct : 5}% limit (set on the Plan page). A table that would put your bankroll at serious risk scores near 0 however well it pays, and the same table scores higher as your bankroll grows. 50 means it earns what your usual game ({setup ? `${rulesShort(setup.rules)}, $${setup.minBet}–$${setup.maxBet}` : "the app's saved rules"}) does when played safely inside your limit; 67 is twice that, 33 half. Sit at 50 and up, think twice from 40 to 49, walk below that.</Info>
@@ -474,7 +474,9 @@ export function growthModel(safe, bankroll, risk) {
 // pairs (every lucky draw has an unlucky twin), which steadies the typical-bankroll line. Kept at up to ~120
 // checkpoints: the 10th / 50th / 90th percentile of the bankroll and every path's highest point so far (for any
 // target); and for each table, the share of paths that ever sat at it and the hours by which half of them had.
-export function growthSim({ B, lv, hours, N = 4000, seed = 20261116 }) {
+// in steps (it hands back control every few paths) so useDeferred can run it a slice at a time without freezing the page;
+// growthSim below runs the same steps straight through, so the checks and the page see the same numbers
+export function* growthSteps({ B, lv, hours, N = 4000, seed = 20261116 }) {
   const steps = Math.max(60, Math.min(480, Math.ceil(hours))), stride = Math.max(1, Math.round(steps / 120)), dt = hours / steps, sq = Math.sqrt(dt), { u, z } = rng(seed);
   let s0 = 0; lv.forEach((l, i) => { if (l.need <= B * 1.0005) s0 = i; });
   const cps = []; for (let i = stride; i < steps; i += stride) cps.push(i); cps.push(steps);
@@ -499,6 +501,7 @@ export function growthSim({ B, lv, hours, N = 4000, seed = 20261116 }) {
       if (i === cps[c]) { col[c + 1][p] = b; top[c][p] = hi; c++; }
     }
     dds[p] = dd; if (dead) bust++; if (b < B) below++; end[l]++;
+    if ((p & 15) === 15) yield;
   }
   const q = (a, f) => a[Math.min(N - 1, Math.floor(f * N))];
   const pts = col.map((a, i) => { const x = Float32Array.from(a).sort(); return { h: i === 0 ? 0 : cps[i - 1] * dt, lo: q(x, 0.1), q1: q(x, 0.25), mid: q(x, 0.5), q3: q(x, 0.75), hi: q(x, 0.9) }; });
@@ -506,6 +509,7 @@ export function growthSim({ B, lv, hours, N = 4000, seed = 20261116 }) {
   const reach = first.map((a) => { const x = Float32Array.from(a).sort(); let n = 0; while (n < N && x[n] !== Infinity) n++; return { p: n / N, med: n >= N / 2 ? x[Math.floor(N / 2)] : null }; });
   return { pts, s0, N, top, reach, cpH: cps.map((i) => i * dt), ddMid: q(dds, 0.5), ddBad: q(dds, 0.9), bust: bust / N, below: below / N, end: end.map((n) => n / N) };
 }
+export function growthSim(o) { const it = growthSteps(o); let r; do r = it.next(); while (!r.done); return r.value; }
 // the chance of touching `goal` within the simulated span, and the hours by which half the paths have (null if fewer do)
 export function goalStats(sim, goal) {
   const frac = (a) => { let n = 0; for (let i = 0; i < a.length; i++) if (a[i] >= goal) n++; return n / sim.N; };
@@ -548,11 +552,11 @@ function useGrowth(mine, bankroll, prefs) {
   const model = useMemo(() => growthModel(mine, bankroll, risk), [mine, risk, bankroll]);
   const key = model ? JSON.stringify([bankroll, risk, model.lv.map((l) => [l.m, Math.round(l.ev * 100), Math.round(l.sd)])]) : null;
   // the simulated futures are the heavy part: they follow a moment behind, and typing a target never re-deals them
-  const sim = useDeferred(key && hours > 0 ? key + "|" + hours : null, () => growthSim({ B: bankroll, lv: model.lv, hours }), true);
+  const sim = useDeferred(key && hours > 0 ? key + "|" + hours : null, () => growthSteps({ B: bankroll, lv: model.lv, hours }), true);
   // a second, much longer deal answers "when do I reach each table, and how often": three times the expected wait for
   // the furthest table shown
   const last = model ? model.lv.filter((l) => l.state === "later").slice(0, 4).pop() : null, farH = last ? Math.min(120000, Math.max(2000, last.hrs * 3)) : 0;
-  const far = useDeferred(key && farH ? key + "|far" + Math.round(farH) : null, () => growthSim({ B: bankroll, lv: model.lv, hours: farH, N: 3000 }), true);
+  const far = useDeferred(key && farH ? key + "|far" + Math.round(farH) : null, () => growthSteps({ B: bankroll, lv: model.lv, hours: farH, N: 3000 }), true);
   const goal = +prefs.goal > bankroll ? +prefs.goal : bankroll * 2, fits = (x) => (x && model && x.end.length === model.lv.length ? x : null);
   const goalS = useMemo(() => (fits(sim) ? goalStats(sim, goal) : null), [sim, goal, model]); // eslint-disable-line
   return { risk, hpw, hours, whenOf, model, goal, goalS, sim: fits(sim), far: fits(far), loading: !!model && !fits(sim) };
@@ -566,7 +570,7 @@ function BankrollNow({ gr, mine, bankroll, prefs, go }) {
   const base = cur ? cur.need : 0, way = next ? Math.max(0, Math.min(1, (bankroll - base) / Math.max(1, next.need - base))) : 0;
   return (
     <section className="card p-5 mb-4">
-      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Your bankroll</div><button className="text-[11px] font-semibold" style={{ color: "var(--brass)" }} onClick={() => go("calc")}>Change spread ›</button></div>
+      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Your bankroll</div><button className="text-[11px] font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => go("calc")}>Change spread ›</button></div>
       {!model ? <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>{bankroll > 0 ? "Your spread doesn't win yet, so there's nothing to plan around. Find a winning spread on the Bet spread page first." : "Set your bankroll on the Bet spread page first."}</p> : <>
         <div className="pbig mt-2">{money(bankroll)}<span className="text-base font-semibold" style={{ color: "var(--ivory-d)" }}> · {cur ? `$${cur.m} tables` : "no table yet"}</span></div>
         <div className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{cur ? `The biggest table your spread covers at ${pct(risk, 0)} risk of ruin.` : `Your spread needs ${shortMoney(model.lv[0].need)} for $${model.lv[0].m} tables at ${pct(risk, 0)} risk.`}</div>
@@ -611,7 +615,7 @@ function Growth({ gr, bankroll, prefs, setPrefs }) {
           <div className="pstat"><div>Worst dip</div><div>{shortMoney(sim.ddMid)}</div><div>from a high point. 1 in 10 passes {shortMoney(sim.ddBad)}</div></div>
         </>}
       </div>
-      <button type="button" onClick={() => setMore(!more)} className="text-xs font-semibold mt-3" style={{ color: "var(--brass)" }} aria-expanded={more}>{more ? "Fewer stats ▴" : "More stats ▾"}</button>
+      <More open={more} onClick={() => setMore(!more)} className="mt-3">{more ? "Fewer stats" : "More stats"}</More>
       <div className="flex items-center justify-between gap-3 mt-4 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
         <label className="flex items-center gap-2 text-sm" style={{ color: "var(--ivory-d)" }}>Target
           <span className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24, width: 120, height: 38 }} type="number" inputMode="numeric" min="0" placeholder={String(Math.round(bankroll * 2))} value={prefs.goal} onChange={(e) => setPrefs({ goal: e.target.value })} aria-label="Target bankroll" /></span></label>
@@ -682,7 +686,7 @@ function CasinoPop({ c, rot, prefs, onClose, onCasinos }) {
           <div className="flex flex-wrap gap-1.5">{spreadLine(x.bets).map(([k, v]) => <span key={k} className="rounded-lg px-2 py-1 text-[11px]" style={{ background: "rgba(var(--fg),.05)", color: "var(--ivory-d)" }}><span className="mono" style={{ color: "var(--muted)" }}>{k}</span> <span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{v}</span></span>)}</div></>}
       </> : <p className="text-sm mb-1" style={{ color: "var(--ivory-d)" }}>{x === undefined && gamesAt(c).length ? "Working out the score…" : "No score yet: there's no game saved here and no scouting report. Save the game you see on the Casinos page and it gets one."}</p>}
       {se && se.n > 0 && <div className="mt-3"><Fact k="Your record here" v={sgnMoney(se.net)} tone={se.net < 0 ? "var(--neg-l)" : undefined} sub={`${se.n} session${se.n === 1 ? "" : "s"} · ${Math.round(se.h * 10) / 10} hours · ${sgnMoney(se.h > 0 ? se.net / se.h : 0)}/hr${se.backedN ? ` · backed off ${se.backedN === 1 ? "once" : se.backedN + " times"}` : ""}`} /></div>}
-      <div className="text-center mt-4"><button className="text-xs font-semibold" style={{ color: "var(--brass)" }} onClick={onCasinos}>Open on the Casinos page to edit games, heat and notes ›</button></div>
+      <div className="text-center mt-4"><button className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={onCasinos}>Open on the Casinos page to edit games, heat and notes ›</button></div>
     </Sheet>
   );
 }
@@ -692,7 +696,7 @@ function Settings({ bankroll, prefs, setPrefs, go }) {
   return (
     <section className="card px-5 py-4 mb-4">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        <div className="pset"><span className="eyebrow">Bankroll</span><span className="mono text-base font-semibold">{money(bankroll)}</span><button className="text-xs font-semibold" style={{ color: "var(--brass)" }} onClick={() => go("calc")}>Change</button></div>
+        <div className="pset"><span className="eyebrow">Bankroll</span><span className="mono text-base font-semibold">{money(bankroll)}</span><button className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => go("calc")}>Change</button></div>
         <div className="pset"><span className="eyebrow">Risk limit</span><Seg small value={prefs.risk} options={PLAN_RISKS} onChange={(v) => setPrefs({ risk: v })} style={{ width: 216 }} /></div>
         <div className="pset"><span className="eyebrow">Sessions a week</span><Step v={prefs.perWeek} set={(v) => setPrefs({ perWeek: v })} min={1} max={7} label="sessions a week" /></div>
         <div className="pset"><span className="eyebrow">Hours a session</span><Step v={prefs.sessHours} set={(v) => setPrefs({ sessHours: v })} min={1} max={12} f={(v) => `${v} h`} label="hours a session" /></div>

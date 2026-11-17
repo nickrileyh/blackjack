@@ -4,16 +4,22 @@
 // 12 v 5, 12 v 6 and 13 v 3 at negative counts are not tested: the app follows BJA's chart, which leaves those plays out.
 import { correctPlay, DEFAULT_RULES, DEFAULT_BETS, COUNTS, calFor, compute, PhiN, pDip, sessionCash, handValue, settle, drawdownFromMix, autoRph, roundFreqs } from "./app-x.jsx";
 let bad = 0, n = 0; const ok = (name, cond, info = "") => { n++; if (!cond) { bad++; console.log("FAIL", name, info); } };
-const near = (name, a, b, tol) => ok(name, Math.abs(a - b) <= tol, `got ${a} want ${b} ±${tol}`);
+const near = (name, a, b, tol) => { if (process.env.MARGINS && /pDip|vs simulation/.test(name)) console.log("  margin", (Math.abs(a - b) / tol).toFixed(2), name); ok(name, Math.abs(a - b) <= tol, `got ${a} want ${b} ±${tol}`); };
 // ---- normal curve
 const erf = (x) => { const t = 1 / (1 + 0.3275911 * Math.abs(x)); const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); return x >= 0 ? y : -y; };
 let worst = 0; for (let z = -4; z <= 4; z += 0.05) worst = Math.max(worst, Math.abs(PhiN(z) - 0.5 * (1 + erf(z / Math.SQRT2))));
 ok("PhiN matches the normal curve", worst < 2e-6, "worst " + worst); near("PhiN(0)", PhiN(0), 0.5, 1e-6); near("PhiN(1.96)", PhiN(1.96), 0.975, 2e-4);
 // ---- chance of dipping x below the start within T, against a brute-force walk
-const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+// The walks use their own seeded random numbers, so a run always gives the same answer: these checks used to fail now
+// and then on sampling noise alone. A walk is also only looked at once a step, which misses dips between looks, so each
+// step adds the exact chance that the path touched the line in between (a Brownian bridge) — no bias left to hide in
+// the tolerance.
+let _seed = +process.env.SEED || 20261116; const rand = () => { _seed = (_seed + 0x6D2B79F5) | 0; let t = Math.imul(_seed ^ (_seed >>> 15), 1 | _seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const gauss = () => { let u = 0, v = 0; while (!u) u = rand(); v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+const touched = (a, b, vr) => rand() < Math.exp((-2 * a * b) / vr); // a and b: height above the line at each end of a step with variance vr
 for (const [mu, sd, T, x] of [[20, 600, 6, 1500], [35, 450, 4, 800], [0, 500, 8, 2000], [60, 900, 10, 1000]]) {
-  const steps = 1500, dt = T / steps, paths = 20000; let hit = 0;
-  for (let p = 0; p < paths; p++) { let w = 0; for (let i = 0; i < steps; i++) { w += mu * dt + sd * Math.sqrt(dt) * gauss(); if (w <= -x) { hit++; break; } } }
+  const steps = 400, dt = T / steps, paths = 20000; let hit = 0;
+  for (let p = 0; p < paths; p++) { let w = 0; for (let i = 0; i < steps; i++) { const a = w; w += mu * dt + sd * Math.sqrt(dt) * gauss(); if (w <= -x || touched(a + x, w + x, sd * sd * dt)) { hit++; break; } } }
   near(`pDip mu=${mu} sd=${sd} T=${T} x=${x}`, pDip(x, mu, sd, T), hit / paths, 0.02);
 }
 // ---- hand values and payouts
@@ -43,7 +49,7 @@ for (const R of [DEFAULT_RULES, { ...DEFAULT_RULES, decks: 8 }, { ...DEFAULT_RUL
   if (R.decks >= 6) ok(tag + " flat betting loses in a shoe", flat.evHand < 0, flat.evHand.toFixed(3)); else ok(tag + " flat betting is near break-even at best", flat.evHand < 0.25, flat.evHand.toFixed(3));
   if (r.evHand > 0) {  // risk of ruin against a brute-force walk with the same drift and swing, half the bankroll to make ruin common
     const B = 0.35 * r.varHand / r.evHand, paths = 3000, cap = 40 * r.n0, chunk = Math.max(1, Math.round(r.n0 / 4000)); let ruin = 0;
-    for (let p = 0; p < paths; p++) { let w = B; for (let t = 0; t < cap; t += chunk) { w += r.evHand * chunk + Math.sqrt(r.varHand * chunk) * gauss(); if (w <= 0) { ruin++; break; } if (w > 12 * B) break; } }
+    for (let p = 0; p < paths; p++) { let w = B; for (let t = 0; t < cap; t += chunk) { const a = w; w += r.evHand * chunk + Math.sqrt(r.varHand * chunk) * gauss(); if (w <= 0 || touched(a, w, r.varHand * chunk)) { ruin++; break; } if (w > 12 * B) break; } }
     near(tag + " risk of ruin vs simulation", Math.exp(-2 * r.evHand * B / r.varHand), ruin / paths, 0.035);
   }
 }
