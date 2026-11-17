@@ -4,7 +4,7 @@
 //  - PlanPage (the Plan tab): the casino rotation and the bankroll growth plan.
 // Like casinos.jsx, nothing from app.jsx may be used while this file loads — only inside functions.
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Sheet, More, compute, sessionCash, tailFix, shoeRounds, useDeferred, Seg, Info, rulesShort, money, shortMoney, sgnMoney, fmtTC, pct, COUNTS, calFor, autoRph, roundFreqs, optimizeSpread, DEFAULT_RULES, sessEv, sessSd, Toggle } from "./app.jsx";
+import { Sheet, More, compute, sessionCash, tailFix, shoeRounds, useDeferred, Seg, Info, rulesShort, money, shortMoney, sgnMoney, fmtTC, pct, COUNTS, calFor, autoRph, roundFreqs, optimizeSpread, DEFAULT_RULES, sessEv, sessSd, Toggle, Glide } from "./app.jsx";
 import { loadCasinoAll, openCasinoId } from "./casinos.jsx";
 import { useNarrow } from "./phone.jsx";
 
@@ -303,7 +303,21 @@ button.prow:hover{background:rgba(var(--fg),.045)}
 .pstat>div:nth-child(3){font-size:11px;line-height:1.35;color:var(--muted);margin-top:1px}
 .pnote{font-size:11.5px;line-height:1.45;border-radius:12px;padding:8px 12px;background:rgba(var(--neg),.09);color:var(--neg-l)}
 .pstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.plegend{display:flex;flex-wrap:wrap;gap:4px 16px}
+.plegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--muted)}
+.plegend>span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.plegend i{width:9px;height:9px;border-radius:3px;flex:none}
+.plegend i.ln{width:14px;height:2.5px;border-radius:2px}
+.plegend i.dash{background:repeating-linear-gradient(90deg,rgba(var(--fg),.5) 0 4px,transparent 4px 7px)}
+.pghead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}
+.pgbig{font-size:38px;line-height:1;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pgsub{font-size:11.5px;color:var(--muted);margin-top:5px}
+.pgrange{text-align:right;font-size:15px;font-weight:600;color:var(--ivory);padding-bottom:1px}
+.pgset{border-top:1px solid var(--line)}
+.pgset>*{padding:11px 0}
+.pgset>*+*{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
+.pgrow{display:flex;align-items:center;justify-content:space-between;gap:10px 14px}
+.pgseg{width:190px;flex:none}
+.pgchart text{font-variant-numeric:tabular-nums}
 .pmrow{padding:11px 0;border-bottom:1px solid var(--line)}
 /* phone: a casino is two lines (its name and how rested it is, then its three numbers with their names), a stat is a
    row (what it is on the left, the number on the right), and the move-up table is a short list */
@@ -315,6 +329,9 @@ button.prow:hover{background:rgba(var(--fg),.045)}
 .pcas .pnum{text-align:left;font-size:12px}
 .pcas .pnum::before{content:attr(data-l) " ";font-weight:500;font-size:10.5px;color:var(--muted)}
 .pstats{grid-template-columns:1fr;gap:0}
+.pgrow.game{flex-wrap:wrap}
+.pgrow.game>.pgseg{width:100%}
+.pgbig{font-size:36px}
 .pstats>.pstat{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k v" "s v";align-items:center;column-gap:14px;padding:10px 0}
 .pstats>.pstat+.pstat{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
 .pstats>.pstat>div:first-child{grid-area:k;font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ivory)}
@@ -608,34 +625,43 @@ export function goalStats(sim, goal) {
 }
 function GrowthChart({ sim, B, lv, flat, hours, whenOf, hist, ladder }) {
   // hist: what the bankroll has been ({ h, v }, h in hours of play before today at your pace, so negative), drawn to the
-  // left of today. ladder: draw the table lines and the "staying at this table" line (only when moving up is included).
-  const narrow = useNarrow(), W = narrow ? 350 : 520, H = narrow ? 200 : 220, P = { l: narrow ? 38 : 44, r: 16, t: 10, b: 22 }, pts = sim.pts, past = hist && hist.length > 1 ? hist : null, h0 = past ? past[0].h : 0;
-  const hiV = Math.max(...pts.map((p) => p.hi), B, ...(past ? past.map((p) => p.v) : [])) * 1.04, loV = Math.min(...pts.map((p) => p.lo), B, ...(past ? past.map((p) => p.v) : [])) * 0.96;
+  // left of today. ladder: draw the table lines and the "never moving up" line (only when moving up is included).
+  const narrow = useNarrow(), W = narrow ? 350 : 520, H = narrow ? 214 : 232, P = { l: 34, r: 8, t: 12, b: 24 }, past = hist && hist.length > 1 ? hist : null, h0 = past ? past[0].h : 0;
+  // 4,000 paths leave the percentile lines a little ragged: a light running average steadies them for drawing only
+  // (the figures printed around the chart are the exact ones). The first point stays today's bankroll.
+  const pts = useMemo(() => { const raw = sim.pts, n = raw.length, w = Math.max(1, Math.round(n / 40)); return raw.map((p, i) => { if (!i) return p; const a = Math.max(1, i - w), b = Math.min(n - 1, i + w), o = { h: p.h }; ["lo", "q1", "mid", "q3", "hi"].forEach((k) => { let t = 0; for (let j = a; j <= b; j++) t += raw[j][k]; o[k] = t / (b - a + 1); }); return o; }); }, [sim]);
+  const end = sim.pts[sim.pts.length - 1];
+  const hiV = Math.max(...pts.map((p) => p.hi), B, ...(past ? past.map((p) => p.v) : [])) * 1.05, loV = Math.min(...pts.map((p) => p.lo), B, ...(past ? past.map((p) => p.v) : [])) * 0.94;
   const x = (h) => P.l + ((h - h0) / (hours - h0)) * (W - P.l - P.r), y = (v) => H - P.b - ((v - loV) / Math.max(1, hiV - loV)) * (H - P.t - P.b);
-  // table lines that fit the chart, never two labels on top of each other (room for the labels only when there are any)
-  const marks = []; if (ladder) lv.forEach((l, i) => { if (i > sim.s0 && l.need > loV && l.need < hiV && marks.every((m) => Math.abs(y(m.need) - y(l.need)) > 13)) marks.push(l); }); if (marks.length) P.r = 62;
-  const line = (k) => pts.map((p, i) => `${i ? "L" : "M"}${x(p.h).toFixed(1)},${y(p[k]).toFixed(1)}`).join("");
-  const area = (a, b) => line(a) + pts.slice().reverse().map((p) => `L${x(p.h).toFixed(1)},${y(p[b]).toFixed(1)}`).join("") + "Z", band = area("hi", "lo"), half = area("q3", "q1");
-  const last = pts[pts.length - 1], ticks = past ? [h0, 0, hours] : [0, 0.5, 1].map((f) => f * hours);
-  const pastLine = past ? past.map((p, i) => `${i ? "L" : "M"}${x(p.h).toFixed(1)},${y(p.v).toFixed(1)}`).join("") : "";
-  // round money on the left: three or four labels on a 1 / 2 / 2.5 / 5 step
+  const fs = narrow ? 10.5 : 10, lab = (v) => (v >= 1000 ? `$${+(v / 1000).toFixed(1)}k` : `$${Math.round(v)}`);
+  // round money in a gutter on the left, as wide as its longest label: three or four labels on a 1 / 2 / 2.5 / 5 step
   const raw = (hiV - loV) / 3.5, pw = Math.pow(10, Math.floor(Math.log10(Math.max(1, raw)))), fr = raw / pw, stepV = (fr <= 1 ? 1 : fr <= 2 ? 2 : fr <= 2.5 ? 2.5 : fr <= 5 ? 5 : 10) * pw;
-  const yt = []; for (let v = Math.ceil(loV / stepV) * stepV; v <= hiV; v += stepV) if (y(v) > P.t + 4 && y(v) < H - P.b - 4) yt.push(v);
+  const yt = []; for (let v = Math.ceil(loV / stepV) * stepV; v <= hiV; v += stepV) if (y(v) > P.t + 4 && y(v) < H - P.b - 8) yt.push(v);
+  P.l = Math.max(26, ...yt.map((v) => lab(v).length * fs * 0.62 + 10));
+  // table lines that fit the chart, never two labels on top of each other (room for the labels only when there are any)
+  const marks = []; if (ladder) lv.forEach((l, i) => { if (i > sim.s0 && l.need > loV && l.need < hiV && marks.every((m) => Math.abs(y(m.need) - y(l.need)) > 13)) marks.push(l); }); if (marks.length) P.r = Math.max(...marks.map((l) => `$${l.m} tables`.length)) * fs * 0.6 + 12;
+  const xy = (h, v) => `${x(h).toFixed(1)},${y(v).toFixed(1)}`, line = (k) => pts.map((p, i) => `${i ? "L" : "M"}${xy(p.h, p[k])}`).join("");
+  const area = (a, b) => line(a) + pts.slice().reverse().map((p) => `L${xy(p.h, p[b])}`).join("") + "Z", band = area("hi", "lo"), half = area("q3", "q1");
+  const ticks = past ? [h0, 0, hours] : [0, 0.5, 1].map((f) => f * hours);
+  const pastLine = past ? past.map((p, i) => `${i ? "L" : "M"}${xy(p.h, p.v)}`).join("") : "", pastArea = past ? `${pastLine}L${x(0).toFixed(1)},${H - P.b}L${x(h0).toFixed(1)},${H - P.b}Z` : "";
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" role="img" aria-label={`${past ? `Your bankroll so far, from ${shortMoney(past[0].v)} to ${shortMoney(B)} today, then ` : ""}the next ${Math.round(hours)} hours of play: typically ${shortMoney(last.mid)}, 8 times in 10 between ${shortMoney(last.lo)} and ${shortMoney(last.hi)}`}>
-      <g key={`${hours}|${B}|${lv.length}|${Math.round(last.mid)}|${past ? past.length : 0}`}>
-        {past && <line className="fadein" x1={x(0)} x2={x(0)} y1={P.t} y2={H - P.b} stroke="rgba(var(--fg),.16)" strokeDasharray="2 3" />}
-        {past && <path className="drawline" pathLength="1" d={pastLine} fill="none" stroke="rgba(var(--fg),.72)" strokeWidth="1.8" strokeLinejoin="round" />}
-        <path className="fadein" d={band} fill="rgba(var(--acc),.1)" />
-        <path className="fadein" d={half} fill="rgba(var(--acc),.14)" />
-        {marks.map((l) => <g key={l.m} className="fadein"><line x1={P.l} x2={W - P.r} y1={y(l.need)} y2={y(l.need)} stroke="rgba(var(--fg),.2)" strokeDasharray="2 4" /><text x={W - P.r + 6} y={y(l.need) + 3} fill="var(--muted)" style={{ font: "600 9.5px Inter" }}>${l.m} tables</text></g>)}
-        {ladder && <line className="fadein" x1={x(0)} y1={y(B)} x2={x(hours)} y2={y(B + flat * hours)} stroke="rgba(var(--fg),.4)" strokeDasharray="4 4" />}
-        <path className={"drawline" + (past ? " late" : "")} pathLength="1" d={line("mid")} fill="none" stroke="var(--brass)" strokeWidth="2" strokeLinejoin="round" />
-        <circle className="popin late" cx={x(hours)} cy={y(last.mid)} r="3.5" fill="var(--brass)" />
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full block pgchart" role="img" aria-label={`${past ? `Your bankroll so far, from ${shortMoney(past[0].v)} to ${shortMoney(B)} today, then ` : ""}the next ${Math.round(hours)} hours of play: typically ${shortMoney(end.mid)}, 8 times in 10 between ${shortMoney(end.lo)} and ${shortMoney(end.hi)}`}>
+      {yt.map((v) => <g key={v}><line x1={P.l} x2={W - P.r} y1={y(v)} y2={y(v)} stroke="rgba(var(--fg),.055)" /><text x={P.l - 7} y={y(v) + 3.5} textAnchor="end" fill="var(--muted)" style={{ font: `500 ${fs}px Inter` }}>{lab(v)}</text></g>)}
+      <g key={`${hours}|${B}|${lv.length}|${Math.round(end.mid)}|${past ? past.length : 0}`}>
+        {past && <path className="fadein" d={pastArea} fill="rgba(var(--fg),.04)" />}
+        <path className="fadein" d={band} fill="rgba(var(--acc),.13)" />
+        <path className="fadein" d={half} fill="rgba(var(--acc),.2)" />
+        {marks.map((l) => <g key={l.m} className="fadein"><line x1={x(0)} x2={W - P.r} y1={y(l.need)} y2={y(l.need)} stroke="rgba(var(--fg),.22)" strokeDasharray="2 4" /><text x={W - P.r + 6} y={y(l.need) + 3.5} fill="var(--muted)" style={{ font: `600 ${fs}px Inter` }}>${l.m} tables</text></g>)}
+        {ladder && <line className="fadein" x1={x(0)} y1={y(B)} x2={x(hours)} y2={y(B + flat * hours)} stroke="rgba(var(--fg),.42)" strokeDasharray="4 4" />}
+        {past && <path className="drawline" pathLength="1" d={pastLine} fill="none" stroke="rgba(var(--fg),.6)" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />}
+        <path className="fadein late" d={line("mid")} fill="none" stroke="rgba(var(--acc),.2)" strokeWidth="7" strokeLinejoin="round" strokeLinecap="round" />
+        <path className={"drawline" + (past ? " late" : "")} pathLength="1" d={line("mid")} fill="none" stroke="var(--brass)" strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
+        <circle className="popin late" cx={x(hours)} cy={y(pts[pts.length - 1].mid)} r="4" fill="var(--brass)" />
+        {past && <line className="fadein" x1={x(0)} x2={x(0)} y1={P.t} y2={H - P.b} stroke="rgba(var(--fg),.2)" strokeDasharray="2 3" />}
+        <circle className="popin" cx={x(0)} cy={y(B)} r="3.6" fill="var(--ivory)" stroke="rgba(var(--sh),.5)" strokeWidth="1" />
       </g>
-      {yt.map((v) => <text key={v} x={P.l - 6} y={y(v) + 3} textAnchor="end" fill="var(--muted)" style={{ font: "500 9.5px Inter" }}>{shortMoney(v)}</text>)}
-      <line x1={P.l} x2={W - P.r} y1={H - P.b} y2={H - P.b} stroke="rgba(var(--fg),.15)" />
-      {ticks.map((h, i) => (past && i === 0 && x(0) - P.l < 78) ? null : <text key={i} x={x(h)} y={H - 6} textAnchor={i === 0 ? "start" : i === 2 ? "end" : "middle"} fill="var(--muted)" style={{ font: "500 9.5px Inter" }}>{h === 0 ? "today" : h < 0 ? whenOf(h) : narrow ? whenOf(h) : `${whenOf(h)} · ${Math.round(h)} h`}</text>)}
+      <line x1={P.l} x2={W - P.r} y1={H - P.b} y2={H - P.b} stroke="rgba(var(--fg),.14)" />
+      {ticks.map((h, i) => (past && i === 0 && x(0) - P.l < 78 ? null : <text key={i} x={i === 0 ? P.l : i === 2 ? W - P.r : x(h)} y={H - 7} textAnchor={i === 0 ? "start" : i === 2 ? "end" : "middle"} fill={h === 0 ? "var(--ivory-d)" : "var(--muted)"} style={{ font: `${h === 0 ? 600 : 500} ${fs}px Inter` }}>{h === 0 ? "Today" : h < 0 ? whenOf(h) : whenOf(h)}</text>))}
     </svg>
   );
 }
@@ -731,37 +757,41 @@ function Growth({ gr, bankroll, prefs, setPrefs }) {
   const shown = ladder ? (() => { const at = Math.max(0, ladder.lv.findIndex((l) => l.state === "now")); return ladder.lv.filter((l, i) => i >= at - 1 && i <= at + 4); })() : [];
   return (<>
     <section className="card p-5 mb-4">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-1">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="eyebrow">Where it's heading</div>
         <Seg small value={prefs.weeks} options={HORIZONS} onChange={(v) => setPrefs({ weeks: v })} style={{ width: 240, maxWidth: "100%" }} />
       </div>
-      {logged && bankroll > 0 && <Seg small value={fromLog ? "logged" : "spread"} options={[["logged", "Logged average"], ["spread", "Your spread now"]]} onChange={(v) => setPrefs({ game: v })} style={{ width: 300, maxWidth: "100%", margin: "8px 0 10px" }} />}
-      {!model ? <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>{!(bankroll > 0) ? "Set your bankroll on the Bet spread page first." : logged ? "The spread set on Bet spread doesn't win yet, so there is nothing to project. Find a winning spread there, or switch back to your logged average." : "Nothing to project yet: your logged sessions and your spread have no edge. Find a winning spread on the Bet spread page first."}</p> : <>
-      <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>{fromLog ? <>Your average game over {logged.n} logged session{logged.n === 1 ? "" : "s"}: <span className="mono" style={{ color: "var(--ivory-d)" }}>{money(logged.ev)}/hr</span>, give or take <span className="mono">{money(logged.sd)}</span> an hour.</> : logged ? <>The spread set on Bet spread: <span className="mono" style={{ color: "var(--ivory-d)" }}>{money(game.ev)}/hr</span>, give or take <span className="mono">{money(game.sd)}</span> an hour.</> : noEdge ? "The sessions you logged average out to no edge, so this uses the spread set on Bet spread instead." : "No sessions logged yet, so this uses the spread set on Bet spread. Log sessions and it follows your average game."}</p>
-      {gameRor > risk * 1.001 && <p className="pnote mb-3">This game is too big for {money(bankroll)}. Played at this size it goes broke {pct(gameRor, 0)} of the time sooner or later; it needs {shortMoney(gameNeed)} to fit your {pct(risk, 0)} limit.{fromLog ? " \u201cYour spread now\u201d shows the spread set on Bet spread instead." : " A smaller spread on Bet spread brings it down."}</p>}
-      {!sim ? <p className="text-sm py-6" style={{ color: "var(--muted)" }}>{loading ? "Working it out…" : ""}</p> : <>
-      <GrowthChart sim={sim} B={bankroll} lv={lv} flat={start.ev} hours={hours} whenOf={whenOf} hist={hist} ladder={up} />
-      <div className="plegend text-[11px] mt-1 mb-3" style={{ color: "var(--muted)" }}>{hist && <span><span style={{ color: "rgba(var(--fg),.72)" }}>━</span> your results</span>}<span><span style={{ color: "var(--brass)" }}>━</span> typical</span><span><span style={{ color: "rgba(var(--acc),.6)" }}>█</span> half the time</span><span><span style={{ color: "rgba(var(--acc),.28)" }}>█</span> 8 times in 10</span>{up && <span>┅ never moving up</span>}</div>
-      </>}
-      <div className="mb-4 pb-3" style={{ borderBottom: "1px solid var(--line)" }}><Toggle label="Include moving up" sub={'Your game grows with the table each time your bankroll reaches "Move up" in the list below, and comes back down at "Drop at"'} on={!!prefs.moveUp} onChange={(v) => setPrefs({ moveUp: v })} /></div>
-      {sim && <>
-      <div className="pstats">
-        <div className="pstat"><div>Typical bankroll</div><div style={{ color: "var(--brass)" }}>{shortMoney(last.mid)}</div><div>after {span}. 8 in 10: {shortMoney(last.lo)} to {shortMoney(last.hi)}</div></div>
-        <div className="pstat"><div>Chance of a loss</div><div style={{ color: sim.below > 0.3 ? "var(--neg-l)" : "var(--ivory)" }}>{Math.round(sim.below * 100)}%</div><div>{oneIn(sim.below).toLowerCase()} you end below today's {shortMoney(bankroll)}</div></div>
+      {!model ? <p className="text-sm mt-3" style={{ color: "var(--ivory-d)" }}>{!(bankroll > 0) ? "Set your bankroll on the Bet spread page first." : logged ? "The spread set on Bet spread doesn't win yet, so there is nothing to project. Find a winning spread there, or switch back to your logged average." : "Nothing to project yet: your logged sessions and your spread have no edge. Find a winning spread on the Bet spread page first."}</p> : !sim ? <p className="text-sm py-10 text-center" style={{ color: "var(--muted)" }}>{loading ? "Working it out…" : ""}</p> : <>
+      <div className="pghead">
+        <div><div className="pgbig" style={{ color: last.mid < bankroll * 0.5 ? "var(--neg-l)" : "var(--brass)" }}><Glide v={last.mid} f={shortMoney} /></div><div className="pgsub">typical in {span}</div></div>
+        <div className="pgrange"><div><span className="mono">{shortMoney(last.lo)}</span> to <span className="mono">{shortMoney(last.hi)}</span></div><div className="pgsub">8 times in 10</div></div>
+      </div>
+      {gameRor > risk * 1.001 && <p className="pnote mt-3">Too big for {money(bankroll)}: at this size this game goes broke {pct(gameRor, 0)} of the time sooner or later. It needs {shortMoney(gameNeed)} for your {pct(risk, 0)} limit.</p>}
+      <div className="mt-3"><GrowthChart sim={sim} B={bankroll} lv={lv} flat={start.ev} hours={hours} whenOf={whenOf} hist={hist} ladder={up} /></div>
+      <div className="plegend mt-2">{hist && <span><i className="ln" style={{ background: "rgba(var(--fg),.6)" }} />your results</span>}<span><i className="ln" style={{ background: "var(--brass)" }} />typical</span><span><i style={{ background: "rgba(var(--acc),.62)" }} />half the time</span><span><i style={{ background: "rgba(var(--acc),.3)" }} />8 in 10</span>{up && <span><i className="ln dash" />never moving up</span>}</div>
+      <div className="pstats mt-4 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
+        <div className="pstat"><div>Chance of a loss</div><div style={{ color: sim.below > 0.3 ? "var(--neg-l)" : "var(--ivory)" }}>{Math.round(sim.below * 100)}%</div><div>ending below today's {shortMoney(bankroll)}</div></div>
         <div className="pstat"><div>Going broke</div><div style={{ color: sim.bust > 0.05 ? "var(--neg-l)" : "var(--ivory)" }}>{sim.bust < 0.005 ? "<1%" : `${Math.round(sim.bust * 100)}%`}</div><div>losing it all within {span}</div></div>
-        {more && <>
-          {up && <div className="pstat"><div>Moving up adds</div><div>{gain > 50 ? sgnMoney(gain) : "Not yet"}</div><div>{gain > 50 ? "to the typical result, against never moving up" : `in ${span} you rarely get far past the next table`}</div></div>}
-          {up && <div className="pstat"><div>Table by then</div><div>${lv[endTop].m}</div><div>the most likely, {Math.round(sim.end[endTop] * 100)}% of the time</div></div>}
-          <div className="pstat"><div>Worst dip</div><div>{shortMoney(sim.ddMid)}</div><div>from a high point. 1 in 10 passes {shortMoney(sim.ddBad)}</div></div>
+        <div className="pstat"><div>Worst dip</div><div>{shortMoney(sim.ddMid)}</div><div>typical, from a high. 1 in 10 passes {shortMoney(sim.ddBad)}</div></div>
+        {up && more && <>
+          <div className="pstat"><div>Moving up adds</div><div>{gain > 50 ? sgnMoney(gain) : "Not yet"}</div><div>{gain > 50 ? "to the typical result, against never moving up" : `in ${span} you rarely get far past the next table`}</div></div>
+          <div className="pstat"><div>Table by then</div><div>${lv[endTop].m}</div><div>the most likely, {Math.round(sim.end[endTop] * 100)}% of the time</div></div>
         </>}
       </div>
-      <More open={more} onClick={() => setMore(!more)} className="mt-3">{more ? "Fewer stats" : "More stats"}</More>
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mt-4 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
-        <label className="flex items-center gap-2 text-sm" style={{ color: "var(--ivory-d)" }}>Target
-          <span className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24, width: 120, height: 38 }} type="number" inputMode="numeric" min="0" placeholder={String(Math.round(bankroll * 2))} value={prefs.goal} onChange={(e) => setPrefs({ goal: e.target.value })} aria-label="Target bankroll" /></span></label>
-        {goalS && <span className="text-xs text-right" style={{ color: "var(--ivory-d)" }}><span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{Math.round(goalS.p * 100)}%</span> chance of reaching {shortMoney(goal)} within {span}{goalS.med != null ? <>, typically by <span className="mono">{whenOf(goalS.med)}</span></> : ""}</span>}
-      </div>
+      {up && <More open={more} onClick={() => setMore(!more)} className="mt-3">{more ? "Fewer stats" : "More stats"}</More>}
       </>}
+      {bankroll > 0 && (model || logged) && <div className="pgset mt-4">
+        {logged && <div className="pgrow game"><div className="min-w-0"><div className="text-sm" style={{ color: "var(--ivory)" }}>Game</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{fromLog ? <>{logged.n} logged session{logged.n === 1 ? "" : "s"}: <span className="mono">{money(logged.ev)}</span>/hr, swings of <span className="mono">{money(logged.sd)}</span></> : game.ev > 0 ? <>Bet spread today: <span className="mono">{money(game.ev)}</span>/hr, swings of <span className="mono">{money(game.sd)}</span></> : "Bet spread today: no edge yet"}</div></div>
+          <div className="pgseg"><Seg small value={fromLog ? "logged" : "spread"} options={[["logged", "Logged"], ["spread", "Spread now"]]} onChange={(v) => setPrefs({ game: v })} /></div></div>}
+        {!logged && <div className="text-[11px] pb-2" style={{ color: "var(--muted)" }}>{noEdge ? "The sessions you logged average out to no edge, so this uses the spread set on Bet spread." : "This uses the spread set on Bet spread. Log sessions and it can follow the game you actually play."}</div>}
+        {model && <Toggle label="Include moving up" sub="Follow the move-up list below as the bankroll grows" on={!!prefs.moveUp} onChange={(v) => setPrefs({ moveUp: v })} />}
+        {model && sim && <div className="pgrow">
+          <label className="flex items-center gap-3 text-sm" style={{ color: "var(--ivory)" }}>Target
+            <span className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24, width: 116, height: 36 }} type="number" inputMode="numeric" min="0" placeholder={String(Math.round(bankroll * 2))} value={prefs.goal} onChange={(e) => setPrefs({ goal: e.target.value })} aria-label="Target bankroll" /></span></label>
+          {goalS && <span className="text-[11.5px] text-right" style={{ color: "var(--muted)" }}><span className="mono font-semibold text-sm" style={{ color: "var(--ivory)" }}>{Math.round(goalS.p * 100)}%</span> reach {shortMoney(goal)}{goalS.med != null ? <>, typically by {whenOf(goalS.med)}</> : ""}</span>}
+        </div>}
+      </div>}
+      {model && <>
       <Info label="Where these numbers come from">"Logged average" is the game you have actually been playing: each logged session's own expected dollars an hour and swing, saved with it when you logged it, weighted by its hours. Nothing on this page or on Bet spread changes it, only logging more sessions does. "Your spread now" is the spread set on Bet spread today, so it follows every change you make there. With no sessions logged, or if they average out to no edge, the spread is used. Either way the game is played at the same size from today's bankroll, never resized, so a game too big for the bankroll shows a real chance of going broke. It is played at your pace of {prefs.perWeek} × {prefs.sessHours} hours a week. The pale line on the left is what your bankroll has actually been, counted back from today's through your logged results (it can't know about money you added or took out). From today the chart deals 4,000 possible futures: the line is the middle one, the darker band holds the middle half, the lighter one 8 in 10. "Include moving up" takes that same game through the tables in the list below: it stays as it is today until the bankroll reaches that list's "Move up" for a table bigger than yours, then grows in step with the table (a $50 table is twice a $25 one), and comes back down at its "Drop at", never below today's game. The dashed line is then the typical result if you never moved up. Percentages carry about a point of sampling noise.</Info>
       </>}
     </section>

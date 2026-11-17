@@ -6076,6 +6076,6 @@ function BetSpreadCalculator() {
 // shared with src/casinos.jsx (the Casinos page lives in its own file)
 export { Sheet, Seg, ChipRow, ConfirmLink, More, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav, Info, money, shortMoney, fmtTC, pct };
 // used by the phone layout's own pieces (src/phone.jsx)
-export { FocusCard, TESTS_KEY, testsOf, TEST_DEFS, Toggle };
+export { FocusCard, TESTS_KEY, testsOf, TEST_DEFS, Toggle, Glide };
 // used by the Plan tab (src/planner.jsx) and the arithmetic checks
 export { tailFix, shoeRounds, useDeferred, COUNTS, calFor, compute, autoRph, roundFreqs, spotsAt, momentAt, optimizeSpread, optimizeForProfit, correctPlay, rulesLabel, pDip, PhiN, DEFAULT_RULES, DEFAULT_BETS, SKILLS, sessEv, sessSd, loadLog, sessionDrawdown, sessionCash };
