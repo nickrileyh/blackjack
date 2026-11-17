@@ -504,6 +504,13 @@ input.in[type=date]::-webkit-date-and-time-value{text-align:left}
 .chipseg.slide .thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));border-radius:9px;background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));box-shadow:0 1px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.6) inset;transform:translateX(calc(var(--i) * (100% + 4px)));transition:transform .3s cubic-bezier(.3,.85,.3,1)}
 .chipseg.slide button{position:relative;z-index:1;transition:color .2s var(--ease)}
 .chipseg.slide button.on{background:none;box-shadow:none}
+:root:not([data-theme="light"]) .chipseg button.on,:root:not([data-theme="light"]) .chipseg.slide .thumb{background:linear-gradient(180deg,rgba(var(--acc),.24),rgba(var(--acc),.13));box-shadow:0 0 0 1px rgba(var(--acc),.36) inset,0 8px 16px -10px rgba(var(--acc),.55)}
+:root:not([data-theme="light"]) .chipseg button.on{color:var(--ivory)}
+:root:not([data-theme="light"]) .chipseg.slide button.on{background:none;box-shadow:none}
+.in{transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease)}
+@media(hover:hover){.in:hover:not(:focus):not(:disabled){border-color:rgba(var(--fg),.24)}.chipseg button:not(.on):hover{color:var(--ivory-d)}.btn.ghost:hover{background:rgba(var(--fg),.12)}}
+@media(hover:hover) and (min-width:1024px){.card{transition:border-color .25s var(--ease)}.card:hover{border-color:rgba(var(--acc),.2)}.card .card:hover{border-color:rgba(var(--acc),.1)}.btn:not(.ghost):hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 26px -10px rgba(var(--acc),.6),0 1px 0 rgba(255,255,255,.4) inset}}
+@media(min-width:1024px){.shell>header h1{letter-spacing:-.028em}::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:rgba(var(--fg),.14);border-radius:999px;border:2px solid transparent;background-clip:content-box}::-webkit-scrollbar-thumb:hover{background:rgba(var(--fg),.26);background-clip:content-box;border:2px solid transparent}::-webkit-scrollbar-track{background:transparent}}
 .bar{transition:height .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1)}
 input[type=range]{accent-color:var(--brass)}
 .pc{width:86px;height:122px;border-radius:10px;background:linear-gradient(160deg,#FFFEFA 0%,#F7F2E7 78%,#EFE8D8 100%);color:#1C1C1E;position:relative;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.9) inset,0 2px 3px -1px rgba(0,0,0,.4),0 14px 26px -10px rgba(0,0,0,.8);font-family:Fraunces,Georgia,serif;user-select:none;flex-shrink:0}
