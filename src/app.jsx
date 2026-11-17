@@ -738,16 +738,16 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
    the other edge catches up (Glider sets data-dir), so it stretches a little and settles. Pressed glass eases back.
    A sheet glides up and slows to a stop. On a computer a soft light drifts after the pointer across a card.
    All of it is off under "reduce motion". */
-:root{--fluid:cubic-bezier(.22,1,.36,1)}
-.navglide{transition:transform .58s var(--fluid)}
-.chipseg.slide .thumb{transition:transform .52s var(--fluid)}
+:root{--fluid:cubic-bezier(.22,1,.36,1);--ez:cubic-bezier(.45,0,.16,1)}
+.navglide{transition:transform .34s var(--ez)}
+.chipseg.slide .thumb{transition:transform .3s var(--ez)}
 /* where the browser has the separate translate property the slide uses it, which leaves scale free for the stretch */
 @supports (translate:0px){
-.navglide{transform:none;translate:calc(var(--i) * 100%) 0;transition:translate .58s var(--fluid)}
-.chipseg.slide .thumb{transform:none;translate:calc(var(--i) * (100% + 4px)) 0;transition:translate .52s var(--fluid)}
+.navglide{transform:none;translate:calc(var(--i) * 100%) 0;transition:translate .34s var(--ez)}
+.chipseg.slide .thumb{transform:none;translate:calc(var(--i) * (100% + 4px)) 0;transition:translate .3s var(--ez)}
 }
 .navglide,.sn-glide{will-change:transform}
-.sn-glide{transition:transform .62s var(--fluid),opacity .25s}
+.sn-glide{transition:transform .36s var(--ez),opacity .25s}
 /* the tab icons do not move or change weight when the selection changes: only their colour eases over, while the glass
    slides underneath. (They used to shrink and pop back, and the line got thicker, which read as a glitch.) Each tab is
    kept on its own layer for good, so nothing is re-drawn when the slide starts or stops. */
@@ -756,15 +756,22 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 .btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .5s var(--fluid),filter .2s,background .3s var(--ease),color .25s var(--ease),border-color .3s var(--ease)}
 .btn:active,.iconbtn:active,.stepbtn:active,.rulespill:active,.chippress:active,.navbtn:active{transition-duration:.12s}
 .btn:active{transform:scale(.99)}.iconbtn:active,.stepbtn:active{transform:scale(.95)}.rulespill:active,.chippress:active,.navbtn:active{transform:scale(.975)}
-.chipseg.slide button{transition:color .35s var(--ease)}
-.rise>div>section,.rise>section,.rise>div>.stagger,.dcol>section{animation-duration:.6s;animation-timing-function:var(--fluid)}
+/* switching tab: the page that comes in is quick too, on the same easy ease, with a shorter stagger */
+.rise>div>section,.rise>section,.rise>div>.stagger,.dcol>section{animation-duration:.36s;animation-timing-function:var(--ez)}
+.rise>div>section:nth-of-type(2),.rise>section:nth-of-type(2),.dcol>section:nth-of-type(2){animation-delay:.03s}
+.rise>div>section:nth-of-type(3),.rise>section:nth-of-type(3),.dcol>section:nth-of-type(3){animation-delay:.06s}
+.rise>div>section:nth-of-type(4),.rise>section:nth-of-type(4){animation-delay:.09s}
+.rise>div>section:nth-of-type(n+5),.rise>section:nth-of-type(n+5),.dcol>section:nth-of-type(n+4){animation-delay:.12s}
+.dcol.o2>section:nth-of-type(1){animation-delay:.05s}.dcol.o2>section:nth-of-type(2){animation-delay:.08s}.dcol.o2>section:nth-of-type(n+3){animation-delay:.11s}
+.dcol.o3>section:nth-of-type(1){animation-delay:.08s}.dcol.o3>section:nth-of-type(n+2){animation-delay:.11s}
+.chipseg.slide button{transition:color .26s var(--ease)}
 .topbar{transition:transform .5s var(--fluid),opacity .32s var(--ease)}
 @media(hover:hover) and (min-width:1024px){.btn:not(.ghost):hover:active:not(:disabled){transform:scale(.99)}}
 /* every other movement in the app, on the same curve: nothing snaps and nothing uses a bare "ease" */
 .acts>button,.qa,.chipbtn,.opt,.xbtn{transition:transform .45s var(--fluid),filter .2s,background-color .3s var(--ease),background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease),opacity .3s var(--ease)}
 .acts>button:active,.qa:active,.chipbtn:active,.opt:active{transition-duration:.1s}
 .tabs button{transition:color .35s var(--ease)}.tabs button.on::after{animation:tabin .5s var(--fluid)}
-.rise{animation-duration:.42s;animation-timing-function:var(--fluid)}
+.rise{animation-duration:.3s;animation-timing-function:var(--ez)}
 .syncpill{animation:rise .5s var(--fluid) both}
 .cmdk-wrap{animation:spfade .28s var(--ease) both}.cmdk{animation:cmdkin .42s var(--fluid) both}
 .sheetwrap{animation:scrimin .32s var(--ease)}
@@ -1461,19 +1468,21 @@ function FillChart({ R, devs }) {
   );
 }
 
-// A selection that flows from one option to the next like a drop of liquid. CSS slides it (the `translate` property,
-// one long ease-out); this adds the stretch: for a moment it is a little longer and a hair thinner, then it settles.
-// The stretch is the `scale` property through the Web Animations API, about the middle, so the whole movement runs on
-// the compositor (no layout, no repaint), stays smooth while the page behind it is busy, and a second tap while it is
-// still moving simply starts the stretch again from where it is. A longer jump stretches a little more, up to a limit.
-function Glider({ cls, at, style }) {
+// A selection that flows from one option to the next like a drop of liquid. CSS slides it (the `translate` property)
+// on an easy ease: it eases out of where it was, moves quickest in the middle and eases into where it is going
+// (--ez; Nick asked for the tab switch to be quicker, with more easy ease). This adds the stretch: it is a little
+// longer and a hair thinner while it is moving fastest, at the halfway point, and its own size again as it lands.
+// The stretch is the `scale` property through the Web Animations API, about the middle and timed to the slide (`ms`),
+// so the whole movement runs on the compositor (no layout, no repaint) and stays smooth while the page behind it is
+// busy; a second tap while it is still moving starts the stretch again from the size it has.
+function Glider({ cls, at, style, ms = 340 }) {
   const el = useRef(null), prev = useRef(at), run = useRef(null);
   useLayoutEffect(() => {
     const d = at - prev.current, n = el.current; prev.current = at;
     if (!d || !n || !n.animate || noMotion()) return;
-    const sx = 1 + Math.min(0.16, 0.05 + 0.028 * Math.abs(d)), sy = 1 - (sx - 1) * 0.14;
+    const sx = 1 + Math.min(0.14, 0.045 + 0.024 * Math.abs(d)), sy = 1 - (sx - 1) * 0.14, ez = "cubic-bezier(.45,0,.55,1)";
     let from = "1 1"; try { if (run.current && run.current.playState === "running") { from = getComputedStyle(n).scale || "1 1"; if (from === "none") from = "1 1"; run.current.cancel(); } } catch (_) {}
-    try { run.current = n.animate([{ scale: from, easing: "cubic-bezier(.25,.6,.3,1)" }, { scale: `${sx.toFixed(3)} ${sy.toFixed(3)}`, offset: 0.28, easing: "cubic-bezier(.35,0,.2,1)" }, { scale: "1 1" }], { duration: 640 }); } catch (_) {}
+    try { run.current = n.animate([{ scale: from, easing: ez }, { scale: `${sx.toFixed(3)} ${sy.toFixed(3)}`, offset: 0.5, easing: ez }, { scale: "1 1" }], { duration: ms }); } catch (_) {}
   }, [at]);
   return <i ref={el} className={cls} aria-hidden="true" style={style} />;
 }
@@ -1482,7 +1491,7 @@ function Seg({ value, options, onChange, cols, style, small }) {
   const n = options.length, at = options.findIndex(([v]) => v === value), slide = !cols || cols >= n;
   return (
     <div className={"chipseg" + (slide ? " slide" : " rows")} role="group" style={{ gridTemplateColumns: `repeat(${cols || n}, minmax(0,1fr))`, "--n": n, "--i": Math.max(0, at), ...style }}>
-      {slide && at >= 0 && <Glider cls="thumb" at={at} />}
+      {slide && at >= 0 && <Glider cls="thumb" at={at} ms={300} />}
       {options.map(([v, l]) => (
         <button key={String(v)} className={value === v ? "on" : ""} onClick={() => onChange(v)} style={{ height: 36, padding: "0 6px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: small ? 12 : undefined }}>{l}</button>
       ))}
@@ -5667,7 +5676,7 @@ function BetSpreadCalculator() {
       </nav>
       <nav className="bottom-nav" aria-label="Sections">
         <div className="flex">
-          {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(tab === "count" ? "train" : tab); return at >= 0 ? <Glider cls="navglide" at={at} style={{ "--i": at, "--n": ks.length }} /> : null; })()}
+          {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(tab === "count" ? "train" : tab); return at >= 0 ? <Glider cls="navglide" at={at} ms={340} style={{ "--i": at, "--n": ks.length }} /> : null; })()}
           {NAV_ITEMS.filter(([k]) => k !== "plan").map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
             <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
               <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
