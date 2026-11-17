@@ -5931,6 +5931,56 @@ function ShortcutsSheet({ onClose, mac }) {
     </Sheet>
   );
 }
+// Bet spread on a wide screen: what the casino gives back in comps for the play this spread puts on the table.
+// The pit rates a player by "theo" — average bet x hands an hour x hours x the edge it assumes — and returns a share of
+// that as comps. The edge and pace it assumes are the house's, not the real game's (a counter's real edge is positive),
+// and only the time spent seated is rated. Seated time is the share of rounds this spread plays (playedFrac), and the bet
+// while seated is the spread's average over those rounds, so per hour of your time the comps come to
+// avgBet (over every round, $0 included) x rated hands x rated edge x share returned.
+// The three assumptions are Nick's to change; they are saved with the spread (bj-spread-v1, so they sync).
+const COMPS_DEF = { edge: 2, hph: 70, ret: 30 };
+const compsOf = (c) => {
+  const n = (v, lo, hi, d) => { const x = Number(v); return isFinite(x) && v !== "" ? Math.min(hi, Math.max(lo, x)) : d; };
+  const o = isObj(c) ? c : {};
+  return { edge: n(o.edge, 0, 10, COMPS_DEF.edge), hph: n(o.hph, 0, 200, COMPS_DEF.hph), ret: n(o.ret, 0, 100, COMPS_DEF.ret) };
+};
+function CompsCard({ r, comps, setComps }) {
+  const [edit, setEdit] = useState(false);
+  const c = compsOf(comps), seated = r.playedFrac || 0, bet = seated > 0 ? r.avgBet / seated : 0;
+  const theo = r.avgBet * c.hph * (c.edge / 100), comp = theo * (c.ret / 100), total = r.evHour + comp;
+  const set = (k, v) => setComps({ ...(isObj(comps) ? comps : COMPS_DEF), [k]: v });
+  return (
+    <section className="card p-5 mb-4">
+      <div className="flex items-baseline justify-between gap-3 mb-1">
+        <div className="eyebrow">Comps</div>
+        <span className="text-[11px]" style={{ color: "var(--muted)" }}>an estimate</span>
+      </div>
+      <div className="grid grid-cols-2 gap-5">
+        <div>
+          <div className="disp text-3xl mt-1 mono" style={{ color: "var(--brass)" }}>+<Glide v={comp} f={(x) => money(x)} /><span className="text-base font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
+          <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>back from rated play</div>
+        </div>
+        <div>
+          <div className="disp text-3xl mt-1 mono" style={{ color: total >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={total} f={(x) => money(x)} /><span className="text-base font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
+          <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>your edge and comps together</div>
+        </div>
+      </div>
+      <p className="text-xs mt-4 pt-3" style={{ borderTop: "1px solid var(--line)", color: "var(--ivory-d)" }}>
+        {seated > 0 ? <>Rated at <span className="mono" style={{ color: "var(--ivory)" }}>{money(bet)}</span> a hand for the {pct(seated, 0)} of your time you're seated. The casino expects to win <span className="mono" style={{ color: "var(--ivory)" }}>{money(theo)}</span> an hour from you and gives back {c.ret}% of it.</> : "This spread never sits down, so nothing is rated."}
+      </p>
+      <More open={edit} onClick={() => setEdit(!edit)} className="mt-3">{edit ? "Done" : "Change how the casino rates you"}</More>
+      <Fold open={edit} className="pt-3">
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="Edge they use" value={comps?.edge ?? c.edge} suffix="%" step={0.25} onChange={(v) => set("edge", v)} />
+          <Field label="Hands an hour" value={comps?.hph ?? c.hph} step={5} onChange={(v) => set("hph", v)} />
+          <Field label="Given back" value={comps?.ret ?? c.ret} suffix="%" step={5} onChange={(v) => set("ret", v)} />
+        </div>
+        <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Most casinos rate blackjack at about 2% and 60 to 80 hands an hour, and give back 20 to 40%. The clubJACK desk can tell you what a rated session of yours earned.</p>
+      </Fold>
+      <Info label="Turning comps into cash">Comps come as bonus play, food and perks, not cash. Bonus play is the one that turns into cash: play it through once on the best-paying video poker you can find and cash out when the bonus amount has gone through — on a game that returns 97% you keep about $97 of every $100. Food and parking comps are worth what you would have spent anyway, so use them for meals you'd buy regardless. Being rated also means the casino records your wins, losses and bet sizes.</Info>
+    </section>
+  );
+}
 function BetSpreadCalculator() {
   const [tab, setTab] = useState(() => _curTab || "progress");
   // The page that is showing is tab; the one the tab bar and sidebar point at is navTab. A tap moves navTab at once
@@ -5978,19 +6028,20 @@ function BetSpreadCalculator() {
   const [bets, setBets] = useState(DEFAULT_BETS);
   const [seats, setSeats] = useState(4); // players at the table, you included
   const [sessHours, setSessHours] = useState(6);
+  const [comps, setComps] = useState(COMPS_DEF); // how the casino rates play for comps (wide screens' Comps card)
   const cal = useMemo(() => calFor(rules, seats), [rules, seats]);
   const [showFreq, setShowFreq] = useState(false);
   const SPREAD_KEY = "bj-spread-v1";
   const [spreadLoaded, setSpreadLoaded] = useState(false);
   useEffect(() => { (async () => {
-    try { const r = await window.storage.get(SPREAD_KEY, false); if (r?.value) { const d = JSON.parse(r.value); if (d.bets) setBets(d.bets); if (d.bankroll) setBankroll(d.bankroll); if (d.minBet) setMinBet(d.minBet); if (d.maxBet) setMaxBet(d.maxBet); if (d.handsPerHour) setHph(d.handsPerHour); if (d.hphAuto !== undefined) setHphAuto(!!d.hphAuto); if (d.objective) setObjective(d.objective); if (d.rorPct !== undefined) setRorPct(Math.min(75, Math.max(1, Math.round(d.rorPct)))); else if (d.rorIdx !== undefined && ROR_STOPS[d.rorIdx]) setRorPct(Math.round(ROR_STOPS[d.rorIdx] * 100)); if (d.evGoal !== undefined) setEvGoal(d.evGoal); if (d.entry !== undefined) setEntry(d.entry); if (d.belowMode) setBelowMode(d.belowMode); if (d.spotsMap) setSpotsMap(d.spotsMap); if (d.seats) setSeats(d.seats); else if (d.others) setSeats(Math.min(7, (+d.others || 3) + 1)); if (d.sessHours) setSessHours(d.sessHours); } } catch (_) {}
+    try { const r = await window.storage.get(SPREAD_KEY, false); if (r?.value) { const d = JSON.parse(r.value); if (d.bets) setBets(d.bets); if (d.bankroll) setBankroll(d.bankroll); if (d.minBet) setMinBet(d.minBet); if (d.maxBet) setMaxBet(d.maxBet); if (d.handsPerHour) setHph(d.handsPerHour); if (d.hphAuto !== undefined) setHphAuto(!!d.hphAuto); if (d.objective) setObjective(d.objective); if (d.rorPct !== undefined) setRorPct(Math.min(75, Math.max(1, Math.round(d.rorPct)))); else if (d.rorIdx !== undefined && ROR_STOPS[d.rorIdx]) setRorPct(Math.round(ROR_STOPS[d.rorIdx] * 100)); if (d.evGoal !== undefined) setEvGoal(d.evGoal); if (d.entry !== undefined) setEntry(d.entry); if (d.belowMode) setBelowMode(d.belowMode); if (d.spotsMap) setSpotsMap(d.spotsMap); if (d.seats) setSeats(d.seats); else if (d.others) setSeats(Math.min(7, (+d.others || 3) + 1)); if (isObj(d.comps)) setComps(compsOf(d.comps)); if (d.sessHours) setSessHours(d.sessHours); } } catch (_) {}
     setSpreadLoaded(true);
   })(); }, []);
   useEffect(() => {
     if (!spreadLoaded) return;
-    const t = setTimeout(() => { try { window.storage.set(SPREAD_KEY, JSON.stringify({ bets, bankroll, minBet, maxBet, handsPerHour, hphAuto, objective, rorPct, evGoal, entry, belowMode, spotsMap, seats, sessHours }), false); } catch (_) {} }, 400);
+    const t = setTimeout(() => { try { window.storage.set(SPREAD_KEY, JSON.stringify({ bets, bankroll, minBet, maxBet, handsPerHour, hphAuto, objective, rorPct, evGoal, entry, belowMode, spotsMap, seats, sessHours, comps: compsOf(comps) }), false); } catch (_) {} }, 400);
     return () => clearTimeout(t);
-  }, [bets, bankroll, minBet, maxBet, handsPerHour, hphAuto, objective, rorPct, evGoal, entry, belowMode, spotsMap, spreadLoaded, seats, sessHours]);
+  }, [bets, bankroll, minBet, maxBet, handsPerHour, hphAuto, objective, rorPct, evGoal, entry, belowMode, spotsMap, spreadLoaded, seats, sessHours, comps]);
   const [flash, setFlash] = useState(false);
 
   const rphAuto = useMemo(() => autoRph(roundFreqs(bets, spotsMap, cal), bets, spotsMap, cal), [bets, spotsMap, cal]);
@@ -6213,6 +6264,7 @@ function BetSpreadCalculator() {
             N₀ is how many rounds until expected profit equals one standard deviation of luck — how long before skill beats variance. {isFinite(r.n0) ? (r.n0 < 30000 ? "Under 30,000 is strong." : r.n0 < 80000 ? "Under 80,000 is playable." : `At ${Math.round(r.n0 / rphEff).toLocaleString()} hours, the spread is too flat — bet less at negative counts and more at high ones.`) : ""}
           </Info>
         </section>
+        {wide && <CompsCard r={r} comps={comps} setComps={setComps} />}
         <section className="card p-5 mb-4">
           <div>
             <div className="flex items-end justify-between gap-3 mb-3">
