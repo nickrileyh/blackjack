@@ -343,6 +343,7 @@ html,body{background:var(--bg)}
 .iconbtn[aria-pressed="true"]{color:var(--brass);border-color:rgba(var(--acc),.45);background:rgba(var(--acc),.12)}
 .rulespill{display:flex;align-items:center;gap:6px;font-size:12px;padding:7px 10px 7px 12px;border-radius:999px;color:var(--ivory-d);background:rgba(var(--fg),.05);border:1px solid rgba(var(--acc),.22);transition:background .15s,transform .13s}
 .rulespill:active{transform:scale(.96)}
+.pillrail,.sn-glide{display:none}
 .rulespill{min-width:0;max-width:100%}
 .rulespill .mono{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rulespill svg{color:var(--brass)}
@@ -394,7 +395,19 @@ html,body{background:var(--bg)}
 .dcol.o3>section:nth-of-type(1){animation-delay:.15s}.dcol.o3>section:nth-of-type(n+2){animation-delay:.2s}
 @media (min-width:1024px){
 html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) transparent}
-.bottom-nav,.hdrgear{display:none!important}
+.bottom-nav,.hdrgear,.shell>header .rulespill,.topbar .rulespill{display:none!important}
+.pillrail{display:block;position:fixed;left:248px;right:0;top:0;z-index:46;padding:46px 40px 0;pointer-events:none;transition:padding-top .34s cubic-bezier(.3,.75,.25,1)}
+.pillrail>div{max-width:var(--W)}
+.pillrail .rulespill{pointer-events:auto;min-height:0;transition:padding .34s cubic-bezier(.3,.75,.25,1),font-size .34s cubic-bezier(.3,.75,.25,1),background .15s,border-color .15s,transform .13s}
+.pillrail .rulespill:hover{background:rgba(var(--fg),.09);border-color:rgba(var(--acc),.4)}
+html.scrolled .pillrail{padding-top:9px}
+html.scrolled .pillrail .rulespill{font-size:11px;padding:5px 9px 5px 11px}
+.topbar{background:rgba(var(--bgrgb),.9);min-height:46px}
+.topbar>div{min-height:29px}
+.sn-glide{display:block;position:absolute;left:14px;right:14px;top:0;height:44px;border-radius:12px;background:rgba(var(--acc),.12);pointer-events:none;transition:transform .34s cubic-bezier(.3,.75,.25,1),opacity .2s}
+.sn-glide::before{content:"";position:absolute;left:-14px;top:11px;bottom:11px;width:3px;border-radius:0 3px 3px 0;background:var(--brass)}
+.sidenav .sn-item.on{background:transparent}
+.sidenav .sn-item.on::before{display:none}
 .shell{--W:800px;--SN:248px;max-width:var(--W)!important;margin-left:calc(var(--SN) + max(40px,(100% - var(--SN) - var(--W))/2))!important;margin-right:40px!important;padding-left:0!important;padding-right:0!important;padding-top:44px!important;padding-bottom:56px!important}
 .shell>header h1{font-size:34px}
 .shell::before{content:"";position:fixed;top:-300px;right:-220px;width:780px;height:780px;border-radius:50%;background:radial-gradient(closest-side,rgba(var(--acc),.085),transparent 72%);pointer-events:none;z-index:-1}
@@ -629,7 +642,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .burst i{position:absolute;left:50%;top:45%;width:5px;height:5px;border-radius:50%;background:var(--brass);opacity:0;animation:fly var(--t) ease-out forwards;animation-delay:var(--dl)}
 .burst i:nth-child(3n){background:var(--acc-hi)}.burst i:nth-child(4n){width:3px;height:3px}
 @keyframes fly{0%{opacity:1;transform:rotate(var(--a)) translateY(-6px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(-6px - var(--d))) scale(.3)}}
-@media (prefers-reduced-motion:reduce){.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -4208,7 +4221,7 @@ function Backup() {
   return (
     <section className="card p-5 mt-4">
       <div className="eyebrow mb-1">Backup</div>
-      <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Everything is saved on this phone and survives restarts. Export a copy now and then in case you switch phones or clear Safari data.</p>
+      <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Everything is saved on this device and survives restarts. Export a copy now and then in case you switch devices or clear your browser's data.</p>
       <div className="grid grid-cols-2 gap-2 mb-2">
         <button className="btn ghost" onClick={exportAll}>Export</button>
         <button className="btn ghost" onClick={importAll} disabled={!text.trim()}>Restore</button>
@@ -4561,7 +4574,7 @@ function CommandPalette({ items, onClose }) {
 }
 function TopBar({ title, children }) {
   const [show, setShow] = useState(false);
-  useEffect(() => { const f = () => setShow(window.scrollY > 64); f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
+  useEffect(() => { const f = () => { const on = window.scrollY > 64; setShow(on); document.documentElement.classList.toggle("scrolled", on); }; f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
   return (
     <div className={"topbar" + (show ? " show" : "")} aria-hidden={!show}>
       <div className="mx-auto flex items-center justify-between gap-3" style={{ maxWidth: "42rem" }}>
@@ -5090,6 +5103,18 @@ function BetSpreadCalculator() {
   const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; const same = t === tab; setTab(t); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } try { window.scrollTo({ top: 0, behavior: same ? "smooth" : "auto" }); } catch (_) {} };
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
   const [cmd, setCmd] = useState(false);
+  // desktop sidebar: one highlight that glides to the current page instead of jumping between rows
+  const snav = useRef(null), glide = useRef(null);
+  useEffect(() => {
+    const place = (jump) => {
+      const n = snav.current, g = glide.current; if (!n || !g) return;
+      const on = n.querySelector(".sn-item.on"); if (!on) { g.style.opacity = 0; return; }
+      const snap = jump || g.style.opacity === "0"; if (snap) g.style.transition = "none";
+      g.style.transform = `translateY(${on.offsetTop}px)`; g.style.opacity = 1;
+      if (snap) { void g.offsetHeight; g.style.transition = ""; }
+    };
+    place(); const r = () => place(true); window.addEventListener("resize", r); return () => window.removeEventListener("resize", r);
+  }, [tab]);
   useEffect(() => {
     const k = (e) => {
       if (firstRun) return;
@@ -5143,6 +5168,9 @@ function BetSpreadCalculator() {
             <button onClick={() => go(tab === "settings" ? "progress" : "settings")} className="iconbtn hdrgear shrink-0" aria-label={tab === "settings" ? "Close settings" : "Settings"} aria-pressed={tab === "settings"}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>
           </div>
         </header>
+        <div className="pillrail"><div className="mx-auto flex justify-end">
+          <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
+        </div></div>
         <TopBar title={({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan", ask: "Ask" })[tab]}>
           <button onClick={() => setSetupOpen(true)} className="rulespill shrink-0" style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </TopBar>
@@ -5399,7 +5427,7 @@ function BetSpreadCalculator() {
         </div>}
         <p className="text-center text-[10px] mt-10" style={{ color: "var(--muted)", opacity: .7 }}>Strategy and indices follow Blackjack Apprenticeship's {rules.h17 ? "H17" : "S17"} charts · practice tool, not gambling advice</p>
       </div>
-      <nav className="sidenav" aria-label="Sections">
+      <nav className="sidenav" aria-label="Sections" ref={snav}>
         <div className="sn-brand">
           <span className="sn-tile" aria-hidden="true"><svg viewBox="0 0 512 512"><path d="M240 92C206 136 108 204 108 288C108 332 140 362 178 362C204 362 224 350 234 332C232 368 216 396 190 414H290C264 396 248 368 246 332C256 350 276 362 302 362C340 362 372 332 372 288C372 204 274 136 240 92Z" style={{ fill: "var(--ivory)" }} /><circle cx="338" cy="346" r="100" style={{ fill: "var(--b2)" }} /><circle cx="338" cy="346" r="80" style={{ fill: "var(--brass)" }} /></svg></span>
           <span className="min-w-0"><span className="sn-name block">Blackjack</span><span className="sn-tag block">Count · Play · Win</span></span>
@@ -5408,6 +5436,7 @@ function BetSpreadCalculator() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
           <span>Jump to…</span><kbd>{isMac ? "⌘K" : "Ctrl K"}</kbd>
         </button>
+        <span className="sn-glide" ref={glide} aria-hidden="true" style={{ opacity: 0 }} />
         <div className="sn-label">Menu</div>
         {NAV_ITEMS.map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
           <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"sn-item" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
