@@ -34,6 +34,15 @@ let _countries = null;
 const countries = () => _countries || (_countries = geoOf("W").feats.map((f) => ({ id: f.id, n: f.n })).sort((a, b) => a.n.localeCompare(b.n)));
 const countryName = (cc) => (countries().find((c) => c.id === cc) || {}).n || cc;
 
+// The first visit to this page used to stall while the casino list and the map outlines were unpacked (about a fifth of
+// a second on a phone). The app now does that work in three small pieces a few seconds after it opens, while nothing
+// is moving, so the page opens as quickly the first time as every time after.
+export function warmCasinos() {
+  const steps = [() => baseData(), () => geoOf("US"), () => mapFor("USA")]; let i = 0;
+  const next = () => { try { steps[i++](); } catch (_) {} if (i < steps.length) setTimeout(next, 350); };
+  setTimeout(next, 0);
+}
+
 // ---------- matching the names typed into the session log to casinos on the map ----------
 const STOP = new Set(["casino", "casinos", "hotel", "resort", "resorts", "the", "and", "at", "of", "spa", "racetrack", "gaming"]);
 const tokens = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/['’.]/g, "").replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter((w) => w && !STOP.has(w));

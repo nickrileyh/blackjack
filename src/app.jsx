@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, useLayoutEffect, useRef, Fragment, createContext, useContext } from "react";
+import { useState, useMemo, useEffect, useLayoutEffect, useRef, Fragment, createContext, useContext, startTransition } from "react";
 import { createPortal } from "react-dom";
-import CasinosPage, { openCasinoAdd } from "./casinos.jsx";
+import CasinosPage, { openCasinoAdd, warmCasinos } from "./casinos.jsx";
 import { PlanPage } from "./planner.jsx";
 import { sfx, soundPrefs, setSoundPrefs } from "./sound.js";
 import { coverCal } from "./cover.js";
@@ -415,12 +415,12 @@ html,body{background:var(--bg)}
 @media (min-width:1024px){
 html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) transparent}
 .bottom-nav,.hdrgear,.shell>header .rulespill,.topbar .rulespill{display:none!important}
-.pillrail{display:block;position:fixed;left:248px;right:0;top:0;z-index:46;padding:46px 40px 0;pointer-events:none;transition:padding-top .34s cubic-bezier(.3,.75,.25,1)}
+.pillrail{display:block;position:fixed;left:248px;right:0;top:0;z-index:46;padding:46px 40px 0;pointer-events:none;transition:transform .34s cubic-bezier(.3,.75,.25,1)}
 .pillrail>div{max-width:var(--W)}
-.pillrail .rulespill{pointer-events:auto;min-height:0;transition:padding .34s cubic-bezier(.3,.75,.25,1),font-size .34s cubic-bezier(.3,.75,.25,1),background .15s,border-color .15s,transform .13s}
+.pillrail .rulespill{pointer-events:auto;min-height:0;transform-origin:100% 0;transition:transform .34s cubic-bezier(.3,.75,.25,1),background .15s,border-color .15s}
 .pillrail .rulespill:hover{background:rgba(var(--fg),.09);border-color:rgba(var(--acc),.4)}
-html.scrolled .pillrail{padding-top:9px}
-html.scrolled .pillrail .rulespill{font-size:11px;padding:5px 9px 5px 11px}
+html.scrolled .pillrail{transform:translateY(-37px)}
+html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .topbar{background:rgba(var(--bgrgb),.9);min-height:46px}
 .topbar>div{min-height:29px}
 .sn-glide{display:block;position:absolute;left:14px;right:14px;top:0;height:44px;border-radius:12px;background:rgba(var(--acc),.12);pointer-events:none;transition:transform .34s cubic-bezier(.3,.75,.25,1),opacity .2s}
@@ -799,8 +799,8 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 .cmdk-wrap{animation:scrimin .28s var(--ease)}.cmdk{animation:cmdkin .42s var(--fluid) both}
 .sheetwrap{animation:scrimin .32s var(--ease)}
 @media (min-width:1024px){.sheetwrap .sheet{animation:sheetpop .42s var(--fluid)}}
-.pillrail{transition:padding-top .5s var(--fluid)}
-.pillrail .rulespill{transition:padding .5s var(--fluid),font-size .5s var(--fluid),background .3s var(--ease),border-color .3s var(--ease),transform .5s var(--fluid)}
+.pillrail{transition:transform .5s var(--fluid)}
+.pillrail .rulespill{transition:background .3s var(--ease),border-color .3s var(--ease),transform .5s var(--fluid)}
 .sn-item,.sn-search,.sn-rules,.keycap,.skillrow,.chipseg button{transition:background .3s var(--ease),border-color .3s var(--ease),color .3s var(--ease)}
 .in{transition:border-color .3s var(--ease),box-shadow .3s var(--ease),background .3s var(--ease)}
 .card{transition:border-color .4s var(--ease)}
@@ -941,6 +941,46 @@ input[type=range]:hover::-webkit-slider-thumb{filter:brightness(1.12)}
 .switch.on:active::after{transform:translateX(16px) scale(1.12)}
 input[type=range]::-webkit-slider-thumb{transition:transform .35s var(--fluid),background .3s var(--ease)}
 input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14);background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,255,255,.62))}
+/* ---- One system for shape, surface and depth (Nick: "a full style upgrade ... sleek and clean and very silky smooth").
+   Shape: three corner sizes and the capsule, nothing in between. --r-s 10px for the smallest pieces (key caps, the x1
+   buttons), --r-m 14px for anything you type in or tap inside a card (inputs, answer buttons, tiles), --r-l 22px for a
+   card, and a capsule for buttons, chips and selections. The Tailwind corner classes are re-pointed to that scale here,
+   so markup written with them falls into line without being touched.
+   Surface: answer buttons and the Home shortcuts are the same glass as every other small control (one hairline edge
+   from --gl-lens) instead of a flat fill with a grey border. Cards are a little more even from top to bottom, so their
+   lower edge no longer sinks into the page.
+   Depth: a very faint wash of the theme colour at the top of the page, so the glass above it has something to carry. */
+:root{--r-s:10px;--r-m:14px;--r-l:22px}
+.bj .rounded-md{border-radius:9px}
+.bj .rounded-lg{border-radius:12px}
+.bj .rounded-xl{border-radius:var(--r-m)}
+.bj .rounded-2xl{border-radius:18px}
+.keycap{border-radius:9px}
+.opt:not(.w-full),.qa{border-color:transparent!important;background-clip:padding-box;box-shadow:var(--gl-lens)}
+.qa{border-radius:18px;background:linear-gradient(180deg,rgba(var(--fg),.07),rgba(var(--fg),.03));background-clip:padding-box}
+:root[data-theme="light"] .qa{background:linear-gradient(180deg,#fff,rgba(255,255,255,.82));background-clip:padding-box}
+@media (hover:hover){.qa:hover{background-clip:padding-box;box-shadow:var(--gl-bead)}}
+.card{background:radial-gradient(120% 80% at 0% 0%,rgba(255,255,255,.028),transparent 55%),linear-gradient(180deg,rgba(var(--fg),.056),rgba(var(--fg),.034))}
+.card .card{background:linear-gradient(180deg,rgba(var(--fg),.05),rgba(var(--fg),.03))}
+:root[data-theme="light"] .card{background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.84))}
+:root[data-theme="light"] .card .card{background:rgba(var(--fg),.028)}
+.bj{background:radial-gradient(520px 320px at 96% -70px,rgba(var(--acc),.1),transparent 72%),radial-gradient(420px 260px at -6% -40px,rgba(var(--acc),.05),transparent 72%),radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%)}
+@media (min-width:1024px){.bj{background:radial-gradient(980px 460px at 86% -150px,rgba(var(--acc),.085),transparent 72%),radial-gradient(700px 380px at 22% -120px,rgba(var(--acc),.04),transparent 72%),radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%)}}
+:root[data-theme="light"] .bj{background:radial-gradient(560px 340px at 96% -70px,rgba(var(--acc),.09),transparent 72%),radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%)}
+/* wells: a touch lighter and quieter, so a page of number boxes is not a page of black holes */
+.in{background:rgba(var(--sh),.42);border-color:rgba(var(--fg),.1)}
+:root[data-theme="light"] .in{background:rgba(var(--fg),.035);border-color:rgba(var(--fg),.11)}
+.in:focus{border-color:rgba(var(--acc),.7)}
+/* type: titles a little tighter, numbers always in fixed-width figures so they never jiggle as they change */
+.shell>header h1{letter-spacing:-.028em}
+.bj{font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+/* desktop: the bet table's number boxes stop stretching across the card; the spare width goes to the figures */
+@media (min-width:1180px){.btrow{grid-template-columns:52px minmax(0,190px) 48px minmax(0,1fr) minmax(0,1fr)}}
+/* a tap is a tap: no waiting to see whether it is the first half of a double-tap zoom */
+.bj button,.bj a,.bj label,.bj input,.bj select{touch-action:manipulation}
+/* the rules pill inside the top bar sits on glass that is already blurred: a second blur there costs a phone a layer
+   for nothing */
+.topbar .rulespill{-webkit-backdrop-filter:none;backdrop-filter:none}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}
@@ -5387,7 +5427,16 @@ export default function App() {
 }
 function BetSpreadCalculator() {
   const [tab, setTab] = useState(() => _curTab || "progress");
+  // The page that is showing is tab; the one the tab bar and sidebar point at is navTab. A tap moves navTab at once
+  // (a cheap update, so the highlight starts sliding on the very next frame) and the page itself is drawn as a React
+  // transition just behind it, so a heavy page can never hold the highlight still under the finger.
+  const [navTab, setNavTab] = useState(tab);
   useEffect(() => { _curTab = tab; }, [tab]);
+  // get the Casinos page's data ready while the app is idle, well after the splash has gone
+  useEffect(() => { const t = setTimeout(() => { const idle = window.requestIdleCallback || ((f) => setTimeout(f, 1)); idle(() => warmCasinos()); }, 3600); return () => clearTimeout(t); }, []);
+  // a new page starts at its top, in the same paint it appears in (not while the old page is still showing)
+  const tabSeen = useRef(tab);
+  useLayoutEffect(() => { if (tabSeen.current !== tab) { tabSeen.current = tab; try { window.scrollTo(0, 0); } catch (_) {} } }, [tab]);
   const [rules, setRulesRaw] = useState(DEFAULT_RULES);
   const [setupOpen, setSetupOpen] = useState(false);
   const [firstRun, setFirstRun] = useState(true);
@@ -5499,7 +5548,7 @@ function BetSpreadCalculator() {
   const maxBar = Math.max(1, ...r.rows.map((x) => x.bet));
   const [trainSub, setTrainSub] = useState("train");
   useEffect(() => { if (tab === "train" || tab === "count") setTrainSub(tab); }, [tab]);
-  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; const same = t === tab; setTab(t); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } try { window.scrollTo({ top: 0, behavior: same ? "smooth" : "auto" }); } catch (_) {} };
+  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; const same = t === tab; setNavTab(t); if (same) setTab(t); else startTransition(() => setTab(t)); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } if (same) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) {} } };
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
   const [cmd, setCmd] = useState(false);
   // desktop sidebar: one highlight that glides to the current page instead of jumping between rows
@@ -5513,7 +5562,7 @@ function BetSpreadCalculator() {
       if (snap) { void g.offsetHeight; g.style.transition = ""; }
     };
     place(); const r = () => place(true); window.addEventListener("resize", r); return () => window.removeEventListener("resize", r);
-  }, [tab]);
+  }, [navTab]);
   useEffect(() => {
     const k = (e) => {
       if (firstRun) return;
@@ -5563,7 +5612,7 @@ function BetSpreadCalculator() {
             <span className="mono">{rulesShort(rules)}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
           </button>
-            <button onClick={() => go(tab === "settings" ? "progress" : "settings")} className="iconbtn hdrgear shrink-0" aria-label={tab === "settings" ? "Close settings" : "Settings"} aria-pressed={tab === "settings"}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>
+            <button onClick={() => go(navTab === "settings" ? "progress" : "settings")} className="iconbtn hdrgear shrink-0" aria-label={tab === "settings" ? "Close settings" : "Settings"} aria-pressed={tab === "settings"}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>
           </div>
         </header>
         <div className="pillrail"><div className="mx-auto flex justify-end">
@@ -5836,7 +5885,7 @@ function BetSpreadCalculator() {
         </button>
         <span className="sn-glide" ref={glide} aria-hidden="true" style={{ opacity: 0 }} />
         <div className="sn-label">Menu</div>
-        {NAV_ITEMS.map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
+        {NAV_ITEMS.map(([k, l, icon]) => { const on = navTab === k || (k === "train" && navTab === "count"); return (
           <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"sn-item" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg>
             <span>{l}</span>
@@ -5850,7 +5899,7 @@ function BetSpreadCalculator() {
             <span className="block text-[10px] font-semibold uppercase" style={{ letterSpacing: ".16em", color: "var(--muted)" }}>Game rules</span>
             <span className="flex items-center justify-between gap-2 mt-1"><span className="mono text-[13px] font-semibold" style={{ color: "var(--ivory)" }}>{rulesShort(rules)}</span><span className="text-[11px] font-semibold" style={{ color: "var(--brass)" }}>Change</span></span>
           </button>
-          <button onClick={() => go(tab === "settings" ? "progress" : "settings")} className={"sn-item" + (tab === "settings" ? " on" : "")} aria-current={tab === "settings" ? "page" : undefined}>
+          <button onClick={() => go(navTab === "settings" ? "progress" : "settings")} className={"sn-item" + (navTab === "settings" ? " on" : "")} aria-current={navTab === "settings" ? "page" : undefined}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
             <span>Settings</span>
           </button>
@@ -5858,8 +5907,8 @@ function BetSpreadCalculator() {
       </nav>
       <nav className="bottom-nav" aria-label="Sections">
         <div className="flex">
-          {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(tab === "count" ? "train" : tab); return at >= 0 ? <Glider cls="navglide" at={at} ms={340} style={{ "--i": at, "--n": ks.length }} /> : null; })()}
-          {NAV_ITEMS.filter(([k]) => k !== "plan").map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
+          {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(navTab === "count" ? "train" : navTab); return at >= 0 ? <Glider cls="navglide" at={at} ms={340} style={{ "--i": at, "--n": ks.length }} /> : null; })()}
+          {NAV_ITEMS.filter(([k]) => k !== "plan").map(([k, l, icon]) => { const on = navTab === k || (k === "train" && navTab === "count"); return (
             <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
               <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
               <span>{l}</span>
