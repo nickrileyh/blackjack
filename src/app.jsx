@@ -704,6 +704,34 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .chipseg.slide,.chipseg.slide .thumb,.chipseg.slide button{border-radius:999px}
 :root:not([data-theme="light"]) .chipseg button.on,:root:not([data-theme="light"]) .chipseg.slide .thumb{background:linear-gradient(180deg,rgba(var(--acc),.22),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.2),0 2px 8px -4px rgba(0,0,0,.6)}
 :root:not([data-theme="light"]) .chipseg.slide button.on{background:none;box-shadow:none}
+/* one selection everywhere: sidebar item, tab, segment and filter chip are the same accent-tinted glass capsule */
+.sn-item,.sn-glide,.sn-search{border-radius:999px}
+.sn-glide::before,.sn-item.on::before{display:none}
+.sn-rules{border-radius:18px}
+.navbtn.on{background:none;box-shadow:none}
+.navglide{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px) / var(--n));border-radius:999px;pointer-events:none;transform:translateX(calc(var(--i) * 100%));transition:transform .5s var(--fluid);background:linear-gradient(180deg,rgba(var(--acc),.22),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.16)}
+.navbtn{z-index:1}
+@media (max-width:350px){.navglide{top:4px;bottom:4px;left:4px;width:calc((100% - 8px) / var(--n))}}
+.gchip{background:linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.03));color:var(--ivory-d);border:1px solid rgba(var(--fg),.07);box-shadow:inset 0 1px 0 var(--gl-rim);transition:transform .35s var(--fluid),background .2s,color .2s,border-color .2s}
+.gchip.on{background:linear-gradient(180deg,rgba(var(--acc),.24),rgba(var(--acc),.11));color:var(--ivory);border-color:rgba(var(--acc),.26);box-shadow:inset 0 1px 0 var(--gl-hi)}
+:root[data-theme="light"] .gchip.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));color:var(--ink);border-color:transparent}
+.chipseg:not(.rows):not(.brushes),.chipseg:not(.rows):not(.brushes) button{border-radius:999px}
+.in{border-radius:14px}.in.sm{border-radius:10px}
+@media (min-width:1024px){.sheetwrap .sheet{border-radius:30px}.cmdk{border-radius:24px}}
+/* ---- fluid motion, very subtle: selections glide with a soft overshoot, pressed glass springs back, and on a computer a
+   faint light follows the pointer across a card. All of it is off under "reduce motion". */
+:root{--fluid:cubic-bezier(.3,1.3,.45,1)}
+.sn-glide{transition:transform .5s var(--fluid),opacity .2s}
+.chipseg.slide .thumb{transition:transform .42s var(--fluid)}
+.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .38s var(--fluid),filter .13s,background .2s,color .18s,border-color .2s}
+.btn:active,.iconbtn:active,.stepbtn:active,.rulespill:active,.chippress:active,.navbtn:active{transition-duration:.09s}
+.sheet{animation-name:sheetflu;animation-duration:.42s;animation-timing-function:cubic-bezier(.2,.9,.25,1)}
+@keyframes sheetflu{0%{transform:translateY(46px) scale(.985);opacity:.3}62%{transform:translateY(-3px) scale(1);opacity:1}100%{transform:none;opacity:1}}
+@media (hover:hover) and (min-width:1024px){
+.card:not(.rulesdlg)::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .45s var(--ease);background:radial-gradient(260px circle at var(--mx,50%) var(--my,-30%),rgba(255,255,255,.05),transparent 70%)}
+:root[data-theme="light"] .card:not(.rulesdlg)::after{background:radial-gradient(260px circle at var(--mx,50%) var(--my,-30%),rgba(var(--acc),.06),transparent 70%)}
+.card:hover::after{opacity:1}
+}
 /* sheets and the Jump-to palette: the page shows through, softly, where the browser can do it */
 .cmdk{position:relative}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) and (color:color-mix(in srgb,red 50%,transparent)){
@@ -717,7 +745,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 }
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
-@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip{transition:none!important}.sheet{animation:none!important}.card::after{display:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -1372,7 +1400,7 @@ function Seg({ value, options, onChange, cols, style, small }) {
   // one row → the selected pill is a separate element that slides between options; wrapped rows keep the plain style
   const n = options.length, at = options.findIndex(([v]) => v === value), slide = !cols || cols >= n;
   return (
-    <div className={"chipseg" + (slide ? " slide" : "")} role="group" style={{ gridTemplateColumns: `repeat(${cols || n}, minmax(0,1fr))`, "--n": n, "--i": Math.max(0, at), ...style }}>
+    <div className={"chipseg" + (slide ? " slide" : " rows")} role="group" style={{ gridTemplateColumns: `repeat(${cols || n}, minmax(0,1fr))`, "--n": n, "--i": Math.max(0, at), ...style }}>
       {slide && at >= 0 && <i className="thumb" aria-hidden="true" />}
       {options.map(([v, l]) => (
         <button key={String(v)} className={value === v ? "on" : ""} onClick={() => onChange(v)} style={{ height: 36, padding: "0 6px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: small ? 12 : undefined }}>{l}</button>
@@ -3901,9 +3929,9 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
         <label className="block"><span className="eyebrow block mb-1.5">Date</span><input className="in" type="date" value={f.date} onChange={(e) => set("date", e.target.value)} /></label>
         <label className="block"><span className="eyebrow block mb-1.5">Hours</span><input className="in mono" type="number" inputMode="decimal" step="0.25" placeholder="0" value={f.hours} onChange={(e) => set("hours", e.target.value)} /></label>
       </div>
-      <div className="flex gap-1.5 mb-4 -mt-1">{[1, 2, 3, 4, 5, 6].map((h) => <button key={h} type="button" onClick={() => set("hours", String(h))} className="chippress flex-1 rounded-lg text-xs font-semibold" style={{ height: 30, background: +f.hours === h ? "rgba(var(--acc),.18)" : "rgba(var(--fg),.05)", color: +f.hours === h ? "var(--brass)" : "var(--muted)" }}>{h}h</button>)}</div>
+      <div className="flex gap-1.5 mb-4 -mt-1">{[1, 2, 3, 4, 5, 6].map((h) => <button key={h} type="button" onClick={() => set("hours", String(h))} className={"chippress gchip flex-1 rounded-full text-xs font-semibold" + (+f.hours === h ? " on" : "")} style={{ height: 30 }}>{h}h</button>)}</div>
       <label className="block mb-2"><span className="eyebrow block mb-1.5">Casino</span><input className="in" placeholder="Where did you play?" value={f.where} onChange={(e) => set("where", e.target.value)} /></label>
-      {casinos.length > 0 && <div className="hidescroll flex gap-1.5 overflow-x-auto mb-4" style={{ scrollbarWidth: "none" }}>{casinos.slice(0, 8).map((c) => <button key={c} type="button" onClick={() => set("where", c)} className="chippress whitespace-nowrap rounded-full px-3 text-xs font-semibold" style={{ height: 30, flexShrink: 0, background: f.where === c ? "rgba(var(--acc),.18)" : "rgba(var(--fg),.05)", color: f.where === c ? "var(--brass)" : "var(--ivory-d)" }}>{c}</button>)}</div>}
+      {casinos.length > 0 && <div className="hidescroll flex gap-1.5 overflow-x-auto mb-4" style={{ scrollbarWidth: "none" }}>{casinos.slice(0, 8).map((c) => <button key={c} type="button" onClick={() => set("where", c)} className={"chippress gchip whitespace-nowrap rounded-full px-3 text-xs font-semibold" + (f.where === c ? " on" : "")} style={{ height: 30, flexShrink: 0 }}>{c}</button>)}</div>}
       <span className="eyebrow block mb-1.5">Result</span>
       <div className="grid gap-2 mb-4" style={{ gridTemplateColumns: "auto 1fr" }}>
         <div className="chipseg" style={{ padding: 3 }}>
@@ -4316,7 +4344,7 @@ function ChipRow({ value, options, onChange, small }) {
   const mask = edge.l || edge.r ? `linear-gradient(90deg, ${edge.l ? "transparent 0, #000 22px" : "#000 0"}, ${edge.r ? "#000 calc(100% - 28px), transparent 100%" : "#000 100%"})` : undefined;
   return (
     <div ref={ref} onScroll={measure} className="hidescroll flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: "none", WebkitMaskImage: mask, maskImage: mask }} role="tablist">
-      {options.map(([v, l]) => <button key={v} role="tab" aria-selected={value === v} onClick={() => onChange(v)} className="chippress whitespace-nowrap rounded-full font-semibold" style={{ height: small ? 30 : 34, padding: small ? "0 12px" : "0 14px", fontSize: small ? 12 : 13, background: value === v ? "var(--ivory)" : "rgba(var(--fg),.05)", color: value === v ? "var(--ink)" : "var(--ivory-d)", border: value === v ? "1px solid transparent" : "1px solid rgba(var(--fg),.07)", flexShrink: 0, transition: "background .18s, color .18s" }}>{l}</button>)}
+      {options.map(([v, l]) => <button key={v} role="tab" aria-selected={value === v} onClick={() => onChange(v)} className={"chippress gchip whitespace-nowrap rounded-full font-semibold" + (value === v ? " on" : "")} style={{ height: small ? 30 : 34, padding: small ? "0 12px" : "0 14px", fontSize: small ? 12 : 13, flexShrink: 0 }}>{l}</button>)}
     </div>
   );
 }
@@ -5010,6 +5038,17 @@ export default function App() {
     };
     document.addEventListener("focusin", f); return () => document.removeEventListener("focusin", f);
   }, []);
+  // liquid glass on a computer: a faint light follows the pointer across the card it is over (the .card::after sheen).
+  // One listener for the whole app, one write per frame; touch screens and "reduce motion" never get it.
+  useEffect(() => {
+    if (typeof matchMedia === "undefined" || !matchMedia("(hover:hover) and (min-width:1024px)").matches || noMotion()) return;
+    let raf = 0, ev = null;
+    const run = () => { raf = 0; let c = ev && ev.target && ev.target.closest ? ev.target.closest(".card") : null;
+      while (c) { const r = c.getBoundingClientRect(); c.style.setProperty("--mx", Math.round(ev.clientX - r.left) + "px"); c.style.setProperty("--my", Math.round(ev.clientY - r.top) + "px"); c = c.parentElement ? c.parentElement.closest(".card") : null; } };
+    const mv = (e) => { ev = e; if (!raf) raf = requestAnimationFrame(run); };
+    window.addEventListener("pointermove", mv, { passive: true });
+    return () => { window.removeEventListener("pointermove", mv); if (raf) cancelAnimationFrame(raf); };
+  }, []);
   const [gen, setGen] = useState(0);
   const [pending, setPending] = useState(null);
   const [toast, setToast] = useState(null);
@@ -5536,6 +5575,7 @@ function BetSpreadCalculator() {
       </nav>
       <nav className="bottom-nav" aria-label="Sections">
         <div className="flex">
+          {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(tab === "count" ? "train" : tab); return at >= 0 ? <i className="navglide" aria-hidden="true" style={{ "--i": at, "--n": ks.length }} /> : null; })()}
           {NAV_ITEMS.filter(([k]) => k !== "plan").map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
             <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
               <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
