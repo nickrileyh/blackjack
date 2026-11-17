@@ -2,7 +2,7 @@
 // formulas (EV, swing, risk of ruin, N0, session bankroll) and ~70 strategy and count-play spot checks against the charts.
 // Run:  tools/checks/run.sh      (it prints "all N checks passed" or each failure)
 // 12 v 5, 12 v 6 and 13 v 3 at negative counts are not tested: the app follows BJA's chart, which leaves those plays out.
-import { correctPlay, DEFAULT_RULES, DEFAULT_BETS, COUNTS, calFor, compute, PhiN, pDip, sessionCash, handValue, settle, drawdownFromMix, autoRph, roundFreqs } from "./app-x.jsx";
+import { correctPlay, DEFAULT_RULES, DEFAULT_BETS, COUNTS, calFor, compute, PhiN, pDip, sessionCash, handValue, settle, drawdownFromMix, autoRph, roundFreqs, plainDeck, handToCards } from "./app-x.jsx";
 let bad = 0, n = 0; const ok = (name, cond, info = "") => { n++; if (!cond) { bad++; console.log("FAIL", name, info); } };
 const near = (name, a, b, tol) => { if (process.env.MARGINS && /pDip|vs simulation/.test(name)) console.log("  margin", (Math.abs(a - b) / tol).toFixed(2), name); ok(name, Math.abs(a - b) <= tol, `got ${a} want ${b} ±${tol}`); };
 // ---- normal curve
@@ -72,4 +72,13 @@ for (const R of [DEFAULT_RULES, { ...DEFAULT_RULES, decks: 8 }, { ...DEFAULT_RUL
    ["10,10 v 6 at +4 splits", P([10, 10], 6, S, sp, 4), "P"], ["10,10 v 5 at +5 splits", P([10, 10], 5, S, sp, 5), "P"], ["10,10 v 5 at +4 stands", P([10, 10], 5, S, sp, 4), "S"], ["10 v 10 at +4 doubles", P([6, 4], 10, S, o, 4), "D"], ["11 v A S17 at +1 doubles", P([6, 5], 11, S, o, 1), "D"], ["9 v 2 at +1 doubles", P([5, 4], 2, S, o, 1), "D"], ["9 v 7 at +3 doubles", P([5, 4], 7, S, o, 3), "D"],
    ["10 v A S17 at +4 doubles", P([6, 4], 11, S, o, 4), "D"], ["10 v A H17 at +3 doubles", P([6, 4], 11, H, o, 3), "D"], ["13 v 2 at -1 hits", P([10, 3], 2, S, o, -1), "H"], ["12 v 6 H17 at -1 stands", P([10, 2], 6, H, o, -1), "S"],
   ].forEach(([name, got, want]) => ok("strategy: " + name, got === want, `got ${got} want ${want}`)); }
+// The 100-hand test shows a count from -2 to +2 beside every plain hand and marks it against basic strategy, so no
+// hand it can ask may have a count play inside that range (it once did: 16 v 10 at +1 wanted "hit").
+{ let cells = 0, wrong = [];
+  for (const h17 of [false, true]) for (const surrender of [false, true]) for (const dbl of ["any", "9-11", "10-11"]) for (const das of [true, false]) {
+    const R = { ...DEFAULT_RULES, h17, surrender, dbl, das }, deck = plainDeck(R);
+    for (const c of deck) for (let tc = -2; tc <= 2; tc++) { cells++; const cp = correctPlay(handToCards({ ...c, kind: "basic" }), c.up, tc, R, { canDouble: true, canSplit: true, canSurrender: surrender, devs: true }); if (cp.act !== c.answer) wrong.push(`${c.hand} v ${c.up} at ${tc}`); }
+    ok(`test hands: enough plain hands left (${h17 ? "H17" : "S17"} ${surrender ? "LS" : "no LS"} ${dbl} ${das ? "DAS" : "no DAS"})`, deck.length >= 250, `only ${deck.length}`);
+  }
+  ok(`test hands: none of ${cells} hand-and-count pairs is marked against its count`, wrong.length === 0, wrong.slice(0, 6).join(", ")); }
 console.log(bad ? `${bad} of ${n} checks FAILED` : `all ${n} checks passed`);

@@ -2053,8 +2053,11 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
   const [decks, setDecks] = useState(decks0);
   const [pen, setPen] = useState(pen0);
   const [speed, setSpeed] = useState(0.8);
-  const [amount, setAmount] = useState(52); // cards (cards mode) or rounds (hands mode)
+  const [want, setAmount] = useState(52); // cards (cards mode) or rounds (hands mode), as picked
   const [spots, setSpots] = useState(3);
+  // a run can't deal more than the shoe holds (one card is burned): 52 cards from one deck used to stop dead at 51
+  const room = decks * 52 - 1;
+  const amount = mode !== "hands" ? Math.min(want, room) : Math.max(1, Math.min(want, Math.floor(room / ((spots + 1) * 2))));
   const [askTC, setAskTC] = useState(false);
   const [carry, setCarry] = useState(false);
   const [showCount, setShowCount] = useState(false);
@@ -2071,7 +2074,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
   const tick = useRef(null);
   const stateRef = useRef({});
 
-  useEffect(() => { (async () => { try { const r = await window.storage.get(COUNT_KEY, false); if (r?.value) setStats(JSON.parse(r.value)); } catch (_) {} setStatsLoaded(true); })(); }, []);
+  useEffect(() => { (async () => { try { const r = await window.storage.get(COUNT_KEY, false); if (r?.value) { const d = JSON.parse(r.value), n = (x) => (typeof x === "number" && isFinite(x) && x > 0 ? x : 0); if (isObj(d)) setStats({ drills: n(d.drills), right: n(d.right), cards: n(d.cards), bestSpeed: n(d.bestSpeed) || null }); } } catch (_) {} setStatsLoaded(true); })(); }, []); // anything that isn't the saved totals is ignored (it used to blank the page)
   const saveStats = (st) => { setStats(st); try { window.storage.set(COUNT_KEY, JSON.stringify(st), false); } catch (_) {} };
 
   const freshShoe = (d = decks, p = pen) => { const cards = makeShoe(d); return { cards, pos: 1, cut: Math.round(cards.length * p / 100), rc: 0, burn: cards[0] }; }; // first card burned
@@ -2171,7 +2174,8 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1.5"><span style={{ color: "var(--ivory-d)" }}>{mode !== "hands" ? "Cards to count" : "Rounds to count"}</span></div>
-              <Seg value={amount} options={mode !== "hands" ? [[26, "26"], [52, "52"], [104, "104"], [208, "208"]] : [[3, "3"], [6, "6"], [10, "10"], [20, "20"]]} onChange={setAmount} />
+              <Seg value={want} options={mode !== "hands" ? [[26, "26"], [52, "52"], [104, "104"], [208, "208"]] : [[3, "3"], [6, "6"], [10, "10"], [20, "20"]]} onChange={setAmount} />
+              {amount < want && <div className="text-[11px] mt-1.5" style={{ color: "var(--muted)" }}>{decks} deck{decks > 1 ? "s" : ""} only deal{decks > 1 ? "" : "s"} {amount} {mode !== "hands" ? "cards" : `round${amount > 1 ? "s" : ""}`} here, so a run stops there.</div>}
             </div>
             {mode === "hands" && (
               <div className="grid items-center gap-3" style={{ gridTemplateColumns: "1fr 200px" }}>
@@ -2320,6 +2324,15 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
 
 const RULES_KEY = "bj-rules-v1";
 const DEFAULT_RULES = { h17: false, surrender: true, insurance: true, decks: 6, pen: 75, das: true, dbl: "any", bj65: false, rsa: false, maxHands: 4, devs: true };
+// Saved rules, made safe to use: a deck count or penetration that isn't one the app offers falls back to the default
+// (a list or a record there used to blank the app), and the yes/no rules become true or false.
+const cleanRules = (saved) => {
+  const r = { ...DEFAULT_RULES, ...saved };
+  r.decks = [1, 2, 4, 6, 8].includes(+r.decks) && typeof r.decks !== "object" ? +r.decks : DEFAULT_RULES.decks;
+  r.pen = typeof r.pen !== "object" && +r.pen >= 50 && +r.pen <= 90 ? +r.pen : DEFAULT_RULES.pen;
+  ["h17", "surrender", "insurance", "bj65", "rsa"].forEach((k) => { r[k] = !!r[k]; });
+  return r;
+};
 const rulesLabel = (r) => [r.h17 ? "H17" : "S17", r.bj65 ? "6:5 blackjack" : "3:2", dasOn(r) ? "DAS" : "no DAS", dblRule(r) === "any" ? "double any 2" : `double ${dblRule(r).replace("-", "–")} only`,
   r.surrender ? "LS" : "no surrender", `split to ${maxHandsOf(r)}`, ...(r.rsa ? ["resplit aces"] : []), r.insurance ? "insurance" : "no insurance", ...(devsOn(r) ? [] : ["basic strategy only (no deviations)"]), `${r.decks}D ${r.pen}%`].join(" · ");
 // the short version for the pill at the top: only what matters most at a glance
@@ -2907,14 +2920,19 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
 
   const newShoe = () => { const cards = makeShoe(decks); return { cards, pos: 1, cut: Math.round(cards.length * pen / 100), rc: 0 }; };
   useEffect(() => { sh.current = newShoe(); setShoe({ ...sh.current }); }, [decks, pen]); // eslint-disable-line
-  const draw = (seen = true) => { const c = sh.current.cards[sh.current.pos]; sh.current = { ...sh.current, pos: sh.current.pos + 1, rc: sh.current.rc + (seen ? hilo(c.rank) : 0) }; setShoe({ ...sh.current }); return c; };
+  // One or two decks cut deep can run out of cards in the middle of a round (it used to stop the table dead). Like a
+  // dealer who shuffles the discards to finish the hand: the round is completed from a fresh shuffle, the count carries
+  // on to the end of the round, and "spent" makes the next bet start a proper new shoe.
+  const draw = (seen = true) => {
+    if (sh.current.pos >= sh.current.cards.length) sh.current = { ...sh.current, cards: makeShoe(decks), pos: 0, spent: true };
+    const c = sh.current.cards[sh.current.pos]; sh.current = { ...sh.current, pos: sh.current.pos + 1, rc: sh.current.rc + (seen ? hilo(c.rank) : 0) }; setShoe({ ...sh.current }); return c; };
   const seeCard = (c) => { sh.current = { ...sh.current, rc: sh.current.rc + hilo(c.rank) }; setShoe({ ...sh.current }); };
   const decksLeft = () => Math.max(0.5, Math.round(((sh.current.cards.length - sh.current.pos) / 52) * 2) / 2);
   const tcNow = () => Math.trunc(sh.current.rc / decksLeft());
 
   // ----- betting -----
   const placeBet = (v) => {
-    if (sh.current.pos >= sh.current.cut) { sfx("shuffle"); sh.current = newShoe(); setShoe({ ...sh.current }); setShuffled(true); setTimeout(() => setShuffled(false), 1800); setMsg({ ok: true, title: "Shuffle.", body: "Fresh shoe — the count is back to zero." }); return; }
+    if (sh.current.spent || sh.current.pos >= sh.current.cut) { sfx("shuffle"); sh.current = newShoe(); setShoe({ ...sh.current }); setShuffled(true); setTimeout(() => setShuffled(false), 1800); setMsg({ ok: true, title: "Shuffle.", body: "Fresh shoe — the count is back to zero." }); return; }
     const tc = tcNow(), exp = spreadFor(tc);
     const ok = v === exp; hm.current = ok ? 0 : 1;
     if (v > 0) sfx("chip");
@@ -3272,9 +3290,16 @@ const TEST_DEFS = [
   { id: "strategy", name: "100 strategy hands", std: "100 hands with counts, 100% correct, under 3 minutes", skill: "strategy" },
   { id: "tc", name: "20 true count conversions", std: "all 20 correct, under 40 seconds", skill: "tc" },
 ];
+// The hands the 100-hand test asks as plain strategy, each shown with a count from -2 to +2. A hand that has a count
+// play is left out (it is only ever asked as that count play, as in Train's mixed mode): shown with a harmless-looking
+// count it was marked against basic strategy even when the count on screen called for the other play — about two
+// tests in three held a hand like that, and the test needs 100 out of 100. tools/checks/math-test.jsx guards this.
+const plainDeck = (rules) => { const covered = new Set(devsFor(rules).map((d) => `${d.hand}|${d.up}`)); return buildDeck(rules).filter((c) => !covered.has(`${c.hand.split(" (")[0]}|${c.up}`)); };
+// saved test results: a record of records, whatever is in storage
+const testsOf = (raw) => { let d = null; try { d = JSON.parse(raw); } catch (_) {} const out = {}; if (isObj(d)) for (const k in d) if (isObj(d[k])) out[k] = d[k]; return out; };
 function Tests({ rules, onRun }) {
   const [best, setBest] = useState({});
-  useEffect(() => { (async () => { try { const r = await window.storage.get(TESTS_KEY, false); if (r?.value) setBest(JSON.parse(r.value)); } catch (_) {} })(); }, []);
+  useEffect(() => { (async () => { try { const r = await window.storage.get(TESTS_KEY, false); if (r?.value) setBest(testsOf(r.value)); } catch (_) {} })(); }, []);
   return (
     <section className="card p-5 mb-4">
       <div className="eyebrow mb-1">Ready-to-play tests</div>
@@ -3297,7 +3322,7 @@ function Tests({ rules, onRun }) {
   );
 }
 async function saveTest(id, rec) {
-  let best = {}; try { const r = await window.storage.get(TESTS_KEY, false); if (r?.value) best = JSON.parse(r.value); } catch (_) {}
+  let best = {}; try { const r = await window.storage.get(TESTS_KEY, false); if (r?.value) best = testsOf(r.value); } catch (_) {}
   const prev = best[id];
   if (!prev || (rec.pass && !prev.pass) || (rec.pass === prev.pass && rec.score > prev.score)) best[id] = rec;
   try { await window.storage.set(TESTS_KEY, JSON.stringify(best), false); } catch (_) {}
@@ -3309,9 +3334,9 @@ function TestRunner({ id, rules, onDone }) {
   // build the question list once
   const qs = useMemo(() => {
     if (id === "deck") { const d = makeShoe(1).slice(0, 51); return d; }
-    if (id === "tc") return Array.from({ length: 20 }, () => { const left = Math.max(0.5, rnd(1, rules.decks * 2 - 1) / 2); const rc = rnd(-Math.round(6 * left) - 2, Math.round(8 * left) + 3); return { rc, left, tc: Math.trunc(rc / left) }; });
+    if (id === "tc") return Array.from({ length: 20 }, () => { const left = Math.max(0.5, rnd(1, rules.decks * 2 - 1) / 2); const rc = rnd(-Math.round(6 * left) - 2, Math.round(8 * left) + 3); return { rc, left, tc: Math.trunc(rc / left), off: rnd(0, 8) }; }); // off: where the right answer sits among the nine buttons
     if (id === "strategy") {
-      const deck = buildDeck(rules), devs = devsFor(rules); const out = [];
+      const deck = plainDeck(rules), devs = devsFor(rules); const out = [];
       for (let i = 0; i < 100; i++) {
         if (i % 3 === 2 && devs.length) { const d = devs[rnd(0, devs.length - 1)]; const side = Math.random() < 0.5; const e = devDrillCount(d, side); const tc = e ? e.tc : side ? d.idx + rnd(0, 1) : d.idx - rnd(1, 2); out.push({ kind: "dev", dev: d, tc, rcs: e ? e.rcs : undefined, answer: side ? d.above : d.below, opts: d.id === "ins" ? null : ["H", "S", "D", ...(d.hand === "10,10" ? ["P"] : []), ...(rules.surrender ? ["R"] : [])] }); }
         else { const c = deck[rnd(0, deck.length - 1)]; out.push({ ...c, kind: "basic", tc: rnd(-2, 2) }); }
@@ -3376,7 +3401,7 @@ function TestRunner({ id, rules, onDone }) {
           <div className="relative tbl felt px-4 py-6" key={state.i}><div className="grid grid-cols-2 gap-4 text-center">
             <div><div className="eyebrow mb-1">Running count</div><div className="disp mono text-5xl font-semibold" style={{ color: "var(--brass)" }}>{fmtTC(q.rc)}</div></div>
             <div><div className="eyebrow mb-1">Decks left</div><div className="disp mono text-5xl font-semibold">{q.left}</div></div></div></div>
-          <div className="grid grid-cols-3 gap-2 mt-4">{Array.from({ length: 9 }, (_, i) => q.tc - 4 + i).map((v) => btn(v, fmtTC(v)))}</div>
+          <div className="grid grid-cols-3 gap-2 mt-4">{Array.from({ length: 9 }, (_, i) => q.tc - q.off + i).map((v) => btn(v, fmtTC(v)))}</div>
         </>
       )}
       {id === "strategy" && q && (
@@ -3488,7 +3513,7 @@ function Assessment({ rules, bets, onDone, onCancel }) {
       const opts = d.id === "ins" ? null : ["H", "S", "D", ...(d.hand === "10,10" ? ["P"] : []), ...(rules.surrender ? ["R"] : [])];
       return { kind: "dev", dev: d, tc, rcs: e ? e.rcs : undefined, answer: side ? d.above : d.below, opts, cards: handToCards({ kind: "dev", dev: d }), dealer: { rank: d.up, suit: rs() }, qkey: Math.random().toString(36).slice(2) };
     });
-    const tcs = Array.from({ length: 8 }, () => { const left = Math.max(0.5, rnd(1, rules.decks * 2 - 1) / 2); const rc = rnd(-Math.round(5 * left) - 2, Math.round(7 * left) + 2); return { rc, left, tc: Math.trunc(rc / left) }; });
+    const tcs = Array.from({ length: 8 }, () => { const left = Math.max(0.5, rnd(1, rules.decks * 2 - 1) / 2); const rc = rnd(-Math.round(5 * left) - 2, Math.round(7 * left) + 2); return { rc, left, tc: Math.trunc(rc / left), off: rnd(0, 8) }; });
     return { strategy: strat, deviation: dev, tc: tcs };
   }, []); // eslint-disable-line
 
@@ -3498,10 +3523,10 @@ function Assessment({ rules, bets, onDone, onCancel }) {
   const [interrupted, setInterrupted] = useState(false);
   useEffect(() => {
     if (stage.id !== "count") return;
-    let i = 0; setCardPos(0); setCountDone(false);
-    const step = () => { i++; setCardPos(i); if (i < 30) tick.current = setTimeout(step, 600); else tick.current = setTimeout(() => setCountDone(true), 600); };
+    let i = 0, dealt = false; setCardPos(0); setCountDone(false);
+    const step = () => { i++; setCardPos(i); if (i < 30) tick.current = setTimeout(step, 600); else tick.current = setTimeout(() => { dealt = true; setCountDone(true); }, 600); };
     tick.current = setTimeout(step, 500);
-    const onVis = () => { if (document.hidden && !countDone) { clearTimeout(tick.current); setCountCards(makeShoe(1).slice(0, 30)); setInterrupted(true); setDealKey((k) => k + 1); } };
+    const onVis = () => { if (document.hidden && !dealt) { clearTimeout(tick.current); setCountCards(makeShoe(1).slice(0, 30)); setInterrupted(true); setDealKey((k) => k + 1); } };
     document.addEventListener("visibilitychange", onVis);
     return () => { clearTimeout(tick.current); document.removeEventListener("visibilitychange", onVis); };
   }, [si, dealKey]); // eslint-disable-line
@@ -3566,7 +3591,7 @@ function Assessment({ rules, bets, onDone, onCancel }) {
           <div className="relative tbl felt px-4 py-6" key={qi}><div className="grid grid-cols-2 gap-4 text-center">
             <div><div className="eyebrow mb-1">Running count</div><div className="disp mono text-4xl" style={{ color: "var(--brass)" }}>{fmtTC(q.rc)}</div></div>
             <div><div className="eyebrow mb-1">Decks left</div><div className="disp mono text-4xl">{q.left}</div></div></div></div>
-          <div className="grid grid-cols-3 gap-2 mt-3">{Array.from({ length: 9 }, (_, i) => q.tc - 4 + i).map((v) => optBtn(v, fmtTC(v), () => record(v === q.tc)))}</div>
+          <div className="grid grid-cols-3 gap-2 mt-3">{Array.from({ length: 9 }, (_, i) => q.tc - q.off + i).map((v) => optBtn(v, fmtTC(v), () => record(v === q.tc)))}</div>
         </>
       )}
       <button onClick={onCancel} className="text-xs underline underline-offset-2 mt-4 lnk" style={{ color: "var(--muted)" }}>Cancel — nothing is saved</button>
@@ -3583,7 +3608,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
   const [testBest, setTestBest] = useState(null);
   const [sess, setSess] = useState(null);
   useEffect(() => { (async () => {
-    try { const r = await window.storage.get(TESTS_KEY, false); setTestBest(r?.value ? JSON.parse(r.value) : {}); } catch (_) { setTestBest({}); }
+    try { const r = await window.storage.get(TESTS_KEY, false); setTestBest(r?.value ? testsOf(r.value) : {}); } catch (_) { setTestBest({}); }
     try { const r = await window.storage.get(SESS_KEY, false); setSess(r?.value ? JSON.parse(r.value) : []); } catch (_) { setSess([]); }
   })(); }, []);
   const netTotal = (sess || []).reduce((a, x) => a + x.result, 0);
@@ -4698,8 +4723,8 @@ function Backup() {
   };
   const importAll = async () => {
     try {
-      const obj = JSON.parse(text); if (obj.app !== "blackjack-trainer" || !obj.data) throw new Error("bad");
-      for (const k of Object.keys(obj.data)) if (BACKUP_KEYS.includes(k)) await window.storage.set(k, obj.data[k], false);
+      const obj = JSON.parse(text); if (!isObj(obj) || obj.app !== "blackjack-trainer" || !isObj(obj.data) || !Object.keys(obj.data).some((k) => BACKUP_KEYS.includes(k))) throw new Error("bad");
+      for (const k of Object.keys(obj.data)) if (BACKUP_KEYS.includes(k) && obj.data[k] != null) await window.storage.set(k, typeof obj.data[k] === "string" ? obj.data[k] : JSON.stringify(obj.data[k]), false);
       _logCache = null; setStatus("Restored. Reloading…"); setTimeout(() => { try { location.reload(); } catch (_) {} }, 900);
     } catch (_) { setStatus("That doesn't look like a backup from this app."); }
   };
@@ -5517,7 +5542,7 @@ function BetSpreadCalculator() {
   const decks = rules.decks, pen = rules.pen;
   useEffect(() => { (async () => {
     let saved = null; try { const r = await window.storage.get(RULES_KEY, false); if (r?.value) saved = JSON.parse(r.value); } catch (_) {}
-    if (saved) { applyRules({ ...DEFAULT_RULES, ...saved }); setFirstRun(false); } else setSetupOpen(true);
+    if (isObj(saved)) { applyRules(cleanRules(saved)); setFirstRun(false); } else setSetupOpen(true);
     setRulesLoaded(true);
   })(); }, []);
   const applyRules = (nr) => { setRulesRaw(nr); };

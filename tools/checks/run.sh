@@ -4,7 +4,7 @@ set -e
 cd "$(dirname "$0")/../.."
 ./build.sh >/dev/null
 cp .build/app.jsx .build/app-x.jsx
-echo 'export { handValue, settle, isBlackjack, drawdownFromMix, patternOf };' >> .build/app-x.jsx
+echo 'export { handValue, settle, isBlackjack, drawdownFromMix, patternOf, plainDeck, handToCards };' >> .build/app-x.jsx
 cp tools/checks/math-test.jsx .build/math-test.jsx
 npx esbuild .build/math-test.jsx --bundle --platform=node --format=cjs --outfile=.build/math-test.cjs --loader:.js=jsx --log-level=error
 node .build/math-test.cjs
