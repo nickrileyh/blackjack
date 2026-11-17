@@ -18,7 +18,7 @@ async function loadSetup() {
 // ---------- plan settings (this device only) ----------
 const PLAN_KEY = "bj-plan-v1";
 export const REST_DEF = { base: 7, backed: 90 };
-const PLAN_DEF = { perWeek: 2, sessHours: 4, weeks: 52, risk: 0.05, goal: "", rest: REST_DEF, minScore: 10, moveUp: false }; // moveUp: the chart's "Include moving up" switch // minScore: a casino scoring under it is never suggested
+const PLAN_DEF = { perWeek: 2, sessHours: 4, weeks: 52, risk: 0.05, goal: "", rest: REST_DEF, minScore: 10, moveUp: false, game: "logged" }; // moveUp: the chart's "Include moving up" switch // minScore: a casino scoring under it is never suggested
 async function loadPlan() {
   try { const x = await window.storage.get(PLAN_KEY, false); if (x && x.value) { const d = JSON.parse(x.value); return { ...PLAN_DEF, ...d, risk: d.risk > 0 && d.risk < 1 ? d.risk : PLAN_DEF.risk, minScore: d.minScore >= 0 && d.minScore <= 100 ? +d.minScore : PLAN_DEF.minScore, rest: { ...REST_DEF, ...(d.rest || {}) } }; } } catch (_) {}
   return PLAN_DEF;
@@ -650,7 +650,12 @@ function useGrowth(mine, bankroll, prefs, sessions, setup) {
   const whenOf = (h) => { const w = h / hpw; return w > 520 ? "10+ years" : new Date(addDays(Date.now(), w * 7)).toLocaleDateString(undefined, { month: "short", year: "numeric" }); };
   const avg = useMemo(() => averageGame(sessions, mine), [sessions, mine]);
   const logged = avg && avg.ev > 0 && avg.sd > 0 ? avg : null;
-  const game = useMemo(() => (logged ? { ...mine, ev: logged.ev, sd: logged.sd, loses: false } : mine), [logged, mine]);
+  // which game the chart plays: the logged average unless he picks "Your spread now" (prefs.game) — the logged game is
+  // fixed by what was saved with each session, so without this choice nothing he changed on Bet spread moved the chart
+  const fromLog = !!logged && prefs.game !== "spread";
+  const game = useMemo(() => (fromLog ? { ...mine, ev: logged.ev, sd: logged.sd, loses: false } : mine), [fromLog, logged, mine]);
+  // that game, never resized, from today's bankroll: its long-run risk of ruin and the bankroll it needs at the limit
+  const wins = game.ev > 0 && game.sd > 0, gameRor = wins && bankroll > 0 ? Math.exp((-2 * game.ev * bankroll) / (game.sd * game.sd)) : 0, gameNeed = wins ? (game.sd * game.sd * -Math.log(risk)) / (2 * game.ev) : 0;
   const topBet = Math.max(0, ...COUNTS.map((c) => +(mine.bets || {})[c] || 0));
   // the ladder: worked out once per game and risk limit (it doesn't depend on the bankroll), then marked from where you stand
   const ladKey = setup ? "lad" + JSON.stringify([setup.rules, setup.seats, setup.spotsMap, setup.minBet, setup.maxBet, setup.hphAuto, setup.handsPerHour, risk]) : null;
@@ -684,7 +689,7 @@ function useGrowth(mine, bankroll, prefs, sessions, setup) {
   // a much longer deal answers "when do I reach each table, and how often": three times the expected wait for the furthest table shown
   const lastL = ladder ? ladder.lv.filter((l) => l.state === "later").slice(0, 4).pop() : null, farH = lastL ? Math.min(120000, Math.max(2000, lastL.hrs * 3)) : 0;
   const far = useDeferred(ladder && farH ? ladKey + "|far|" + bankroll + "|" + Math.round(farH) : null, () => growthSteps({ B: bankroll, lv: ladder.lv, hours: farH, N: 3000 }), true);
-  return { risk, hpw, hours, whenOf, model, logged, noEdge: !!avg && !logged, goal, goalS, hist, sim: fits(sim, model && model.lv), ladder, ladBusy: !!ladKey && !lad, far: fits(far, ladder && ladder.lv), loading: !!model && !fits(sim, model.lv) };
+  return { risk, hpw, hours, whenOf, model, logged, fromLog, game, gameRor, gameNeed, noEdge: !!avg && !logged, goal, goalS, hist, sim: fits(sim, model && model.lv), ladder, ladBusy: !!ladKey && !lad, far: fits(far, ladder && ladder.lv), loading: !!model && !fits(sim, model.lv) };
 }
 // Right column, top: where the bankroll stands today
 function BankrollNow({ gr, mine, bankroll, prefs, go }) {
@@ -716,7 +721,7 @@ function BankrollNow({ gr, mine, bankroll, prefs, go }) {
 }
 function Growth({ gr, bankroll, prefs, setPrefs }) {
   const [more, setMore] = useState(false);
-  const { risk, hours, whenOf, model, logged, noEdge, goal, goalS, sim, hist, loading, ladder, far, ladBusy } = gr;
+  const { risk, hours, whenOf, model, logged, fromLog, game, gameRor, gameNeed, noEdge, goal, goalS, sim, hist, loading, ladder, far, ladBusy } = gr;
   const span = HORIZONS.find((h) => h[0] === prefs.weeks)[1], up = !!(model && !model.steady);
   const cols = "44px minmax(0,1fr) 46px 58px 58px minmax(0,1.4fr)";
   const getting = (l, i) => { const rc = far ? far.reach[i] : null; return l.state === "now" ? "You're here" : l.state === "ok" ? "Covered" : l.state === "short" ? `${shortMoney(l.need - bankroll)} short` : !rc ? "…" : <>{rc.med != null ? whenOf(rc.med) : "rarely"} · <span className="mono">{rc.p > 0.99 ? ">99" : Math.round(rc.p * 100)}%</span></>; };
@@ -730,8 +735,10 @@ function Growth({ gr, bankroll, prefs, setPrefs }) {
         <div className="eyebrow">Where it's heading</div>
         <Seg small value={prefs.weeks} options={HORIZONS} onChange={(v) => setPrefs({ weeks: v })} style={{ width: 240, maxWidth: "100%" }} />
       </div>
-      {!model ? <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>{bankroll > 0 ? "Nothing to project yet: your logged sessions and your spread have no edge. Find a winning spread on the Bet spread page first." : "Set your bankroll on the Bet spread page first."}</p> : <>
-      <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>{logged ? <>Your average game over {logged.n} logged session{logged.n === 1 ? "" : "s"}: <span className="mono" style={{ color: "var(--ivory-d)" }}>{money(logged.ev)}/hr</span>, give or take <span className="mono">{money(logged.sd)}</span> an hour.</> : noEdge ? "The sessions you logged average out to no edge, so this uses the spread set on Bet spread instead." : "No sessions logged yet, so this uses the spread set on Bet spread. Log sessions and it follows your average game."}</p>
+      {logged && bankroll > 0 && <Seg small value={fromLog ? "logged" : "spread"} options={[["logged", "Logged average"], ["spread", "Your spread now"]]} onChange={(v) => setPrefs({ game: v })} style={{ width: 300, maxWidth: "100%", margin: "8px 0 10px" }} />}
+      {!model ? <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>{!(bankroll > 0) ? "Set your bankroll on the Bet spread page first." : logged ? "The spread set on Bet spread doesn't win yet, so there is nothing to project. Find a winning spread there, or switch back to your logged average." : "Nothing to project yet: your logged sessions and your spread have no edge. Find a winning spread on the Bet spread page first."}</p> : <>
+      <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>{fromLog ? <>Your average game over {logged.n} logged session{logged.n === 1 ? "" : "s"}: <span className="mono" style={{ color: "var(--ivory-d)" }}>{money(logged.ev)}/hr</span>, give or take <span className="mono">{money(logged.sd)}</span> an hour.</> : logged ? <>The spread set on Bet spread: <span className="mono" style={{ color: "var(--ivory-d)" }}>{money(game.ev)}/hr</span>, give or take <span className="mono">{money(game.sd)}</span> an hour.</> : noEdge ? "The sessions you logged average out to no edge, so this uses the spread set on Bet spread instead." : "No sessions logged yet, so this uses the spread set on Bet spread. Log sessions and it follows your average game."}</p>
+      {gameRor > risk * 1.001 && <p className="pnote mb-3">This game is too big for {money(bankroll)}. Played at this size it goes broke {pct(gameRor, 0)} of the time sooner or later; it needs {shortMoney(gameNeed)} to fit your {pct(risk, 0)} limit.{fromLog ? " \u201cYour spread now\u201d shows the spread set on Bet spread instead." : " A smaller spread on Bet spread brings it down."}</p>}
       {!sim ? <p className="text-sm py-6" style={{ color: "var(--muted)" }}>{loading ? "Working it out…" : ""}</p> : <>
       <GrowthChart sim={sim} B={bankroll} lv={lv} flat={start.ev} hours={hours} whenOf={whenOf} hist={hist} ladder={up} />
       <div className="plegend text-[11px] mt-1 mb-3" style={{ color: "var(--muted)" }}>{hist && <span><span style={{ color: "rgba(var(--fg),.72)" }}>━</span> your results</span>}<span><span style={{ color: "var(--brass)" }}>━</span> typical</span><span><span style={{ color: "rgba(var(--acc),.6)" }}>█</span> half the time</span><span><span style={{ color: "rgba(var(--acc),.28)" }}>█</span> 8 times in 10</span>{up && <span>┅ never moving up</span>}</div>
@@ -755,7 +762,7 @@ function Growth({ gr, bankroll, prefs, setPrefs }) {
         {goalS && <span className="text-xs text-right" style={{ color: "var(--ivory-d)" }}><span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{Math.round(goalS.p * 100)}%</span> chance of reaching {shortMoney(goal)} within {span}{goalS.med != null ? <>, typically by <span className="mono">{whenOf(goalS.med)}</span></> : ""}</span>}
       </div>
       </>}
-      <Info label="Where these numbers come from">The game projected is the average of the sessions you have logged: each session's own expected dollars an hour and swing, saved with it when you logged it, weighted by its hours. With no sessions logged, or if they average out to no edge, it is the spread set on Bet spread. It is played at your pace of {prefs.perWeek} × {prefs.sessHours} hours a week. The pale line on the left is what your bankroll has actually been, counted back from today's through your logged results (it can't know about money you added or took out). From today the chart deals 4,000 possible futures: the line is the middle one, the darker band holds the middle half, the lighter one 8 in 10. "Include moving up" takes that same game through the tables in the list below: it stays as it is today until the bankroll reaches that list's "Move up" for a table bigger than yours, then grows in step with the table (a $50 table is twice a $25 one), and comes back down at its "Drop at", never below today's game. The dashed line is then the typical result if you never moved up. Percentages carry about a point of sampling noise.</Info>
+      <Info label="Where these numbers come from">"Logged average" is the game you have actually been playing: each logged session's own expected dollars an hour and swing, saved with it when you logged it, weighted by its hours. Nothing on this page or on Bet spread changes it, only logging more sessions does. "Your spread now" is the spread set on Bet spread today, so it follows every change you make there. With no sessions logged, or if they average out to no edge, the spread is used. Either way the game is played at the same size from today's bankroll, never resized, so a game too big for the bankroll shows a real chance of going broke. It is played at your pace of {prefs.perWeek} × {prefs.sessHours} hours a week. The pale line on the left is what your bankroll has actually been, counted back from today's through your logged results (it can't know about money you added or took out). From today the chart deals 4,000 possible futures: the line is the middle one, the darker band holds the middle half, the lighter one 8 in 10. "Include moving up" takes that same game through the tables in the list below: it stays as it is today until the bankroll reaches that list's "Move up" for a table bigger than yours, then grows in step with the table (a $50 table is twice a $25 one), and comes back down at its "Drop at", never below today's game. The dashed line is then the typical result if you never moved up. Percentages carry about a point of sampling noise.</Info>
       </>}
     </section>
     <section className="card p-5 mb-4">
