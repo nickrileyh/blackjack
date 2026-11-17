@@ -33,12 +33,26 @@ for (const B of [3000, 6000, 20000, 60000]) for (const cap of [2, 5, 20]) GAMES.
   // session cash: the chance of dipping that far is 5% before the shoe-clustering factor
   const cash = cashFor(x, 4); if (x.ev > 0) ok(`${tag}: session cash`, cash > 0 && Math.abs(pDip(cash, x.ev, x.sd, 4) - 0.05) < 0.02, `pDip ${pDip(cash, x.ev, x.sd, 4)}`);
 });
-{ const setup = { ...base, bankroll: 6000, rorPct: 5 }, ref = scoreGame(setup, GAMES[0]);
-  near("your usual game scores 50", scoreFor(ref, ref), 50, 0); near("twice the money scores 67", scoreFor({ ...ref, ev: ref.ev * 2 }, ref), 67, 0);
-  near("half the money scores 33", scoreFor({ ...ref, ev: ref.ev / 2 }, ref), 33, 0); near("a losing game scores 0", scoreFor({ ...ref, loses: true }, ref), 0, 0);
-  ok("risk of ruin counts in the score: same money, safer table, higher score", scoreFor({ ...ref, ror: ref.ror / 2 }, ref) > 50 && scoreFor({ ...ref, ror: Math.min(0.99, ref.ror * 1.5) }, ref) < 50, `${scoreFor({ ...ref, ror: ref.ror / 2 }, ref)} ${scoreFor({ ...ref, ror: Math.min(0.99, ref.ror * 1.5) }, ref)}`);
-  const safe = { ...ref, ror: 0.05, fit: 1 }, risky = { ...ref, ror: 0.5, fit: 1 }; near("same money at 50% risk instead of 5% scores 34 against it", scoreFor(risky, safe), Math.round((100 * 0.5) / (0.5 + 0.95)), 0);
-  ok("certain ruin scores 0", scoreFor({ ...ref, ror: 1 }, ref) === 0); }
+// ---- scores: absolute against the risk limit, so they follow the bankroll
+{ const setup = { ...base, bankroll: 6000, rorPct: 5 }, ref = { ev: 20, sd: 400, ror: 0.05, fit: 1, infeasible: false, loses: false }, S = (x) => scoreFor({ ...ref, ...x }, ref, setup);
+  near("a usual game inside the limit scores 50", S({}), 50, 0); near("twice the money scores 67", S({ ev: 40 }), 67, 0); near("half the money scores 33", S({ ev: 10 }), 33, 0);
+  near("a losing game scores 0", S({ loses: true }), 0, 0); near("certain ruin scores 0", S({ ror: 1, infeasible: true, fit: 0 }), 0, 0);
+  ok("same money, safer table, higher score", S({ ror: 0.01 }) > 50);
+  // over the limit: the same money at 65% risk (the bankroll is 14% of what the bets need) is worth almost nothing
+  const f = (ror) => Math.pow(Math.log(ror) / Math.log(0.05), 2);
+  ok("65% risk scores under 5 even at three times the money", S({ ev: 60, ror: 0.65, infeasible: true, fit: f(0.65) }) < 5, String(S({ ev: 60, ror: 0.65, infeasible: true, fit: f(0.65) })));
+  ok("a little over the limit lands in the 40s", S({ ror: 0.07, infeasible: true, fit: f(0.07) }) >= 40 && S({ ror: 0.07, infeasible: true, fit: f(0.07) }) < 50, String(S({ ror: 0.07, infeasible: true, fit: f(0.07) })));
+  // a usual game that is itself too big for the bankroll is the yardstick as if it were safe, and scores low itself
+  const big = { ...ref, ror: 0.58, infeasible: true, fit: f(0.58) };
+  ok("a too-big usual game scores low itself", scoreFor(big, big, setup) < 5, String(scoreFor(big, big, setup)));
+  ok("…and a 65%-risk table doesn't look good beside it", scoreFor({ ...ref, ev: 60, ror: 0.65, infeasible: true, fit: f(0.65) }, big, setup) < 5);
+  ok("a losing usual game still leaves a yardstick", scoreFor({ ...ref, ev: 15 }, { ...ref, loses: true, ev: 0 }, setup) === 50);
+  // the real thing: a $50 double-deck table against a growing bankroll — risk falls and the score climbs
+  const dd = { rules: { decks: 2, h17: true, das: true, pen: 60, dbl: "9-11" }, min: 50, max: 3000 }; let prev = -1, prevRor = 2, list = [];
+  for (const B of [5000, 10000, 20000, 40000, 80000, 160000]) { const su = { ...base, bankroll: B, rorPct: 5 }, x = scoreGame(su, dd), sc = scoreFor(x, scoreGame(su, GAMES[0]), su); list.push(`${B}:${sc}@${Math.round(x.ror * 100)}%`);
+    ok(`$50 double deck, bankroll ${B}: the score rises as risk falls`, sc >= prev && x.ror <= prevRor + 0.005, list.join(" ")); prev = sc; prevRor = x.ror;
+    if (B === 5000) ok("$50 double deck wrecks a $5,000 bankroll: score under 10", x.ror > 0.5 && sc < 10, `score ${sc} risk ${x.ror}`); }
+  ok("…and is a good game once the bankroll is big enough", prev >= 50, list.join(" ")); }
 
 // ---- table bankrolls: scaled bets at "move up" run exactly the risk limit, at "drop at" twice it
 for (const B of [6000, 40000]) for (const risk of [0.02, 0.05, 0.1, 0.2]) {

@@ -47,15 +47,21 @@ export function scoreGame(setup, g) {
   let rps = 0; try { rps = shoeRounds(roundFreqs(res.bets, spotsMap, cal), res.bets, spotsMap, cal, R.pen); } catch (_) {}
   return { rps, ev: loses ? 0 : res.ev * rph, sd: Math.sqrt(va * rph), ror: loses ? 1 : res.ror, bets: res.bets, infeasible: over, fit: over ? Math.pow(Math.min(1, Math.log(Math.min(0.999999, res.ror)) / Math.log(cap)), 2) : 1, loses, rph, mn, mx };
 }
-const verdictOf = (s, score) => { if (s.loses) return ["Walk", "No spread wins here when every hand is played."]; if (s.infeasible) return score >= 50 ? ["Maybe", "Better for you than your usual game, but too big for your bankroll at your risk limit."] : score >= 40 ? ["Maybe", "Close to your usual game, but too big for your bankroll at your risk limit."] : ["Walk", "Too big for your bankroll at your risk limit."]; return score >= 50 ? ["Sit", "As good as your usual game or better."] : score >= 40 ? ["Maybe", "Worth playing if nothing better is open."] : ["Walk", "Much worse for you than your usual game."]; };
-// 0–100 from what the game is worth to you against your usual game. Worth = dollars an hour (your bankroll, every hand
-// played, your risk limit) × the chance of not going broke playing it (1 − its risk of ruin) × `fit` (a further
-// markdown when the table is too big for the bankroll at the limit). The usual game is weighed the same way, so the
-// same worth is 50, twice is 67, three times 75, half 33, and it never tops out. Risk therefore counts at every level:
-// of two tables paying the same, the safer one scores higher.
+const verdictOf = (s, score) => { if (s.loses) return ["Walk", "No spread wins here when every hand is played."]; if (s.infeasible) return score >= 50 ? ["Maybe", "It pays well, but it runs over your risk limit."] : score >= 40 ? ["Maybe", "Close, but it runs a little over your risk limit."] : ["Walk", "Too big for your bankroll: the risk of ruin is far over your limit."]; return score >= 50 ? ["Sit", "As good as your usual game or better, inside your risk limit."] : score >= 40 ? ["Maybe", "A little under your usual game."] : ["Walk", "Earns much less than your usual game."]; };
+// 0–100: what the game is worth to you with the bankroll you have now.
+//   worth = dollars an hour (every hand played, the best bets for your bankroll)
+//           × the chance of not going broke playing it (1 − its risk of ruin)
+//           × fit: 1 while the risk is inside your limit, else (bankroll ÷ the bankroll those bets need at the limit)²
+// and the score is 100 × worth ÷ (worth + yardstick). The yardstick is your usual game played safely inside the limit
+// (its $/hr × the chance of not going broke at the limit) — NOT marked down for its own risk. That is what makes the
+// score follow the bankroll: a table that would wreck a small bankroll scores near 0 even if your usual game would wreck
+// it too (an earlier version marked both down, so a 65%-risk table could still score 70), and the same table climbs as
+// the bankroll grows and its risk falls. 50 = earns what your usual game does, safely; 67 = twice that; it never tops out.
 const scoreOf = (ev, ref) => (!(ev > 0) ? 0 : ref > 0 ? Math.round((100 * ev) / (ev + ref)) : 100);
 export const worthOf = (x) => (x.loses ? 0 : x.ev * Math.max(0, 1 - x.ror) * x.fit);
-export const scoreFor = (x, ref) => (x.loses ? 0 : scoreOf(worthOf(x), worthOf(ref)));
+// the yardstick; when the usual game has no winning every-hand spread at all, 1/400 of the bankroll an hour stands in
+export const yardstick = (ref, setup) => (ref && !ref.loses && ref.ev > 0 ? ref.ev * (1 - (ref.infeasible ? setup.rorPct / 100 : ref.ror)) : (setup.bankroll / 400) * (1 - setup.rorPct / 100));
+export const scoreFor = (x, ref, setup) => (x.loses ? 0 : scoreOf(worthOf(x), yardstick(ref, setup)));
 // Cash to bring so a session of `hours` runs out only 1 time in 20: the chance of ever dipping that far (pDip), with the
 // app's fitted correction for how results bunch up inside a shoe — the same sum as "bring with you" on Bet spread.
 export const cashFor = (x, hours) => (x && x.ev > 0 && x.sd > 0 && hours > 0 ? tailFix(x.rps || 0, hours * x.rph).c95 * sessionCash(0.05, x.ev, x.sd, hours) : 0);
@@ -89,7 +95,7 @@ export function TableScoreCard({ casinos, onUseRules, appRules }) {
   }, [setup, ref, g]);
   const R = g.rules, row = (label, control) => <div className="grid items-center gap-3" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,200px)" }}><span className="text-sm" style={{ color: "var(--ivory-d)" }}>{label}</span>{control}</div>;
   const num = (k, ph) => <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24 }} type="number" inputMode="numeric" min="0" placeholder={ph} value={g[k]} onChange={(e) => setG((o) => ({ ...o, [k]: e.target.value }))} /></div>;
-  const score = out && ref ? scoreFor(out, ref) : null, [verdict, why] = out && ref ? verdictOf(out, score) : ["", ""];
+  const score = out && ref ? scoreFor(out, ref, setup) : null, [verdict, why] = out && ref ? verdictOf(out, score) : ["", ""];
   const tone = verdict === "Sit" ? "var(--brass)" : verdict === "Maybe" ? "var(--ivory)" : "var(--rose)";
   return (
     <section className="card p-5 mb-4 deskonly">
@@ -128,7 +134,7 @@ export function TableScoreCard({ casinos, onUseRules, appRules }) {
           {onUseRules && <button type="button" className="text-xs font-semibold mt-3" style={{ color: "var(--brass)" }} onClick={() => onUseRules({ ...appRules, ...R })}>Practice this game in the app ›</button>}
         </div>
       )}
-      <Info label="About the score">What this table is worth to you against your usual game ({setup ? `${rulesShort(setup.rules)}, $${setup.minBet}–$${setup.maxBet}` : "the app's saved rules"}), playing every hand with the best bets your bankroll allows at your risk limit ({setup ? setup.rorPct : 5}%, set on the Plan page). It weighs dollars an hour by the chance of not going broke, so risk of ruin counts: of two tables paying the same, the safer one scores higher, and a table too big for your bankroll is marked down hard. 50 is as good as your usual game, 67 twice as good, 33 half. Sit at 50 and up, think twice from 40 to 49, walk below that.</Info>
+      <Info label="About the score">What this table is worth to you with the bankroll you have now: its dollars an hour, playing every hand with the best bets your bankroll allows, weighed by its risk of ruin against your {setup ? setup.rorPct : 5}% limit (set on the Plan page). A table that would put your bankroll at serious risk scores near 0 however well it pays, and the same table scores higher as your bankroll grows. 50 means it earns what your usual game ({setup ? `${rulesShort(setup.rules)}, $${setup.minBet}–$${setup.maxBet}` : "the app's saved rules"}) does when played safely inside your limit; 67 is twice that, 33 half. Sit at 50 and up, think twice from 40 to 49, walk below that.</Info>
     </section>
   );
 }
@@ -175,7 +181,7 @@ function scoreCasino(setup, c, peek) {
   if (_sc.size > 4000) _sc.clear();
   const ref = refOf(setup); let best = null;
   const mine = !!((c.mark && c.mark.games) || []).some((g) => g.rules);
-  if (ref) games.forEach((g) => { const x = scoreGame(setup, g), sc = scoreFor(x, ref); if (!best || sc > best.score || (sc === best.score && x.ror < best.ror)) best = { ...x, score: sc, g, mine, n: games.length }; });
+  if (ref) games.forEach((g) => { const x = scoreGame(setup, g), sc = scoreFor(x, ref, setup); if (!best || sc > best.score || (sc === best.score && x.ror < best.ror)) best = { ...x, score: sc, g, mine, n: games.length }; });
   _sc.set(k, best); return best;
 }
 export const scoreTone = (n) => (n >= 50 ? "var(--brass)" : n >= 40 ? "var(--ivory)" : "var(--rose)");
@@ -327,7 +333,7 @@ function useRotation(all, prefs, bankroll) {
   const h90 = []; rows.forEach((r) => { const h = ((r.c.sess && r.c.sess.recs) || []).filter((x) => daysBetween(dayOf(x.date), today) <= 90).reduce((s, x) => s + x.h, 0); if (h > 0) h90.push([r.c, h]); });
   h90.sort((a, b) => b[1] - a[1]);
   const tot = h90.reduce((s, x) => s + x[1], 0), heavy = h90.length > 0 && rows.length > 1 && tot >= 6 && h90[0][1] / tot > 0.5 ? h90[0] : null, share = Object.fromEntries(h90.map(([c, h]) => [c.id, h / tot]));
-  const scout = near.map((x) => ({ ...x, s: sc.get(x.c) })).filter((x) => x.s && x.s.score >= 40).sort((a, b) => b.s.score - a.s.score || a.mi - b.mi).slice(0, 5);
+  const scout = near.map((x) => ({ ...x, s: sc.get(x.c) })).filter((x) => x.s && !x.s.loses).sort((a, b) => b.s.score - a.s.score || a.s.ror - b.s.ror || a.mi - b.mi).slice(0, 5); // best score first, then the lowest risk
   return { now, today, R, rows, sc, isReady, ready, resting, plan, visits, heavy, tot, share, scout, cap: prefs.risk };
 }
 // Left column, top: the next casino to play, then the visits after it
@@ -382,7 +388,7 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
             <span className="ptrack block" aria-hidden="true"><i className={"barx " + (rd ? "ok" : r.kind === "backed" ? "x" : "")} style={{ width: `${frac * 100}%` }} /></span></span>
         </button>); })}
       <Info label="What the columns mean">
-        <b>Score</b>: how much the casino's best game is worth to you against your usual game: its dollars an hour weighed by its risk of ruin, so a safer table scores higher and one over your limit is marked down hard. 50 is the same as your usual game, 67 twice as good, 33 half. <b>Risk</b>: the risk of ruin there, meaning the chance of losing your whole bankroll if you kept playing that table's bets and never cut them. Red is over your limit. <b>$/hr</b>: what those bets earn on average. All three assume you play every hand with the best bets for your bankroll, and use the games you saved for that casino, or its scouting report when you haven't saved any. <b>Rested</b>: the bar fills as the casino rests. Full and green is ready; red is a back-off counting down.
+        <b>Score</b>: what the casino's best game is worth to you with the bankroll you have now. It is the table's dollars an hour weighed by its risk of ruin against your limit, so a table that would put your bankroll at serious risk scores near 0 however well it pays, and it climbs as your bankroll grows. 50 earns what your usual game does when played safely inside your limit, 67 twice that, 33 half. <b>Risk</b>: the risk of ruin there, meaning the chance of losing your whole bankroll if you kept playing that table's bets and never cut them. Red is over your limit. <b>$/hr</b>: what those bets earn on average. All three assume you play every hand with the best bets for your bankroll, and use the games you saved for that casino, or its scouting report when you haven't saved any. <b>Rested</b>: the bar fills as the casino rests. Full and green is ready; red is a back-off counting down.
       </Info>
       <Info label="Change the rest days">
         <div className="space-y-2.5 mb-3 mt-1">
@@ -394,7 +400,7 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
     </section>
     {scout.length > 0 && <section className="card p-5 mb-4">
       <div className="eyebrow">Worth scouting</div>
-      <p className="text-xs mt-0.5 mb-3" style={{ color: "var(--muted)" }}>The best reported games near where you play that aren't in your rotation yet.</p>
+      <p className="text-xs mt-0.5 mb-3" style={{ color: "var(--muted)" }}>The best reported games for your bankroll near where you play that aren't in your rotation yet.</p>
       <div className="phead" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS}` }}><span>Casino</span>{numHead}</div>
       {scout.map((x) => (
         <button key={x.c.id} className="prow" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS}` }} onClick={() => onOpen(x.c)}>
@@ -635,7 +641,7 @@ function CasinoPop({ c, rot, prefs, onClose, onCasinos }) {
       {x ? <>
         <div className="flex items-center gap-4 mb-1">
           <div className="mono font-semibold leading-none" style={{ fontSize: 40, color: scoreTone(x.score) }}>{x.score}</div>
-          <div className="min-w-0"><div className="text-base font-semibold" style={{ color: scoreTone(x.score) }}>{verdict}</div><div className="text-xs" style={{ color: "var(--ivory-d)" }}>{why} The score weighs what it earns by its risk of ruin; 50 is your usual game.</div></div>
+          <div className="min-w-0"><div className="text-base font-semibold" style={{ color: scoreTone(x.score) }}>{verdict}</div><div className="text-xs" style={{ color: "var(--ivory-d)" }}>{why} The score weighs what it earns by its risk of ruin with your bankroll today.</div></div>
         </div>
         <div className="mt-3">
           <Fact k="What it earns you" v={x.ev > 0 ? `${money(x.ev)}/hr` : "—"} sub={x.ev > 0 ? `On average, playing every hand with the ${over ? "safest" : "best"} bets your ${shortMoney(setup.bankroll)} allows here.${ref && ref.ev > 0 ? ` Your usual game earns ${money(ref.ev)}/hr the same way.` : ""}` : "No spread wins here when every hand is played."} />
