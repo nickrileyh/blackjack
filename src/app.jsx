@@ -815,9 +815,55 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 .sheet{border-radius:34px;border-bottom:1px solid transparent;box-shadow:0 -10px 50px -10px rgba(0,0,0,.7)}
 .sheet>div:last-child{padding-bottom:22px!important}
 }
+/* ---- The material, refined against how Apple describes Liquid Glass (a clear material that reflects and refracts
+   what is around it, takes its colour from the content behind, and answers movement with specular highlights; a layer
+   of controls and navigation floating over the content, not the content itself). What that means here:
+   1. Content cards are quieter than the controls: a softer rim, so the floating glass is what catches the eye.
+   2. Clear, not frosted: the small floating pieces blur less and carry more of the colour behind them.
+   3. Edges bend light: a bright rim, light gathered just inside the edge, a little weight along the bottom (--gl-lens).
+      A selection is a bead of the same glass, tinted and slightly raised (--gl-bead).
+   4. Highlights answer movement: the tab bar's rim turns a few degrees as the page scrolls, then settles (--gl-tilt,
+      set by one scroll listener in App on that one element).
+   5. What you press turns into a clear lens for a moment: a switch's knob, a slider's handle.
+   Real refraction (bending the picture behind the glass) needs an SVG filter inside backdrop-filter, which Safari does
+   not support, so it is not attempted; everything here works the same in Safari and Chrome. */
+:root{
+--gl-edge-soft:linear-gradient(135deg,rgba(255,255,255,.2),rgba(255,255,255,.05) 26%,rgba(255,255,255,.02) 62%,rgba(255,255,255,.11));
+--gl-lens:inset 0 1px 0 rgba(255,255,255,.2),inset 0 -1px 0 rgba(255,255,255,.05),inset 0 0 9px rgba(255,255,255,.045),inset 0 -6px 9px -7px rgba(0,0,0,.4);
+--gl-bead:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(255,255,255,.07),inset 0 0 10px rgba(var(--acc),.2),0 3px 10px -5px rgba(0,0,0,.55)}
+:root[data-theme="light"]{--gl-edge-soft:var(--gl-edge);
+--gl-lens:inset 0 1px 0 #fff,inset 0 0 8px rgba(255,255,255,.6),inset 0 -5px 8px -7px rgba(var(--fg),.16);
+--gl-bead:inset 0 1px 0 rgba(255,255,255,.55),0 3px 10px -5px rgba(var(--fg),.4)}
+.card::before{background:var(--gl-edge-soft)}
+/* the tab capsule: clearer, with a lit edge that moves */
+.bottom-nav>div{background:linear-gradient(180deg,rgba(var(--fg),.11),rgba(var(--fg),.04)),rgba(var(--bgrgb),.42);-webkit-backdrop-filter:blur(20px) saturate(2.1) brightness(1.06);backdrop-filter:blur(20px) saturate(2.1) brightness(1.06);box-shadow:var(--gl-lens),0 14px 34px -14px rgba(0,0,0,.75),0 2px 8px -3px rgba(0,0,0,.4)}
+:root[data-theme="light"] .bottom-nav>div{background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px) saturate(1.9);backdrop-filter:blur(18px) saturate(1.9);box-shadow:var(--gl-lens),0 0 0 1px rgba(var(--fg),.06),0 14px 34px -16px rgba(var(--fg),.4),0 2px 8px -3px rgba(var(--fg),.16)}
+.bottom-nav>div::before{background:linear-gradient(calc(135deg + var(--gl-tilt,0deg)),rgba(255,255,255,.46),rgba(255,255,255,.09) 27%,rgba(255,255,255,.03) 62%,rgba(255,255,255,.27))}
+:root[data-theme="light"] .bottom-nav>div::before{background:linear-gradient(calc(135deg + var(--gl-tilt,0deg)),#fff,rgba(255,255,255,.7) 27%,rgba(255,255,255,.3) 62%,#fff)}
+/* a selection is a bead of the glass */
+.navglide,.sn-glide{background:linear-gradient(180deg,rgba(var(--acc),.3),rgba(var(--acc),.12));box-shadow:var(--gl-bead)}
+:root:not([data-theme="light"]) .chipseg button.on,:root:not([data-theme="light"]) .chipseg.slide .thumb{background:linear-gradient(180deg,rgba(var(--acc),.3),rgba(var(--acc),.12));box-shadow:var(--gl-bead)}
+:root:not([data-theme="light"]) .chipseg.slide button.on{background:none;box-shadow:none}
+.gchip.on{box-shadow:var(--gl-bead)}
+/* small controls and panels: the lit, weighted edge */
+.rulespill,.iconbtn,.stepbtn,.btn.ghost,.sn-search,.xbtn{box-shadow:var(--gl-lens)}
+.pillrail .rulespill,.topbar .rulespill{-webkit-backdrop-filter:blur(16px) saturate(2);backdrop-filter:blur(16px) saturate(2)}
+.btn{background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.05) 46%,rgba(255,255,255,0) 55%),linear-gradient(180deg,var(--acc-hi),var(--brass));box-shadow:0 8px 22px -10px rgba(var(--acc),.55),inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 0 1px rgba(255,255,255,.14),inset 0 -2px 4px -1px rgba(0,0,0,.18)}
+.btn.ghost{background:linear-gradient(180deg,rgba(var(--fg),.09),rgba(var(--fg),.035));box-shadow:var(--gl-lens)}
+.cmdk{box-shadow:var(--gl-lens),0 40px 90px -20px rgba(0,0,0,.8)}
+.card.rulesdlg{box-shadow:var(--gl-lens),0 30px 80px -20px rgba(0,0,0,.8)}
+:root[data-theme="light"] .card.rulesdlg{box-shadow:var(--gl-lens),0 30px 80px -24px rgba(var(--fg),.45)}
+@media (max-width:1023px){.sheet{box-shadow:var(--gl-lens),0 -10px 50px -10px rgba(0,0,0,.7)}}
+@media (min-width:1024px){.sheetwrap .sheet{box-shadow:var(--gl-lens),0 40px 90px -20px rgba(0,0,0,.75)}}
+/* pressed: the knob and the handle become a clear lens */
+.switch::after{transition:transform .5s var(--fluid),background .3s var(--ease),box-shadow .3s var(--ease)}
+.switch:active::after{transform:scale(1.12);background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.6));box-shadow:0 3px 10px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.95),inset 0 0 6px rgba(255,255,255,.5)}
+.switch.on:active::after{transform:translateX(16px) scale(1.12)}
+input[type=range]::-webkit-slider-thumb{transition:transform .35s var(--fluid),background .3s var(--ease)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14);background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,255,255,.62))}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
-@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -5131,6 +5177,17 @@ export default function App() {
       requestAnimationFrame(() => { if (document.activeElement !== t) return; try { t.setSelectionRange(0, t.value.length); } catch (_) { try { t.select(); } catch (__) {} } });
     };
     document.addEventListener("focusin", f); return () => document.removeEventListener("focusin", f);
+  }, []);
+  // liquid glass answers movement: while the page scrolls, the lit rim of the tab capsule turns a few degrees the way the
+  // page is going and eases back when it stops. One variable on that one element, so nothing else is re-styled.
+  useEffect(() => {
+    if (noMotion()) return;
+    let raf = 0, last = window.scrollY, target = 0, cur = 0, el = null;
+    const put = (v) => { if (!el || !el.isConnected) el = document.querySelector(".bottom-nav > div"); if (el) el.style.setProperty("--gl-tilt", v); };
+    const run = () => { cur += (target - cur) * 0.16; target *= 0.9; const live = Math.abs(cur) > 0.2 || Math.abs(target) > 0.2; put(live ? cur.toFixed(1) + "deg" : "0deg"); raf = live ? requestAnimationFrame(run) : 0; };
+    const sc = () => { const y = window.scrollY, d = y - last; last = y; target = Math.max(-36, Math.min(36, target + d * 0.45)); if (!raf) raf = requestAnimationFrame(run); };
+    window.addEventListener("scroll", sc, { passive: true });
+    return () => { window.removeEventListener("scroll", sc); if (raf) cancelAnimationFrame(raf); };
   }, []);
   // liquid glass on a computer: a faint light follows the pointer across the card it is over (the .card::after sheen).
   // One listener for the whole app, one write per frame; touch screens and "reduce motion" never get it.
