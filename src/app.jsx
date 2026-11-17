@@ -283,6 +283,15 @@ const css = `
 :root[data-theme="amethyst"]{--bg:#08060D;--bg2:#0D0A14;--velvet:#120D1C;--velvet-l:#1D1530;--fg:240,235,248;--ivory:#F0EBF8;--ivory-d:#C3BAD3;--brass:#B794F6;--brass-d:#8A63D6;--acc:183,148,246;--acc-hi:#D2BCFB;--rose:#FF7086;--neg:255,112,134;--neg-l:#FFB8C3;--muted:#9A92A7;--ink:#140A24;--sh:4,2,9;--bgrgb:8,6,13;--felt1:#35215F;--felt2:#231640;--felt3:#120B23;--sheet1:#17112A;--sheet2:#0C0915;--back1:#6E2A55;--back2:#4C1C3B;--seg-hi:#F6F2FC;--seg-lo:#E4DCF2;--line:rgba(240,235,248,.11)}
 :root[data-theme="copper"]{--bg:#0A0806;--bg2:#100C09;--velvet:#18110C;--velvet-l:#251A12;--fg:246,238,230;--ivory:#F6EEE6;--ivory-d:#CDBFB1;--brass:#E8955A;--brass-d:#B86A34;--acc:232,149,90;--acc-hi:#F4B888;--rose:#F25F5C;--neg:242,95,92;--neg-l:#F8B4B2;--muted:#A29484;--ink:#1E0E04;--sh:8,5,2;--bgrgb:10,8,6;--felt1:#1C4A39;--felt2:#123024;--felt3:#0A1A13;--sheet1:#1C1510;--sheet2:#0F0B08;--back1:#7A2A22;--back2:#551C17;--seg-hi:#FBF5EF;--seg-lo:#EEE2D5;--line:rgba(246,238,230,.11)}
 :root[data-theme="graphite"]{--bg:#09090A;--bg2:#0E0E10;--velvet:#121214;--velvet-l:#1B1B1E;--fg:236,236,238;--ivory:#ECECEE;--ivory-d:#B4B4BA;--brass:#D6D6DB;--brass-d:#9A9AA2;--acc:214,214,219;--acc-hi:#F2F2F5;--rose:#F0736A;--neg:240,115,106;--neg-l:#F7B5AF;--muted:#96969D;--ink:#111113;--sh:2,2,3;--bgrgb:9,9,10;--felt1:#2E3035;--felt2:#1D1E22;--felt3:#0F1012;--sheet1:#17171A;--sheet2:#0D0D0F;--back1:#3A3D44;--back2:#26282D;--seg-hi:#F4F4F6;--seg-lo:#DEDEE2;--line:rgba(236,236,238,.11)}
+:root[data-theme="onyx"]{--bg:#0A0A0A;--bg2:#0E0E0E;--velvet:#111111;--velvet-l:#1B1A18;--fg:245,245,247;--ivory:#F5F5F7;--ivory-d:#BDBDC2;--brass:#D4AF37;--brass-d:#A68628;--acc:212,175,55;--acc-hi:#EBD27A;--rose:#EF6B5E;--neg:239,107,94;--neg-l:#F6B4AC;--muted:#98989D;--ink:#111111;--sh:0,0,0;--bgrgb:10,10,10;--felt1:#2B2A27;--felt2:#191918;--felt3:#0C0C0C;--sheet1:#191918;--sheet2:#0D0D0D;--back1:#1A1A1A;--back2:#0E0E0E;--seg-hi:#FFFFFF;--seg-lo:#F5F5F7;--line:rgba(245,245,247,.11)}
+/* Onyx & Gold (Nick's palette: #111111, #D4AF37, #F5F5F7, #FFFFFF; "make it the best looking theme"): black and one
+   metal, nothing else. Money won is gold like every other good number, so green never appears in the page itself. The
+   felt is onyx inside a gold hairline with its printing in gold, and the card backs are black with a gold lattice
+   inside a white frame. Card faces and chips keep their real colours, as in every theme. */
+:root[data-theme="onyx"]{--win:212,175,55;--win-l:#E6C968}
+:root[data-theme="onyx"] .feltprint{color:var(--brass);opacity:.26}
+:root[data-theme="onyx"] .felt.busy .feltprint{opacity:.1}
+:root[data-theme="onyx"] .pcback{background:repeating-linear-gradient(45deg,transparent 0 6px,rgba(212,175,55,.5) 6px 6.6px),repeating-linear-gradient(-45deg,var(--back1) 0 6px,rgba(212,175,55,.5) 6px 6.6px);box-shadow:0 0 0 4px #FFFFFF inset,0 0 0 5px rgba(212,175,55,.75) inset,0 0 0 1px rgba(0,0,0,.45),0 8px 18px -8px rgba(0,0,0,.85)}
 :root[data-theme="sapphire"]{--bg:#06070D;--bg2:#0A0C15;--velvet:#0D1020;--velvet-l:#161B36;--fg:234,237,247;--ivory:#EAEDF7;--ivory-d:#B6BCD0;--brass:#6F9CFF;--brass-d:#4169D8;--acc:111,156,255;--acc-hi:#A3BFFF;--rose:#FF6E7A;--neg:255,110,122;--neg-l:#FFB6BD;--muted:#8E95AC;--ink:#060A1C;--sh:2,3,9;--bgrgb:6,7,13;--felt1:#1C2C72;--felt2:#121C4C;--felt3:#0A102A;--sheet1:#141831;--sheet2:#0A0C18;--back1:#8E2A3A;--back2:#641C29;--seg-hi:#F3F5FC;--seg-lo:#DDE2F2;--line:rgba(234,237,247,.11)}
 html,body{background:var(--bg)}
 :root{color-scheme:dark;--sbar:transparent;--bg-end:#020304;--scrim:rgba(2,3,6,.62)}
@@ -591,6 +600,7 @@ input[type=range]{accent-color:var(--brass)}
 .tbl{perspective:900px}
 .felt{isolation:isolate}
 :root:not([data-theme="light"]) .felt{--muted:rgba(var(--fg),.66);--line:rgba(var(--fg),.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 22px 40px -24px rgba(0,0,0,.6),inset 0 -30px 50px -30px rgba(0,0,0,.35)}
+:root[data-theme="onyx"] .felt{box-shadow:inset 0 0 0 1px rgba(212,175,55,.2),inset 0 22px 40px -24px rgba(0,0,0,.6),inset 0 -30px 50px -30px rgba(0,0,0,.35)}
 .feltprint{position:absolute;left:50%;top:50%;width:min(100%,520px);transform:translate(-50%,-46%);z-index:-1;pointer-events:none;color:rgb(var(--fg));opacity:.15;overflow:visible;transition:opacity .24s var(--ease)}
 .felt.busy .feltprint{opacity:.06}
 .feltprint .fp-l{fill:none;stroke:currentColor;stroke-width:.7;opacity:.8}
@@ -5361,7 +5371,7 @@ let _openLog = false;
 let _logWhere = ""; // casino name handed over by the Casinos page's "Log a session"
 let _logPre = null; // a session handed over by the timer: { where, hours, date, timed }
 const THEME_KEY = "bj-theme-v1";
-const THEME_LIST = [["emerald", "Emerald", "#34D399", "#0D1114", "#1A2024"], ["sapphire", "Dark blue", "#6F9CFF", "#0D1020", "#1A1F3A"], ["gold", "Classic gold", "#E2BA62", "#0C1422", "#1A2234"], ["amethyst", "Amethyst", "#B794F6", "#120D1C", "#211A33"], ["copper", "Copper", "#E8955A", "#18110C", "#281D15"], ["graphite", "Graphite", "#D6D6DB", "#121214", "#1F1F23"], ["light", "White & blue", "#1E3FA8", "#EEF2F8", "#FFFFFF"], ["kiera", "Kiera", "#EF6698", "#F7E8EF", "#FFFFFF"]];
+const THEME_LIST = [["emerald", "Emerald", "#34D399", "#0D1114", "#1A2024"], ["sapphire", "Dark blue", "#6F9CFF", "#0D1020", "#1A1F3A"], ["gold", "Classic gold", "#E2BA62", "#0C1422", "#1A2234"], ["amethyst", "Amethyst", "#B794F6", "#120D1C", "#211A33"], ["copper", "Copper", "#E8955A", "#18110C", "#281D15"], ["graphite", "Graphite", "#D6D6DB", "#121214", "#1F1F23"], ["onyx", "Onyx & Gold", "#D4AF37", "#0A0A0A", "#1A1A1A"], ["light", "White & blue", "#1E3FA8", "#EEF2F8", "#FFFFFF"], ["kiera", "Kiera", "#EF6698", "#F7E8EF", "#FFFFFF"]];
 // Kiera is a light theme: it uses every "light" layout rule (data-theme="light") and repaints the colours on top (data-skin)
 const applyTheme = (t) => { try { const el = document.documentElement, skin = t === "kiera" ? "kiera" : null; if (skin) el.setAttribute("data-skin", skin); else el.removeAttribute("data-skin"); if (skin) t = "light"; if (t && t !== "emerald") el.setAttribute("data-theme", t); else el.removeAttribute("data-theme"); const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", skin ? "#F7E8EF" : t === "light" ? "#0E1A3A" : getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#07090A"); window.dispatchEvent(new Event("bj-theme")); } catch (_) {} };
 function ThemePicker() {
