@@ -4,7 +4,7 @@
 // Run:  tools/checks/run.sh
 process.env.TZ = "America/New_York"; // the date checks cross a clock change
 import { COUNTS, calFor, compute, pDip, PhiN, DEFAULT_RULES } from "./app.jsx";
-import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, schedule, addDays, daysBetween, reportGame } from "./planner.jsx";
+import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, schedule, addDays, daysBetween, reportGame, scoreTone } from "./planner.jsx";
 let bad = 0, n = 0; const ok = (name, cond, info = "") => { n++; if (!cond) { bad++; console.log("FAIL", name, info); } };
 const near = (name, a, b, tol) => ok(name, Math.abs(a - b) <= tol, `got ${a} want ${b} ±${tol}`);
 const base = { rules: { ...DEFAULT_RULES, h17: true, surrender: true, decks: 6, pen: 75 }, seats: 4, spotsMap: {}, minBet: 25, maxBet: 500, hphAuto: true, handsPerHour: 100 };
@@ -143,6 +143,15 @@ const rg = (s) => reportGame(s);
   const d = rg("High limit: 6 decks, S17, DAS, LS, resplit aces to 3, $100–$3000, about 1.5 decks cut; 6 tables (Apr 2022 CBJN)."); ok("report: high limit", d && !d.rules.h17 && d.rules.surrender && d.rules.rsa && d.rules.pen === 75 && d.min === 100, JSON.stringify(d));
   ok("report: 6:5 tables are left out", rg("Low-limit tables: 6 decks, H17, $10–$500, all paying 6:5.") === null); ok("report: side games are left out", rg("Spanish 21: 6 decks, H17, $10–$500, about 3 tables.") === null);
   ok("report: a line without limits is left out", rg("6 decks, S17, DAS, no surrender per a 2014 forum post.") === null); }
+
+// ---- a score's colour: one smooth run from red (0) to green (100)
+{
+  const hue = (n) => +/^hsl\((\d+) /.exec(scoreTone(n))[1];
+  ok("score colour: 0 is red", hue(0) <= 8, `hue ${hue(0)}`); ok("score colour: 100 is green", hue(100) >= 120 && hue(100) <= 150, `hue ${hue(100)}`);
+  let smooth = true; for (let n = 1; n <= 100; n++) { const d = hue(n) - hue(n - 1); if (d < 0 || d > 3) smooth = false; }
+  ok("score colour: the hue only ever moves toward green, in small steps", smooth);
+  ok("score colour: out-of-range scores are clamped", scoreTone(-5) === scoreTone(0) && scoreTone(140) === scoreTone(100));
+}
 
 console.log(bad ? `${bad} of ${n} plan checks FAILED` : `all ${n} plan checks passed`);
 process.exit(bad ? 1 : 0);

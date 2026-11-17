@@ -17,9 +17,9 @@ async function loadSetup() {
 // ---------- plan settings (this device only) ----------
 const PLAN_KEY = "bj-plan-v1";
 export const REST_DEF = { base: 7, backed: 90 };
-const PLAN_DEF = { perWeek: 2, sessHours: 4, weeks: 52, risk: 0.05, goal: "", rest: REST_DEF };
+const PLAN_DEF = { perWeek: 2, sessHours: 4, weeks: 52, risk: 0.05, goal: "", rest: REST_DEF, minScore: 10 }; // minScore: a casino scoring under it is never suggested
 async function loadPlan() {
-  try { const x = await window.storage.get(PLAN_KEY, false); if (x && x.value) { const d = JSON.parse(x.value); return { ...PLAN_DEF, ...d, risk: d.risk > 0 && d.risk < 1 ? d.risk : PLAN_DEF.risk, rest: { ...REST_DEF, ...(d.rest || {}) } }; } } catch (_) {}
+  try { const x = await window.storage.get(PLAN_KEY, false); if (x && x.value) { const d = JSON.parse(x.value); return { ...PLAN_DEF, ...d, risk: d.risk > 0 && d.risk < 1 ? d.risk : PLAN_DEF.risk, minScore: d.minScore >= 0 && d.minScore <= 100 ? +d.minScore : PLAN_DEF.minScore, rest: { ...REST_DEF, ...(d.rest || {}) } }; } } catch (_) {}
   return PLAN_DEF;
 }
 
@@ -96,7 +96,7 @@ export function TableScoreCard({ casinos, onUseRules, appRules }) {
   const R = g.rules, row = (label, control) => <div className="grid items-center gap-3" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,200px)" }}><span className="text-sm" style={{ color: "var(--ivory-d)" }}>{label}</span>{control}</div>;
   const num = (k, ph) => <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24 }} type="number" inputMode="numeric" min="0" placeholder={ph} value={g[k]} onChange={(e) => setG((o) => ({ ...o, [k]: e.target.value }))} /></div>;
   const score = out && ref ? scoreFor(out, ref, setup) : null, [verdict, why] = out && ref ? verdictOf(out, score) : ["", ""];
-  const tone = verdict === "Sit" ? "var(--brass)" : verdict === "Maybe" ? "var(--ivory)" : "var(--rose)";
+  const tone = score == null ? "var(--ivory)" : scoreTone(score);
   return (
     <section className="card p-5 mb-4 deskonly">
       <div className="eyebrow mb-3">Table score</div>
@@ -184,7 +184,13 @@ function scoreCasino(setup, c, peek) {
   if (ref) games.forEach((g) => { const x = scoreGame(setup, g), sc = scoreFor(x, ref, setup); if (!best || sc > best.score || (sc === best.score && x.ror < best.ror)) best = { ...x, score: sc, g, mine, n: games.length }; });
   _sc.set(k, best); return best;
 }
-export const scoreTone = (n) => (n >= 50 ? "var(--brass)" : n >= 40 ? "var(--ivory)" : "var(--rose)");
+// A score's colour: one smooth run from red at 0 through amber to green at 100 (Nick's instruction), a little darker on
+// the light themes so it reads on white.
+export const scoreTone = (n) => {
+  const t = Math.max(0, Math.min(100, +n || 0)) / 100; let light = false;
+  try { light = document.documentElement.getAttribute("data-theme") === "light"; } catch (_) {}
+  return `hsl(${Math.round(4 + 138 * t)} ${light ? 72 : 70}% ${light ? 35 : 60}%)`;
+};
 // Scores for a list of casinos. The optimizer runs once per game, so they are worked out a few at a time after the page
 // has settled and kept; `get(c)` is undefined until that casino's turn has come. `over` lets a page pass the live
 // bankroll and risk limit instead of the saved ones.
@@ -303,7 +309,7 @@ function Nums({ x, cap }) {
   const dash = <span className="pnum" style={{ color: "var(--muted)" }}>—</span>;
   if (!x) return <>{dash}{dash}{dash}</>;
   return (<>
-    <span className="pnum" style={{ color: x.score >= 50 ? "var(--brass)" : "var(--ivory)" }}>{x.score}</span>
+    <span className="pnum" style={{ color: scoreTone(x.score) }}>{x.score}</span>
     <span className="pnum" style={{ color: x.loses ? "var(--muted)" : x.ror > cap * 1.001 ? "var(--rose)" : "var(--ivory-d)" }}>{x.loses ? "—" : pct(x.ror, x.ror < 0.0095 ? 1 : 0)}</span>
     <span className="pnum" style={{ color: "var(--ivory-d)" }}>{x.ev > 0 ? money(x.ev) : "—"}</span>
   </>);
@@ -325,46 +331,60 @@ function useRotation(all, prefs, bankroll) {
   const scoreList = useMemo(() => [...rows.map((r) => r.c), ...near.map((x) => x.c)], [rows, near]);
   const sc = useCasinoScores(scoreList, true, { bankroll, rorPct: prefs.risk * 100 }), scoreN = (c) => { const x = sc.get(c); return x ? x.score : null; };
   const isReady = (r) => (r.kind !== "backed" || !!r.until) && (!r.until || r.until <= today);
-  const ready = rows.filter(isReady).sort((a, b) => weightAt(b.last, today, scoreN(b.c)) - weightAt(a.last, today, scoreN(a.c)));
-  const resting = rows.filter((r) => !isReady(r)).sort((a, b) => (a.until || Infinity) - (b.until || Infinity));
-  const plan = schedule(rows, today, R, prefs.perWeek, 6, scoreN);
+  // A casino scoring under the cut-off (10 unless Nick changes it) is never suggested: it is left out of the schedule and
+  // listed last as "Skipped". One with no score at all (no game saved or reported) stays in. `pending` is true until
+  // every casino's score is in, so the plan doesn't name a casino and then take it back.
+  const minScore = prefs.minScore, low = (c) => { const x = sc.get(c); return !!x && x.score < minScore; };
+  const pending = rows.some((r) => gamesAt(r.c).length && sc.get(r.c) === undefined);
+  const okRows = rows.filter((r) => !low(r.c)), skipped = rows.filter((r) => low(r.c)).sort((a, b) => scoreN(b.c) - scoreN(a.c));
+  const ready = okRows.filter(isReady).sort((a, b) => weightAt(b.last, today, scoreN(b.c)) - weightAt(a.last, today, scoreN(a.c)));
+  const resting = okRows.filter((r) => !isReady(r)).sort((a, b) => (a.until || Infinity) - (b.until || Infinity));
+  const plan = pending ? [] : schedule(okRows, today, R, prefs.perWeek, 6, scoreN);
   const visits = {}; plan.forEach((v) => (visits[v.c.id] = [...(visits[v.c.id] || []), v.t]));
   // where your hours went over the last 90 days
   const h90 = []; rows.forEach((r) => { const h = ((r.c.sess && r.c.sess.recs) || []).filter((x) => daysBetween(dayOf(x.date), today) <= 90).reduce((s, x) => s + x.h, 0); if (h > 0) h90.push([r.c, h]); });
   h90.sort((a, b) => b[1] - a[1]);
   const tot = h90.reduce((s, x) => s + x[1], 0), heavy = h90.length > 0 && rows.length > 1 && tot >= 6 && h90[0][1] / tot > 0.5 ? h90[0] : null, share = Object.fromEntries(h90.map(([c, h]) => [c.id, h / tot]));
   const scout = near.map((x) => ({ ...x, s: sc.get(x.c) })).filter((x) => x.s && !x.s.loses).sort((a, b) => b.s.score - a.s.score || a.s.ror - b.s.ror || a.mi - b.mi).slice(0, 5); // best score first, then the lowest risk
-  return { now, today, R, rows, sc, isReady, ready, resting, plan, visits, heavy, tot, share, scout, cap: prefs.risk };
+  return { now, today, R, rows, sc, isReady, ready, resting, skipped, low, pending, minScore, plan, visits, heavy, tot, share, scout, cap: prefs.risk };
 }
 // Left column, top: the next casino to play, then the visits after it
+const setupB = (sc) => (sc.setup ? sc.setup.bankroll : 0);
 function PlayNext({ rot, prefs, onOpen }) {
-  const { today, R, rows, sc, ready, plan, heavy, tot, cap } = rot, first = plan[0];
+  const { today, R, rows, sc, ready, skipped, low, pending, minScore, plan, heavy, tot, cap } = rot, first = plan[0];
   if (!rows.length) return <section className="card p-5 mb-4"><div className="eyebrow mb-2">Play next</div><p className="text-sm" style={{ color: "var(--ivory-d)" }}>Nothing to plan yet. Log a session on the Sessions page, or mark a casino as "been" on the Casinos page, and this fills in: where to play next, when each casino is safe to go back to, and what each one is worth to you.</p></section>;
   const x = first ? sc.get(first.c) : null, row = first && rows.find((r) => r.c.id === first.c.id);
-  const need = Math.max(1, Math.ceil((prefs.perWeek * R.base) / 7)), active = rows.filter((r) => r.kind !== "backed" || (r.until && r.until <= today)).length;
+  const need = Math.max(1, Math.ceil((prefs.perWeek * R.base) / 7)), active = rows.filter((r) => !low(r.c) && (r.kind !== "backed" || (r.until && r.until <= today))).length;
+  const bestSkip = skipped[0] && sc.get(skipped[0].c), allSkipped = !pending && skipped.length === rows.length;
   const top = x ? Math.max(0, ...COUNTS.map((k) => +x.bets[k] || 0)) : 0;
   return (
     <section className="card p-5 mb-4">
-      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Play next</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{ready.length} of {rows.length} ready</div></div>
+      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Play next</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{pending ? "" : `${ready.length} of ${rows.length} ready`}</div></div>
+      {pending && <div className="text-sm mt-2" style={{ color: "var(--muted)" }}>Working out the scores…</div>}
+      {allSkipped && <div className="mt-2">
+        <div className="pbig" style={{ color: "var(--ivory)" }}>Nothing to suggest</div>
+        <p className="text-xs mt-1.5" style={{ color: "var(--ivory-d)" }}>Every casino you play scores under {minScore} with a {money(setupB(sc))} bankroll at a {pct(cap, 0)} risk limit, so none is put forward.{bestSkip ? <> The closest is {skipped[0].c.name} at <b style={{ color: scoreTone(bestSkip.score) }}>{bestSkip.score}</b>.</> : ""} A table with a lower minimum, or a bigger bankroll, brings the scores up. "Worth scouting" below lists the best games reported near you.</p>
+      </div>}
       {first && <button className="block text-left w-full mt-2" onClick={() => onOpen(first.c)}>
         <div className="pbig truncate" style={{ color: "var(--brass)" }}>{first.c.name}</div>
         <div className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{first.t <= today ? "Today" : fmtWeekday(first.t)}{row && row.last ? ` · last visit ${ago(daysBetween(row.last, today))}` : ""}{first.back ? " · first visit since the back-off, keep it short" : ""}</div>
       </button>}
       {x ? <div className="flex flex-wrap gap-1.5 mt-3">
-        <span className="pchip">Score <b style={x.score >= 50 ? { color: "var(--brass)" } : undefined}>{x.score}</b></span>
+        <span className="pchip">Score <b style={{ color: scoreTone(x.score) }}>{x.score}</b></span>
         {!x.loses && <span className="pchip">Risk of ruin <b style={x.ror > cap * 1.001 ? { color: "var(--rose)" } : undefined}>{pct(x.ror, x.ror < 0.0095 ? 1 : 0)}</b></span>}
         {x.ev > 0 && <span className="pchip">Earns <b>{money(x.ev)}/hr</b></span>}
         {x.ev > 0 && <span className="pchip">Bets <b>${x.mn}–${top}</b></span>}
       </div> : first && <div className="text-xs mt-3" style={{ color: "var(--muted)" }}>{gamesAt(first.c).length ? "Working out the score…" : "No game saved or reported here, so no score yet."}</div>}
-      {heavy && <p className="pnote mt-3">{Math.round((100 * heavy[1]) / tot)}% of your last 90 days' hours were at {heavy[0].name}. The plan spreads them out.</p>}
-      {active < need && <p className="pnote mt-3">{prefs.perWeek} sessions a week needs {need} casinos to keep every visit rested, and you have {active}. Add {need - active} from "Worth scouting", or play fewer sessions.</p>}
+      {!pending && !allSkipped && skipped.length > 0 && <p className="text-[11.5px] mt-3" style={{ color: "var(--muted)" }}>Not suggested, scoring under {minScore}: {skipped.map((r, i) => { const y = sc.get(r.c); return <span key={r.c.id}>{i ? ", " : ""}{r.c.name} <b style={{ color: scoreTone(y.score) }}>{y.score}</b></span>; })}.</p>}
+      {heavy && !allSkipped && <p className="pnote mt-3">{Math.round((100 * heavy[1]) / tot)}% of your last 90 days' hours were at {heavy[0].name}. The plan spreads them out.</p>}
+      {!pending && !allSkipped && active < need && <p className="pnote mt-3">{prefs.perWeek} sessions a week needs {need} casinos to keep every visit rested, and you have {active}. Add {need - active} from "Worth scouting", or play fewer sessions.</p>}
       {plan.length > 1 && <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
         <div className="eyebrow mb-1" style={{ fontSize: 10 }}>Then</div>
         {plan.slice(1).map((v, i) => { const y = sc.get(v.c); return (
           <button key={i} className="prow" style={{ gridTemplateColumns: "86px minmax(0,1fr) auto", padding: "7px 6px" }} onClick={() => onOpen(v.c)}>
             <span className="mono text-xs" style={{ color: "var(--ivory-d)" }}>{fmtWeekday(v.t)}</span>
             <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{v.c.name}</span>{(v.back || v.wait) && <span className="block text-[11px] truncate" style={{ color: v.back ? "var(--neg-l)" : "var(--muted)" }}>{v.back ? "first visit since the back-off" : "nothing is ready sooner"}</span>}</span>
-            <span className="pnum" style={{ color: y && y.score >= 50 ? "var(--brass)" : "var(--ivory-d)" }}>{y ? y.score : "—"}</span>
+            <span className="pnum" style={{ color: y ? scoreTone(y.score) : "var(--muted)" }}>{y ? y.score : "—"}</span>
           </button>); })}
       </div>}
       <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Log each session after you play and the plan moves on by itself.</p>
@@ -372,7 +392,7 @@ function PlayNext({ rot, prefs, onOpen }) {
   );
 }
 function Rotation({ rot, prefs, setPrefs, onOpen }) {
-  const { now, today, R, rows, sc, isReady, ready, resting, share, scout, cap } = rot;
+  const { now, today, R, rows, sc, isReady, ready, resting, skipped, low, minScore, share, scout, cap } = rot;
   const setRest = (k, v) => setPrefs({ rest: { ...prefs.rest, [k]: v } });
   const numHead = <><span className="text-right">Score</span><span className="text-right">Risk</span><span className="text-right">$/hr</span></>;
   if (!rows.length) return null;
@@ -380,18 +400,19 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
     <section className="card p-5 mb-4">
       <div className="eyebrow mb-3">Your casinos</div>
       <div className="phead" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS} 92px` }}><span>Casino</span>{numHead}<span className="text-right">Rested</span></div>
-      {[...ready, ...resting].map((r) => { const rd = isReady(r), frac = rd ? 1 : r.until && r.from ? Math.max(0.04, Math.min(0.96, (now - r.from) / Math.max(DAY, r.until - r.from))) : 0.04, sh = share[r.c.id]; return (
+      {[...ready, ...resting, ...skipped].map((r) => { const rd = isReady(r), sk = low(r.c), frac = rd ? 1 : r.until && r.from ? Math.max(0.04, Math.min(0.96, (now - r.from) / Math.max(DAY, r.until - r.from))) : 0.04, sh = share[r.c.id]; return (
         <button key={r.c.id} className="prow" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS} 92px` }} onClick={() => onOpen(r.c)}>
           <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{r.c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{r.last ? ago(daysBetween(r.last, today)) : "no sessions"}{sh ? ` · ${Math.round(sh * 100)}% of hours` : ""}{r.why ? ` · ${r.why}` : ""}</span></span>
           <Nums x={sc.get(r.c)} cap={cap} />
-          <span className="min-w-0"><span className="block text-[11px] font-semibold text-right mb-1.5" style={{ color: rd ? "var(--brass)" : r.kind === "backed" ? "var(--rose)" : "var(--ivory-d)" }}>{rd ? "Ready" : r.until ? `Back ${fmtDay(r.until)}` : "Backed off"}</span>
-            <span className="ptrack block" aria-hidden="true"><i className={"barx " + (rd ? "ok" : r.kind === "backed" ? "x" : "")} style={{ width: `${frac * 100}%` }} /></span></span>
+          <span className="min-w-0"><span className="block text-[11px] font-semibold text-right mb-1.5" style={{ color: sk ? "var(--muted)" : rd ? "var(--brass)" : r.kind === "backed" ? "var(--rose)" : "var(--ivory-d)" }} title={sk ? `Scores under ${minScore}, so it is never suggested` : undefined}>{sk ? "Skipped" : rd ? "Ready" : r.until ? `Back ${fmtDay(r.until)}` : "Backed off"}</span>
+            <span className="ptrack block" aria-hidden="true"><i className={"barx " + (sk ? "" : rd ? "ok" : r.kind === "backed" ? "x" : "")} style={{ width: `${frac * 100}%` }} /></span></span>
         </button>); })}
       <Info label="What the columns mean">
-        <b>Score</b>: what the casino's best game is worth to you with the bankroll you have now. It is the table's dollars an hour weighed by its risk of ruin against your limit, so a table that would put your bankroll at serious risk scores near 0 however well it pays, and it climbs as your bankroll grows. 50 earns what your usual game does when played safely inside your limit, 67 twice that, 33 half. <b>Risk</b>: the risk of ruin there, meaning the chance of losing your whole bankroll if you kept playing that table's bets and never cut them. Red is over your limit. <b>$/hr</b>: what those bets earn on average. All three assume you play every hand with the best bets for your bankroll, and use the games you saved for that casino, or its scouting report when you haven't saved any. <b>Rested</b>: the bar fills as the casino rests. Full and green is ready; red is a back-off counting down.
+        <b>Score</b>: what the casino's best game is worth to you with the bankroll you have now. It is the table's dollars an hour weighed by its risk of ruin against your limit, so a table that would put your bankroll at serious risk scores near 0 however well it pays, and it climbs as your bankroll grows. 50 earns what your usual game does when played safely inside your limit, 67 twice that, 33 half. <b>Risk</b>: the risk of ruin there, meaning the chance of losing your whole bankroll if you kept playing that table's bets and never cut them. Red is over your limit. <b>$/hr</b>: what those bets earn on average. All three assume you play every hand with the best bets for your bankroll, and use the games you saved for that casino, or its scouting report when you haven't saved any. <b>Rested</b>: the bar fills as the casino rests. Full and green is ready; red is a back-off counting down. <b>Skipped</b>: the casino scores under {minScore}, so it is never suggested as a place to play. The score's colour runs from red at 0 to green at 100.
       </Info>
-      <Info label="Change the rest days">
+      <Info label="Change the rest days and the lowest score to suggest">
         <div className="space-y-2.5 mb-3 mt-1">
+          <div className="flex items-center justify-between gap-3"><span className="text-sm">Never suggest a casino scoring under</span><Step v={prefs.minScore} set={(v) => setPrefs({ minScore: v })} min={0} max={50} step={5} f={(v) => (v > 0 ? String(v) : "Off")} label="lowest score to suggest" /></div>
           <div className="flex items-center justify-between gap-3"><span className="text-sm">Rest after a visit</span><Step v={prefs.rest.base} set={(v) => setRest("base", v)} min={1} max={30} f={(v) => `${v} d`} label="rest after a visit" /></div>
           <div className="flex items-center justify-between gap-3"><span className="text-sm">Rest after a back-off</span><Step v={prefs.rest.backed} set={(v) => setRest("backed", v)} min={30} max={365} step={15} f={(v) => `${v} d`} label="rest after a back-off" /></div>
         </div>
@@ -615,7 +636,7 @@ function Growth({ gr, bankroll, prefs, setPrefs }) {
 // ---------- a casino's details, as a pop-up on the Plan page ----------
 function CasinoPop({ c, rot, prefs, onClose, onCasinos }) {
   const { today, rows, sc, isReady, visits, cap } = rot, row = rows.find((x) => x.c.id === c.id), x = sc.get(c), setup = sc.setup, ref = sc.ref, se = c.sess;
-  const rd = row && isReady(row), planned = (visits[c.id] || []).map(fmtWeekday);
+  const rd = row && isReady(row), planned = (visits[c.id] || []).map(fmtWeekday), sk = !!row && rot.low(c);
   // the same bets dealt at this table and at your usual one: what the rules and penetration alone are worth
   const gameX = useMemo(() => {
     if (!x || !setup || !ref || ref.loses) return null;
@@ -633,9 +654,9 @@ function CasinoPop({ c, rot, prefs, onClose, onCasinos }) {
     <Sheet title={c.name} onClose={onClose}>
       <p className="text-xs -mt-2 mb-3" style={{ color: "var(--muted)" }}>{[c.city, c.st].filter(Boolean).join(", ")}</p>
       <div className="rounded-xl px-4 py-3 mb-3" style={{ background: "rgba(var(--fg),.035)" }}>
-        <div className="text-sm font-semibold" style={{ color: !row ? "var(--ivory)" : rd ? "var(--brass)" : row.kind === "backed" ? "var(--rose)" : "var(--ivory)" }}>{!row ? "Not in your rotation yet" : rd ? "Ready to play" : row.until ? `Resting until ${fmtWeekday(row.until)}` : "Backed off"}</div>
+        <div className="text-sm font-semibold" style={{ color: !row || sk ? "var(--ivory)" : rd ? "var(--brass)" : row.kind === "backed" ? "var(--rose)" : "var(--ivory)" }}>{!row ? "Not in your rotation yet" : sk ? "Not suggested" : rd ? "Ready to play" : row.until ? `Resting until ${fmtWeekday(row.until)}` : "Backed off"}</div>
         <div className="text-xs mt-0.5" style={{ color: "var(--ivory-d)" }}>
-          {!row ? "You haven't logged a session here. Scout it, log the session, and it joins the rotation." : <>{row.last ? `Last visit ${ago(daysBetween(row.last, today))}.` : "No sessions logged."}{!rd && row.days ? ` It rests ${row.days} days${row.why ? ` (${row.why})` : ""}.` : ""}{planned.length ? ` Planned: ${planned.join(", ")}.` : rd ? "" : " Not in the next six visits."}</>}
+          {!row ? "You haven't logged a session here. Scout it, log the session, and it joins the rotation." : <>{row.last ? `Last visit ${ago(daysBetween(row.last, today))}.` : "No sessions logged."}{!rd && row.days ? ` It rests ${row.days} days${row.why ? ` (${row.why})` : ""}.` : ""}{sk ? ` It scores under ${rot.minScore} with your bankroll, so the plan leaves it out.` : planned.length ? ` Planned: ${planned.join(", ")}.` : rd ? "" : " Not in the next six visits."}</>}
         </div>
       </div>
       {x ? <>
