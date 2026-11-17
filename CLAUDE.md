@@ -188,6 +188,10 @@ Not built yet: reports shared between people using the app (needs an online home
 
 Playing cards are drawn at fixed pixel sizes (`.pc`, `.pc.sm`, `.pc.big`) and scaled with CSS `zoom: var(--cz)`. Each felt sets `--cz` through a class (`cz-play` live play, `cz-train` strategy table / pairs / hand totals, `cz-big` single-card drills and tests, `cz-rounds` + `rd-seats` table rounds), with larger values at 640px and 1024px. To change how big cards are, change those values in the `css` string; don't edit the card artwork sizes. Anything sized to hold cards uses `calc(Npx * var(--cz, 1))`. Hands use `.hand > .slot` so cards sit side by side when they fit and tuck under each other when they don't.
 
+## Themes
+
+`THEME_LIST` in `src/app.jsx` (Emerald, Dark blue, Classic gold, Amethyst, Copper, White & blue, Kiera); each is one block of colour variables on `:root[data-theme=…]`. **Kiera** (pink with a green felt, from a palette Nick sent) is a light theme: `applyTheme` sets `data-theme="light"` so every light-theme layout rule applies, plus `data-skin="kiera"`, whose block repaints the colours. Add another light theme the same way; a rule that must beat a later light-theme rule needs both attributes in its selector.
+
 ## The table felt
 
 `.felt` is the green table surface used by live play, the strategy table and the drills. `FeltPrint` draws the printing on it (payout and dealer rule, read from the app's rules through `RulesCtx`) behind the cards; it is used on live play and the strategy table only. In the light theme the felt is deep blue and `:root[data-theme="light"] .felt` re-points the text and accent variables to light-on-dark, so anything placed inside a felt should use the theme variables rather than fixed colors. Outside a felt, use `var(--recess)` for sunken boxes (not `rgba(var(--sh),…)`, which is white in the light theme) and `rgba(var(--fg),…)` for faint tracks and tints. The sidebar logo (`.sn-tile`) is the app icon's spade and chip in theme colors.

@@ -287,6 +287,16 @@ html,body{background:var(--bg)}
 :root[data-theme="light"] .in{background:#FFFFFF;border-color:rgba(15,27,61,.16)}
 /* the light theme keeps a real felt: deep blue, with everything printed or written on it switched to light-on-dark */
 :root[data-theme="light"] .felt{--fg:255,255,255;--ivory:#F5F7FF;--ivory-d:#D3DBF2;--muted:#AAB8E0;--brass:#B9CBFF;--brass-d:#93ACF2;--acc:185,203,255;--acc-hi:#D6E0FF;--rose:#FF8E8E;--neg:255,142,142;--neg-l:#FFC4C4;--ink:#0E1A3A;--line:rgba(255,255,255,.16);color:var(--ivory);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 22px 40px -24px rgba(6,12,40,.7)}
+:root[data-skin="kiera"]{--recess:rgba(120,30,70,.06);--bg-end:#F2D6E2;--scrim:rgba(70,20,45,.38);--bg:#F7E8EF;--bg2:#FFFFFF;--velvet:#FBEFF4;--velvet-l:#FFFFFF;--fg:74,28,52;--ivory:#3D1A2C;--ivory-d:#6E4458;--brass:#D9437F;--brass-d:#B8336A;--acc:217,67,127;--acc-hi:#EF6698;--rose:#C2410C;--neg:194,65,12;--neg-l:#A3360A;--muted:#946B7E;--ink:#FFFFFF;--sh:255,255,255;--bgrgb:247,232,239;--felt1:#2E9E62;--felt2:#1F7E4B;--felt3:#17633A;--sheet1:#FFFFFF;--sheet2:#FCF3F7;--back1:#EF6698;--back2:#C94A7E;--seg-hi:#F27AA6;--seg-lo:#E25A8E;--line:rgba(74,28,52,.1);--sbar:#3D1A2C}
+:root[data-skin="kiera"] .felt{--brass:#C9F7DC;--brass-d:#9EEABF;--acc:201,247,220;--acc-hi:#E4FFEE;--muted:#B5E6C9;--ivory-d:#D9F5E4;--rose:#FFB38A;--neg:255,179,138;--neg-l:#FFD2B8;--ink:#0D3B22;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 22px 40px -24px rgba(5,40,20,.6)}
+:root[data-skin="kiera"] .card{border-color:rgba(217,67,127,.12);box-shadow:0 1px 2px rgba(120,30,70,.05),0 10px 26px -18px rgba(150,40,90,.35)}
+:root[data-skin="kiera"] .chipseg{background:rgba(217,67,127,.07);box-shadow:inset 0 1px 2px rgba(120,30,70,.08)}
+:root[data-skin="kiera"] .chipseg button.on,:root[data-skin="kiera"] .chipseg.slide .thumb{box-shadow:0 2px 6px -2px rgba(217,67,127,.55)}
+:root[data-skin="kiera"] .chipseg.slide button.on{box-shadow:none}
+:root[data-skin="kiera"][data-theme="light"] .card.focuscard{background:linear-gradient(135deg,rgba(217,67,127,.08),#FFFFFF 60%);border-color:rgba(217,67,127,.22)}
+:root[data-skin="kiera"][data-theme="light"] .sidenav{background:rgba(255,255,255,.72);border-right-color:rgba(120,30,70,.08)}
+:root[data-skin="kiera"] .in{border-color:rgba(120,30,70,.16)}
+:root[data-skin="kiera"] .bottom-nav,:root[data-skin="kiera"] .topbar{box-shadow:0 -1px 0 rgba(120,30,70,.06)}
 .sbar{position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top);background:var(--sbar);z-index:80;pointer-events:none}
 .bj{overscroll-behavior-y:contain;-webkit-touch-callout:none;background:var(--bg);min-height:100vh;line-height:1.55;background:radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%);color:var(--ivory);font-family:'Instrument Sans',Inter,system-ui,sans-serif;min-height:100vh;padding-bottom:env(safe-area-inset-bottom);-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 .bj::before{content:"";position:fixed;inset:0;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E")}
@@ -4596,14 +4606,15 @@ function TopBar({ title, children }) {
 let _openLog = false;
 let _logWhere = ""; // casino name handed over by the Casinos page's "Log a session"
 const THEME_KEY = "bj-theme-v1";
-const THEME_LIST = [["emerald", "Emerald", "#34D399", "#0D1114", "#1A2024"], ["sapphire", "Dark blue", "#7AA2FF", "#0D1020", "#1A1F3A"], ["gold", "Classic gold", "#D9B56A", "#0C1422", "#1A2234"], ["amethyst", "Amethyst", "#B794F6", "#120D1C", "#211A33"], ["copper", "Copper", "#E8955A", "#18110C", "#281D15"], ["light", "White & blue", "#1E3FA8", "#EEF2F8", "#FFFFFF"]];
-const applyTheme = (t) => { try { if (t && t !== "emerald") document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", t === "light" ? "#0E1A3A" : getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#07090A"); } catch (_) {} };
+const THEME_LIST = [["emerald", "Emerald", "#34D399", "#0D1114", "#1A2024"], ["sapphire", "Dark blue", "#7AA2FF", "#0D1020", "#1A1F3A"], ["gold", "Classic gold", "#D9B56A", "#0C1422", "#1A2234"], ["amethyst", "Amethyst", "#B794F6", "#120D1C", "#211A33"], ["copper", "Copper", "#E8955A", "#18110C", "#281D15"], ["light", "White & blue", "#1E3FA8", "#EEF2F8", "#FFFFFF"], ["kiera", "Kiera", "#EF6698", "#F7E8EF", "#FFFFFF"]];
+// Kiera is a light theme: it uses every "light" layout rule (data-theme="light") and repaints the colours on top (data-skin)
+const applyTheme = (t) => { try { const el = document.documentElement, skin = t === "kiera" ? "kiera" : null; if (skin) el.setAttribute("data-skin", skin); else el.removeAttribute("data-skin"); if (skin) t = "light"; if (t && t !== "emerald") el.setAttribute("data-theme", t); else el.removeAttribute("data-theme"); const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", skin ? "#F7E8EF" : t === "light" ? "#0E1A3A" : getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#07090A"); } catch (_) {} };
 function ThemePicker() {
   const [t, setT] = useState(() => { try { return localStorage.getItem("bj:" + THEME_KEY) || "emerald"; } catch (_) { return "emerald"; } });
   useEffect(() => { applyTheme(t); try { window.storage.set(THEME_KEY, t, false); } catch (_) {} }, [t]);
   return (
     <div className="grid grid-cols-2 gap-2.5">
-      {THEME_LIST.map(([k, l, acc, bg, card]) => { const on = t === k, lightT = k === "light"; return (
+      {THEME_LIST.map(([k, l, acc, bg, card]) => { const on = t === k, lightT = k === "light" || k === "kiera"; return (
         <button key={k} onClick={() => setT(k)} aria-pressed={on} className="rounded-2xl p-2.5 text-left chippress" style={{ background: "rgba(var(--fg),.03)", border: on ? "2px solid var(--brass)" : "1px solid rgba(var(--fg),.1)", padding: on ? 9 : 10 }}>
           <div className="rounded-xl p-2 mb-2 overflow-hidden" style={{ height: 82, background: bg, border: lightT ? "1px solid rgba(15,27,61,.08)" : "1px solid rgba(255,255,255,.05)" }}>
             <div className="rounded-md mb-1.5" style={{ height: 6, width: "46%", background: lightT ? "#0E1A3A" : "rgba(255,255,255,.75)" }} />
