@@ -136,7 +136,7 @@ export function startSmooth(canvas) {
     t2 = setTimeout(() => { try { if (stopL) stopL(); if (pointer) stopL = paintLight(); } catch (_) {} }, wait + 350); };
   const size = () => ({ w: window.innerWidth, h: window.innerHeight, d: window.devicePixelRatio || 1 });
   // a new theme: drop the old pictures at once (the CSS gradients stand in for a moment), then paint the new ones
-  const onTheme = () => { try { root().style.removeProperty("--feltimg"); root().style.removeProperty("--plight"); } catch (_) {} glow(); pictures(40); };
+  const onTheme = () => { try { root().style.removeProperty("--feltimg"); root().style.removeProperty("--plight"); } catch (_) {} if (canvas) canvas.classList.remove("on"); glow(); pictures(40); };
   let rz = 0;
   const onResize = () => { clearTimeout(rz); rz = setTimeout(() => { const k = size(); if (k.w !== seen.w || k.d !== seen.d || Math.abs(k.h - seen.h) > 200) { seen = k; glow(); } }, 220); };
   seen = size(); glow(); pictures(500);

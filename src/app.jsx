@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback, Fragment, createContext, useContext, startTransition } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import CasinosPage, { openCasinoAdd, openCasinoNear, warmCasinos } from "./casinos.jsx";
 import { startSmooth } from "./smooth.js";
 import { PlanPage } from "./planner.jsx";
@@ -14,11 +14,11 @@ const localDay = (t = Date.now()) => { const d = new Date(t); return `${d.getFul
 const LABEL = (tc) => (tc === -3 ? "≤ −3" : tc === 6 ? "≥ +6" : tc > 0 ? `+${tc}` : tc < 0 ? `−${-tc}` : "0");
 const DEFAULT_BETS = { "-3": 0, "-2": 0, "-1": 0, "0": 0, "1": 25, "2": 50, "3": 50, "4": 75, "5": 75, "6": 100 };
 const fmtH = (h) => `${Math.round((Number(h) || 0) * 100) / 100}h`; // hours to the hundredth, no float noise
-const sgnMoney = (v) => { const r = Math.round(v); return `${r > 0 ? "+" : r < 0 ? "−" : ""}$${Math.abs(r).toLocaleString()}`; };
-const shortMoney = (v) => { const a = Math.abs(v), sg = v < 0 ? "−" : ""; return a >= 1000 ? `${sg}$${(a / 1000).toFixed(a >= 10000 ? 0 : 1)}k` : `${sg}$${Math.round(a)}`; };
+const sgnMoney = (v) => { const r = Math.round(v); return `${r > 0 ? "+" : r < 0 ? "−\u2060" : ""}$${Math.abs(r).toLocaleString()}`; };
+const shortMoney = (v) => { const a = Math.abs(v), sg = v < 0 ? "−\u2060" : ""; return a >= 1000 ? `${sg}$${(a / 1000).toFixed(a >= 10000 ? 0 : 1)}k` : `${sg}$${Math.round(a)}`; };
 function niceTicks(lo, hi, n = 5) { const span = hi - lo || 1; const raw = span / n; const mag = Math.pow(10, Math.floor(Math.log10(raw))); const e = raw / mag; const step = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag; const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(+v.toFixed(10)); return out; }
 const money = (n, d = 0) =>
-  (n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
+  (n < 0 ? "−\u2060" : "") + "$" + Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
 const pct = (x, d = 2) => (x * 100).toFixed(d) + "%";
 const cash = (n) => money(n, Math.round(n * 100) % 100 ? 2 : 0);           // $5,037.50 only when there are cents
 const sgnCash = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + cash(Math.abs(n));
@@ -339,7 +339,7 @@ html,body{background:var(--bg)}
 @media (max-width:370px){.shell>header{gap:8px}.shell>header h1{font-size:24px;white-space:nowrap}.shell>header .rulespill{font-size:11px;gap:3px;padding:6px 7px 6px 9px}.shell>header .rulespill svg{display:none}.shell>header .rulespill{padding-right:9px}}
 /* rows of answer buttons: labels keep a little air on both sides and never wrap, however many buttons share the row */
 .acts>button{padding-left:7px;padding-right:7px;white-space:nowrap}
-.acts>button{transition:transform .12s var(--ease),background-color .15s,border-color .15s,opacity .15s}.acts>button:active:not(:disabled){transform:scale(.97)}
+.acts>button{transition:transform .12s var(--ease),background-color .15s var(--ez),border-color .15s var(--ez),opacity .15s var(--ez)}.acts>button:active:not(:disabled){transform:scale(.97)}
 @media (max-width:420px){.acts{gap:6px}.acts>button.text-sm,.acts>button.text-base{font-size:13px}}
 @media (max-width:350px){.acts>button.text-sm,.acts>button.text-base{font-size:12px}.acts>button{padding-left:5px;padding-right:5px}}
 @media (max-width:389px){.acts:has(>button:nth-child(5)){gap:5px}.acts>button:first-child:nth-last-child(n+5),.acts>button:first-child:nth-last-child(n+5)~button{font-size:12.5px!important;padding-left:5px;padding-right:5px}}
@@ -368,10 +368,10 @@ html,body{background:var(--bg)}
 .qa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:76px;border-radius:16px;background:rgba(var(--fg),.04);border:1px solid rgba(var(--acc),.12);font-size:11.5px;font-weight:600;color:var(--ivory-d);transition:transform .13s var(--ease),background .16s var(--ease),border-color .16s var(--ease),color .16s var(--ease)}
 .qa:active{transform:scale(.95);background:rgba(var(--acc),.1)}
 .qa svg{color:var(--brass)}
-.iconbtn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;color:var(--ivory-d);background:rgba(var(--fg),.05);border:1px solid rgba(var(--fg),.1);transition:transform .13s,background .15s,color .15s}
+.iconbtn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;color:var(--ivory-d);background:rgba(var(--fg),.05);border:1px solid rgba(var(--fg),.1);transition:transform .13s var(--ez),background .15s var(--ez),color .15s var(--ez)}
 .iconbtn:active{transform:scale(.92)}
 .iconbtn[aria-pressed="true"]{color:var(--brass);border-color:rgba(var(--acc),.45);background:rgba(var(--acc),.12)}
-.rulespill{display:flex;align-items:center;gap:6px;font-size:12px;padding:7px 10px 7px 12px;border-radius:999px;color:var(--ivory-d);background:rgba(var(--fg),.05);border:1px solid rgba(var(--acc),.22);transition:background .15s,transform .13s}
+.rulespill{display:flex;align-items:center;gap:6px;font-size:12px;padding:7px 10px 7px 12px;border-radius:999px;color:var(--ivory-d);background:rgba(var(--fg),.05);border:1px solid rgba(var(--acc),.22);transition:background .15s var(--ez),transform .13s var(--ez)}
 .rulespill:active{transform:scale(.96)}
 .pillrail,.sn-glide{display:none}
 .rulespill{min-width:0;max-width:100%}
@@ -383,7 +383,7 @@ html,body{background:var(--bg)}
 @media (hover:hover) and (pointer:fine) and (min-width:700px){.kbdhint{display:block}}
 .kbdonly{display:none}
 @media (hover:hover) and (pointer:fine) and (min-width:700px){.kbdonly{display:block}}
-.keycap{min-width:38px;height:28px;padding:0 9px;border-radius:8px;font:600 12px Inter,system-ui,sans-serif;color:var(--ivory);background:rgba(var(--fg),.07);border:1px solid rgba(var(--fg),.14);border-bottom-width:2px;transition:background .15s,border-color .15s,color .15s}
+.keycap{min-width:38px;height:28px;padding:0 9px;border-radius:8px;font:600 12px Inter,system-ui,sans-serif;color:var(--ivory);background:rgba(var(--fg),.07);border:1px solid rgba(var(--fg),.14);border-bottom-width:2px;transition:background .15s var(--ez),border-color .15s var(--ez),color .15s var(--ez)}
 .keycap[data-on="1"]{color:var(--brass);background:rgba(var(--acc),.12);border-color:rgba(var(--acc),.5);font-weight:500}
 .keycap:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .shoe-w{position:relative;height:12px}
@@ -396,13 +396,13 @@ html,body{background:var(--bg)}
 :root[data-theme="light"] .card.focuscard{background:linear-gradient(135deg,rgba(30,63,168,.07),#FFFFFF 60%);border-color:rgba(30,63,168,.2)}
 .shell section[id^="sp-"]{scroll-margin-top:68px}
 
-.stepbtn{width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;line-height:1;color:var(--ivory-d);background:rgba(var(--fg),.06);border:1px solid rgba(var(--fg),.1);transition:transform .12s,background .15s}
+.stepbtn{width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;line-height:1;color:var(--ivory-d);background:rgba(var(--fg),.06);border:1px solid rgba(var(--fg),.1);transition:transform .12s var(--ez),background .15s var(--ez)}
 .stepbtn:active{transform:scale(.9)}
 .stepbtn:disabled{opacity:.35}
 .pnlwrap{position:relative}.pnltip{position:absolute;top:0;transform:translateX(-50%);pointer-events:none;white-space:nowrap;padding:7px 11px;border-radius:12px;font-size:11px;line-height:1.35;color:var(--ivory-d);background:color-mix(in srgb,var(--bg2) 86%,transparent);box-shadow:var(--gl-lens),0 10px 26px -12px rgba(var(--sh),.9);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);z-index:2}.pnltip b{color:var(--ivory);font-weight:600}
 .tcrow{display:grid;grid-template-columns:64px 1fr 64px 64px 84px;align-items:center;gap:10px;font-size:12.5px;padding:7px 10px;border-radius:10px}.tcrow>span:nth-child(n+3){text-align:right}.tcrow.h{font-size:10px;color:var(--muted);padding-top:0;padding-bottom:4px}
 .wrow{display:grid;grid-template-columns:104px 1fr 62px;align-items:center;gap:12px;padding:6px 0;font-size:13px}
-.skillrow{display:flex;align-items:center;gap:10px;padding:11px 4px;border-radius:10px;transition:background .15s}
+.skillrow{display:flex;align-items:center;gap:10px;padding:11px 4px;border-radius:10px;transition:background .15s var(--ez)}
 .skillrow:active{background:rgba(var(--fg),.04)}
 @media (hover:hover){.skillrow:hover{background:rgba(var(--fg),.035)}}
 .syncpill{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;top:calc(env(safe-area-inset-top) + 10px);z-index:90;max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:9px 16px;border-radius:999px;font-size:13px;font-weight:500;color:var(--ivory);background:rgba(var(--bgrgb),.92);border:1px solid rgba(var(--acc),.35);box-shadow:0 12px 30px -12px rgba(0,0,0,.7);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:rise .27s var(--ease) both}
@@ -427,13 +427,13 @@ html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) 
 .bottom-nav,.hdrgear,.shell>header .rulespill,.topbar .rulespill{display:none!important}
 .pillrail{display:block;position:fixed;left:248px;right:0;top:0;z-index:46;padding:46px 40px 0;pointer-events:none;transition:transform .32s var(--ez)}
 .pillrail>div{max-width:var(--W)}
-.pillrail .rulespill{pointer-events:auto;min-height:0;transform-origin:100% 0;transition:transform .32s var(--ez),background .15s,border-color .15s}
+.pillrail .rulespill{pointer-events:auto;min-height:0;transform-origin:100% 0;transition:transform .32s var(--ez),background .15s var(--ez),border-color .15s var(--ez)}
 .pillrail .rulespill:hover{background:rgba(var(--fg),.09);border-color:rgba(var(--acc),.4)}
 html.scrolled .pillrail{transform:translateY(-37px)}
 html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .topbar{background:rgba(var(--bgrgb),.9);min-height:46px}
 .topbar>div{min-height:29px}
-.sn-glide{display:block;position:absolute;left:14px;right:14px;top:0;height:44px;border-radius:12px;background:rgba(var(--acc),.12);pointer-events:none;transition:transform .32s var(--ez),opacity .16s}
+.sn-glide{display:block;position:absolute;left:14px;right:14px;top:0;height:44px;border-radius:12px;background:rgba(var(--acc),.12);pointer-events:none;transition:transform .32s var(--ez),opacity .16s var(--ez)}
 .sn-glide::before{content:"";position:absolute;left:-14px;top:25%;bottom:25%;width:3px;border-radius:0 3px 3px 0;background:var(--brass)}
 .sidenav>*{flex-shrink:0}
 .sidenav .sn-item.on{background:transparent}
@@ -445,7 +445,7 @@ html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .topbar>div{max-width:var(--W)!important}
 .sidenav{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:248px;z-index:46;padding:28px 14px 18px;background:rgba(var(--bgrgb),.6);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-right:1px solid rgba(var(--fg),.07);overflow-y:auto}
 .sn-brand{display:flex;align-items:center;gap:12px;padding:0 10px 22px}
-.sn-search{display:flex;align-items:center;gap:10px;width:100%;height:38px;padding:0 9px 0 12px;margin-bottom:20px;border-radius:11px;background:rgba(var(--fg),.04);border:1px solid rgba(var(--fg),.08);font-size:13px;font-weight:500;color:var(--muted);transition:background .15s,border-color .15s,color .15s}
+.sn-search{display:flex;align-items:center;gap:10px;width:100%;height:38px;padding:0 9px 0 12px;margin-bottom:20px;border-radius:11px;background:rgba(var(--fg),.04);border:1px solid rgba(var(--fg),.08);font-size:13px;font-weight:500;color:var(--muted);transition:background .15s var(--ez),border-color .15s var(--ez),color .15s var(--ez)}
 .sn-search:hover{background:rgba(var(--fg),.07);border-color:rgba(var(--acc),.3);color:var(--ivory-d)}
 .sn-search span{flex:1;text-align:left}
 .sn-search:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
@@ -462,7 +462,7 @@ html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .sn-item.on::before{content:"";position:absolute;left:-14px;top:11px;bottom:11px;width:3px;border-radius:0 3px 3px 0;background:var(--brass)}
 .sn-item:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .sn-foot{margin-top:auto;padding-top:16px;border-top:1px solid rgba(var(--fg),.07)}
-.sn-rules{display:block;width:100%;text-align:left;padding:12px;margin-bottom:6px;border-radius:14px;background:rgba(var(--fg),.035);border:1px solid rgba(var(--fg),.07);transition:background .15s,border-color .15s}
+.sn-rules{display:block;width:100%;text-align:left;padding:12px;margin-bottom:6px;border-radius:14px;background:rgba(var(--fg),.035);border:1px solid rgba(var(--fg),.07);transition:background .15s var(--ez),border-color .15s var(--ez)}
 .sn-rules:hover{background:rgba(var(--fg),.06);border-color:rgba(var(--acc),.3)}
 .sheetwrap{justify-content:center!important;align-items:center;padding:40px}
 .sheetwrap .sheet{max-width:560px!important;max-height:min(86vh,860px)!important;border-radius:22px;border-bottom:1px solid rgba(var(--acc),.16);box-shadow:0 40px 90px -20px rgba(0,0,0,.75);animation:sheetpop .29s var(--ez)}
@@ -509,7 +509,7 @@ html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .sheetgrab{touch-action:none}
 @media (min-width:1024px){.sheetgrab{touch-action:auto}}
 .navbtn:active{transform:scale(.94)}
-.chippress{transition:transform .13s var(--ease),background .18s,color .18s}
+.chippress{transition:transform .13s var(--ease),background .18s var(--ez),color .18s var(--ez)}
 .chippress:active{transform:scale(.96)}
 .navbtn.on{color:var(--brass)}
 
@@ -521,14 +521,14 @@ html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .in.sm{padding:7px 8px;border-radius:8px;text-align:right}
 input.in[type=date]{min-height:44px;color-scheme:dark}
 input.in[type=date]::-webkit-date-and-time-value{text-align:left}
-.btn{background:linear-gradient(180deg,var(--acc-hi),var(--brass));color:var(--ink);font-weight:600;font-size:16px;letter-spacing:-.01em;border-radius:12px;padding:13px 18px;width:100%;transition:transform .13s var(--ease),filter .13s;box-shadow:0 8px 22px -10px rgba(var(--acc),.55),0 1px 0 rgba(255,255,255,.4) inset}
+.btn{background:linear-gradient(180deg,var(--acc-hi),var(--brass));color:var(--ink);font-weight:600;font-size:16px;letter-spacing:-.01em;border-radius:12px;padding:13px 18px;width:100%;transition:transform .13s var(--ease),filter .13s var(--ez);box-shadow:0 8px 22px -10px rgba(var(--acc),.55),0 1px 0 rgba(255,255,255,.4) inset}
 @media(hover:hover){.btn:hover{filter:brightness(1.05)}}
 @media (orientation:landscape){.bj{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}}
 .btn:active{transform:scale(.985)}
 .btn:focus-visible{outline:3px solid var(--ivory);outline-offset:2px}
 .btn.ghost{background:rgba(var(--fg),.08);color:var(--ivory);box-shadow:none;border:1px solid rgba(var(--fg),.16)}
 .chipseg{background:rgba(var(--sh),.55);border-radius:12px;padding:4px;display:grid;grid-template-columns:1fr 1fr;gap:4px;box-shadow:inset 0 1px 3px rgba(0,0,0,.45)}
-.chipseg button{padding:8px;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);transition:background .15s,color .15s}
+.chipseg button{padding:8px;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);transition:background .15s var(--ez),color .15s var(--ez)}
 .chipseg button:active{transform:scale(.96)}
 .chipseg button.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.6) inset}
 .chipseg.slide{position:relative}
@@ -546,7 +546,7 @@ input.in[type=date]::-webkit-date-and-time-value{text-align:left}
 input[type=range]{accent-color:var(--brass)}
 .pc{width:86px;height:122px;border-radius:10px;background:linear-gradient(160deg,#FFFEFA 0%,#F7F2E7 78%,#EFE8D8 100%);color:#1C1C1E;position:relative;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.9) inset,0 2px 3px -1px rgba(0,0,0,.4),0 14px 26px -10px rgba(0,0,0,.8);font-family:Fraunces,Georgia,serif;user-select:none;flex-shrink:0}
 .pc.red{color:#C0262B}
-.chipbtn{position:relative;width:66px;height:66px;border-radius:50%;transition:transform .13s var(--ease),filter .13s;flex-shrink:0}
+.chipbtn{position:relative;width:66px;height:66px;border-radius:50%;transition:transform .13s var(--ease),filter .13s var(--ez);flex-shrink:0}
 .chipbtn:active:not(:disabled){transform:scale(.9)}
 @media(hover:hover){.chipbtn:hover:not(:disabled){filter:brightness(1.08)}}
 .chipface{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(var(--c) 0 24deg,#F3ECDC 24deg 34deg,var(--c) 34deg 60deg);box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 -3px 5px rgba(0,0,0,.45) inset,0 7px 14px -6px rgba(0,0,0,.9)}
@@ -660,7 +660,7 @@ input[type=range]{accent-color:var(--brass)}
 @keyframes spfade{from{opacity:0}to{opacity:1}}
 @media (min-width:1024px){.splash>*{zoom:1.4}}
 @keyframes splashout{to{opacity:0;transform:scale(1.04);visibility:hidden}}
-.opt{transition:transform .13s var(--ease),filter .13s,background .17s,color .17s,opacity .17s}
+.opt{transition:transform .13s var(--ease),filter .13s var(--ez),background .17s var(--ez),color .17s var(--ez),opacity .17s var(--ez)}
 .opt:active{transform:scale(.97)}
 @keyframes leave{from{opacity:1}to{opacity:0}}
 .leave .dealt{animation:leave .18s ease-in-out forwards !important;animation-delay:0ms !important}
@@ -743,7 +743,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .navglide{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px) / var(--n));transform:translateX(calc(var(--i) * 100%));border-radius:999px;pointer-events:none;background:linear-gradient(180deg,rgba(var(--acc),.22),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.16)}
 .navbtn{z-index:1}
 @media (max-width:350px){.navglide{top:4px;bottom:4px;left:4px;width:calc((100% - 8px) / var(--n))}}
-.gchip{background:linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.03));color:var(--ivory-d);border:1px solid rgba(var(--fg),.07);box-shadow:inset 0 1px 0 var(--gl-rim);transition:transform .32s var(--fluid),background .16s,color .16s,border-color .16s}
+.gchip{background:linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.03));color:var(--ivory-d);border:1px solid rgba(var(--fg),.07);box-shadow:inset 0 1px 0 var(--gl-rim);transition:transform .32s var(--fluid),background .16s var(--ez),color .16s var(--ez),border-color .16s var(--ez)}
 .gchip.on{background:linear-gradient(180deg,rgba(var(--acc),.24),rgba(var(--acc),.11));color:var(--ivory);border-color:rgba(var(--acc),.26);box-shadow:inset 0 1px 0 var(--gl-hi)}
 :root[data-theme="light"] .gchip.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));color:var(--ink);border-color:transparent}
 .chipseg:not(.rows):not(.brushes),.chipseg:not(.rows):not(.brushes) button{border-radius:999px}
@@ -784,20 +784,20 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 :root{--ez-slide:cubic-bezier(.22,.68,.1,1)}
 .navglide,.chipseg.slide .thumb{transition:none}
 .navglide,.sn-glide,.chipseg.slide .thumb{will-change:transform}
-.sn-glide{transition:transform .48s var(--ez-slide),opacity .2s}
+.sn-glide{transition:transform .48s var(--ez-slide),opacity .2s var(--ez)}
 /* the tab icons do not move or change weight when the selection changes: only their colour eases over, while the glass
    slides underneath. (They used to shrink and pop back, and the line got thicker, which read as a glitch.) Each tab is
    kept on its own layer for good, so nothing is re-drawn when the slide starts or stops. */
 .navbtn.on .navicon svg{animation:none}
 .navbtn{will-change:transform}
-.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .41s var(--fluid),filter .16s,background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease)}
+.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .41s var(--fluid),filter .16s var(--ez),background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease)}
 .btn:active,.iconbtn:active,.stepbtn:active,.rulespill:active,.chippress:active,.navbtn:active{transition-duration:.12s}
 .btn:active{transform:scale(.99)}.iconbtn:active,.stepbtn:active{transform:scale(.95)}.rulespill:active,.chippress:active,.navbtn:active{transform:scale(.975)}
 .chipseg.slide button{transition:color .16s var(--ease)}
 .topbar{transition:transform .41s var(--fluid),opacity .17s var(--ease)}
 @media(hover:hover) and (min-width:1024px){.btn:not(.ghost):hover:active:not(:disabled){transform:scale(.99)}}
 /* every other movement in the app, on the same curve: nothing snaps and nothing uses a bare "ease" */
-.acts>button,.qa,.chipbtn,.opt,.xbtn{transition:transform .37s var(--fluid),filter .16s,background-color .16s var(--ease),background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease),opacity .16s var(--ease)}
+.acts>button,.qa,.chipbtn,.opt,.xbtn{transition:transform .37s var(--fluid),filter .16s var(--ez),background-color .16s var(--ease),background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease),opacity .16s var(--ease)}
 .acts>button:active,.qa:active,.chipbtn:active,.opt:active{transition-duration:.1s}
 .tabs button{transition:color .19s var(--ease)}.tabs button.on::after{animation:tabin .41s var(--fluid)}
 .rise{animation-duration:.39s;animation-timing-function:var(--ez)}
@@ -1106,6 +1106,25 @@ body{background:none}
 @media (min-width:1180px){.dcol>.mb-4,.dcol>*>.card.mb-4{margin-bottom:20px}}
 .bj h1,.bj h2,.bj h3,.bj .disp{text-wrap:balance}
 .bj p{text-wrap:pretty}
+/* ---- Second pass: sleeker and smoother ----
+   Nick: "restyle making everything sleeker and smoother more improved animations. check everything".
+   (1) Folds: every "More …", Info and "Show all" now grows and shrinks (Fold, useGlideH) instead of shoving the page
+   in one frame; what it reveals comes into focus as it opens. (2) The primary button glows less, and presses a little
+   deeper so a tap is felt. (3) A theme change crossfades (a view transition, where the browser has them). */
+.fold{display:flow-root}
+@keyframes foldin{from{opacity:0;filter:blur(4px);transform:translate3d(0,-6px,0)}}
+.foldin{animation:foldin .5s var(--ez-soft) backwards}
+.btn:not(.ghost){box-shadow:0 6px 16px -9px rgba(var(--acc),.42),inset 0 0 0 var(--hair) rgba(255,255,255,.26),inset 0 var(--hair) 0 rgba(255,255,255,.5),inset 0 -2px 4px -1px rgba(0,0,0,.16)}
+.btn:not(.ghost):disabled{box-shadow:none}
+.btn:active:not(:disabled){transform:scale(.975)}
+@media(hover:hover) and (min-width:1024px){.btn:not(.ghost):hover:not(:disabled){box-shadow:0 10px 22px -10px rgba(var(--acc),.5),inset 0 0 0 var(--hair) rgba(255,255,255,.3),inset 0 var(--hair) 0 rgba(255,255,255,.55),inset 0 -2px 4px -1px rgba(0,0,0,.16)}.btn:not(.ghost):hover:active:not(:disabled){transform:scale(.975)}}
+.btn{transition:transform .36s var(--ez),box-shadow .24s var(--ez-soft),filter .16s var(--ez),opacity .2s var(--ez-soft)}
+.btn:active{transition-duration:.1s}
+/* the theme crossfade: the old look dissolves into the new one */
+::view-transition-old(root),::view-transition-new(root){animation-duration:.46s;animation-timing-function:cubic-bezier(.22,.61,.36,1)}
+/* the glow behind the page fades out at a theme change and back in once the new one is painted */
+.glowbg{transition:opacity .5s var(--ez-soft)}
+@media (prefers-reduced-motion:reduce){.foldin{animation:none!important}.btn{transition:none!important}::view-transition-old(root),::view-transition-new(root){animation:none!important}}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}
@@ -1453,7 +1472,7 @@ function SoundCard() {
     <section className="card p-5 mb-4">
       <div className="eyebrow mb-3">Sound</div>
       <Toggle label="Sound effects" sub="Quiet and short. A phone's silent switch mutes them too." on={p.on} onChange={(v) => set({ on: v })} />
-      <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--line)", opacity: p.on ? 1 : 0.4, pointerEvents: p.on ? "auto" : "none", transition: "opacity .2s" }} aria-hidden={!p.on}>
+      <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--line)", opacity: p.on ? 1 : 0.4, pointerEvents: p.on ? "auto" : "none", transition: "opacity .2s var(--ez)" }} aria-hidden={!p.on}>
         <div>
           <div className="flex items-baseline justify-between"><span className="text-sm" style={{ color: "var(--ivory)" }}>Volume</span><span className="text-[11px] mono" style={{ color: "var(--brass)" }}>{Math.round(p.vol * 100)}%</span></div>
           <input type="range" min={20} max={100} step={10} value={Math.round(p.vol * 100)} onChange={(e) => set({ vol: Number(e.target.value) / 100 })} className="w-full mt-1" aria-label="Sound volume" disabled={!p.on} />
@@ -1656,6 +1675,7 @@ function TrainChart({ cur, result, R }) {
 // costs at every count), so a play is worth more the more is bet at the counts where it comes up.
 function DevWorth({ R, devs, spread }) {
   const [all, setAll] = useState(false);
+  const listRef = useGlideH(all);
   const d = useMemo(() => {
     if (!spread || !devsOn(R)) return null;
     const { bets, spotsMap, rph, seats } = spread;
@@ -1678,7 +1698,7 @@ function DevWorth({ R, devs, spread }) {
         <div className="eyebrow">What each count play is worth</div>
         <span className="text-[11px]" style={{ color: "var(--muted)" }}>per hour, at your spread</span>
       </div>
-      <div className="mt-2">
+      <div className="mt-2" ref={listRef}>
         {shown.map((r, i) => (
           <div key={r.x.id} className="wrow">
             <span className="font-medium truncate" style={{ color: "var(--ivory)" }}>{r.x.name}</span>
@@ -1807,7 +1827,7 @@ function FillChart({ R, devs }) {
                   <Fragment key={key}>
                     <div className="flex items-center justify-end pr-2 text-[11px] font-semibold" style={{ color: "var(--ivory)" }}>{label}</div>
                     {UP.map((u) => { const k = `${key}|${u}`, ans = fn(u), v = fill[k]; return (
-                      <button key={u} onClick={() => tap(k)} className="relative flex items-center justify-center rounded-md font-semibold" style={{ height: 30, fontSize: 12, transition: "background .15s", ...cellStyle(k, ans) }} aria-label={`${label} vs ${upLabel(u)}`}>
+                      <button key={u} onClick={() => tap(k)} className="relative flex items-center justify-center rounded-md font-semibold" style={{ height: 30, fontSize: 12, transition: "background .15s var(--ez)", ...cellStyle(k, ans) }} aria-label={`${label} vs ${upLabel(u)}`}>
                         {checked && v !== ans ? <span><span style={{ opacity: .6 }}>{v || "·"}</span><span style={{ color: "var(--ivory)" }}> {ans}</span></span> : v || "·"}
                       </button>); })}
                   </Fragment>
@@ -2172,7 +2192,7 @@ function Trainer({ rules, setRules, spread }) {
           </div>}
 
           {(() => { const res = (<>
-            <div className="rounded-xl px-4 py-3 relative overflow-hidden" style={{ minHeight: 64, background: result ? (result.ok ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)") : "rgba(var(--fg),.045)", transition: "background .25s" }}>
+            <div className="rounded-xl px-4 py-3 relative overflow-hidden" style={{ minHeight: 64, background: result ? (result.ok ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)") : "rgba(var(--fg),.045)", transition: "background .25s var(--ez)" }}>
               {timer && result && <div className="drain" style={{ "--t": result.ok ? "1.4s" : "3.4s", background: result.ok ? "var(--brass)" : "var(--rose)" }} />}
               {result ? (
                 <div className="rise">
@@ -2373,7 +2393,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
               <span className="block text-sm font-medium" style={{ color: "var(--ivory)" }}>Options</span>
               <span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{decks} deck{decks > 1 ? "s" : ""} · cut {pen}% · {speed}s a card · {amount} {mode !== "hands" ? "cards" : "rounds"}{mode === "hands" ? ` · ${spots} player${spots > 1 ? "s" : ""}` : ""}{askTC ? " · true count too" : ""}{carry ? " · count carries over" : ""}</span>
             </span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)", flex: "none", transform: opts ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)", flex: "none", transform: opts ? "rotate(180deg)" : "none", transition: "transform .2s var(--ez)" }}><path d="M6 9l6 6 6-6" /></svg>
           </button>
 
           {opts && <div className="space-y-3 mt-1 mb-1 rise">
@@ -2613,7 +2633,7 @@ function RulesModal({ rules, onSave, onClose, first }) {
             <span className="block text-sm font-semibold" style={{ color: "var(--ivory)" }}>Advanced</span>
             <span className="block text-[11px]" style={{ color: advancedNotes(draft).length ? "var(--brass)" : "var(--muted)" }}>{advancedNotes(draft).length ? advancedNotes(draft).join(" · ") : "Doubling, splitting, deviations — standard"}</span>
           </span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)", transform: adv ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)", transform: adv ? "rotate(180deg)" : "none", transition: "transform .2s var(--ez)" }}><path d="M6 9l6 6 6-6" /></svg>
         </button>
         {adv && <div className="space-y-3 mt-2 rise">
           {row("Double on", <Seg value={dblRule(draft)} options={[["any", "Any 2"], ["9-11", "9–11"], ["10-11", "10–11"]]} onChange={(v) => setDraft({ ...draft, dbl: v })} />)}
@@ -2715,6 +2735,53 @@ function useTimer(active) {
   return () => Math.round(performance.now() - (startRef.current ?? performance.now()));
 }
 const noMotion = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+// ---- Folds: whatever opens or closes under a link moves the page below it smoothly instead of in one frame ----
+// A height that changes is something that travels, so it runs on the sliding curve (--ez-slide): off promptly, never a
+// jump in the first frame, the same long glide to rest. Both read heights with offsetHeight (layout, not transforms),
+// and a second tap mid-move carries on from wherever the height is.
+const FOLD_EASE = "cubic-bezier(.22,.68,.1,1)";
+// <Fold open>: a block that is there only while open. Opening grows it from nothing while its contents come into
+// focus (.foldin); closing shrinks and fades it, and only then takes it away.
+function Fold({ open, children, className = "", style }) {
+  const [on, setOn] = useState(!!open);
+  if (open && !on) setOn(true);
+  const box = useRef(null), anim = useRef(null), seen = useRef(false);
+  useLayoutEffect(() => {
+    if (!seen.current) { seen.current = true; return; }
+    const n = box.current; if (!n) return;
+    const was = anim.current, cur = n.offsetHeight;
+    if (was) { anim.current = null; was.cancel(); }
+    if (noMotion() || !n.animate) { n.style.overflow = ""; if (!open) setOn(false); return; }
+    const full = n.offsetHeight, from = was ? cur : open ? 0 : full;
+    n.style.overflow = "hidden";
+    const a = n.animate(open ? [{ height: from + "px" }, { height: full + "px" }] : [{ height: from + "px", opacity: 1 }, { height: "0px", opacity: 0 }],
+      { duration: open ? 480 : 340, easing: FOLD_EASE, fill: open ? "none" : "forwards" });
+    anim.current = a;
+    a.onfinish = () => { if (anim.current !== a) return; anim.current = null; if (open) n.style.overflow = ""; else setOn(false); };
+  }, [open]); // eslint-disable-line
+  if (!on) return null;
+  return <div ref={box} className="fold"><div className={"foldin " + className} style={style}>{children}</div></div>;
+}
+// useGlideH(dep): put the ref on a list that grows or shrinks when dep changes ("All 9 casinos", "Show all"); its
+// height glides from the old size to the new one, so the rows below are revealed by a moving edge.
+function useGlideH(dep) {
+  const ref = useRef(null), last = useRef(0), anim = useRef(null), prev = useRef(dep);
+  useLayoutEffect(() => {
+    const n = ref.current, changed = prev.current !== dep; prev.current = dep;
+    if (!n || !changed) return;
+    const was = anim.current, cur = n.offsetHeight;
+    if (was) { anim.current = null; was.cancel(); }
+    const from = was ? cur : last.current, to = n.offsetHeight;
+    if (noMotion() || !n.animate || !from || Math.abs(to - from) < 2) { n.style.overflow = ""; last.current = to; return; }
+    n.style.overflow = "hidden";
+    const a = n.animate([{ height: from + "px" }, { height: to + "px" }], { duration: to > from ? 480 : 360, easing: FOLD_EASE });
+    anim.current = a;
+    const done = () => { if (anim.current !== a) return; anim.current = null; n.style.overflow = ""; last.current = n.offsetHeight; };
+    a.onfinish = done; a.oncancel = done;
+  }, [dep]); // eslint-disable-line
+  useLayoutEffect(() => { const n = ref.current; if (n && !anim.current) last.current = n.offsetHeight; });
+  return ref;
+}
 // a number that glides to its new value, fast at first and easing to a stop (not rounded — for chart positions and decimals).
 // `from` is where it starts when the page opens; leave it out to start at the value itself.
 // The app's one curve (--ez in the css), for motion driven from script: progress at time p, 0 to 1.
@@ -2952,7 +3019,7 @@ function SpreadMini({ bets, tc }) {
         {rows.map((x, i) => { const on = x.c === here; return (
           <div key={x.c} className="flex-1 flex flex-col items-center justify-end h-full">
             <span className="mono barlab" style={{ "--i": i, fontSize: 8.5, color: on ? "var(--brass)" : x.b ? "var(--ivory-d)" : "var(--muted)", fontWeight: on ? 700 : 500 }}>{x.b ? (x.b >= 1000 ? `${x.b / 1000}k` : x.b) : "—"}</span>
-            <div className="w-full rounded-t bary" style={{ "--i": i, height: `${x.b ? Math.max(8, (x.b / mx) * 70) : 3}%`, background: x.b ? (on ? "var(--brass)" : "rgba(var(--acc),.4)") : "rgba(var(--fg),.1)", transition: "background .25s" }} />
+            <div className="w-full rounded-t bary" style={{ "--i": i, height: `${x.b ? Math.max(8, (x.b / mx) * 70) : 3}%`, background: x.b ? (on ? "var(--brass)" : "rgba(var(--acc),.4)") : "rgba(var(--fg),.1)", transition: "background .25s var(--ez)" }} />
           </div>); })}
       </div>
       <div className="flex gap-1 mt-1">{rows.map((x) => <span key={x.c} className="flex-1 text-center mono" style={{ fontSize: 8.5, color: x.c === here ? "var(--brass)" : "var(--muted)" }}>{LABEL(x.c).replace("≤ ", "≤").replace("≥ ", "≥")}</span>)}</div>
@@ -3006,7 +3073,7 @@ const CHIP_COLORS = (v) => v < 25 ? ["#A83236", "#C4494E", "#F6EFE2"] : v < 100 
 function More({ open, onClick, className = "", children }) {
   return (
     <button type="button" onClick={onClick} aria-expanded={!!open} className={"flex items-center gap-1.5 text-xs font-semibold lnk " + className} style={{ color: "var(--brass)" }}>
-      {children}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
+      {children}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .4s var(--ez)" }}><path d="M6 9l6 6 6-6" /></svg>
     </button>
   );
 }
@@ -3016,9 +3083,9 @@ function Info({ label, children }) {
     <div className="mt-3">
       <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex items-center gap-1.5 text-[11.5px] font-semibold lnk" style={{ color: "var(--muted)" }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 7.6v.1" /></svg>
-        {label}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
+        {label}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .4s var(--ez)" }}><path d="M6 9l6 6 6-6" /></svg>
       </button>
-      {open && <div className="text-[11.5px] mt-1.5 leading-relaxed rise" style={{ color: "var(--ivory-d)" }}>{children}</div>}
+      <Fold open={open} className="text-[11.5px] pt-1.5 leading-relaxed" style={{ color: "var(--ivory-d)" }}>{children}</Fold>
     </div>
   );
 }
@@ -4060,7 +4127,7 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
       {ddMed != null && (
         <div className="grid grid-cols-2 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
           <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-base font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>−{money(Math.round(ddMed / 25) * 25)}</div><div className="text-[10px]" style={{ color: "var(--muted)" }}>expected over {fmtH(last.h)}</div></div>
-          <div><div className="eyebrow" style={{ fontSize: 9 }}>Your drawdown</div><div className="mono text-base font-semibold mt-0.5" style={{ color: mdd0 > ddMed ? "var(--neg-l)" : "var(--ivory)" }}>{mdd0 ? "−" + money(Math.round(mdd0)) : "$0"}</div><div className="text-[10px]" style={{ color: "var(--muted)" }}>biggest drop from a peak</div></div>
+          <div><div className="eyebrow" style={{ fontSize: 9 }}>Your drawdown</div><div className="mono text-base font-semibold mt-0.5" style={{ color: mdd0 > ddMed ? "var(--neg-l)" : "var(--ivory)" }}>{mdd0 ? "−\u2060" + money(Math.round(mdd0)) : "$0"}</div><div className="text-[10px]" style={{ color: "var(--muted)" }}>biggest drop from a peak</div></div>
         </div>
       )}
     </div>
@@ -4125,7 +4192,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
   const dateOf = (s) => new Date(s.date + "T12:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   const Pill = ({ v, set, items }) => (
     <div className="flex rounded-full p-0.5" style={{ background: "rgba(var(--fg),.06)" }}>
-      {items.map(([k, l]) => <button key={k} onClick={() => set(k)} className="rounded-full text-xs font-semibold" style={{ padding: "6px 12px", background: v === k ? "rgba(var(--fg),.14)" : "transparent", color: v === k ? "var(--ivory)" : "var(--muted)", transition: "background .18s, color .18s" }}>{l}</button>)}
+      {items.map(([k, l]) => <button key={k} onClick={() => set(k)} className="rounded-full text-xs font-semibold" style={{ padding: "6px 12px", background: v === k ? "rgba(var(--fg),.14)" : "transparent", color: v === k ? "var(--ivory)" : "var(--muted)", transition: "background .18s var(--ez), color .18s var(--ez)" }}>{l}</button>)}
     </div>
   );
   const headVal = view === "bars" && picked ? sp.s.result : sp ? sp.act : 0;
@@ -4188,7 +4255,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
             {list.map((s, k) => { const a = pts[k], b = pts[k + 1]; const x0 = xv(a), x1 = xv(b); const gap = Math.min(4, (x1 - x0) * 0.28); const h = +s.hours || 0; const e = sessEv(s, evHour) * h, d = sessSd(s, sdHour) * Math.sqrt(h); const bx = x0 + gap / 2, bw = Math.max(1.5, x1 - x0 - gap); const on = !picked || k === si;
               return (<g key={s.id || k}>
                 {band > 0 && <rect x={bx} width={bw} y={y(e + band * d)} height={Math.max(1, y(e - band * d) - y(e + band * d))} rx={Math.min(2, bw / 3)} fill="rgba(var(--fg),.05)" />}
-                <rect className="growy" x={bx} width={bw} y={Math.min(y(0), y(s.result))} height={Math.max(1, Math.abs(y(s.result) - y(0)))} rx={Math.min(3, bw / 3)} fill={s.result >= 0 ? "var(--brass)" : "var(--rose)"} opacity={on ? 0.9 : 0.35} style={{ transition: "opacity .15s", transformOrigin: s.result >= 0 ? "50% 100%" : "50% 0%", animationDelay: `${Math.min(k, 30) * 0.013}s` }} />
+                <rect className="growy" x={bx} width={bw} y={Math.min(y(0), y(s.result))} height={Math.max(1, Math.abs(y(s.result) - y(0)))} rx={Math.min(3, bw / 3)} fill={s.result >= 0 ? "var(--brass)" : "var(--rose)"} opacity={on ? 0.9 : 0.35} style={{ transition: "opacity .15s var(--ez)", transformOrigin: s.result >= 0 ? "50% 100%" : "50% 0%", animationDelay: `${Math.min(k, 30) * 0.013}s` }} />
                 {showExp && <line x1={bx} x2={bx + bw} y1={y(e)} y2={y(e)} stroke="rgba(var(--fg),.6)" strokeWidth="1.25" />}
               </g>); })}
           </>)}
@@ -4437,7 +4504,7 @@ function SpreadSheet({ cfg0, current, legacy, session, others = 0, onUse, onUseA
           <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Blackjack pays</span><div className="chipseg mt-1">{[[false, "3 to 2"], [true, "6 to 5"]].map(([v, l]) => <button key={l} type="button" className={!!cfg.rules.bj65 === v ? "on" : ""} onClick={() => setR("bj65", v)}>{l}</button>)}</div></div>
           <button type="button" onClick={() => setAdv((v) => !v)} aria-expanded={adv} className="rowh w-full flex items-center justify-between gap-3 py-1.5 text-left">
             <span><span className="block text-xs font-semibold" style={{ color: "var(--ivory)" }}>Advanced rules</span><span className="block text-[11px]" style={{ color: advancedNotes(cfg.rules).length ? "var(--brass)" : "var(--muted)" }}>{advancedNotes(cfg.rules).length ? advancedNotes(cfg.rules).join(" · ") : "Doubling, splitting, deviations — standard"}</span></span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)", transform: adv ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)", transform: adv ? "rotate(180deg)" : "none", transition: "transform .2s var(--ez)" }}><path d="M6 9l6 6 6-6" /></svg>
           </button>
           {adv && <div className="space-y-3 rise">
             <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Double on</span><div className="chipseg mt-1" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>{[["any", "Any 2"], ["9-11", "9–11"], ["10-11", "10–11"]].map(([v, l]) => <button key={v} type="button" className={dblRule(cfg.rules) === v ? "on" : ""} onClick={() => setR("dbl", v)}>{l}</button>)}</div></div>
@@ -4601,8 +4668,8 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
       </div>
       <input className="in mb-3" placeholder="Notes — heat, rules, mistakes you noticed" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
       <More open={more} onClick={() => setMore(!more)} className="mb-3">{more ? "Fewer details" : "More details — lowest point, table, heat"}</More>
-      {more && (
-        <div className="rounded-xl p-3 mb-4 space-y-3 rise" style={{ background: "rgba(var(--fg),.035)" }}>
+      <Fold open={more}>
+        <div className="rounded-xl p-3 mb-4 space-y-3" style={{ background: "rgba(var(--fg),.035)" }}>
           <label className="block"><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Lowest point during the session</span>
             <div className="relative mt-1"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>−$</span><input className="in mono" style={{ paddingLeft: 38 }} type="number" inputMode="decimal" placeholder="how far down you got" value={f.low} onChange={(e) => set("low", e.target.value)} /></div>
             <span className="block text-[11px] mt-1" style={{ color: "var(--muted)" }}>Checks the "bring with you" number against real dips.</span></label>
@@ -4611,7 +4678,7 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
           <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Heat</span>
             <div className="chipseg mt-1" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>{HEAT.map(([k, l]) => <button key={k} type="button" className={f.heat === k ? "on" : ""} onClick={() => set("heat", k)}>{l}</button>)}</div></div>
         </div>
-      )}
+      </Fold>
       {editing && onEditSpread && (
         <button type="button" onClick={onEditSpread} className="w-full text-left rounded-xl px-3.5 py-3 mb-4 flex items-center justify-between gap-3" style={{ background: "rgba(var(--fg),.04)", border: "1px solid rgba(var(--acc),.18)" }}>
           <div className="min-w-0"><div className="eyebrow" style={{ fontSize: 9.5 }}>Spread & rules for this session</div>
@@ -4699,7 +4766,7 @@ function MonthBars({ months, sel, onPick }) {
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" role="img" aria-label="Results by month">
       <line x1="0" x2={W} y1={y0} y2={y0} stroke="rgba(var(--fg),.15)" />
       {months.map((m, i) => { const cw = W / months.length, cx = (i + 0.5) * cw, h = Math.max(1.5, Math.abs(m.net) * sc); const pick = onPick ? { className: "mbar", role: "button", tabIndex: 0, "aria-pressed": sel === m.k, "aria-label": `${monthName(m.k)}: show the days`, onClick: () => onPick(m.k), onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPick(m.k); } } } : {}; return (
-        <g key={m.k} {...pick} style={{ opacity: sel && sel !== m.k ? 0.38 : 1, transition: "opacity .2s" }}>
+        <g key={m.k} {...pick} style={{ opacity: sel && sel !== m.k ? 0.38 : 1, transition: "opacity .2s var(--ez)" }}>
           {onPick && <rect x={cx - cw / 2 + 1} width={cw - 2} y="1" height={H - 2} rx="6" fill={sel === m.k ? "rgba(var(--fg),.05)" : "transparent"} />}
           <rect className="growy" style={{ transformOrigin: m.net >= 0 ? "50% 100%" : "50% 0%", animationDelay: `${i * 0.04}s` }} x={cx - bw / 2} width={bw} y={m.net >= 0 ? y0 - h : y0} height={h} rx="3" fill={m.net >= 0 ? "var(--brass)" : "var(--rose)"} opacity=".9" />
           {months.length <= 8 && <text x={cx} y={m.net >= 0 ? y0 - h - 4 : y0 + h + 10} textAnchor="middle" fill="var(--ivory-d)" style={{ font: "600 9px Inter" }}>{shortMoney(m.net)}</text>}
@@ -4731,6 +4798,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
   const [casino, setCasino] = useState("all");
   const [pnlFull, setPnlFull] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const histRef = useGlideH(showAll);
   const [exportMsg, setExportMsg] = useState(null);
   useEffect(() => { if (_openLog) { _openLog = false; setSheet("new"); } }, []);
   useNav((o) => { if (o.log) setSheet("new"); });
@@ -4769,7 +4837,8 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
     return sessions.filter((s) => new Date(s.date + "T12:00").getTime() >= since && (casino === "all" || casinoKey(s) === casino));
   }, [sessions, period, casino]);
   const st = useMemo(() => sessionStats(list, evHour, sdHour), [list, evHour, sdHour]);
-  const [moreStats, setMoreStats] = useState(false);   // streak, average win/loss, upswing and swings sit behind "More stats"
+  const [moreStats, setMoreStats] = useState(false);
+  const statsRef = useGlideH(moreStats);   // streak, average win/loss, upswing and swings sit behind "More stats"
   const ddE = useDeferred(list.length > 1 && mix && mix.length ? ddKey(list, mix, hph) : null, () => drawdownSteps(expectedParts(list, mix, hph))) || null;
   const byCasino = useMemo(() => {
     const m = new Map();
@@ -4889,11 +4958,11 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
 
         {/* stats */}
         <div className="eyebrow mb-2 px-1">Stats</div>
-        <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="grid grid-cols-2 gap-2 mb-4" ref={statsRef}>
           <StatTile k="Best session" v={st.best ? sgnMoney(st.best.result) : "—"} sub={st.best ? `${dateShort(st.best.date)}${st.best.where ? " · " + st.best.where : ""}` : ""} tone="var(--brass)" />
           <StatTile k="Worst session" v={st.worst ? sgnMoney(st.worst.result) : "—"} sub={st.worst ? `${dateShort(st.worst.date)}${st.worst.where ? " · " + st.worst.where : ""}` : ""} tone={st.worst && st.worst.result < 0 ? "var(--neg-l)" : undefined} />
-          <StatTile k="Drawdown" v={st.mdd ? `−${money(Math.round(st.mdd))}` : "$0"} sub={ddE ? `median for your hours\u00a0−${money(Math.round(ddE.med / 25) * 25)}` : "biggest drop from a peak"} tone={ddE && st.mdd > ddE.med ? "var(--neg-l)" : undefined} />
-          <StatTile k="From your peak" v={st.fromPeak > 0 ? `−${money(Math.round(st.fromPeak))}` : "At a high"} sub={st.fromPeak > 0 ? "below your best point" : "new high-water mark"} tone={st.fromPeak > 0 ? undefined : "var(--brass)"} />
+          <StatTile k="Drawdown" v={st.mdd ? `−\u2060${money(Math.round(st.mdd))}` : "$0"} sub={ddE ? `median for your hours\u00a0−\u2060${money(Math.round(ddE.med / 25) * 25)}` : "biggest drop from a peak"} tone={ddE && st.mdd > ddE.med ? "var(--neg-l)" : undefined} />
+          <StatTile k="From your peak" v={st.fromPeak > 0 ? `−\u2060${money(Math.round(st.fromPeak))}` : "At a high"} sub={st.fromPeak > 0 ? "below your best point" : "new high-water mark"} tone={st.fromPeak > 0 ? undefined : "var(--brass)"} />
           {moreStats && <>
           <StatTile enter k="Streak" v={st.curStreak > 0 ? `${st.curStreak} W` : st.curStreak < 0 ? `${-st.curStreak} L` : "—"} sub={`longest ${st.longW} W · ${st.longL} L`} />
           <StatTile enter k="Avg win / loss" v={`${st.wins ? shortMoney(st.avgWin) : "—"} / ${st.losses ? shortMoney(st.avgLoss) : "—"}`} sub={`${st.wins} won · ${st.losses} lost`} />
@@ -4949,6 +5018,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
         <section className="card p-5 mb-4 ph-b">
           <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">History</div><button onClick={exportCsv} className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }}>Export CSV</button></div>
           {exportMsg && <div className="text-xs mb-2" style={{ color: "var(--brass)" }}>{exportMsg}</div>}
+          <div ref={histRef}>
           {groups.map((g) => { const mt = monthTot(g.k); return (
             <div key={g.k} className="mb-3">
               <div className="flex justify-between text-[11px] font-semibold px-1 py-1.5" style={{ color: "var(--muted)" }}><span>{monthName(g.k)}</span><span className="mono">{sgnMoney(mt.net)} · {fmtH(mt.h)}</span></div>
@@ -4967,6 +5037,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
                   </button>))}
               </div>
             </div>); })}
+          </div>
           {list.length > histN && <button onClick={() => setShowAll(!showAll)} className="w-full text-xs font-semibold py-2 lnk" style={{ color: "var(--brass)" }}>{showAll ? "Show fewer" : `Show all ${list.length}`}</button>}
         </section>
       </>}
@@ -5412,10 +5483,16 @@ const applyTheme = (t) => { try { const el = document.documentElement, skin = t 
 function ThemePicker() {
   const [t, setT] = useState(() => { try { return localStorage.getItem("bj:" + THEME_KEY) || "emerald"; } catch (_) { return "emerald"; } });
   useEffect(() => { applyTheme(t); try { window.storage.set(THEME_KEY, t, false); } catch (_) {} }, [t]);
+  // where the browser can (Chrome, Safari 18), the old look dissolves into the new one instead of switching in a frame
+  const pick = (k) => {
+    if (k === t) return;
+    if (typeof document !== "undefined" && document.startViewTransition && !noMotion()) { try { document.startViewTransition(() => { flushSync(() => setT(k)); applyTheme(k); }); return; } catch (_) {} }
+    setT(k);
+  };
   return (
     <div className="grid grid-cols-2 gap-2.5 themerow">
       {THEME_LIST.map(([k, l, acc, bg, card]) => { const on = t === k, lightT = k === "light" || k === "kiera"; return (
-        <button key={k} onClick={() => setT(k)} aria-pressed={on} className="rounded-2xl p-2.5 text-left chippress" style={{ background: "rgba(var(--fg),.03)", border: on ? "2px solid var(--brass)" : "1px solid rgba(var(--fg),.1)", padding: on ? 9 : 10 }}>
+        <button key={k} onClick={() => pick(k)} aria-pressed={on} className="rounded-2xl p-2.5 text-left chippress" style={{ background: "rgba(var(--fg),.03)", border: on ? "2px solid var(--brass)" : "1px solid rgba(var(--fg),.1)", padding: on ? 9 : 10 }}>
           <div className="rounded-xl p-2 mb-2 overflow-hidden" style={{ height: 82, background: bg, border: lightT ? "1px solid rgba(15,27,61,.08)" : "1px solid rgba(255,255,255,.05)" }}>
             <div className="rounded-md mb-1.5" style={{ height: 6, width: "46%", background: lightT ? "#0E1A3A" : "rgba(255,255,255,.75)" }} />
             <div className="rounded-lg p-1.5 flex items-end gap-1" style={{ height: 50, background: card, boxShadow: lightT ? "0 2px 8px -3px rgba(15,27,61,.25)" : "none" }}>
@@ -6150,7 +6227,7 @@ function BetSpreadCalculator() {
       {setupOpen && <RulesModal rules={rules} onSave={saveRules} onClose={() => setSetupOpen(false)} first={firstRun} />}
       {cmd && <CommandPalette items={cmdItems} onClose={() => setCmd(false)} />}
       {keysOpen && <ShortcutsSheet onClose={() => setKeysOpen(false)} mac={isMac} />}
-      <div ref={shellRef} className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
+      <div ref={shellRef} className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s var(--ez)", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
         <header className="mb-5 flex items-end justify-between gap-3">
           <div className="shrink-0">
@@ -6224,7 +6301,7 @@ function BetSpreadCalculator() {
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Chance of a losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>finish below where you started</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>peak to low{sess.dd90 == null ? "" : ` · 1 in 10: −${money(Math.round(sess.dd90 / 25) * 25)}`}</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>peak to low{sess.dd90 == null ? "" : ` · 1 in 10: −\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</div></div>
               </div>
             ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
             <Info label="About these numbers">"Bring with you" covers the deepest you're likely to dip during the session, not just where you finish — including the extra swing from hot and cold shoes clustering, checked against full simulations. Drawdown is the biggest drop from a high point to a low within the session.</Info>
@@ -6352,7 +6429,7 @@ function BetSpreadCalculator() {
                         {frontier.map((p, i) => { const sel = Math.round(p.cap * 100) === rorPct; return (
                           <button key={p.cap} onClick={() => setRorPct(Math.round(p.cap * 100))} className="relative flex-1 flex flex-col items-center justify-end h-full" aria-label={`${Math.round(p.cap * 100)}% risk`}>
                             {sel && !p.infeasible && <span className="absolute mono whitespace-nowrap" style={{ fontSize: 9, top: -13, color: "var(--brass)" }}>${p.ev.toFixed(0)}</span>}
-                            <div className="w-full rounded-t bary" style={{ "--i": i, height: p.infeasible ? 3 : `${Math.max(8, (p.ev / mx) * 100)}%`, background: p.infeasible ? "rgba(var(--neg),.35)" : sel ? "var(--brass)" : p.ev > r.evHour ? "rgba(var(--acc),.45)" : "rgba(var(--acc),.22)", transition: "height .34s var(--ez), background .16s" }} />
+                            <div className="w-full rounded-t bary" style={{ "--i": i, height: p.infeasible ? 3 : `${Math.max(8, (p.ev / mx) * 100)}%`, background: p.infeasible ? "rgba(var(--neg),.35)" : sel ? "var(--brass)" : p.ev > r.evHour ? "rgba(var(--acc),.45)" : "rgba(var(--acc),.22)", transition: "height .34s var(--ez), background .16s var(--ez)" }} />
                           </button>); })}
                       </div>
                     </div>
@@ -6474,7 +6551,7 @@ function BetSpreadCalculator() {
   );
 }
 // shared with src/casinos.jsx (the Casinos page lives in its own file)
-export { Sheet, Seg, ChipRow, ConfirmLink, More, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav, Info, money, shortMoney, fmtTC, pct };
+export { Sheet, Seg, ChipRow, ConfirmLink, More, Fold, useGlideH, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav, Info, money, shortMoney, fmtTC, pct };
 // used by the phone layout's own pieces (src/phone.jsx)
 export { FocusCard, TESTS_KEY, testsOf, TEST_DEFS, Toggle, Glide };
 // used by the Plan tab (src/planner.jsx) and the arithmetic checks

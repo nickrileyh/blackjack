@@ -2,7 +2,7 @@
 // Lives in its own file (with casino-map.js and casino-data.js) so work here doesn't collide with app.jsx.
 // Shared controls come from app.jsx; they are only touched inside components, never while this file loads.
 import { useState, useMemo, useEffect, useRef, memo } from "react";
-import { Sheet, Seg, ChipRow, ConfirmLink, More, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav } from "./app.jsx";
+import { Sheet, Seg, ChipRow, ConfirmLink, More, Fold, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav } from "./app.jsx";
 import { unpack, albersUsa, azimuthal, regionMap, countryMap, fitBox, regionAt } from "./casino-map.js";
 import { GEO_US, GEO_CA, GEO_WORLD, CASINO_ROWS, CASINO_INTEL } from "./casino-data.js";
 import { TableScoreCard, useCasinoScores, scoreTone, milesBetween } from "./planner.jsx";
@@ -99,7 +99,7 @@ const casCss = `
 .cm-lab{font:600 11px Inter,system-ui,sans-serif;fill:var(--ivory);paint-order:stroke;stroke:var(--bg);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
 .cm-labs{transition:opacity .18s var(--ease)}
 .cm-ctl{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px}
-.cm-btn{width:34px;height:34px;border-radius:999px;display:flex;align-items:center;justify-content:center;color:var(--ivory-d);background:linear-gradient(180deg,rgba(var(--fg),.1),rgba(var(--fg),.04)),rgba(var(--bgrgb),.6);border:1px solid rgba(var(--fg),.12);box-shadow:inset 0 1px 0 var(--gl-hi);backdrop-filter:blur(14px) saturate(1.6);-webkit-backdrop-filter:blur(14px) saturate(1.6);transition:transform .12s var(--ease),color .15s,opacity .2s}
+.cm-btn{width:34px;height:34px;border-radius:999px;display:flex;align-items:center;justify-content:center;color:var(--ivory-d);background:linear-gradient(180deg,rgba(var(--fg),.1),rgba(var(--fg),.04)),rgba(var(--bgrgb),.6);border:1px solid rgba(var(--fg),.12);box-shadow:inset 0 1px 0 var(--gl-hi);backdrop-filter:blur(14px) saturate(1.6);-webkit-backdrop-filter:blur(14px) saturate(1.6);transition:transform .12s var(--ease),color .15s var(--ez),opacity .2s var(--ez)}
 .cm-btn:active{transform:scale(.92)}.cm-btn:disabled{opacity:.35}
 @media (hover:hover){.cm-btn:hover:not(:disabled){color:var(--ivory)}}
 .cm-btn:focus-visible,.crow:focus-visible,.cpick:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
@@ -107,11 +107,11 @@ const casCss = `
 .cm-hint{position:absolute;left:10px;bottom:10px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:500;color:var(--ivory-d);background:rgba(var(--bgrgb),.72);border:1px solid rgba(var(--fg),.08);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none}
 .cm-scale{position:absolute;right:12px;bottom:11px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:10px;font-weight:600;color:var(--muted);pointer-events:none}
 .cm-scale span{display:block;height:5px;border:1.5px solid rgba(var(--fg),.45);border-top:0;border-radius:0 0 2px 2px}
-.cpick{display:flex;align-items:center;gap:7px;height:34px;padding:0 10px 0 13px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--ivory);background:rgba(var(--fg),.05);border:1px solid rgba(var(--acc),.22);transition:transform .13s var(--ease),background .15s;min-width:0}
+.cpick{display:flex;align-items:center;gap:7px;height:34px;padding:0 10px 0 13px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--ivory);background:rgba(var(--fg),.05);border:1px solid rgba(var(--acc),.22);transition:transform .13s var(--ease),background .15s var(--ez);min-width:0}
 .cpick:active{transform:scale(.97)}.cpick svg{color:var(--brass);flex:none}
 .cdot{flex:none;display:inline-block;width:9px;height:9px;border-radius:50%;box-sizing:border-box;border:1.5px solid rgba(var(--fg),.4)}
 .cdot.b{background:var(--brass);border-color:var(--brass)}.cdot.x{background:var(--rose);border-color:var(--rose);box-shadow:0 0 0 3px rgba(var(--neg),.2)}
-.crow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;width:100%;text-align:left;padding:10px 4px;border-radius:10px;transition:background .15s}
+.crow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;width:100%;text-align:left;padding:10px 4px;border-radius:10px;transition:background .15s var(--ez)}
 .crow+.crow{border-top:1px solid rgba(var(--fg),.06)}
 .crow:active{background:rgba(var(--fg),.05)}
 @media (hover:hover){.crow:hover{background:rgba(var(--fg),.04)}}
@@ -364,11 +364,11 @@ function GameEditor({ g, set, onRemove, onUse, used }) {
         {row(<>Penetration <span className="mono" style={{ color: "var(--brass)" }}>{R.pen}%</span></>, <input type="range" min={50} max={90} step={5} value={R.pen} onChange={(e) => setR("pen", Number(e.target.value))} aria-label="Penetration" />)}
       </div>
       <More open={more} onClick={() => setMore(!more)} className="mt-4 mb-1">{more ? "Fewer rules" : "More rules — doubling, splitting"}</More>
-      {more && <div className="space-y-3 mt-2 rise">
+      <Fold open={more} className="space-y-3 pt-2">
         {row("Double on", <Seg value={dblRule(R)} options={[["any", "Any 2"], ["9-11", "9–11"], ["10-11", "10–11"]]} onChange={(v) => setR("dbl", v)} />)}
         {row("Split up to (hands)", <Seg value={maxHandsOf(R)} options={[[2, "2"], [3, "3"], [4, "4"]]} onChange={(v) => setR("maxHands", v)} />)}
         {row("Resplit aces", <Seg value={!!R.rsa} options={[[false, "No"], [true, "Yes"]]} onChange={(v) => setR("rsa", v)} />)}
-      </div>}
+      </Fold>
       <div className="grid grid-cols-3 gap-2 mt-4">
         <label className="block"><span className="eyebrow block mb-1.5">Table min</span>{num("min", "Min", "$")}</label>
         <label className="block"><span className="eyebrow block mb-1.5">Table max</span>{num("max", "Max", "$")}</label>
@@ -393,7 +393,7 @@ function IntelBlock({ intel, onCopy, copied }) {
       <div className="flex items-baseline justify-between gap-3"><span className="eyebrow">Scouting report</span>{intel.asOf && <span className="text-[11px]" style={{ color: "var(--muted)" }}>as of {intel.asOf}</span>}</div>
       {facts.length > 0 && <div className="grid gap-2 mt-2.5" style={{ gridTemplateColumns: `repeat(${facts.length}, minmax(0,1fr))` }}>{facts.map(([v, k]) => (
         <div key={k} className="rounded-xl px-2.5 py-2" style={{ background: "rgba(var(--fg),.04)" }}><div className="mono text-[13px] font-semibold leading-tight" style={{ color: "var(--ivory)" }}>{v}</div><div className="text-[10.5px] leading-tight mt-0.5" style={{ color: "var(--muted)" }}>{k}</div></div>))}</div>}
-      {open ? <div className="space-y-2.5 mt-3 rise">
+      <Fold open={open} className="space-y-2.5 pt-3">
         {rows.map(([k, v]) => (
           <div key={k}><div className="text-[11px] font-semibold" style={{ color: "var(--muted)" }}>{k}</div>
             {Array.isArray(v) ? <ul className="text-[13px] leading-snug" style={{ color: "var(--ivory-d)" }}>{v.map((x, i) => <li key={i} className="flex gap-2 mt-1"><span aria-hidden="true" style={{ color: "var(--brass)" }}>·</span><span>{x}</span></li>)}</ul> : <div className="text-[13px] leading-snug mt-0.5" style={{ color: "var(--ivory-d)" }}>{v}</div>}
@@ -401,7 +401,8 @@ function IntelBlock({ intel, onCopy, copied }) {
         {intel.best && intel.best.decks && onCopy && <button type="button" className="btn ghost" style={{ fontSize: 14, padding: "10px 12px" }} onClick={onCopy} disabled={copied}>{copied ? "Added to your games ✓" : "Add the reported game to mine"}</button>}
         {intel.src && intel.src.length > 0 && <div className="text-[11px] pt-2.5" style={{ borderTop: "1px solid var(--line)", color: "var(--muted)" }}>Sources: {intel.src.map(([l, u], i) => <span key={u + i}>{i ? " · " : ""}<a className="clink" href={u} target="_blank" rel="noopener noreferrer">{l}</a></span>)}</div>}
         <p className="text-[11px]" style={{ color: "var(--muted)" }}>Gathered from public reports. Casinos change rules, limits and table counts often — trust what you see on the floor.</p>
-      </div> : <More open={false} onClick={() => setOpen(true)} className="mt-3">Read the full report</More>}
+      </Fold>
+      {!open && <More open={false} onClick={() => setOpen(true)} className="mt-3">Read the full report</More>}
     </div>
   );
 }
