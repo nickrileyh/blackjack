@@ -3307,7 +3307,7 @@ function TestRunner({ id, rules, onDone }) {
     onDone({ ...rec, ms, ok, total, extra });
   };
   const answer = (v) => {
-    if (id === "deck") { const rc = deckCards.reduce((a, c) => a + hilo(c.rank), 0); finish(v === rc ? 1 : 0, 1, { rc }); return; }
+    if (id === "deck") { const rc = qs.reduce((a, c) => a + hilo(c.rank), 0); finish(v === rc ? 1 : 0, 1, { rc }); return; }
     const q = qs[state.i]; let ok;
     if (id === "tc") ok = v === q.tc;
     if (id === "strategy") ok = v === q.answer;
@@ -3330,7 +3330,7 @@ function TestRunner({ id, rules, onDone }) {
       {id === "deck" && (
         <>
           <div className="relative tbl felt cz-big px-4 py-5"><div className="flex items-center justify-center" style={{ minHeight: "calc(180px * var(--cz, 1))" }}>
-            {pos > 0 && pos <= 51 && !state.done ? <><PlayingCard key={pos + "-" + dealKey} rank={deckCards[pos - 1].rank} suit={deckCards[pos - 1].suit} face={deckCards[pos - 1].face} big delay={0} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: ".3s" }} /><span className="absolute top-2 right-3 mono text-[10px]" style={{ color: "var(--muted)" }}>{pos}/51</span></> : <div className="eyebrow" style={{ opacity: .7 }}>{state.done ? "What's the running count?" : "Ready…"}</div>}
+            {pos > 0 && pos <= 51 && !state.done ? <><PlayingCard key={pos} rank={qs[pos - 1].rank} suit={qs[pos - 1].suit} face={qs[pos - 1].face} big delay={0} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: ".3s" }} /><span className="absolute top-2 right-3 mono text-[10px]" style={{ color: "var(--muted)" }}>{pos}/51</span></> : <div className="eyebrow" style={{ opacity: .7 }}>{state.done ? "What's the running count?" : "Ready…"}</div>}
           </div></div>
           {state.done && <div className="mt-4 rise"><Stepper value={guess} onChange={setGuess} /><button className="btn mt-3" onClick={() => answer(guess)}>Check</button></div>}
         </>
@@ -3547,7 +3547,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
   const [testBest, setTestBest] = useState(null);
   const [sess, setSess] = useState(null);
   useEffect(() => { (async () => {
-    try { const r = await window.storage.get(TEST_KEY, false); setTestBest(r?.value ? JSON.parse(r.value) : {}); } catch (_) { setTestBest({}); }
+    try { const r = await window.storage.get(TESTS_KEY, false); setTestBest(r?.value ? JSON.parse(r.value) : {}); } catch (_) { setTestBest({}); }
     try { const r = await window.storage.get(SESS_KEY, false); setSess(r?.value ? JSON.parse(r.value) : []); } catch (_) { setSess([]); }
   })(); }, []);
   const netTotal = (sess || []).reduce((a, x) => a + x.result, 0);
