@@ -35,6 +35,8 @@ async function spreadSetup() {
   const base = await loadSetup(), plan = _planRisk || (await loadPlan()).risk;
   return { ...base, entry: -3, belowMode: "min", rorPct: plan * 100 };
 }
+// the hours-a-week goal set on the Plan page, for Home's "This week" card (the Plan page's own copy if it is open)
+export async function planHours() { return (_plan || (await loadPlan())).hours; }
 let _planRisk = 0; // the Plan page's live risk limit, so the Casinos page scores match it without a reload
 export function scoreGame(setup, g) {
   const R = { ...DEFAULT_RULES, ...(g.rules || {}) }, seats = g.seats || setup.seats || 4, cal = calFor(R, seats), B = setup.bankroll, cap = setup.rorPct / 100;

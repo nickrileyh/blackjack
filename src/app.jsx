@@ -5,7 +5,7 @@ import { startSmooth } from "./smooth.js";
 import { PlanPage } from "./planner.jsx";
 import { sfx, soundPrefs, setSoundPrefs } from "./sound.js";
 import { coverCal, DEVIATIONS as COVER_DEVS } from "./cover.js";
-import { useNarrow, TripCard, TimerCard, MoreHub, TrainHub, phoneCss, timerDo, useSessionTimer } from "./phone.jsx";
+import { useNarrow, TripCard, WeekCard, TimerCard, MoreHub, TrainHub, phoneCss, timerDo, useSessionTimer } from "./phone.jsx";
 
 // ---------- model ----------
 const COUNTS = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
@@ -4253,6 +4253,7 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
         </div>
       )}
       {go && !timing && <TripCard go={go} bankroll={bankroll} />}
+      {go && <WeekCard sessions={sessions} go={go} />}
       {wide && <PracticeCard log={log} go={go} />}
       <SkillsCard log={log} go={go} />
       </div><div className="dcol o2 flipd">

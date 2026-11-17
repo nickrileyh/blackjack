@@ -3,7 +3,7 @@
 // Like casinos.jsx: nothing imported from app.jsx may be used while this file loads, only inside components.
 import { useState, useEffect, useMemo } from "react";
 import { Sheet, SESS_KEY, casinoKey, localDay, loadLog, FocusCard, TESTS_KEY, testsOf, TEST_DEFS } from "./app.jsx";
-import { usePlayNext, scoreTone } from "./planner.jsx";
+import { usePlayNext, scoreTone, planHours } from "./planner.jsx";
 import { useWhere, nearestCasinos, distLabel, CAS_KEY } from "./casinos.jsx";
 
 // the phone layout is everything under the line where the sidebar takes over
@@ -165,6 +165,55 @@ export function TripCard({ go, bankroll }) {
   );
 }
 
+// Home: hours played this week against the Plan page's hours-a-week goal (Nick: "make 'hours this week' section on
+// home page"). This week is the phone's own calendar week (Sunday first in the US, Monday in most other places); its
+// hours are the sessions logged on those days plus a session being timed now, which counts until it is logged.
+const weekFirst = () => { try { const l = new Intl.Locale(navigator.language || "en-US"), w = l.getWeekInfo ? l.getWeekInfo() : l.weekInfo; if (w && w.firstDay) return w.firstDay % 7; } catch (_) {} return 1; };
+const hrs = (h) => { const r = Math.round(h * 10) / 10; return `${r % 1 ? r.toFixed(1) : r} h`; };
+const money0 = (v) => `${v > 0 ? "+" : v < 0 ? "−" : ""}$${Math.abs(Math.round(v)).toLocaleString()}`;
+export function WeekCard({ sessions, go }) {
+  const t = useSessionTimer(), [goal, setGoal] = useState(null), [, tick] = useState(0);
+  useEffect(() => { let live = true; planHours().then((h) => live && setGoal(h)).catch(() => live && setGoal(8)); return () => { live = false; }; }, []);
+  // a running clock adds to today's column; redraw every half minute while it runs
+  useEffect(() => { if (!t || t.endAt || t.pauseAt) return; const id = setInterval(() => tick((n) => n + 1), 30000); return () => clearInterval(id); }, [t]);
+  const days = useMemo(() => {
+    const now = new Date(), back = (now.getDay() - weekFirst() + 7) % 7, out = [];
+    for (let i = 0; i < 7; i++) { const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - back + i); out.push({ key: localDay(d.getTime()), lab: d.toLocaleDateString(undefined, { weekday: "narrow" }), today: i === back, future: i > back, h: 0 }); }
+    return out;
+  }, []);
+  const week = useMemo(() => {
+    const at = Object.fromEntries(days.map((d, i) => [d.key, i])), h = days.map(() => 0); let n = 0, res = 0;
+    (sessions || []).forEach((x) => { const i = at[x && x.date]; if (i == null) return; h[i] += +x.hours || 0; res += +x.result || 0; n++; });
+    return { h, n, res };
+  }, [sessions, days]);
+  const live = t ? timerMs(t) / 3.6e6 : 0, today = days.findIndex((d) => d.today);
+  const per = week.h.map((v, i) => v + (i === today ? live : 0)), done = per.reduce((a, b) => a + b, 0);
+  const g = goal || 8, frac = Math.min(1, done / g), top = Math.max(...per, g / 4, 0.5);
+  return (
+    <section className="card p-5 mb-4 weekcard">
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="eyebrow">This week</div>
+        <button className="text-[11px] font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => go("plan")}>{goal ? `Goal ${hrs(goal)}` : "Goal"} ›</button>
+      </div>
+      <button className="cardbtn w-full text-left mt-2" onClick={() => go("sessions")}>
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0"><span className="disp mono text-[30px] leading-none" style={{ color: done >= g ? "var(--brass)" : "var(--ivory)" }}>{hrs(done)}</span><span className="text-sm ml-1.5" style={{ color: "var(--muted)" }}>of {hrs(g)}</span></div>
+          <span className="text-xs text-right pb-0.5" style={{ color: done >= g ? "var(--brass)" : "var(--muted)" }}>{done >= g ? (done - g >= 0.05 ? `${hrs(done - g)} over` : "Goal reached") : `${hrs(g - done)} to go`}</span>
+        </div>
+        <div className="wkbar mt-3"><i className="barx" style={{ width: `${Math.max(done > 0 ? 2 : 0, frac * 100)}%` }} /></div>
+        <div className="wkdays mt-3.5" aria-hidden="true">
+          {days.map((d, i) => (
+            <div key={d.key} className={"wkday" + (d.today ? " today" : "") + (d.future ? " future" : "")}>
+              <div className="wkcol">{per[i] > 0 && <i className="bary" style={{ "--i": i, height: `${Math.max(10, (per[i] / top) * 100)}%` }} />}</div>
+              <span>{d.lab}</span>
+            </div>))}
+        </div>
+        <div className="text-xs mt-3" style={{ color: "var(--muted)" }}>{week.n || live ? <>{week.n} session{week.n === 1 ? "" : "s"}{live ? " + one being timed" : ""}{week.n ? <> · <span className="mono" style={{ color: week.res >= 0 ? "var(--brass)" : "var(--rose)" }}>{money0(week.res)}</span></> : ""}</> : "Nothing logged yet this week"}</div>
+      </button>
+    </section>
+  );
+}
+
 // ======================= the More tab =======================
 // Casinos and Plan sit behind one tab on a phone. Kept to those two rows on purpose (Nick asked for this menu to be
 // cleaned up): Settings is the gear in the top right of every page, the rules are the pill beside it, and logging a
@@ -269,6 +318,17 @@ export const phoneCss = `
 .livedot{width:7px;height:7px;border-radius:50%;background:var(--brass);box-shadow:0 0 0 3px rgba(var(--acc),.22);animation:livedot 2s var(--ez) infinite}
 @keyframes livedot{50%{box-shadow:0 0 0 6px rgba(var(--acc),0)}}
 .hdrback{display:none}
+/* Home's This week card: every screen size */
+.wkbar{position:relative;height:8px;border-radius:99px;background:rgba(var(--fg),.08);overflow:hidden}
+.wkbar>i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--brass);transform-origin:0 50%}
+.wkdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.wkday{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.wkcol{position:relative;width:100%;max-width:26px;height:34px;border-radius:7px;background:rgba(var(--fg),.05);overflow:hidden}
+.wkcol>i{position:absolute;left:0;right:0;bottom:0;border-radius:7px;background:rgba(var(--acc),.62);transform-origin:50% 100%}
+.wkday.today .wkcol>i{background:var(--brass)}
+.wkday.future .wkcol{background:rgba(var(--fg),.025)}
+.wkday>span{font-size:10.5px;font-weight:600;color:var(--muted)}
+.wkday.today>span{color:var(--brass)}
 @media (hover:hover){.mrow:hover,.trow:hover{filter:none;background:rgba(var(--fg),.045)}}
 @media (prefers-reduced-motion:reduce){.livedot{animation:none}.ptile{transition:none}.resin{animation:none}}
 @media (max-width:1023px){
