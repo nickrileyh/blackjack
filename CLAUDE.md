@@ -192,15 +192,20 @@ Playing cards are drawn at fixed pixel sizes (`.pc`, `.pc.sm`, `.pc.big`) and sc
 
 `THEME_LIST` in `src/app.jsx` (Emerald, Dark blue, Classic gold, Amethyst, Copper, Graphite, White & blue, Kiera); each is one block of colour variables on `:root[data-theme=…]`. **Kiera** (pink with a green felt, from a palette Nick sent) is a light theme: `applyTheme` sets `data-theme="light"` so every light-theme layout rule applies, plus `data-skin="kiera"`, whose block repaints the colours. Add another light theme the same way; a rule that must beat a later light-theme rule needs both attributes in its selector.
 
-## Liquid glass
+## Liquid glass (after iOS 26)
 
-Nick asked for a subtle Apple-style liquid glass look on the app's elements. It is one block at the end of the `css` string in `src/app.jsx` ("Liquid glass, kept subtle"), driven by four variables: `--gl-hi` (the bright top edge), `--gl-rim` (a faint ring), `--gl-sheen` (a soft sheen from the top-left corner) and `--gl-blur` (the material). Light themes re-point the first three.
+Nick asked for an Apple-style liquid glass look, then for it to go further, "like iOS 26". It is one block at the end of the `css` string in `src/app.jsx` ("Liquid glass, after iOS 26"), driven by five variables: `--gl-edge` (the specular rim: a gradient brightest at the top-left and bottom-right corners), `--gl-hi` (the bright top edge on small controls), `--gl-rim`, `--gl-sheen` (a soft sheen from the top-left corner) and `--gl-blur` (the material). Light themes re-point them.
 
-- **Real blur only on what floats over the page**: bottom tab bar, top bar, sidebar, the floating rules pill, sheets, the Jump-to palette and the sync toast. Cards get the edge and the sheen but no `backdrop-filter` — nothing sits behind them, and dozens of blurred layers make a phone scroll badly. Don't add blur to cards or list rows.
+- **The tab bar is a floating capsule** (`.bottom-nav > div`): `.bottom-nav` itself is now only the fade the page disappears into, with `pointer-events: none`, so taps beside the capsule reach the page. The selected tab is a capsule over the whole button (`.navbtn.on`), not a lozenge round the icon. Checked at 320, 390 and tablet widths; below 350px the side padding tightens.
+- **The top bar has no bottom line**: it is blurred glass that fades out through a `mask-image` over its last 18px (it has 22px of bottom padding for that).
+- **Sheets float on a phone** (below 1024px): inset 8px from the screen edges, round all the way round; the wrapper's bottom padding stands in for the safe area, so the sheet's own content padding is cut to 22px there.
+- **The rim** is a `::before` with a 1px padding and a mask (`.card:not(.rulesdlg)::before`, the tab capsule, the palette), which is why `.card` is `position: relative` through `:where()` (zero specificity, so a Tailwind position class still wins) and its own border is transparent in the dark themes. Don't put the rim on anything that scrolls its own content (the rules dialog is left out for that reason: the ring would scroll with it), and don't use `.card::before` for anything else.
+- **Real blur only on what floats over the page**: tab capsule, top bar, sidebar, the floating rules pill, sheets, the Jump-to palette and the sync toast. Cards get the rim and the sheen but no `backdrop-filter` — nothing sits behind them, and dozens of blurred layers make a phone scroll badly. Don't add blur to cards or list rows.
+- **Shapes**: cards are 22px round (16px when nested), `.btn` and the sliding segmented control (`.chipseg.slide`) are capsules. A `.chipseg` that can wrap to several rows keeps its 12px corners.
 - Sheets and the palette are see-through through `color-mix()` inside an `@supports` rule, so older browsers keep the solid sheet. `prefers-reduced-transparency` turns the chrome solid again.
-- Pills, round buttons, ghost buttons, the selected tab and the selected segment share the same capsule: a top-to-bottom tint with the `--gl-hi` edge. Give a new small control the same two declarations rather than a flat fill (`.pchip` on the Plan page does).
+- Pills, round buttons and ghost buttons share one capsule: a top-to-bottom tint with the `--gl-hi` edge. Give a new small control the same two declarations rather than a flat fill (`.pchip` on the Plan page does).
 - Shadows in the light rules use `rgba(var(--fg),…)` so Kiera and any later light theme tint them their own colour.
-- Keep it subtle: tune the four variables, not individual elements.
+- Tune the variables, not individual elements.
 
 ## The table felt
 

@@ -663,31 +663,60 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .burst i{position:absolute;left:50%;top:45%;width:5px;height:5px;border-radius:50%;background:var(--brass);opacity:0;animation:fly var(--t) ease-out forwards;animation-delay:var(--dl)}
 .burst i:nth-child(3n){background:var(--acc-hi)}.burst i:nth-child(4n){width:3px;height:3px}
 @keyframes fly{0%{opacity:1;transform:rotate(var(--a)) translateY(-6px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(-6px - var(--d))) scale(.3)}}
-/* ---- Liquid glass, kept subtle (Nick's instruction). Surfaces read as a clear material: a brighter top edge where light
-   catches (--gl-hi), a faint ring (--gl-rim), a soft sheen from the top-left corner (--gl-sheen), and real blur
-   (--gl-blur) only on the pieces that float over the page: tab bar, top bar, sidebar, rules pill, sheets, palette,
-   toast. Cards get the edge and sheen but no blur — there is nothing behind them to blur, and dozens of blurred layers
-   would make a phone scroll badly. The whole look lives in this block so it can be tuned or switched off in one place. */
-:root{--gl-hi:rgba(255,255,255,.13);--gl-rim:rgba(255,255,255,.04);--gl-sheen:rgba(255,255,255,.05);--gl-blur:blur(24px) saturate(1.8)}
-:root[data-theme="light"]{--gl-hi:rgba(255,255,255,.95);--gl-rim:rgba(255,255,255,.6);--gl-sheen:rgba(255,255,255,.55)}
-.card{background:radial-gradient(130% 90% at 0% 0%,var(--gl-sheen),transparent 55%),linear-gradient(180deg,rgba(var(--fg),.055),rgba(var(--fg),.02));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px var(--gl-rim),inset 0 -1px 0 rgba(var(--sh),.5),0 16px 36px -20px rgba(0,0,0,.9)}
-:root[data-theme="light"] .card{background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.8));box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px var(--gl-rim),0 1px 2px rgba(var(--fg),.06),0 10px 28px -16px rgba(var(--fg),.26)}
-.bottom-nav,.topbar{background:rgba(var(--bgrgb),.68);backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur)}
-.bottom-nav{box-shadow:inset 0 1px 0 var(--gl-hi),0 -12px 30px -18px rgba(0,0,0,.9)}
-:root[data-theme="light"] .bottom-nav{box-shadow:inset 0 1px 0 var(--gl-hi),0 -1px 0 rgba(var(--fg),.06)}
+/* ---- Liquid glass, after iOS 26 (Nick's instruction). Surfaces read as a clear material: a specular rim that is
+   brightest at the top-left and bottom-right corners (--gl-edge), a bright top edge on small controls (--gl-hi), a soft
+   sheen from the top-left corner (--gl-sheen), and real blur (--gl-blur) only on the pieces that float over the page:
+   the tab bar (a floating capsule), the top bar (fades out instead of ending in a line), sidebar, rules pill, sheets
+   (inset from the screen edges on a phone), palette and toast. Cards get the rim and sheen but no blur — there is
+   nothing behind them to blur, and dozens of blurred layers would make a phone scroll badly. Shapes follow: capsule
+   buttons and sliding segments, rounder cards. The whole look lives in this block so it can be tuned in one place. */
+:root{--gl-hi:rgba(255,255,255,.14);--gl-rim:rgba(255,255,255,.04);--gl-sheen:rgba(255,255,255,.055);--gl-blur:blur(26px) saturate(1.9);
+--gl-edge:linear-gradient(135deg,rgba(255,255,255,.3),rgba(255,255,255,.07) 26%,rgba(255,255,255,.025) 62%,rgba(255,255,255,.17))}
+:root[data-theme="light"]{--gl-hi:rgba(255,255,255,.95);--gl-rim:rgba(255,255,255,.6);--gl-sheen:rgba(255,255,255,.55);
+--gl-edge:linear-gradient(135deg,#fff,rgba(255,255,255,.75) 26%,rgba(255,255,255,.35) 62%,#fff)}
+/* cards */
+:where(.card){position:relative}
+.card{border-radius:22px;border-color:transparent;background:radial-gradient(130% 90% at 0% 0%,var(--gl-sheen),transparent 55%),linear-gradient(180deg,rgba(var(--fg),.058),rgba(var(--fg),.022));box-shadow:inset 0 -1px 0 rgba(var(--sh),.45),0 16px 36px -20px rgba(0,0,0,.9)}
+.card .card{border-radius:16px}
+.card:not(.rulesdlg)::before,.bottom-nav>div::before,.cmdk::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--gl-edge);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none;z-index:1}
+:root[data-theme="light"] .card{border-color:rgba(var(--fg),.07);background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.8));box-shadow:0 1px 2px rgba(var(--fg),.06),0 10px 28px -16px rgba(var(--fg),.26)}
+/* the tab bar: a floating capsule, with the page fading out beneath it */
+.bottom-nav{padding:22px 12px max(10px,calc(env(safe-area-inset-bottom) - 12px));background:linear-gradient(to top,rgba(var(--bgrgb),.86),rgba(var(--bgrgb),.5) 55%,rgba(var(--bgrgb),0));backdrop-filter:none;-webkit-backdrop-filter:none;border-top:0;box-shadow:none;pointer-events:none}
+:root[data-theme="light"] .bottom-nav{box-shadow:none}
+.bottom-nav>div{position:relative;pointer-events:auto;max-width:27rem;padding:5px;border-radius:999px;background:linear-gradient(180deg,rgba(var(--fg),.1),rgba(var(--fg),.045)),rgba(var(--bgrgb),.5);backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur);box-shadow:0 14px 34px -14px rgba(0,0,0,.75),0 2px 8px -3px rgba(0,0,0,.4)}
+:root[data-theme="light"] .bottom-nav>div{background:rgba(255,255,255,.62);box-shadow:0 0 0 1px rgba(var(--fg),.06),0 14px 34px -16px rgba(var(--fg),.4),0 2px 8px -3px rgba(var(--fg),.16)}
+.navbtn{min-height:50px;border-radius:999px;padding:5px 0 3px;gap:2px;transition:color .18s var(--ease),transform .13s var(--ease),background .25s var(--ease)}
+@media (max-width:350px){.bottom-nav{padding-left:6px;padding-right:6px}.bottom-nav>div{padding:4px}}
+.navbtn.on{background:linear-gradient(180deg,rgba(var(--fg),.16),rgba(var(--fg),.08));box-shadow:inset 0 1px 0 var(--gl-hi)}
+:root[data-theme="light"] .navbtn.on{background:rgba(var(--acc),.12);box-shadow:inset 0 1px 0 var(--gl-hi)}
+.navbtn .navicon,.navbtn.on .navicon{background:none;box-shadow:none;height:26px}
+.sn-glide{background:linear-gradient(180deg,rgba(var(--acc),.2),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.14)}
+/* the top bar: blurred glass that fades away at its lower edge */
+.topbar{background:linear-gradient(180deg,rgba(var(--bgrgb),.9),rgba(var(--bgrgb),.72) 60%,rgba(var(--bgrgb),.4));backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur);border-bottom:0;box-shadow:none;padding-bottom:22px;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent)}
+:root[data-theme="light"] .topbar{box-shadow:none}
 .sidenav{backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur);box-shadow:inset -1px 0 0 var(--gl-rim)}
-.navbtn.on .navicon,.sn-glide{background:linear-gradient(180deg,rgba(var(--acc),.2),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.14)}
-.rulespill,.iconbtn,.stepbtn,.btn.ghost,.sn-search,.sn-rules{background:linear-gradient(180deg,rgba(var(--fg),.085),rgba(var(--fg),.035));box-shadow:inset 0 1px 0 var(--gl-hi)}
+/* small controls: one glass capsule */
+.rulespill,.iconbtn,.stepbtn,.btn.ghost,.sn-search,.sn-rules{background:linear-gradient(180deg,rgba(var(--fg),.09),rgba(var(--fg),.035));box-shadow:inset 0 1px 0 var(--gl-hi)}
 .pillrail .rulespill,.topbar .rulespill,.syncpill{backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur)}
 .syncpill{background:rgba(var(--bgrgb),.7);box-shadow:inset 0 1px 0 var(--gl-hi),0 12px 30px -12px rgba(0,0,0,.7)}
-:root:not([data-theme="light"]) .chipseg button.on,:root:not([data-theme="light"]) .chipseg.slide .thumb{background:linear-gradient(180deg,rgba(var(--acc),.2),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.2),0 2px 8px -4px rgba(0,0,0,.6)}
+.btn{border-radius:999px;box-shadow:0 8px 22px -10px rgba(var(--acc),.55),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.12)}
+.btn.ghost{box-shadow:inset 0 1px 0 var(--gl-hi)}
+.chipseg.slide,.chipseg.slide .thumb,.chipseg.slide button{border-radius:999px}
+:root:not([data-theme="light"]) .chipseg button.on,:root:not([data-theme="light"]) .chipseg.slide .thumb{background:linear-gradient(180deg,rgba(var(--acc),.22),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.2),0 2px 8px -4px rgba(0,0,0,.6)}
 :root:not([data-theme="light"]) .chipseg.slide button.on{background:none;box-shadow:none}
 /* sheets and the Jump-to palette: the page shows through, softly, where the browser can do it */
+.cmdk{position:relative}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) and (color:color-mix(in srgb,red 50%,transparent)){
-.sheet,.cmdk{background:linear-gradient(180deg,var(--gl-hi),var(--gl-hi) 1px,transparent 1px),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 80%,transparent),color-mix(in srgb,var(--sheet2) 87%,transparent) 40%);backdrop-filter:blur(30px) saturate(1.7);-webkit-backdrop-filter:blur(30px) saturate(1.7)}
+.sheet,.cmdk{background:linear-gradient(180deg,var(--gl-hi),var(--gl-hi) 1px,transparent 1px),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 78%,transparent),color-mix(in srgb,var(--sheet2) 86%,transparent) 40%);backdrop-filter:blur(34px) saturate(1.8);-webkit-backdrop-filter:blur(34px) saturate(1.8)}
+}
+/* on a phone a sheet floats: inset from the screen edges, round all the way round */
+@media (max-width:1023px){
+.sheetwrap{padding:0 8px max(8px,calc(env(safe-area-inset-bottom) - 16px))}
+.sheet{border-radius:34px;border-bottom:1px solid rgba(var(--acc),.16);box-shadow:0 -10px 50px -10px rgba(0,0,0,.8)}
+.sheet>div:last-child{padding-bottom:22px!important}
 }
 /* "Reduce transparency" on the device: solid surfaces again */
-@media (prefers-reduced-transparency:reduce){.bottom-nav,.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
+@media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
