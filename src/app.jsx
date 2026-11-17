@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, Fragment, createContext, useContext, startTransition } from "react";
 import { createPortal } from "react-dom";
 import CasinosPage, { openCasinoAdd, warmCasinos } from "./casinos.jsx";
+import { GRAIN } from "./grain.js";
 import { PlanPage } from "./planner.jsx";
 import { sfx, soundPrefs, setSoundPrefs } from "./sound.js";
 import { coverCal } from "./cover.js";
@@ -984,6 +985,31 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14);background:
 /* the rules pill inside the top bar sits on glass that is already blurred: a second blur there costs a phone a layer
    for nothing */
 .topbar .rulespill{-webkit-backdrop-filter:none;backdrop-filter:none}
+/* ---- Smooth gradients (Nick sent a photo of his Mac: rings round the light on a card, steps in the page's fade).
+   A screen has 256 levels of each colour and a soft glow on a dark surface crosses only a few of them, so it is drawn
+   as flat bands with edges you can see. Two cures, both here:
+   1. A dither over the whole app: .bjroot::after lays a tile of very faint specks (src/grain.js, made by
+      tools/grain/make-grain.py) on top of everything. Each speck is worth a level or two, which is enough to break up
+      every band edge under it and too little to see as grain. It is one layer, above everything, and it ignores taps.
+      It replaces the old grain that sat under the cards (and did nothing for the gradients inside them).
+   2. Glows fade on a curve, not a straight line: eight steps of a cosine, flat at the centre and flat where it ends,
+      so a glow has no visible rim. A two-stop fade to transparent always shows its edge; write new glows this way. */
+.bj::before{content:none}
+.bjroot::after{content:"";position:fixed;inset:0;z-index:2147483000;pointer-events:none;background:url("${GRAIN}") 0 0/128px 128px}
+@media (-webkit-min-device-pixel-ratio:2),(min-resolution:2dppx){.bjroot::after{background-size:64px 64px}}
+@media (-webkit-min-device-pixel-ratio:3),(min-resolution:3dppx){.bjroot::after{background-size:calc(128px / 3) calc(128px / 3)}}
+.card::after{background:radial-gradient(360px circle at var(--mx,50%) var(--my,-30%),rgba(255,255,255,.036) 0%,rgba(255,255,255,.0346) 12.5%,rgba(255,255,255,.0307) 25%,rgba(255,255,255,.0249) 37.5%,rgba(255,255,255,.018) 50%,rgba(255,255,255,.0111) 62.5%,rgba(255,255,255,.0053) 75%,rgba(255,255,255,.0014) 87.5%,rgba(255,255,255,0) 100%)}
+:root[data-theme="light"] .card::after{background:radial-gradient(360px circle at var(--mx,50%) var(--my,-30%),rgba(var(--acc),.042) 0%,rgba(var(--acc),.0404) 12.5%,rgba(var(--acc),.0358) 25%,rgba(var(--acc),.029) 37.5%,rgba(var(--acc),.021) 50%,rgba(var(--acc),.013) 62.5%,rgba(var(--acc),.0062) 75%,rgba(var(--acc),.0016) 87.5%,rgba(var(--acc),0) 100%)}
+.card{background:radial-gradient(120% 80% at 0% 0%,rgba(255,255,255,.026) 0%,rgba(255,255,255,.025) 7.75%,rgba(255,255,255,.0222) 15.5%,rgba(255,255,255,.018) 23.25%,rgba(255,255,255,.013) 31%,rgba(255,255,255,.008) 38.75%,rgba(255,255,255,.0038) 46.5%,rgba(255,255,255,.001) 54.25%,rgba(255,255,255,0) 62%),linear-gradient(180deg,rgba(var(--fg),.056),rgba(var(--fg),.034))}
+.card .card{background:linear-gradient(180deg,rgba(var(--fg),.05),rgba(var(--fg),.03))}
+:root[data-theme="light"] .card{background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.84))}
+:root[data-theme="light"] .card .card{background:rgba(var(--fg),.028)}
+.bj{background:radial-gradient(520px 320px at 96% -70px,rgba(var(--acc),.1) 0%,rgba(var(--acc),.0962) 10%,rgba(var(--acc),.0854) 20%,rgba(var(--acc),.0691) 30%,rgba(var(--acc),.05) 40%,rgba(var(--acc),.0309) 50%,rgba(var(--acc),.0146) 60%,rgba(var(--acc),.0038) 70%,rgba(var(--acc),0) 80%),radial-gradient(420px 260px at -6% -40px,rgba(var(--acc),.05) 0%,rgba(var(--acc),.0481) 10%,rgba(var(--acc),.0427) 20%,rgba(var(--acc),.0346) 30%,rgba(var(--acc),.025) 40%,rgba(var(--acc),.0154) 50%,rgba(var(--acc),.0073) 60%,rgba(var(--acc),.0019) 70%,rgba(var(--acc),0) 80%),radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%)}
+@media (min-width:1024px){.bj{background:radial-gradient(980px 460px at 86% -150px,rgba(var(--acc),.06) 0%,rgba(var(--acc),.0577) 10%,rgba(var(--acc),.0512) 20%,rgba(var(--acc),.0415) 30%,rgba(var(--acc),.03) 40%,rgba(var(--acc),.0185) 50%,rgba(var(--acc),.0088) 60%,rgba(var(--acc),.0023) 70%,rgba(var(--acc),0) 80%),radial-gradient(700px 380px at 22% -120px,rgba(var(--acc),.035) 0%,rgba(var(--acc),.0337) 10%,rgba(var(--acc),.0299) 20%,rgba(var(--acc),.0242) 30%,rgba(var(--acc),.0175) 40%,rgba(var(--acc),.0108) 50%,rgba(var(--acc),.0051) 60%,rgba(var(--acc),.0013) 70%,rgba(var(--acc),0) 80%),radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%)}
+.shell::before{background:radial-gradient(closest-side,rgba(var(--acc),.07) 0%,rgba(var(--acc),.0673) 10%,rgba(var(--acc),.0597) 20%,rgba(var(--acc),.0484) 30%,rgba(var(--acc),.035) 40%,rgba(var(--acc),.0216) 50%,rgba(var(--acc),.0103) 60%,rgba(var(--acc),.0027) 70%,rgba(var(--acc),0) 80%)}}
+:root[data-theme="light"] .bj{background:radial-gradient(560px 340px at 96% -70px,rgba(var(--acc),.09) 0%,rgba(var(--acc),.0866) 10%,rgba(var(--acc),.0768) 20%,rgba(var(--acc),.0622) 30%,rgba(var(--acc),.045) 40%,rgba(var(--acc),.0278) 50%,rgba(var(--acc),.0132) 60%,rgba(var(--acc),.0034) 70%,rgba(var(--acc),0) 80%),radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%)}
+.bottom-nav{background:linear-gradient(to top,rgba(var(--bgrgb),.86),rgba(var(--bgrgb),.78) 18%,rgba(var(--bgrgb),.6) 40%,rgba(var(--bgrgb),.36) 60%,rgba(var(--bgrgb),.15) 80%,rgba(var(--bgrgb),.04) 92%,rgba(var(--bgrgb),0))}
+.topbar::after{height:24px;background:linear-gradient(180deg,rgba(var(--bgrgb),.74),rgba(var(--bgrgb),.62) 18%,rgba(var(--bgrgb),.4) 42%,rgba(var(--bgrgb),.2) 64%,rgba(var(--bgrgb),.07) 84%,rgba(var(--bgrgb),0))}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}
@@ -5602,7 +5628,7 @@ function BetSpreadCalculator() {
   ].map(([group, label, run, more, note]) => ({ group, label, run, more, note }));
 
   return (
-    <RulesCtx.Provider value={rules}><div className="bj">
+    <RulesCtx.Provider value={rules}><div className="bj bjroot">
       <style>{css}</style>
       {setupOpen && <RulesModal rules={rules} onSave={saveRules} onClose={() => setSetupOpen(false)} first={firstRun} />}
       {cmd && <CommandPalette items={cmdItems} onClose={() => setCmd(false)} />}

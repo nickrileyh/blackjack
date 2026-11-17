@@ -1,4 +1,4 @@
-const CACHE = "bj-v76";
+const CACHE = "bj-v77";
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./index.html", "./icon-192.png?v=3", "./apple-touch-icon.png?v=3", "./icon.svg?v=3"]))); self.skipWaiting(); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener("fetch", (e) => {
