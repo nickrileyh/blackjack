@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useLayoutEffect, useRef, Fragment, createContext, useContext, startTransition } from "react";
+import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback, Fragment, createContext, useContext, startTransition } from "react";
 import { createPortal } from "react-dom";
 import CasinosPage, { openCasinoAdd, openCasinoNear, warmCasinos } from "./casinos.jsx";
 import { startSmooth } from "./smooth.js";
@@ -1022,6 +1022,49 @@ body{background:none}
 .felt{background-image:var(--feltimg,radial-gradient(120% 90% at 50% 0%,var(--felt1) 0%,var(--felt2) 60%,var(--felt3) 100%));background-size:100% 100%;background-repeat:no-repeat}
 .bottom-nav{background:linear-gradient(to top,rgba(var(--bgrgb),.86),rgba(var(--bgrgb),.78) 18%,rgba(var(--bgrgb),.6) 40%,rgba(var(--bgrgb),.36) 60%,rgba(var(--bgrgb),.15) 80%,rgba(var(--bgrgb),.04) 92%,rgba(var(--bgrgb),0))}
 .topbar::after{height:24px;background:linear-gradient(180deg,rgba(var(--bgrgb),.74),rgba(var(--bgrgb),.62) 18%,rgba(var(--bgrgb),.4) 42%,rgba(var(--bgrgb),.2) 64%,rgba(var(--bgrgb),.07) 84%,rgba(var(--bgrgb),0))}
+/* ---- Desktop extras: Home's dashboard, the chart beside the trainer, saved spreads, the shortcuts list ---- */
+.hstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;margin-bottom:16px}
+.hstat{display:block;width:100%;text-align:left;padding:17px 20px 16px;animation:rise .48s var(--ez) backwards}
+.hstat:nth-child(2){animation-delay:.03s}.hstat:nth-child(3){animation-delay:.06s}.hstat:nth-child(4){animation-delay:.09s}
+.hstat-v{display:block;font-size:27px;font-weight:600;letter-spacing:-.025em;line-height:1.1;margin-top:9px;white-space:nowrap}
+.hstat-u{font-size:15px;font-weight:500;opacity:.55;margin-left:1px;letter-spacing:0}
+.hstat-s{display:block;font-size:11.5px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hstat:active{opacity:.82}
+@media (hover:hover){.card.hstat:hover::before{background:linear-gradient(155deg,rgba(var(--acc),.8),rgba(var(--acc),.4) 22%,rgba(var(--acc),.26) 60%,rgba(var(--acc),.55))}}
+.pdays{display:flex;gap:6px;margin-top:14px}
+.pday{flex:1 1 0;min-width:0;text-align:center}
+.pday>span{display:block;font-size:10px;margin-top:6px}
+.pbar{height:76px;display:flex;align-items:flex-end}
+.pbar>div{width:100%;border-radius:5px 5px 2px 2px}
+.hrecent{margin-top:14px;border-top:1px solid var(--line);padding-top:6px}
+.hrow{display:grid;grid-template-columns:58px minmax(0,1fr) 46px 70px;gap:10px;align-items:baseline;font-size:12.5px;padding:6px 0}
+.hrow+.hrow{border-top:1px solid rgba(var(--fg),.06)}
+.tc-grid{display:grid;gap:3px}
+.tc-h,.tc-l{font-size:10.5px;font-weight:600;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:color .16s var(--ez)}
+.tc-h{padding-bottom:3px}.tc-l{justify-content:flex-end;padding-right:7px}
+.tc-h.on,.tc-l.on{color:var(--brass)}
+.tc-cell{height:23px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:rgba(var(--fg),.05);transition:opacity .2s var(--ez)}
+.tc-cell.cross{background:rgba(var(--fg),.1)}
+.tc-cell.here{background:rgba(var(--acc),.34);box-shadow:0 0 0 1.5px rgba(var(--acc),.8)}
+.tc-grid.shown .tc-cell{opacity:.4}
+.tc-grid.shown .tc-cell.cross{opacity:.62}
+.tc-grid.shown .tc-cell.here{opacity:1;box-shadow:0 0 0 2px var(--ivory)}
+.tc-cell.lit{animation:tcpop .42s var(--ez) backwards;position:relative;z-index:1}
+@keyframes tcpop{from{transform:scale(1.7)}}
+.svrow{display:grid;grid-template-columns:minmax(0,1fr) 68px 58px 60px 46px;gap:10px;align-items:center;padding:9px 0}
+.svrow+.svrow{border-top:1px solid rgba(var(--fg),.07)}
+.svrow.eyebrow{padding:4px 0 6px}
+.svrow.now>span:first-child>span:first-child{font-style:italic}
+.btn.svuse{width:auto;min-height:30px;height:30px;padding:0 12px;font-size:12px}
+.svdel{font-size:17px;line-height:1;color:var(--muted);text-align:right;height:30px}
+.svdel.sure{font-size:11px;font-weight:600;color:var(--rose)}
+.kbgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 34px}
+.kbrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0;font-size:13px;color:var(--ivory-d)}.kbrow>span:last-child{text-align:right}
+.kbkeys{display:flex;align-items:center;gap:5px;flex:none}
+.kbkeys i{font-style:normal;font-size:10.5px;color:var(--muted)}
+.kbrow kbd{min-width:22px;text-align:center;font-size:11px;padding:3px 7px}
+@media (max-width:640px){.kbgrid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.hstat,.tc-cell.lit{animation:none!important}.tc-cell,.tc-h,.tc-l{transition:none!important}}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}
@@ -1510,6 +1553,61 @@ function Grid({ title, rows, R, alt }) {
         ))}
       </div>
     </div>
+  );
+}
+// Train on a wide screen: the chart beside the hand. Before the answer it only marks where the hand sits (its row and
+// the dealer's column) so it can't give the play away; once the hand is answered the plays show and its cell is lit.
+// "Always show" keeps the plays up, for learning the chart rather than testing it (saved on this device).
+const TCHART_KEY = "bj:bj-trainchart-v1";
+const chartSpot = (c) => {
+  if (!c) return null;
+  const hand = c.kind === "dev" ? c.dev.hand : c.hand, up = c.kind === "dev" ? c.dev.up : c.up; let m;
+  if ((m = /^Hard (\d+)/.exec(hand))) return { cat: "hard", row: Math.max(8, Math.min(17, +m[1])), up };
+  if ((m = /^A,(\d)(?!\d)/.exec(hand)) && +m[1] >= 2 && +m[1] <= 9) return { cat: "soft", row: +m[1], up };
+  if ((m = /^(A|\d+),(A|\d+)$/.exec(hand)) && m[1] === m[2]) return { cat: "pair", row: m[1] === "A" ? 11 : +m[1], up };
+  return null;
+};
+const CHART_SETS = {
+  hard: ["Hard totals", [17, 16, 15, 14, 13, 12, 11, 10, 9, 8], (v) => (v === 8 ? "≤8" : String(v)), hardRule],
+  soft: ["Soft totals", [9, 8, 7, 6, 5, 4, 3, 2], (v) => `A,${v}`, softRule],
+  pair: ["Pairs", [11, 10, 9, 8, 7, 6, 5, 4, 3, 2], (v) => `${upLabel(v)},${upLabel(v)}`, pairRule],
+};
+function TrainChart({ cur, result, R }) {
+  const [always, setAlways] = useState(() => { try { return localStorage.getItem(TCHART_KEY) === "1"; } catch (_) { return false; } });
+  const flip = () => setAlways((v) => { try { localStorage.setItem(TCHART_KEY, v ? "0" : "1"); } catch (_) {} return !v; });
+  const at = chartSpot(cur), show = always || !!result, d = cur && cur.kind === "dev" ? cur.dev : null;
+  if (!cur) return null;
+  const set = at ? CHART_SETS[at.cat] : null;
+  // five rows of the chart, the hand's own in the middle where it can be: the neighbours are where the mistakes are made,
+  // and the card stays short enough to sit under the math panel without pushing anything off a laptop screen
+  const rowsNear = set ? (() => { const i = set[1].indexOf(at.row), a = Math.max(0, Math.min(set[1].length - 5, i - 2)); return set[1].slice(a, a + 5); })() : [];
+  const low = (a) => (ACT[a] || a).toLowerCase();
+  const devLine = !d ? null : d.id === "ins" ? `Insurance: take it at ${idxLabel(d)} and up, otherwise skip it.`
+    : d.edge ? `${d.name}: ${edgeRule(d)}.`
+    : devLow(d) ? `${d.name}: ${low(d.below)} at ${idxLabel(d)} and below, otherwise ${low(d.above)}.`
+    : `${d.name}: ${low(d.above)} at ${idxLabel(d)} and up, otherwise ${low(d.below)}.`;
+  return (
+    <section className="card p-5 mb-4 tchart">
+      <div className="flex items-baseline justify-between gap-3 mb-3">
+        <div className="eyebrow">On the chart{set ? ` · ${set[0]}` : ""}</div>
+        <button className="text-[11px] font-semibold lnk" style={{ color: "var(--brass)" }} onClick={flip} aria-pressed={always}>{always ? "Hide until answered" : "Always show"}</button>
+      </div>
+      {set && (
+        <div className={"tc-grid mono" + (show ? " shown" : "")} style={{ gridTemplateColumns: `38px repeat(${UP.length}, minmax(0,1fr))` }} aria-hidden={!show}>
+          <div />
+          {UP.map((u) => <div key={u} className={"tc-h" + (u === at.up ? " on" : "")}>{upLabel(u)}</div>)}
+          {rowsNear.map((v) => (
+            <Fragment key={v}>
+              <div className={"tc-l" + (v === at.row ? " on" : "")}>{set[2](v)}</div>
+              {UP.map((u) => { const here = v === at.row && u === at.up, cross = v === at.row || u === at.up, a = here && result ? cur.answer : set[3](v, u, R); return (
+                <div key={u} className={"tc-cell" + (here ? " here" : cross ? " cross" : "") + (here && result ? " lit" : "")} style={show ? { background: ACOL[a] || "var(--brass)", color: a === "D" || !ACOL[a] ? "#1B1407" : "#FFF8EC" } : undefined}>{show ? a : ""}</div>); })}
+            </Fragment>))}
+        </div>
+      )}
+      {show ? (devLine ? <p className="text-xs mt-3" style={{ color: "var(--ivory-d)" }}><span style={{ color: "var(--brass)" }}>Count play.</span> {devLine}</p>
+        : null)
+        : <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>{set ? "Its row and column are marked. The plays show once you answer." : "This one goes by the count, not the chart. Its index shows once you answer."}</p>}
+    </section>
   );
 }
 function Charts({ R, devs }) {
@@ -2025,6 +2123,8 @@ function Trainer({ rules, setRules }) {
       {/* wide screens: the math for every hand as it is answered, right or wrong; it stays up while the next hand is dealt,
           so dealing on automatically doesn't take it away before it has been read */}
       {wide && lastMath && <Odds key={lastMath.c.qkey} side c={lastMath.c} picked={lastMath.picked} R={rules} stale={!result || !cur || cur.qkey !== lastMath.c.qkey} />}
+      {/* under it, the chart with this hand's cell (blank until the hand is answered) */}
+      {wide && cur && <TrainChart cur={cur} result={leaving ? null : result} R={rules} />}
 
       {/* weak spots */}
       {weakest.length > 0 && (
@@ -3697,6 +3797,16 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
                     <path d={`${line}L300,70L0,70Z`} fill="url(#hc-g)" />
                     <path d={line} fill="none" stroke={col} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
                   </svg>); })()}
+                {/* the latest few, on a wide screen: Home answers "how did the last ones go" without a trip to Sessions */}
+                <div className="deskonly hrecent">
+                  {sess.slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).slice(-4).reverse().map((x, i) => (
+                    <div key={x.id || i} className="hrow">
+                      <span className="mono" style={{ color: "var(--muted)" }}>{dateShort(x.date)}</span>
+                      <span className="truncate" style={{ color: "var(--ivory-d)" }}>{x.where || "Session"}</span>
+                      <span className="mono" style={{ color: "var(--muted)" }}>{fmtH(x.hours)}</span>
+                      <span className="mono font-semibold text-right" style={{ color: x.result >= 0 ? "var(--brass)" : "var(--rose)" }}>{sgnMoney(x.result)}</span>
+                    </div>))}
+                </div>
               </div>); })() : (
               <div className="text-sm" style={{ color: "var(--muted)" }}>Track wins and losses against expectation.</div>
             )}
@@ -3991,7 +4101,8 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
   return portalTarget ? createPortal(ui, portalTarget) : ui;
 }
 const SESS_KEY = "bj-sessions-v1";
-function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }) {
+function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll, ror }) {
+  const wide = useWide(); // the dashboard pieces (numbers across the top, the practice chart) are for a wide screen only
   const [log, setLog] = useState(null);
   const [skill, setSkill] = useState("strategy");
   const [sessions, setSessions] = useState([]);
@@ -4017,7 +4128,7 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
   const refreshLog = async () => { _logCache = null; setLog(await loadLog()); };
   const timing = !!useSessionTimer(); // a running session goes to the top of the page
   return (
-    <div className="homepage"><div className="dgrid wl"><div className="dcol">
+    <div className="homepage">{wide && go && <HomeStats bankroll={bankroll} ev={evHour} sd={sdHour} ror={ror} ready={ready} log={log} go={go} />}<div className="dgrid wl"><div className="dcol">
       {go && timing && <TripCard go={go} bankroll={bankroll} />}
       <FocusCard log={log} go={go} />
       {go && (
@@ -4030,10 +4141,63 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
         </div>
       )}
       {go && !timing && <TripCard go={go} bankroll={bankroll} />}
+      {wide && <PracticeCard log={log} go={go} />}
       <SkillsCard log={log} go={go} />
       </div><div className="dcol o2 flipd">
       <LevelPanel rules={rules} bets={bets} log={log} refreshLog={refreshLog} go={go} evHour={evHour} openSessions={() => go && go("sessions")} />
     </div></div></div>
+  );
+}
+// Home on a wide screen: four numbers across the top, each one a way in to the page behind it
+function HomeStats({ bankroll, ev, sd, ror, ready, log, go }) {
+  const wk = useMemo(() => { const from = Date.now() - 7 * 864e5; let n = 0, ok = 0; (log || []).forEach((e) => { if (e.t >= from) { n++; ok += e.ok; } }); return { n, acc: n ? Math.round((ok / n) * 100) : null }; }, [log]);
+  const tiles = [
+    ["Bankroll", ready ? <>$<Glide v={bankroll} enter round f={(x) => x.toLocaleString()} /></> : "…", "Change it on Bet spread", "var(--ivory)", () => go("calc")],
+    ["Expected", ready ? <><Glide v={ev} enter f={(x) => money(x)} /><span className="hstat-u">/hr</span></> : "…", `± ${money(sd)} an hour`, ev >= 0 ? "var(--brass)" : "var(--rose)", () => go("calc")],
+    ["Risk of ruin", ready ? <><Glide v={ror} enter f={(x) => (x >= 0.9995 ? "100" : pct(x, ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="hstat-u">%</span></> : "…", "of losing the bankroll", ror < 0.02 ? "var(--brass)" : ror < 0.1 ? "var(--ivory)" : "var(--rose)", () => go("plan")],
+    ["Practice this week", log ? <><Glide v={wk.n} enter round f={(x) => x.toLocaleString()} /><span className="hstat-u">{wk.n === 1 ? " rep" : " reps"}</span></> : "…", wk.acc == null ? "Nothing yet this week" : `${wk.acc}% right`, "var(--ivory)", () => go("train", { trainView: "drill" })],
+  ];
+  return (
+    <div className="hstats">
+      {tiles.map(([k, v, sub, tone, fn]) => (
+        <button key={k} className="card hstat" onClick={fn}>
+          <span className="eyebrow block">{k}</span>
+          <span className="hstat-v mono" style={{ color: tone }}>{v}</span>
+          <span className="hstat-s">{sub}</span>
+        </button>))}
+    </div>
+  );
+}
+// Home on a wide screen: the last two weeks of practice, a bar a day (taller = more reps, dimmer = more mistakes)
+function PracticeCard({ log, go }) {
+  const d = useMemo(() => {
+    const days = [], t0 = new Date(); t0.setHours(12, 0, 0, 0);
+    for (let i = 13; i >= 0; i--) { const x = new Date(t0); x.setDate(x.getDate() - i); days.push({ k: localDay(x.getTime()), d: x, n: 0, ok: 0 }); }
+    const at = {}; days.forEach((x, i) => { at[x.k] = i; });
+    (log || []).forEach((e) => { const i = at[localDay(e.t)]; if (i != null) { days[i].n++; days[i].ok += e.ok; } });
+    const n = days.reduce((a, x) => a + x.n, 0), ok = days.reduce((a, x) => a + x.ok, 0);
+    let st = 0; for (let i = 13; i >= 0; i--) { if (days[i].n) st++; else if (i < 13) break; } // today may still be empty
+    return { days, n, acc: n ? Math.round((ok / n) * 100) : null, st, on: days.filter((x) => x.n).length, max: Math.max(1, ...days.map((x) => x.n)) };
+  }, [log]);
+  if (!log || !d.n) return null; // nothing practised in two weeks: Focus for today already says where to start
+  return (
+    <section className="card p-5 mb-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="eyebrow">Practice · last 14 days</div>
+        <span className="mono text-xs" style={{ color: "var(--muted)" }}>{d.st >= 2 ? <><span style={{ color: "var(--brass)" }}>{d.st}-day streak</span> · </> : null}{d.on} of 14 days</span>
+      </div>
+      <div className="flex items-baseline gap-2 mt-2">
+        <span className="disp mono text-3xl" style={{ color: "var(--ivory)" }}><Glide v={d.n} enter round f={(x) => x.toLocaleString()} /></span>
+        <span className="text-xs" style={{ color: "var(--muted)" }}>reps · <span className="mono font-semibold" style={{ color: skillTone(d.acc) }}>{d.acc}%</span> right</span>
+      </div>
+      <div className="pdays" role="img" aria-label={`Reps a day over the last 14 days, ${d.n} in all`}>
+        {d.days.map((x, i) => { const acc = x.n ? x.ok / x.n : 0, today = i === 13; return (
+          <div key={x.k} className="pday" title={x.n ? `${x.d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}: ${x.n} rep${x.n === 1 ? "" : "s"}, ${Math.round(acc * 100)}% right` : `${x.d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}: no practice`}>
+            <div className="pbar"><div className="bary" style={{ "--i": i, height: x.n ? `${Math.max(7, (x.n / d.max) * 100)}%` : 3, background: !x.n ? "rgba(var(--fg),.1)" : today ? "var(--brass)" : `rgba(var(--acc),${(0.28 + 0.5 * Math.max(0, (acc - 0.6) / 0.4)).toFixed(2)})` }} /></div>
+            <span style={{ color: today ? "var(--ivory)" : "var(--muted)", fontWeight: today ? 600 : 400 }}>{x.d.toLocaleDateString(undefined, { weekday: "narrow" })}</span>
+          </div>); })}
+      </div>
+    </section>
   );
 }
 const SKILL_GO = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], pairs: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }], totals: ["count", { drill: "totals" }], play: ["play", {}] };
@@ -4748,7 +4912,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
   );
 }
 
-const BACKUP_KEYS = ["bj-rules-v1", "bj-spread-v1", "bj-trainer-v1", "bj-count-v1", "bj-log-v1", "bj-tests-v1", "bj-sessions-v1", "bj-assess-v1", "bj-playall-v1", "bj-casinos-v1"];
+const BACKUP_KEYS = ["bj-rules-v1", "bj-spread-v1", "bj-trainer-v1", "bj-count-v1", "bj-log-v1", "bj-tests-v1", "bj-sessions-v1", "bj-assess-v1", "bj-playall-v1", "bj-casinos-v1", "bj-spreads-v1"];
 function Backup() {
   const [text, setText] = useState("");
   const [status, setStatus] = useState(null);
@@ -5168,7 +5332,7 @@ function ThemePicker() {
     </div>
   );
 }
-function SettingsPage({ rules, onRules, seats, go }) {
+function SettingsPage({ rules, onRules, seats, go, onKeys }) {
   const Row = ({ title, sub, onClick, right }) => (
     <button onClick={onClick} className="rowh w-full flex items-center justify-between gap-3 py-3 text-left" style={{ borderTop: "1px solid var(--line)" }}>
       <span className="min-w-0"><span className="block text-sm" style={{ color: "var(--ivory)" }}>{title}</span>{sub && <span className="block text-xs mt-0.5" style={{ color: "var(--muted)" }}>{sub}</span>}</span>
@@ -5189,6 +5353,7 @@ function SettingsPage({ rules, onRules, seats, go }) {
         <Row title="Game rules" sub={rulesLabel(rules)} onClick={onRules} right="Change" />
         <Row title="Spread & table" sub={`${seats} player${seats === 1 ? "" : "s"} at the table · bets, bankroll, rounds per hour`} onClick={() => go("calc")} right="Open" />
         <Row title="Sessions" sub="Your casino log, chart and stats" onClick={() => go("sessions")} right="Open" />
+        {onKeys && <div className="kbdonly"><Row title="Keyboard shortcuts" sub="Every key the app answers to. Press ? anywhere" onClick={onKeys} right="Show" /></div>}
       </section>
       </div><div className="dcol o2">
       <SyncCard />
@@ -5569,6 +5734,101 @@ export default function App() {
     </>
   );
 }
+// Bet spread on a wide screen: keep a few spreads by name and see them side by side, each priced with today's
+// bankroll, rules and table, so they can be compared and switched between. "Use" puts one back in the bet table.
+// { list: [{ id, name, bets, spots }] } under SPREADS_KEY, which is in BACKUP_KEYS so it syncs (items merge by id).
+const SPREADS_KEY = "bj-spreads-v1";
+const spreadSame = (a, sa, b, sb) => COUNTS.every((c) => (Number(a[c]) || 0) === (Number(b[c]) || 0) && ((sa || {})[c] === 2) === ((sb || {})[c] === 2));
+const spreadRange = (bets) => { const v = COUNTS.map((c) => Number(bets[c]) || 0).filter((x) => x > 0); return v.length ? `$${Math.min(...v).toLocaleString()}–$${Math.max(...v).toLocaleString()}` : "No bets"; };
+function SavedSpreads({ bets, spotsMap, bankroll, cal, rphOf, now, onUse }) {
+  const [list, setList] = useState(null), [name, setName] = useState(""), [del, setDel] = useState(null);
+  const load = async () => { try { const r = await window.storage.get(SPREADS_KEY, false); const d = r?.value ? JSON.parse(r.value) : null; setList(Array.isArray(d?.list) ? d.list.filter((x) => isObj(x) && isObj(x.bets)) : []); } catch (_) { setList([]); } };
+  useEffect(() => { load(); window.addEventListener("bj-sync-applied", load); return () => window.removeEventListener("bj-sync-applied", load); }, []); // eslint-disable-line
+  const save = (l) => { setList(l); try { window.storage.set(SPREADS_KEY, JSON.stringify({ list: l }), false); } catch (_) {} };
+  const rows = useMemo(() => (list || []).map((x) => {
+    const sp = isObj(x.spots) ? x.spots : {};
+    try { const r = compute({ bankroll, handsPerHour: rphOf(x.bets, sp), bets: x.bets, cal, spotsMap: sp }); return { x, sp, ev: r.evHour, ror: r.ror }; } catch (_) { return { x, sp, ev: 0, ror: 1 }; }
+  }), [list, bankroll, cal, rphOf]);
+  if (!list) return null;
+  const cur = rows.find((r) => spreadSame(r.x.bets, r.sp, bets, spotsMap));
+  const tone = (ror) => (ror < 0.02 ? "var(--brass)" : ror < 0.1 ? "var(--ivory)" : "var(--rose)");
+  const risk = (ror) => (ror >= 0.9995 ? "100%" : pct(ror, ror < 0.001 ? 3 : 1));
+  const add = () => {
+    if (cur || list.length >= 12) return;
+    const b = {}; COUNTS.forEach((c) => { b[c] = Number(bets[c]) || 0; });
+    const sp = {}; COUNTS.forEach((c) => { if (spotsMap[c] === 2) sp[c] = 2; });
+    save([...list, { id: Date.now(), name: name.trim().slice(0, 28) || spreadRange(b), bets: b, spots: sp }]); setName("");
+  };
+  return (
+    <section className="card p-5 mb-4">
+      <div className="flex items-baseline justify-between gap-3 mb-1">
+        <div className="eyebrow">Saved spreads</div>
+        {rows.length > 0 && <span className="text-[11px]" style={{ color: "var(--muted)" }}>with today's bankroll and rules</span>}
+      </div>
+      {rows.length === 0 ? <p className="text-xs mt-2 mb-3" style={{ color: "var(--ivory-d)" }}>Save the bets above under a name. Saved spreads line up here with what each earns and risks, so you can compare them and switch back.</p> : (
+        <div className="mt-2 mb-3">
+          <div className="svrow eyebrow" style={{ fontSize: 10 }}><span>Spread</span><span className="text-right">Per hour</span><span className="text-right">Risk</span><span /><span /></div>
+          {!cur && (
+            <div className="svrow now">
+              <span className="min-w-0"><span className="block text-sm font-medium truncate" style={{ color: "var(--ivory)" }}>In the table now</span><span className="block text-[11px] mono" style={{ color: "var(--muted)" }}>{spreadRange(bets)} · not saved</span></span>
+              <span className="mono text-sm font-semibold text-right" style={{ color: now.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(now.evHour)}</span>
+              <span className="mono text-xs font-semibold text-right" style={{ color: tone(now.ror) }}>{risk(now.ror)}</span><span /><span />
+            </div>)}
+          {rows.map(({ x, sp, ev, ror }) => { const on = cur && cur.x.id === x.id; return (
+            <div key={x.id} className={"svrow" + (on ? " on" : "")}>
+              <span className="min-w-0"><span className="block text-sm font-medium truncate" style={{ color: "var(--ivory)" }}>{x.name}</span><span className="block text-[11px] mono truncate" style={{ color: "var(--muted)" }}>{spreadRange(x.bets)}{COUNTS.some((c) => sp[c] === 2) ? " · two hands" : ""}</span></span>
+              <span className="mono text-sm font-semibold text-right" style={{ color: ev >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(ev)}</span>
+              <span className="mono text-xs font-semibold text-right" style={{ color: tone(ror) }}>{risk(ror)}</span>
+              {on ? <span className="text-[11px] font-semibold text-center" style={{ color: "var(--brass)" }}>In use</span> : <button className="btn ghost svuse" onClick={() => { setDel(null); onUse(x.bets, sp); }}>Use</button>}
+              <button className={"svdel lnk" + (del === x.id ? " sure" : "")} onClick={() => { if (del === x.id) { save(list.filter((y) => y.id !== x.id)); setDel(null); } else setDel(x.id); }} onBlur={() => setDel((d) => (d === x.id ? null : d))} aria-label={del === x.id ? `Delete ${x.name}: press again` : `Delete ${x.name}`}>{del === x.id ? "Delete?" : "×"}</button>
+            </div>); })}
+        </div>)}
+      {cur ? <p className="text-[11px]" style={{ color: "var(--muted)" }}>The bets in the table are saved as <span style={{ color: "var(--ivory-d)" }}>{cur.x.name}</span>. Change a bet to save another.</p>
+        : list.length >= 12 ? <p className="text-[11px]" style={{ color: "var(--muted)" }}>Twelve saved. Delete one to save another.</p> : (
+        <div className="flex gap-2">
+          <input className="in" style={{ height: 42, flex: 1, minWidth: 0 }} value={name} maxLength={28} placeholder={`Name it (${spreadRange(bets)})`} aria-label="Name for this spread" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") add(); }} />
+          <button className="btn" style={{ width: "auto", minHeight: 42, padding: "0 18px" }} onClick={add}>Save spread</button>
+        </div>)}
+    </section>
+  );
+}
+// Keyboard shortcuts, on a computer: "?" opens this list. Pages are G then a letter (two keys, so a stray key press
+// at the table never leaves it); the table's own keys are listed as they are set.
+const GO_KEYS = [["h", "Home", "progress"], ["t", "Train", "train"], ["d", "Drills", "count"], ["p", "Live play", "play"], ["b", "Bet spread", "calc"], ["s", "Sessions", "sessions"], ["c", "Casinos", "casinos"], ["l", "Plan", "plan"], [",", "Settings", "settings"]];
+function ShortcutsSheet({ onClose, mac }) {
+  const pk = playKeysOf(_playPrefs.keys);
+  const K = ({ k }) => <kbd>{k}</kbd>;
+  const Row = ({ keys, what }) => <div className="kbrow"><span className="kbkeys">{keys.map((k, i) => (k === "then" ? <i key={i}>then</i> : k === "or" ? <i key={i}>or</i> : <K key={i} k={k} />))}</span><span>{what}</span></div>;
+  return (
+    <Sheet title="Keyboard shortcuts" onClose={onClose}>
+      <div className="kbgrid">
+        <div>
+          <div className="eyebrow mb-2">Anywhere</div>
+          <Row keys={[mac ? "⌘K" : "Ctrl K", "or", "/"]} what="Jump to anything" />
+          <Row keys={["?"]} what="This list" />
+          <Row keys={["Esc"]} what="Close a sheet or dialog" />
+          <div className="eyebrow mt-5 mb-2">Go to a page</div>
+          {GO_KEYS.map(([k, l]) => <Row key={k} keys={["G", "then", k.toUpperCase()]} what={l} />)}
+          <Row keys={["G", "then", "N"]} what="Log a session" />
+          <Row keys={["G", "then", "R"]} what="Game rules" />
+        </div>
+        <div>
+          <div className="eyebrow mb-2">Train</div>
+          <Row keys={["H", "S", "D", "P", "R"]} what="Play the hand" />
+          <Row keys={["O"]} what="Odds, after an answer" />
+          <Row keys={["Enter"]} what="Next hand" />
+          <div className="eyebrow mt-5 mb-2">Live play</div>
+          <Row keys={["H", "S", "D", "P", "R"].map((a) => keyName(pk[a]))} what="Play the hand" />
+          <Row keys={["Enter", "or", keyName(pk.next)]} what="Deal the next hand" />
+          <Row keys={[keyName(pk.insY), "or", keyName(pk.insN)]} what="Insurance: yes or no" />
+          <div className="eyebrow mt-5 mb-2">Casinos map</div>
+          <Row keys={["+", "or", "−"]} what="Zoom" /><Row keys={["0"]} what="Whole map" /><Row keys={["←", "→", "↑", "↓"]} what="Move the map" />
+        </div>
+      </div>
+      <p className="text-[11px] mt-4" style={{ color: "var(--muted)" }}>Live play's keys can be changed in its table settings.</p>
+    </Sheet>
+  );
+}
 function BetSpreadCalculator() {
   const [tab, setTab] = useState(() => _curTab || "progress");
   // The page that is showing is tab; the one the tab bar and sidebar point at is navTab. A tap moves navTab at once
@@ -5699,6 +5959,10 @@ function BetSpreadCalculator() {
   // (TrainHub, MoreHub in src/phone.jsx); the pages behind them carry a link back to their menu. The sidebar on a
   // computer lists every page, so the two menus are never shown there.
   const narrow = useNarrow();
+  const wide = useWide();
+  // rounds an hour for any spread, the way this page works it out for the one in the table (for the saved spreads)
+  const rphOf = useCallback((b, sp) => (hphAuto ? autoRph(roundFreqs(b, sp, cal), b, sp, cal) : Math.max(1, Number(handsPerHour) || 1)), [hphAuto, handsPerHour, cal]);
+  const loadSpread = (b, sp) => { const nb = {}; COUNTS.forEach((c) => { nb[c] = Number(b[c]) || 0; }); setBets(nb); setSpotsMap({ ...sp }); setOptResult(null); setFlash(true); setTimeout(() => setFlash(false), 700); };
   useEffect(() => { if (!narrow && (tab === "more" || tab === "trainhub")) go(tab === "more" ? "progress" : trainSub); }, [narrow, tab]); // eslint-disable-line
   const isTrain = (t) => t === "train" || t === "count" || t === "trainhub";
   // Settings is the gear in the top right of every page on a phone (Nick: "put the settings button in the top right
@@ -5714,6 +5978,9 @@ function BetSpreadCalculator() {
   const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; if (o?.pre) _logPre = o.pre; if (o?.near) openCasinoNear(); if (t === "settings" && navTab !== "settings") cameFrom.current = navTab; const same = t === tab; setNavTab(t); if (same) setTab(t); else startTransition(() => setTab(t)); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } if (same) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) {} } };
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
   const [cmd, setCmd] = useState(false);
+  const [keysOpen, setKeysOpen] = useState(false); // the keyboard shortcuts list ("?")
+  const live = useRef({}); live.current = { go, tab }; // the key handler below reads the latest of these
+  const gAt = useRef(0); // when G was pressed: the next key within a moment picks the page
   // desktop sidebar: one highlight that glides to the current page instead of jumping between rows
   const snav = useRef(null), glide = useRef(null);
   useEffect(() => {
@@ -5730,10 +5997,24 @@ function BetSpreadCalculator() {
     const k = (e) => {
       if (firstRun) return;
       const tag = (e.target?.tagName || "").toLowerCase(), typing = tag === "input" || tag === "textarea" || tag === "select";
-      if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === "k") { e.preventDefault(); setCmd((v) => !v); }
-      else if (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); setCmd(true); }
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === "k") { e.preventDefault(); setCmd((v) => !v); return; }
+      if (typing || e.metaKey || e.ctrlKey || e.altKey || e.isComposing) { gAt.current = 0; return; }
+      if (e.key === "/") { e.preventDefault(); setCmd(true); return; }
+      // the rest only when nothing is open over the page (a sheet, the rules, the palette — and a key being picked for the table)
+      if (document.querySelector(".sheetwrap,.rulesscrim,.cmdk-wrap")) { gAt.current = 0; return; }
+      const key = e.key.toLowerCase(), L = live.current;
+      if (e.key === "?") { e.preventDefault(); setKeysOpen(true); return; }
+      if (gAt.current && Date.now() - gAt.current < 1500) {
+        gAt.current = 0;
+        const hit = GO_KEYS.find((x) => x[0] === key);
+        const run = hit ? () => L.go(hit[2]) : key === "n" ? () => L.go("sessions", { log: true }) : key === "r" ? () => setSetupOpen(true) : null;
+        if (run) { e.preventDefault(); e.stopPropagation(); run(); } // stopped here (capture), so the page's own keys never see it
+        return;
+      }
+      // G starts it, unless the table has G as one of its own keys
+      if (key === "g" && !e.repeat && !(L.tab === "play" && Object.values(playKeysOf(_playPrefs.keys)).includes("g"))) gAt.current = Date.now();
     };
-    window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
+    window.addEventListener("keydown", k, true); return () => window.removeEventListener("keydown", k, true);
   }, [firstRun]);
   const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
   const cmdItems = !cmd ? [] : [
@@ -5757,6 +6038,7 @@ function BetSpreadCalculator() {
     ["Actions", "Add a casino", () => { openCasinoAdd(); go("casinos", { add: true }); }, "map pin new"],
     ["Actions", "Casinos near me", () => go("casinos", { near: true }), "distance closest location nearby"],
     ["Actions", "Change game rules", () => setSetupOpen(true), "decks h17 s17 surrender penetration", rulesShort(rules)],
+    ...(narrow ? [] : [["Actions", "Keyboard shortcuts", () => setKeysOpen(true), "keys hotkeys help", "?"]]),
   ].map(([group, label, run, more, note]) => ({ group, label, run, more, note }));
 
   return (
@@ -5766,6 +6048,7 @@ function BetSpreadCalculator() {
       <style>{phoneCss}</style>
       {setupOpen && <RulesModal rules={rules} onSave={saveRules} onClose={() => setSetupOpen(false)} first={firstRun} />}
       {cmd && <CommandPalette items={cmdItems} onClose={() => setCmd(false)} />}
+      {keysOpen && <ShortcutsSheet onClose={() => setKeysOpen(false)} mac={isMac} />}
       <div className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
         <header className="mb-5 flex items-end justify-between gap-3">
@@ -5793,7 +6076,7 @@ function BetSpreadCalculator() {
 
 
         {(tab === "train" || tab === "count") && !narrow && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
-        {tab === "more" ? <MoreHub key="mo" go={go} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
+        {tab === "more" ? <MoreHub key="mo" go={go} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} onKeys={() => setKeysOpen(true)} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} ror={r.ror} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .5s var(--ez)" }}>
@@ -5929,6 +6212,7 @@ function BetSpreadCalculator() {
           <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>A $0 bet means you sit out at that count.</p>
           {showFreq && <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Share of rounds dealt at each true count for this shoe, table and spread{seats === 1 && COUNTS.some((c) => !((Number(bets[c]) || 0) > 0)) ? " — counting only the rounds you're at the table for" : ""}.</p>}
         </section>
+        {wide && spreadLoaded && <SavedSpreads bets={bets} spotsMap={spotsMap} bankroll={+bankroll || 0} cal={cal} rphOf={rphOf} now={r} onUse={loadSpread} />}
 
         {/* optimizer */}
         <section id="sp-opt" className="card focusrim p-5">
