@@ -189,6 +189,8 @@ Data: `bj-casinos-v1` (in `BACKUP_KEYS`, so it syncs) holds `{ marks: [...] }` �
 
 Scouting reports show at the top of a casino's sheet: three quick facts (tables, lowest 3:2 minimum, best game), then "Read the full report". "Add the reported game to mine" copies `best` into Nick's own games (a rule the report doesn't mention is taken as not offered). The "Reports" chip filters the map and list to casinos that have one, and list rows show the table count and minimum.
 
+**Played, no game saved** (wide screens only, above Table score): every casino marked been or backed off, or matched to a logged session, that has no game of Nick's saved and isn't hidden — most sessions first. Tapping one opens its sheet to add the game. It disappears once all have a game.
+
 **Table score** (`TableScoreCard` in `src/planner.jsx`, below the list, wide screens only): a table's rules, players, min and max → `scoreGame`, scored exactly as on the Plan tab (every hand played, the Plan page's risk limit; see "Scores" there). Games saved on casinos can be loaded from its picker.
 
 Not built yet: reports shared between people using the app (needs an online home and a decision about what is public).

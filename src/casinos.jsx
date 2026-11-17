@@ -664,6 +664,16 @@ export default function CasinosPage({ rules, onUseRules, go }) {
               </button>))}
           </section>
         )}
+        {(() => { // wide screens: casinos you've played that have no game of yours saved yet
+          const todo = everything.all.filter((c) => statusOf(c) !== "none" && !(c.mark && c.mark.hidden) && !((c.mark && c.mark.games) || []).length)
+            .sort((x, y) => ((y.sess && y.sess.n) || 0) - ((x.sess && x.sess.n) || 0) || x.name.localeCompare(y.name));
+          return todo.length > 0 && (
+            <section className="card p-5 mb-4 deskonly">
+              <div className="flex items-baseline justify-between gap-3 mb-1"><div className="eyebrow">Played, no game saved</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{todo.length}</div></div>
+              <p className="text-xs mb-2" style={{ color: "var(--muted)" }}>Add the table you played so its score and the Plan tab use your game, not a guess.</p>
+              {todo.map((c) => <CasinoRow key={c.id} c={c} place={[c.city, c.st].filter(Boolean).join(", ")} onOpen={openCasino} />)}
+            </section>);
+        })()}
         <TableScoreCard casinos={everything.all} appRules={rules} onUseRules={onUseRules} />
       </div></div>
 
