@@ -1413,11 +1413,19 @@ function Table({ cards, dealer, tc, rcs, qkey, leaving }) {
   );
 }
 
-function Odds({ c, picked, R }) {
+function Odds({ c, picked, R, side, stale }) {
   const o = useMemo(() => oddsFor(c, R), [c, R]);
+  const wrap = side ? "card p-5 mb-4" : "card p-4 mt-3";
+  const head = (
+    <div className="flex items-baseline justify-between gap-3 mb-3">
+      <div className="eyebrow">The math behind it</div>
+      {side && <div className="mono text-xs" style={{ color: "var(--muted)" }}>{c.kind === "dev" ? c.dev.hand : c.hand} vs {upLabel(c.kind === "dev" ? c.dev.up : c.up)}{stale ? " · last hand" : ""}</div>}
+    </div>
+  );
   const P = (x, d = 0) => (x * 100).toFixed(d) + "%";
   if (!o) return (
-    <div className="card p-4 mt-3 text-sm" style={{ color: "var(--ivory-d)" }}>
+    <div className={wrap + " text-sm"} style={{ color: "var(--ivory-d)" }}>
+      {side && head}
       Insurance is a side bet that the dealer's hole card is a ten. It needs more than 1 in 3 of the remaining cards to be tens to break even — that's roughly true count +3 with Hi-Lo.
     </div>
   );
@@ -1427,8 +1435,8 @@ function Odds({ c, picked, R }) {
   const span = Math.max(0.01, valid[0].ev - valid[valid.length - 1].ev);
   const dl = ["17", "18", "19", "20", "21", "Bust"];
   return (
-    <div className="card p-4 mt-3">
-      <div className="eyebrow mb-3">The math behind it</div>
+    <div className={wrap}>
+      {head}
       <div className="grid grid-cols-3 gap-2 mb-4 text-center">
         {[["Dealer busts", P(o.dealerBust)], ["You bust if you hit", o.soft && o.t <= 21 ? "0%" : P(o.bust)], ["Win if you stand", P(o.stand.win)]].map(([k, v]) => (
           <div key={k} className="rounded-xl py-2 px-1" style={{ background: "var(--recess)" }}>
@@ -1750,6 +1758,8 @@ function Trainer({ rules, setRules }) {
   const [streak, setStreak] = useState(0);
   const [session, setSession] = useState({ asked: 0, right: 0 });
   const [more, setMore] = useState(false);
+  const wide = useWide();
+  const [lastMath, setLastMath] = useState(null);   // { c, picked }: the hand last answered, for the side column's math on a wide screen
   // phone: once the answer is up (or its odds are opened), make sure all of it, Next included, is clear of the tab bar
   const resRef = useRef(null);
   useEffect(() => {
@@ -1835,6 +1845,7 @@ function Trainer({ rules, setRules }) {
 
   const answer = (choice) => {
     if (!cur || result) return;
+    setLastMath({ c: cur, picked: choice });
     const ok = choice === cur.answer;
     const ms = performance.now() - (qt.current || performance.now());
     const fast = ms <= (cur.kind === "dev" ? 4000 : 2500);
@@ -1942,7 +1953,7 @@ function Trainer({ rules, setRules }) {
       {view !== "drill" && masteryCard}
       {view === "drill" && <>
       {/* mode */}
-      <div className="segw"><Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(null); setResult(null); }} style={{ marginBottom: 12 }} /></div>
+      <div className="segw"><Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(null); setResult(null); setLastMath(null); }} style={{ marginBottom: 12 }} /></div>
 
 
       {/* card */}
@@ -1992,17 +2003,17 @@ function Trainer({ rules, setRules }) {
                 <p className="text-sm" style={{ color: "var(--muted)" }}>{cur.kind === "dev" ? "The count matters here. What's the play?" : "What's the play?"}</p>
               )}
             </div>
-            {more && result && <Odds c={cur} picked={result.choice} R={rules} />}
+            {more && result && !wide && <Odds c={cur} picked={result.choice} R={rules} />}
             <div className="grid grid-cols-3 gap-2 mt-3">
-              <button onClick={() => { pause(); setMore((m) => !m); }} disabled={!result} className="btn ghost">{more ? "Hide odds" : "Odds"}</button>
-              <button onClick={next} disabled={!result || leaving} className="btn col-span-2">Next hand</button>
+              {!wide && <button onClick={() => { pause(); setMore((m) => !m); }} disabled={!result} className="btn ghost">{more ? "Hide odds" : "Odds"}</button>}
+              <button onClick={next} disabled={!result || leaving} className={"btn " + (wide ? "col-span-3" : "col-span-2")}>Next hand</button>
             </div>
           </>);
             // phone: nothing until there is an answer; then it stands where the answer buttons were, so Next is under the thumb
             // that just answered. (It used to float over the tab bar and cut across whatever row of buttons it landed on.)
             return narrow ? (result ? <div ref={resRef} className="resin mt-5" key={cur.qkey}>{res}</div> : null) : <div className="mt-4">{res}</div>; })()}
           <div className={narrow ? "mt-3" : ""}>
-            <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>H</b> hit · <b>S</b> stand · <b>D</b> double · <b>P</b> split{rules.surrender ? <> · <b>R</b> surrender</> : null} · <b>O</b> odds · <b>Enter</b> next</div>
+            <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>H</b> hit · <b>S</b> stand · <b>D</b> double · <b>P</b> split{rules.surrender ? <> · <b>R</b> surrender</> : null}{wide ? null : <> · <b>O</b> odds</>} · <b>Enter</b> next</div>
             <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}><Toggle label="Deal the next hand automatically" on={auto} onChange={(v) => { setAuto(v); if (!v) pause(); }} /></div>
           </div>
         </section>
@@ -2010,6 +2021,10 @@ function Trainer({ rules, setRules }) {
       </>}
       </div><div className="dcol o2 stick">
       {view === "drill" && <>
+
+      {/* wide screens: the math for every hand as it is answered, right or wrong; it stays up while the next hand is dealt,
+          so dealing on automatically doesn't take it away before it has been read */}
+      {wide && lastMath && <Odds key={lastMath.c.qkey} side c={lastMath.c} picked={lastMath.picked} R={rules} stale={!result || !cur || cur.qkey !== lastMath.c.qkey} />}
 
       {/* weak spots */}
       {weakest.length > 0 && (
