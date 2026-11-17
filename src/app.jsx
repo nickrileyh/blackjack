@@ -4,7 +4,7 @@ import CasinosPage, { openCasinoAdd, openCasinoNear, warmCasinos } from "./casin
 import { startSmooth } from "./smooth.js";
 import { PlanPage } from "./planner.jsx";
 import { sfx, soundPrefs, setSoundPrefs } from "./sound.js";
-import { coverCal } from "./cover.js";
+import { coverCal, DEVIATIONS as COVER_DEVS } from "./cover.js";
 import { useNarrow, TripCard, TimerCard, MoreHub, TrainHub, phoneCss, timerDo, useSessionTimer } from "./phone.jsx";
 
 // ---------- model ----------
@@ -390,6 +390,9 @@ html,body{background:var(--bg)}
 .stepbtn{width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;line-height:1;color:var(--ivory-d);background:rgba(var(--fg),.06);border:1px solid rgba(var(--fg),.1);transition:transform .12s,background .15s}
 .stepbtn:active{transform:scale(.9)}
 .stepbtn:disabled{opacity:.35}
+.pnlwrap{position:relative}.pnltip{position:absolute;top:0;transform:translateX(-50%);pointer-events:none;white-space:nowrap;padding:7px 11px;border-radius:12px;font-size:11px;line-height:1.35;color:var(--ivory-d);background:color-mix(in srgb,var(--bg2) 86%,transparent);box-shadow:var(--gl-lens),0 10px 26px -12px rgba(var(--sh),.9);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);z-index:2}.pnltip b{color:var(--ivory);font-weight:600}
+.tcrow{display:grid;grid-template-columns:64px 1fr 64px 64px 84px;align-items:center;gap:10px;font-size:12.5px;padding:7px 10px;border-radius:10px}.tcrow>span:nth-child(n+3){text-align:right}.tcrow.h{font-size:10px;color:var(--muted);padding-top:0;padding-bottom:4px}
+.wrow{display:grid;grid-template-columns:104px 1fr 62px;align-items:center;gap:12px;padding:6px 0;font-size:13px}
 .skillrow{display:flex;align-items:center;gap:10px;padding:11px 4px;border-radius:10px;transition:background .15s}
 .skillrow:active{background:rgba(var(--fg),.04)}
 @media (hover:hover){.skillrow:hover{background:rgba(var(--fg),.035)}}
@@ -468,6 +471,7 @@ html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .dcol.stick{position:sticky;top:24px}
 .dcol.flipd{display:flex;flex-direction:column-reverse;justify-content:flex-end}
 .segw{max-width:460px}
+.trainbar{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);column-gap:20px;align-items:start}.trainbar>.segw{min-width:0}.trainbar>.segw+.segw{max-width:none}
 .narrow{max-width:720px}
 .deskonly{display:block}.notdesk{display:none}
 .homesess{display:block}
@@ -1602,7 +1606,48 @@ function TrainChart({ cur, result, R }) {
     </section>
   );
 }
-function Charts({ R, devs }) {
+// Wide screens only: what each count play adds to the spread set on Bet spread, in dollars an hour. It is the page's
+// own $/hr worked out once more with that one play left to basic strategy (src/cover.js holds what skipping each one
+// costs at every count), so a play is worth more the more is bet at the counts where it comes up.
+function DevWorth({ R, devs, spread }) {
+  const [all, setAll] = useState(false);
+  const d = useMemo(() => {
+    if (!spread || !devsOn(R)) return null;
+    const { bets, spotsMap, rph, seats } = spread;
+    const ev = (cal) => compute({ bankroll: 1, handsPerHour: rph, bets, cal, spotsMap }).evHour;
+    const cal = calFor(R, seats), base = ev(cal), list = [];
+    devs.forEach((x) => {
+      if (x.id === "ins") { list.push({ x, v: base - ev(calFor({ ...R, insurance: false }, seats)) }); return; }
+      const cv = COVER_DEVS[DEV_TABLE.findIndex((y) => y.id === x.id) - 1]; if (!cv) return;
+      const c = coverCal(cal, R, { deviations: [{ play: cv.id, mode: "skip" }] });
+      if (c.applied.length) list.push({ x, v: base - ev(c.cal) });
+    });
+    list.forEach((r) => { r.v = Math.max(0, r.v); }); list.sort((a, b) => b.v - a.v);
+    return { base, list, tot: list.reduce((t, r) => t + r.v, 0) };
+  }, [R, devs, spread]);
+  if (!d || !d.list.length || !(d.list[0].v > 0.004)) return null;
+  const mx = d.list[0].v, shown = all ? d.list : d.list.slice(0, 6), usd = (v) => (v >= 100 ? "$" + Math.round(v) : "$" + v.toFixed(2));
+  return (
+    <section className="card p-5 mt-4">
+      <div className="flex items-baseline justify-between mb-1">
+        <div className="eyebrow">What each count play is worth</div>
+        <span className="text-[11px]" style={{ color: "var(--muted)" }}>per hour, at your spread</span>
+      </div>
+      <div className="mt-2">
+        {shown.map((r, i) => (
+          <div key={r.x.id} className="wrow">
+            <span className="font-medium truncate" style={{ color: "var(--ivory)" }}>{r.x.name}</span>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full rounded-full bar barx" style={{ "--i": i, width: `${Math.max(2, (r.v / mx) * 100)}%`, background: i < 3 ? "var(--brass)" : "rgba(var(--acc),.55)" }} /></div>
+            <span className="mono text-right font-semibold" style={{ color: r.v >= 0.005 ? "var(--ivory)" : "var(--muted)" }}>{usd(r.v)}</span>
+          </div>))}
+      </div>
+      {d.list.length > 6 && <More open={all} onClick={() => setAll(!all)} className="mt-2">{all ? "Fewer" : `All ${d.list.length} plays`}</More>}
+      <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>Together these add about <span className="mono" style={{ color: "var(--ivory)" }}>{usd(d.tot)}</span> an hour to your <span className="mono" style={{ color: "var(--ivory)" }}>{sgnMoney(d.base)}</span>. Learn them from the top.</p>
+    </section>
+  );
+}
+function Charts({ R, devs, spread }) {
+  const wide = useWide();
   const alt = { ...R, h17: !R.h17 };
   const hard = []; for (let t = 17; t >= 8; t--) hard.push([t === 8 ? "≤8" : String(t), (u, r) => hardRule(t, u, r)]); // 5–7 always hit, same as 8
   const soft = []; for (let k = 9; k >= 2; k--) soft.push([`A,${k}`, (u, r) => softRule(k, u, r)]);
@@ -1661,6 +1706,7 @@ function Charts({ R, devs }) {
         </div>
         <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Negative indices: basic strategy stands or surrenders, and you hit at that count and below.{R.h17 && devs.some((d) => d.id === "A7v2") ? " A,7 vs 2 isn't on the BJA H17 chart; its 0− was measured by this app's own simulations." : ""}</p>
       </section>
+      {wide && <DevWorth R={R} devs={devs} spread={spread} />}
       </div>
     </div>
   );
@@ -1833,7 +1879,7 @@ function Seg({ value, options, onChange, cols, style, small }) {
 let _trainMode = "basic", _trainView = "drill";
 // go(tab, options) on a page that's already open can't remount it, so the page listens for the options instead
 const useNav = (fn) => useEffect(() => { const h = (e) => fn(e.detail || {}); window.addEventListener("bj-nav", h); return () => window.removeEventListener("bj-nav", h); });
-function Trainer({ rules, setRules }) {
+function Trainer({ rules, setRules, spread }) {
   const [mode, setMode] = useState(_trainMode); // basic | dev | mixed
   useEffect(() => { _trainMode = mode; }, [mode]);
   const narrow = useNarrow(); // on a phone the answer takes the place of the answer buttons, with Next where the thumb already is
@@ -2036,14 +2082,16 @@ function Trainer({ rules, setRules }) {
   );
   return (
     <div>
+      {/* on wide screens the two switches share a row, so both columns under them start level */}
+      <div className="trainbar">
       <div className="segw ph-hide"><Seg value={view} options={[["drill", "Practice"], ["fill", "Fill chart"], ["charts", "Charts"]]} onChange={setView} style={{ marginBottom: 12 }} /></div>
+      {view === "drill" && <div className="segw"><Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(null); setResult(null); setLastMath(null); }} style={{ marginBottom: 12 }} /></div>}
+      </div>
 
-      {view === "charts" ? <Charts R={rules} devs={DEVS} /> : view === "fill" ? <FillChart R={rules} devs={DEVS} /> : null}
+      {view === "charts" ? <Charts R={rules} devs={DEVS} spread={spread} /> : view === "fill" ? <FillChart R={rules} devs={DEVS} /> : null}
       <div className="dgrid wl"><div className="dcol">
       {view !== "drill" && masteryCard}
       {view === "drill" && <>
-      {/* mode */}
-      <div className="segw"><Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(null); setResult(null); setLastMath(null); }} style={{ marginBottom: 12 }} /></div>
 
 
       {/* card */}
@@ -2980,6 +3028,8 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const [phantom, setPhantom] = useState(null);
   const [msg, setMsg] = useState(null); // {ok, title, body}
   const [mistakes, setMistakes] = useState([]);
+  const [byTc, setByTc] = useState({}); const [tcSnap, setTcSnap] = useState({}); const tcR = useRef({}); const betTc = useRef(0); // see tally()
+  const wide = useWide();
   const [stats, setStats] = useState({ hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0 });
   const [guess, setGuess] = useState(0);
   const [showTotals, setShowTotals] = useState(_playPrefs.totals);
@@ -3055,9 +3105,12 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const tcNow = () => Math.trunc(sh.current.rc / decksLeft());
 
   // ----- betting -----
+  // hands, clean hands and money at each true count the bet was placed at (this session)
+  const tally = (c, ok, net) => { const k = Math.max(-3, Math.min(6, c)), b = tcR.current, r = b[k] || { n: 0, ok: 0, net: 0 }; tcR.current = { ...b, [k]: { n: r.n + 1, ok: r.ok + (ok ? 1 : 0), net: r.net + net } }; setByTc(tcR.current); };
   const placeBet = (v) => {
-    if (sh.current.spent || sh.current.pos >= sh.current.cut) { sfx("shuffle"); sh.current = newShoe(); setShoe({ ...sh.current }); setShuffled(true); setTimeout(() => setShuffled(false), 1800); setMsg({ ok: true, title: "Shuffle.", body: "Fresh shoe — the count is back to zero." }); return; }
+    if (sh.current.spent || sh.current.pos >= sh.current.cut) { setTcSnap(tcR.current); sfx("shuffle"); sh.current = newShoe(); setShoe({ ...sh.current }); setShuffled(true); setTimeout(() => setShuffled(false), 1800); setMsg({ ok: true, title: "Shuffle.", body: "Fresh shoe — the count is back to zero." }); return; }
     const tc = tcNow(), exp = spreadFor(tc);
+    betTc.current = tc;
     const ok = v === exp; hm.current = ok ? 0 : 1;
     if (v > 0) sfx("chip");
     if (!ok) { sfx("wrong", v > 0 ? 190 : 0); setMistakes((m) => [...m, { kind: "bet", tc, you: v, correct: exp, hand: stats.hands + 1 }]); setMsg({ ok: false, title: exp ? `Your spread says $${exp} at ${fmtTC(tc)}.` : `Your spread sits out at ${fmtTC(tc)}.`, body: `You bet ${v ? "$" + v : "nothing"}.` }); }
@@ -3066,7 +3119,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     if (v === 0) { // sit out: watch one hand go by so you keep counting
       const other = [draw(), draw()]; const d = [draw(), draw(false)];
       setPhantom(other); setDealer(d); setHoleHidden(true); setHands([]);
-      setTimeout(() => { seeCard(d[1]); setHoleHidden(false); const full = dealerPlay(d, () => draw(), rules.h17); setDealer(full); setPhase("result"); setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (ok ? 1 : 0) })); setPts((p) => pushPt(p, 0)); bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (ok ? 1 : 0), pts: pushPt(a.pts, 0) })); logResult("play", ok, { kind: "sitout" }); }, ms(900));
+      setTimeout(() => { seeCard(d[1]); setHoleHidden(false); const full = dealerPlay(d, () => draw(), rules.h17); setDealer(full); setPhase("result"); setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (ok ? 1 : 0) })); tally(tc, ok, 0); setPts((p) => pushPt(p, 0)); bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (ok ? 1 : 0), pts: pushPt(a.pts, 0) })); logResult("play", ok, { kind: "sitout" }); }, ms(900));
       setPhase("dealing"); return;
     }
     const p = [draw(), draw()]; const d = [draw(), draw(false)];
@@ -3158,6 +3211,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     const clean = hm.current === 0;
     setLastNet(net); setHistory((h) => [...h.slice(-9), net]);
     setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (clean ? 1 : 0), net: s.net + net }));
+    tally(betTc.current, clean, net);
     setPts((p) => pushPt(p, net));
     bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (clean ? 1 : 0), net: a.net + net, pts: pushPt(a.pts, net) }));
     logResult("play", clean, { net });
@@ -3180,7 +3234,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     setMsg(ok ? { ok: true, title: `Running count ${fmtTC(sh.current.rc)} — right.` } : { ok: false, title: `Running count is ${fmtTC(sh.current.rc)}.`, body: `You said ${fmtTC(guess)}.` });
     setPhase("bet");
   };
-  const reset = () => { clearTimeout(dealerTick.current); setLastNet(null); setHistory([]); setPts([]); setScope("session"); sh.current = newShoe(); setShoe({ ...sh.current }); setHands([]); setDealer([]); setPhantom(null); setMistakes([]); setStats({ hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0 }); setBank(bankroll0 || 1000); setMsg(null); setPhase("bet"); };
+  const reset = () => { clearTimeout(dealerTick.current); setLastNet(null); setHistory([]); setPts([]); setScope("session"); sh.current = newShoe(); setShoe({ ...sh.current }); setHands([]); setDealer([]); setPhantom(null); setMistakes([]); tcR.current = {}; setByTc({}); setTcSnap({}); setStats({ hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0 }); setBank(bankroll0 || 1000); setMsg(null); setPhase("bet"); };
 
   useEffect(() => {
     const onKey = (e) => {
@@ -3229,6 +3283,27 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const dl = decksLeft(); const tc = Math.trunc(shoe.rc / dl);
   const dv = handValue(dealer); const h = hands[active]; const av = h ? available(h, active) : {};
   const kinds = { bet: "Bet size", play: "Play", insurance: "Insurance", count: "Count" };
+  // By count (wide screens): with the count hidden the table only moves on at a shuffle, so it can't be read for the count
+  const tcShown = showCount ? byTc : tcSnap, tcRows = COUNTS.filter((c) => tcShown[c]).map((c) => ({ c, ...tcShown[c] }));
+  const tcMax = Math.max(1, ...tcRows.map((r) => r.n));
+  const mistakesCard = mistakes.length > 0 && (
+        <section className="card p-5 mb-4">
+          <div className="flex items-baseline justify-between mb-3"><div className="eyebrow">Mistakes this session</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{mistakes.length}{mistakes.length > 12 ? " · last 12 shown" : ""}</div></div>
+          <div className="space-y-1.5">
+            {mistakes.slice(-12).reverse().map((m, i) => (
+              <div key={i} className="grid items-center gap-2 text-xs rounded-lg px-3 py-2" style={{ gridTemplateColumns: "52px 1fr", background: "rgba(var(--neg),.08)" }}>
+                <span className="eyebrow" style={{ fontSize: 9 }}>{kinds[m.kind]}</span>
+                <span style={{ color: "var(--ivory-d)" }}>
+                  {m.kind === "play" && <>Hand {m.hand}: {m.key} vs {upLabel(m.up)} at {fmtTC(m.tc)} — you {ACT[m.you].toLowerCase()}, <b style={{ color: "var(--ivory)" }}>{ACT[m.correct].toLowerCase()}</b>{m.dev ? ` (${m.dev})` : ""}</>}
+                  {m.kind === "bet" && <>Hand {m.hand}: at {fmtTC(m.tc)} you bet {m.you ? "$" + m.you : "nothing"}, spread says <b style={{ color: "var(--ivory)" }}>{m.correct ? "$" + m.correct : "sit out"}</b></>}
+                  {m.kind === "insurance" && <>Hand {m.hand}: at {fmtTC(m.tc)} you chose {m.you}, correct is <b style={{ color: "var(--ivory)" }}>{m.correct}</b></>}
+                  {m.kind === "count" && <>After hand {m.hand}: you said {fmtTC(m.you)}, count was <b style={{ color: "var(--ivory)" }}>{fmtTC(m.correct)}</b></>}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+  );
   // the same figures for either view: this session, or every hand played on this device
   const allTime = scope === "all";
   const view = allTime
@@ -3326,6 +3401,21 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           </div>
         )}
       </section>
+      {wide && tcRows.length > 0 && (
+        <section className="card p-5 mb-4">
+          <div className="flex items-baseline justify-between mb-3"><div className="eyebrow">By true count</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{showCount ? "this session" : "this session, up to the last shuffle"}</div></div>
+          <div className="tcrow h"><span>Count</span><span /><span>Hands</span><span>Clean</span><span>Net</span></div>
+          {tcRows.map((r) => { const a = Math.round((r.ok / r.n) * 100); return (
+            <div key={r.c} className="tcrow" style={{ background: "rgba(var(--fg),.035)", marginTop: 4 }}>
+              <span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{LABEL(r.c)}</span>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full rounded-full" style={{ width: `${Math.max(3, (r.n / tcMax) * 100)}%`, background: "rgba(var(--acc),.5)", transition: "width .4s var(--ez)" }} /></div>
+              <span className="mono" style={{ color: "var(--ivory-d)" }}>{r.n}</span>
+              <span className="mono font-semibold" style={{ color: a >= 95 ? "var(--brass)" : a >= 80 ? "var(--ivory)" : "var(--neg-l)" }}>{a}%</span>
+              <span className="mono font-semibold" style={{ color: r.net > 0 ? "var(--brass)" : r.net < 0 ? "var(--neg-l)" : "var(--muted)" }}>{sgnMoney(r.net)}</span>
+            </div>); })}
+        </section>
+      )}
+      {wide && mistakesCard}
       </div><div className="dcol o2 stick">
 
       {/* the ramp only points at the current count when the player has chosen to see the count — otherwise it would give it away */}
@@ -3360,24 +3450,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
         </section>
       )}
 
-      {mistakes.length > 0 && (
-        <section className="card p-5 mb-4">
-          <div className="flex items-baseline justify-between mb-3"><div className="eyebrow">Mistakes this session</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{mistakes.length}{mistakes.length > 12 ? " · last 12 shown" : ""}</div></div>
-          <div className="space-y-1.5">
-            {mistakes.slice(-12).reverse().map((m, i) => (
-              <div key={i} className="grid items-center gap-2 text-xs rounded-lg px-3 py-2" style={{ gridTemplateColumns: "52px 1fr", background: "rgba(var(--neg),.08)" }}>
-                <span className="eyebrow" style={{ fontSize: 9 }}>{kinds[m.kind]}</span>
-                <span style={{ color: "var(--ivory-d)" }}>
-                  {m.kind === "play" && <>Hand {m.hand}: {m.key} vs {upLabel(m.up)} at {fmtTC(m.tc)} — you {ACT[m.you].toLowerCase()}, <b style={{ color: "var(--ivory)" }}>{ACT[m.correct].toLowerCase()}</b>{m.dev ? ` (${m.dev})` : ""}</>}
-                  {m.kind === "bet" && <>Hand {m.hand}: at {fmtTC(m.tc)} you bet {m.you ? "$" + m.you : "nothing"}, spread says <b style={{ color: "var(--ivory)" }}>{m.correct ? "$" + m.correct : "sit out"}</b></>}
-                  {m.kind === "insurance" && <>Hand {m.hand}: at {fmtTC(m.tc)} you chose {m.you}, correct is <b style={{ color: "var(--ivory)" }}>{m.correct}</b></>}
-                  {m.kind === "count" && <>After hand {m.hand}: you said {fmtTC(m.you)}, count was <b style={{ color: "var(--ivory)" }}>{fmtTC(m.correct)}</b></>}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {!wide && mistakesCard}
 
       </div></div>
 
@@ -3898,6 +3971,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
 
 // ======================= progress =======================
 function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
+  const [hov, setHov] = useState(null); // the session under the mouse (a mouse only: a finger scrolls the page)
   if (sessions.length < 2) return null;
   const W = 320, H = 150, P = { l: 6, r: 6, t: 14, b: 18 };
   let ch = 0, cr = 0, ce = 0, cv = 0;
@@ -3913,9 +3987,12 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
     pts.slice().reverse().map((p, i) => `L${x(pts.length - 1 - i).toFixed(1)},${y(p.exp - p.sd).toFixed(1)}`).join("") + "Z";
   const last = pts[pts.length - 1];
   let pk0 = 0, mdd0 = 0; pts.forEach((p) => { if (p.act > pk0) pk0 = p.act; if (pk0 - p.act > mdd0) mdd0 = pk0 - p.act; });
+  const hi_ = hov != null && hov >= 1 && hov < pts.length ? hov : null, hs = hi_ ? sessions[hi_ - 1] : null;
+  const onMove = (e) => { if (e.pointerType !== "mouse") return; const b = e.currentTarget.getBoundingClientRect(); const f = ((e.clientX - b.left) / b.width * W - P.l) / (W - P.l - P.r); setHov(Math.max(1, Math.min(pts.length - 1, Math.round(f * (pts.length - 1))))); };
   return (
-    <div className="mb-4">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ display: "block", cursor: onExpand ? "zoom-in" : undefined }} role="img" aria-label="Cumulative results vs expectation" onClick={onExpand}>
+    <div className="mb-4 pnlwrap">
+      {hs && <div className="pnltip" style={{ left: `${Math.max(20, Math.min(80, (x(hi_) / W) * 100))}%` }}><b>{dateShort(hs.date)}</b>{hs.where ? ` · ${hs.where}` : ""}<br /><span className="mono" style={{ color: hs.result >= 0 ? "var(--brass)" : "var(--neg-l)" }}>{sgnMoney(hs.result)}</span> in {fmtH(+hs.hours || 0)} · total <b className="mono">{sgnMoney(pts[hi_].act)}</b></div>}
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ display: "block", cursor: onExpand ? "zoom-in" : undefined }} role="img" aria-label="Cumulative results vs expectation" onClick={onExpand} onPointerMove={onMove} onPointerLeave={() => setHov(null)}>
         <line x1={P.l} x2={W - P.r} y1={y(0)} y2={y(0)} stroke="rgba(var(--fg),.14)" strokeWidth="1" />
         {/* keyed by what is drawn, so a new filter or a new session plays the trace again */}
         <g key={`${pts.length}|${last.act}|${last.exp}`}>
@@ -3923,8 +4000,9 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
         <path className="fadein" d={line("exp")} fill="none" stroke="rgba(var(--fg),.4)" strokeWidth="1.5" strokeDasharray="3 4" style={{ animationDelay: ".1s" }} />
         <path className="drawline" pathLength="1" d={line("act")} fill="none" stroke={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
         <circle className="popin late" cx={x(pts.length - 1)} cy={y(last.act)} r="3.5" fill={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} />
-        <text className="fadein late" style={{ font: "600 11px Inter", animationDuration: ".3s" }} x={x(pts.length - 1) - 4} y={y(last.act) - 8} textAnchor="end" fill="var(--ivory)">{last.act >= 0 ? "+" : "−"}${Math.abs(last.act).toLocaleString()}</text>
+        <text className="fadein late" style={{ font: "600 11px Inter", animationDuration: ".3s", opacity: hi_ ? 0 : undefined }} x={x(pts.length - 1) - 4} y={y(last.act) - 8} textAnchor="end" fill="var(--ivory)">{last.act >= 0 ? "+" : "−"}${Math.abs(last.act).toLocaleString()}</text>
         </g>
+        {hi_ && <g pointerEvents="none"><line x1={x(hi_)} x2={x(hi_)} y1={P.t - 4} y2={H - P.b} stroke="rgba(var(--fg),.28)" strokeWidth="1" /><circle cx={x(hi_)} cy={y(pts[hi_].act)} r="4" fill="var(--bg2)" stroke="var(--ivory)" strokeWidth="1.75" /></g>}
         <text x={P.l} y={H - 4} fill="var(--muted)" style={{ font: "500 9px Inter" }}>0h</text>
         <text x={W - P.r} y={H - 4} textAnchor="end" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{fmtH(last.h)}</text>
       </svg>
@@ -5884,6 +5962,7 @@ function BetSpreadCalculator() {
   const sess = useMemo(() => (sessBase ? { ...sessBase, ddMed: sessDd ? sessBase.fx.d50 * sessDd.med : null, dd90: sessDd ? sessBase.fx.d90 * sessDd.p90 : null } : null), [sessBase, sessDd]);
   const mix = useMemo(() => mixOf(r.rows, cal), [r, cal]);
   // your own spread as this page prices it, for the Plan tab's bankroll side
+  const trainSpread = useMemo(() => ({ bets, spotsMap, rph: rphEff, seats }), [bets, spotsMap, rphEff, seats]);
   const mine = useMemo(() => { let rps = 0; try { rps = shoeRounds(r.rf, bets, spotsMap, cal, rules.pen); } catch (_) {} return { ev: r.evHour, sd: r.sdHour, ror: r.ror, mn: Math.max(0, +minBet || 0), bets, rph: rphEff, rps, loses: !(r.evHour > 0), sessHours: sessT }; }, [r, bets, spotsMap, cal, rules.pen, minBet, rphEff, sessT]);
   const rorTarget = rorPct / 100;
   const [optResult, setOptResult] = useState(null);
@@ -6048,7 +6127,7 @@ function BetSpreadCalculator() {
 
 
         {(tab === "train" || tab === "count") && !narrow && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
-        {tab === "more" ? <MoreHub key="mo" go={go} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} onKeys={() => setKeysOpen(true)} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
+        {tab === "more" ? <MoreHub key="mo" go={go} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} onKeys={() => setKeysOpen(true)} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} spread={trainSpread} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .5s var(--ez)" }}>
