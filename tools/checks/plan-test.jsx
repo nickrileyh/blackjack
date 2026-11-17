@@ -3,8 +3,8 @@
 // separate random walk, session cash, the rotation's dates, and the scouting-report reader.
 // Run:  tools/checks/run.sh
 process.env.TZ = "America/New_York"; // the date checks cross a clock change
-import { COUNTS, calFor, compute, pDip, PhiN, DEFAULT_RULES } from "./app.jsx";
-import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, schedule, addDays, daysBetween, reportGame, scoreTone, gamesAt } from "./planner.jsx";
+import { COUNTS, calFor, compute, pDip, PhiN, DEFAULT_RULES, optimizeSpread } from "./app.jsx";
+import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, schedule, addDays, daysBetween, reportGame, scoreTone, gamesAt, ladderModel, averageGame, bankrollHistory } from "./planner.jsx";
 let bad = 0, n = 0; const ok = (name, cond, info = "") => { n++; if (!cond) { bad++; console.log("FAIL", name, info); } };
 const near = (name, a, b, tol) => ok(name, Math.abs(a - b) <= tol, `got ${a} want ${b} ±${tol}`);
 const base = { rules: { ...DEFAULT_RULES, h17: true, surrender: true, decks: 6, pen: 75 }, seats: 4, spotsMap: {}, minBet: 25, maxBet: 500, hphAuto: true, handsPerHour: 100 };
@@ -186,6 +186,45 @@ const rg = (s) => reportGame(s);
   const setup = { ...base, bankroll: 20000, rorPct: 5 }, free = scoreGame(setup, { rules: { ...gs[0].rules, dbl: "any" }, min: 25, max: 1000 }), tied = scoreGame(setup, gs[0]);
   ok("report: a doubling limit lowers what the game earns", tied.ev < free.ev, `${tied.ev} vs ${free.ev}`);
   ok("report: your own saved game is used instead of the report", gamesAt({ intel: it, mark: { games: [{ rules: { decks: 6, h17: true }, min: 10, max: 300 }] } }).length === 1);
+}
+
+// ---- moving up and dropping back: every hand played, the best bets for each table (ladderModel)
+for (const [nm, su] of [["6D H17 LS $25-500", base], ["2D H17 $50-1000", { ...base, rules: { ...DEFAULT_RULES, decks: 2, h17: true, pen: 60 }, minBet: 50, maxBet: 1000 }]]) for (const risk of [0.02, 0.05, 0.2]) {
+  const L = ladderModel(su, risk), cal = calFor({ ...DEFAULT_RULES, ...su.rules }, 4), ratio = su.maxBet / su.minBet, tag0 = `ladder ${nm} ${risk}`;
+  ok(`${tag0}: built`, L.lv.length >= 6, `levels ${L.lv.length}`);
+  // the optimizer on its own, as the page's casino scores call it: the most $/hr inside the limit, or nothing
+  const best = (m, B) => { const x = optimizeSpread({ B, mn: m, mx: Math.max(m, Math.round((ratio * m) / 5) * 5), cal, entry: -3, belowMode: "min", spotsMap: {}, rorCap: risk }); return x.ev > 0 && x.ror <= risk * 1.001 ? x.ev * L.rph : 0; };
+  L.lv.forEach((l, i) => {
+    const tag = `${tag0} $${l.m}`, at = compute({ bankroll: l.need, handsPerHour: L.rph, bets: l.bets, cal, spotsMap: {} }), dn = compute({ bankroll: l.down, handsPerHour: L.rph, bets: l.bets, cal, spotsMap: {} });
+    ok(`${tag}: every hand is played, inside the table's limits`, COUNTS.every((c, k) => l.bets[c] >= l.m && l.bets[c] <= l.mx && (k === 0 || l.bets[c] >= l.bets[COUNTS[k - 1]])), JSON.stringify(l.bets));
+    near(`${tag}: $/hr`, l.ev, at.evHour, 1e-6 * at.evHour); near(`${tag}: swing`, l.sd, at.sdHour, 1e-4 * at.sdHour);
+    ok(`${tag}: at "move up" the bets run the risk limit`, at.ror <= risk * 1.002 && at.ror >= risk * 0.93, `ror ${at.ror}`);
+    near(`${tag}: at "drop at" that risk has doubled`, dn.ror, 2 * risk, 0.012 * risk);
+    if (!i) { ok(`${tag}: nothing wins inside the limit with 4% less`, best(l.m, l.need * 0.96) === 0, String(best(l.m, l.need * 0.96))); return; }
+    const p = L.lv[i - 1];
+    ok(`${tag}: a bigger table needs more`, l.need > p.need && l.down > p.down && l.down < l.need && l.ev > p.ev, `${p.need} → ${l.need}`);
+    // the rule itself: from "move up" on the bigger table earns as much, and a tenth short of it the smaller earns more
+    ok(`${tag}: at "move up" it earns what the smaller table would`, best(l.m, l.need) >= best(p.m, l.need) * 0.99, `${best(l.m, l.need)} vs ${best(p.m, l.need)}`);
+    ok(`${tag}: a tenth short, the smaller table still earns more`, best(p.m, l.need * 0.9) > best(l.m, l.need * 0.9), `${best(p.m, l.need * 0.9)} vs ${best(l.m, l.need * 0.9)}`);
+  });
+}
+{ // rules nothing can beat playing every hand: no ladder, no crash
+  const L = ladderModel({ ...base, rules: { ...DEFAULT_RULES, decks: 8, h17: true, bj65: true, pen: 60 } }, 0.05); ok("ladder: a 6:5 game has no table to move up to", L.lv.length === 0, JSON.stringify(L.lv.map((l) => l.m))); }
+
+// ---- the game the chart projects (the average of the logged sessions) and the history it opens with
+{
+  const mine = { ev: 20, sd: 500 }, S = [{ date: "2026-10-03", hours: 2, result: 300, snap: { ev: 30, sd: 600 } }, { date: "2026-09-01", hours: 6, result: -450, snap: { ev: 10, sd: 400 } }, { date: "2026-10-20", hours: 4, result: 125 }, { date: "2026-10-21", hours: 0, result: 50 }];
+  const a = averageGame(S, mine);
+  near("average game: $/hr is weighted by hours", a.ev, (30 * 2 + 10 * 6 + 20 * 4) / 12, 1e-9); near("average game: the swing averages the variance", a.sd, Math.sqrt((600 * 600 * 2 + 400 * 400 * 6 + 500 * 500 * 4) / 12), 1e-9);
+  ok("average game: a session with no hours isn't counted", a.n === 3 && a.hours === 12); ok("average game: nothing logged, nothing to average", averageGame([], mine) === null && averageGame(null, mine) === null);
+  const h = bankrollHistory(S, 8000), tot = 300 - 450 + 125 + 50;
+  ok("history: one point before the first session and one per session, in date order", h.length === 5 && h.every((q, i) => !i || q.t >= h[i - 1].t));
+  near("history: it starts at today's bankroll less everything won since", h[0].v, 8000 - tot, 1e-9); near("history: it ends at today's bankroll", h[h.length - 1].v, 8000, 1e-9);
+  near("history: the oldest session comes first", h[1].v - h[0].v, -450, 1e-9); near("history: each step is that session's result", h[2].v - h[1].v, 300, 1e-9);
+  ok("history: starts the day before the first session", daysBetween(h[0].t, h[1].t) === 1); ok("history: nothing logged, no history", bankrollHistory([], 8000).length === 0);
+  // steady play (the switch off): one table, never resized — the middle path is the bankroll plus the average game's edge
+  const T = 416, s = growthSim({ B: 8000, lv: [{ m: 25, need: 0, down: 0, ev: a.ev, sd: a.sd, state: "now" }], hours: T }), last = s.pts[s.pts.length - 1];
+  near("steady play: the typical result is today's bankroll plus the edge", last.mid, 8000 + a.ev * T, 0.06 * a.sd * Math.sqrt(T));
 }
 
 // ---- a score's colour: one smooth run from red (0) to green (100)
