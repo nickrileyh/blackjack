@@ -1738,7 +1738,7 @@ const useNav = (fn) => useEffect(() => { const h = (e) => fn(e.detail || {}); wi
 function Trainer({ rules, setRules }) {
   const [mode, setMode] = useState(_trainMode); // basic | dev | mixed
   useEffect(() => { _trainMode = mode; }, [mode]);
-  const narrow = useNarrow(); // on a phone the answer comes up as a bar over the tabs, with Next under the thumb
+  const narrow = useNarrow(); // on a phone the answer takes the place of the answer buttons, with Next where the thumb already is
   const [view, setView] = useState(_trainView); // drill | fill | charts
   useEffect(() => { _trainView = view; }, [view]);
   useNav((o) => { if (o.trainView) setView(o.trainView); if (o.trainMode && o.trainMode !== mode) { setMode(o.trainMode); setCur(null); setResult(null); } });
@@ -1750,6 +1750,13 @@ function Trainer({ rules, setRules }) {
   const [streak, setStreak] = useState(0);
   const [session, setSession] = useState({ asked: 0, right: 0 });
   const [more, setMore] = useState(false);
+  // phone: once the answer is up (or its odds are opened), make sure all of it, Next included, is clear of the tab bar
+  const resRef = useRef(null);
+  useEffect(() => {
+    if (!narrow || !result || !resRef.current) return;
+    const t = setTimeout(() => { try { const r = resRef.current.getBoundingClientRect(), room = window.innerHeight - 84, over = r.bottom - room; if (over > 2) window.scrollBy({ top: Math.min(over + 4, r.top - 70), behavior: noMotion() ? "auto" : "smooth" }); } catch (_) {} }, 60);
+    return () => clearTimeout(t);
+  }, [narrow, !!result, more]);
   const [auto, setAuto] = useState(false);
   const [timer, setTimer] = useState(null);
   const timerRef = useRef(null);
@@ -1951,7 +1958,8 @@ function Trainer({ rules, setRules }) {
             <span>{cur.kind === "dev" ? cur.dev.hand : cur.hand}</span>
           </div>
 
-          <div className={"acts grid gap-2 mt-5" + (cur.opts ? " pad" : "")} style={{ gridTemplateColumns: cur.opts ? `repeat(${Math.min(cur.opts.length, 5)}, 1fr)` : "1fr 1fr" }}>
+          {/* on a phone the buttons give way to the answer: nothing is left half hidden behind it */}
+          {!(narrow && result) && <div className={"acts grid gap-2 mt-5" + (cur.opts ? " pad" : "")} style={{ gridTemplateColumns: cur.opts ? `repeat(${Math.min(cur.opts.length, 5)}, 1fr)` : "1fr 1fr" }}>
             {(cur.opts || [cur.dev.below, cur.dev.above]).map((o, i) => {
               const isAns = result && o === cur.answer;
               const isPick = result && o === result.choice && !result.ok;
@@ -1967,7 +1975,7 @@ function Trainer({ rules, setRules }) {
                 </button>
               );
             })}
-          </div>
+          </div>}
 
           {(() => { const res = (<>
             <div className="rounded-xl px-4 py-3 relative overflow-hidden" style={{ minHeight: 64, background: result ? (result.ok ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)") : "rgba(var(--fg),.045)", transition: "background .25s" }}>
@@ -1978,7 +1986,7 @@ function Trainer({ rules, setRules }) {
                     <span>{result.ok ? "Right." : `${cur.opts ? label(cur.answer) : cur.answer}.`}</span>
                     {narrow && <span className="mono text-[11px] font-medium" style={{ color: "var(--muted)" }}>{session.right}/{session.asked}{streak >= 2 ? ` · ${streak} in a row` : ""}</span>}
                   </div>
-                  <p className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>{why(cur)}</p>
+                  <p className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>{narrow && !result.ok && <span style={{ color: "var(--muted)" }}>You picked <b style={{ color: "var(--neg-l)", fontWeight: 600 }}>{cur.opts ? label(result.choice) : result.choice}</b>. </span>}{why(cur)}</p>
                 </div>
               ) : (
                 <p className="text-sm" style={{ color: "var(--muted)" }}>{cur.kind === "dev" ? "The count matters here. What's the play?" : "What's the play?"}</p>
@@ -1990,8 +1998,9 @@ function Trainer({ rules, setRules }) {
               <button onClick={next} disabled={!result || leaving} className="btn col-span-2">Next hand</button>
             </div>
           </>);
-            // phone: nothing until there is an answer, then a bar that floats over the tab bar (drawn outside the card, which shakes on a miss)
-            return narrow ? (result ? createPortal(<div className={"bj resbar " + (result.ok ? "ok" : "bad")} key={cur.qkey}>{res}</div>, document.body) : null) : <div className="mt-4">{res}</div>; })()}
+            // phone: nothing until there is an answer; then it stands where the answer buttons were, so Next is under the thumb
+            // that just answered. (It used to float over the tab bar and cut across whatever row of buttons it landed on.)
+            return narrow ? (result ? <div ref={resRef} className="resin mt-5" key={cur.qkey}>{res}</div> : null) : <div className="mt-4">{res}</div>; })()}
           <div className={narrow ? "mt-3" : ""}>
             <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>H</b> hit · <b>S</b> stand · <b>D</b> double · <b>P</b> split{rules.surrender ? <> · <b>R</b> surrender</> : null} · <b>O</b> odds · <b>Enter</b> next</div>
             <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}><Toggle label="Deal the next hand automatically" on={auto} onChange={(v) => { setAuto(v); if (!v) pause(); }} /></div>

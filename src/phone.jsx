@@ -270,8 +270,7 @@ export const phoneCss = `
 @keyframes livedot{50%{box-shadow:0 0 0 6px rgba(var(--acc),0)}}
 .hdrback{display:none}
 @media (hover:hover){.mrow:hover,.trow:hover{filter:none;background:rgba(var(--fg),.045)}}
-@media (prefers-reduced-motion:reduce){.livedot{animation:none}.ptile{transition:none}.resbar{animation:none}}
-@media (prefers-reduced-transparency:reduce){.resbar{background:rgb(var(--bgrgb))}}
+@media (prefers-reduced-motion:reduce){.livedot{animation:none}.ptile{transition:none}.resin{animation:none}}
 @media (max-width:1023px){
 .ph-only{display:block}.ph-hide{display:none!important}
 /* a page behind a menu says where it came from */
@@ -283,13 +282,9 @@ export const phoneCss = `
 .shell>header h1{font-size:clamp(28px,8.4vw,34px);letter-spacing:-.03em}
 .shell>header h1.long{font-size:clamp(21px,6vw,27px);letter-spacing:-.025em;white-space:nowrap}
 .shell>header .rulespill{min-width:0}
-/* Train: the answer comes up as a bar over the tab bar, with Next under the thumb */
-.bj.resbar{min-height:0}
-.resbar{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 84px);z-index:44;max-height:62vh;overflow-y:auto;padding:12px;border-radius:24px;background:linear-gradient(180deg,rgba(var(--bgrgb),.9),rgba(var(--bgrgb),.94));-webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);box-shadow:var(--gl-lens),0 22px 44px -18px rgba(0,0,0,.75);animation:resbarin .3s var(--ez) backwards}
-:root[data-theme="light"] .resbar{background:rgba(255,255,255,.9);box-shadow:0 0 0 var(--hair) rgba(var(--fg),.1),0 18px 40px -18px rgba(var(--fg),.45)}
-.resbar.ok{box-shadow:var(--gl-lens),0 0 0 1px rgba(var(--acc),.45),0 22px 44px -18px rgba(0,0,0,.75)}
-.resbar.bad{box-shadow:var(--gl-lens),0 0 0 1px rgba(var(--neg),.5),0 22px 44px -18px rgba(0,0,0,.75)}
-@keyframes resbarin{from{opacity:0;transform:translateY(18px)}}
+/* Train: the answer stands where the answer buttons were */
+.resin{animation:resin .32s var(--ez) backwards}
+@keyframes resin{from{opacity:0;transform:translateY(8px)}}
 /* the strategy table and its answer buttons fit one screen: smaller cards, no labels inside the felt (the line under
    it names both hands), and shorter still on a short screen */
 .cz-train{--cz:1}.tblrows{gap:8px}
