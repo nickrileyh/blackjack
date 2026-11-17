@@ -405,7 +405,8 @@ html.scrolled .pillrail .rulespill{font-size:11px;padding:5px 9px 5px 11px}
 .topbar{background:rgba(var(--bgrgb),.9);min-height:46px}
 .topbar>div{min-height:29px}
 .sn-glide{display:block;position:absolute;left:14px;right:14px;top:0;height:44px;border-radius:12px;background:rgba(var(--acc),.12);pointer-events:none;transition:transform .34s cubic-bezier(.3,.75,.25,1),opacity .2s}
-.sn-glide::before{content:"";position:absolute;left:-14px;top:11px;bottom:11px;width:3px;border-radius:0 3px 3px 0;background:var(--brass)}
+.sn-glide::before{content:"";position:absolute;left:-14px;top:25%;bottom:25%;width:3px;border-radius:0 3px 3px 0;background:var(--brass)}
+.sidenav>*{flex-shrink:0}
 .sidenav .sn-item.on{background:transparent}
 .sidenav .sn-item.on::before{display:none}
 .shell{--W:800px;--SN:248px;max-width:var(--W)!important;margin-left:calc(var(--SN) + max(40px,(100% - var(--SN) - var(--W))/2))!important;margin-right:40px!important;padding-left:0!important;padding-right:0!important;padding-top:44px!important;padding-bottom:56px!important}
@@ -5119,7 +5120,7 @@ function BetSpreadCalculator() {
       const n = snav.current, g = glide.current; if (!n || !g) return;
       const on = n.querySelector(".sn-item.on"); if (!on) { g.style.opacity = 0; return; }
       const snap = jump || g.style.opacity === "0"; if (snap) g.style.transition = "none";
-      g.style.transform = `translateY(${on.offsetTop}px)`; g.style.opacity = 1;
+      g.style.transform = `translateY(${on.offsetTop}px)`; g.style.height = on.offsetHeight + "px"; g.style.left = on.offsetLeft + "px"; g.style.right = "auto"; g.style.width = on.offsetWidth + "px"; g.style.opacity = 1;
       if (snap) { void g.offsetHeight; g.style.transition = ""; }
     };
     place(); const r = () => place(true); window.addEventListener("resize", r); return () => window.removeEventListener("resize", r);
