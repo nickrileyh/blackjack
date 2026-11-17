@@ -276,7 +276,7 @@ function compute({ bankroll, handsPerHour, bets, cal, spotsMap = {} }) {
 // ---------- UI ----------
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');/*FONTIMPORT*/
-:root{--recess:rgba(var(--sh),.55);--ease:cubic-bezier(.4,0,.2,1);--bg:#07090A;--bg2:#0B0E10;--velvet:#0D1114;--velvet-l:#142024;--fg:236,241,238;--ivory:#ECF1EE;--ivory-d:#B3BDB9;--brass:#34D399;--brass-d:#18986A;--acc:52,211,153;--acc-hi:#7BEBC1;--rose:#FB7161;--neg:251,113,97;--neg-l:#FDB3AA;--muted:#7D8985;--ink:#03150E;--sh:1,4,4;--bgrgb:7,9,10;--felt1:#11261E;--felt2:#0B1914;--felt3:#060F0C;--sheet1:#121B1C;--sheet2:#090E10;--back1:#7A2232;--back2:#521623;--seg-hi:#F4F8F6;--seg-lo:#DCE6E1;--line:rgba(236,241,238,.11)}
+:root{--recess:rgba(var(--sh),.55);--ease:cubic-bezier(.45,0,.16,1);--bg:#07090A;--bg2:#0B0E10;--velvet:#0D1114;--velvet-l:#142024;--fg:236,241,238;--ivory:#ECF1EE;--ivory-d:#B3BDB9;--brass:#34D399;--brass-d:#18986A;--acc:52,211,153;--acc-hi:#7BEBC1;--rose:#FB7161;--neg:251,113,97;--neg-l:#FDB3AA;--muted:#7D8985;--ink:#03150E;--sh:1,4,4;--bgrgb:7,9,10;--felt1:#11261E;--felt2:#0B1914;--felt3:#060F0C;--sheet1:#121B1C;--sheet2:#090E10;--back1:#7A2232;--back2:#521623;--seg-hi:#F4F8F6;--seg-lo:#DCE6E1;--line:rgba(236,241,238,.11)}
 :root[data-theme="gold"]{--bg:#05070B;--bg2:#090E16;--velvet:#0C1422;--velvet-l:#111B2E;--fg:246,239,226;--ivory:#F6EFE2;--ivory-d:#C9CDD6;--brass:#D9B56A;--brass-d:#A8863E;--acc:217,181,106;--acc-hi:#E6C57E;--rose:#E0574B;--neg:224,87,75;--neg-l:#F2B8AC;--muted:#98A0B0;--ink:#17110F;--sh:3,6,12;--bgrgb:5,7,11;--felt1:#111B2E;--felt2:#0B111D;--felt3:#070C14;--sheet1:#121A29;--sheet2:#0A0F18;--back1:#24466E;--back2:#18314F;--seg-hi:#FBF6EA;--seg-lo:#EDE5D2;--line:rgba(246,239,226,.12)}
 :root[data-theme="amethyst"]{--bg:#08060D;--bg2:#0D0A14;--velvet:#120D1C;--velvet-l:#1D1530;--fg:240,235,248;--ivory:#F0EBF8;--ivory-d:#C3BAD3;--brass:#B794F6;--brass-d:#8A63D6;--acc:183,148,246;--acc-hi:#D2BCFB;--rose:#FF7086;--neg:255,112,134;--neg-l:#FFB8C3;--muted:#8B8299;--ink:#140A24;--sh:4,2,9;--bgrgb:8,6,13;--felt1:#1D1530;--felt2:#130E21;--felt3:#0A0712;--sheet1:#17112A;--sheet2:#0C0915;--back1:#6E2A55;--back2:#4C1C3B;--seg-hi:#F6F2FC;--seg-lo:#E4DCF2;--line:rgba(240,235,248,.11)}
 :root[data-theme="copper"]{--bg:#0A0806;--bg2:#100C09;--velvet:#18110C;--velvet-l:#251A12;--fg:246,238,230;--ivory:#F6EEE6;--ivory-d:#CDBFB1;--brass:#E8955A;--brass-d:#B86A34;--acc:232,149,90;--acc-hi:#F4B888;--rose:#F25F5C;--neg:242,95,92;--neg-l:#F8B4B2;--muted:#968877;--ink:#1E0E04;--sh:8,5,2;--bgrgb:10,8,6;--felt1:#1F2A22;--felt2:#141C17;--felt3:#0B110D;--sheet1:#1C1510;--sheet2:#0F0B08;--back1:#2F4A5E;--back2:#203444;--seg-hi:#FBF5EF;--seg-lo:#EEE2D5;--line:rgba(246,238,230,.11)}
@@ -344,9 +344,9 @@ html,body{background:var(--bg)}
 .tabs{display:flex;gap:22px;border-bottom:1px solid rgba(var(--fg),.08);margin-bottom:18px}
 .tabs button{position:relative;padding:4px 2px 11px;font-size:15px;font-weight:600;color:var(--muted);transition:color .18s var(--ease)}
 .tabs button.on{color:var(--ivory)}
-.tabs button.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:2px;background:var(--brass);animation:tabin .25s var(--ease)}
+.tabs button.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:2px;background:var(--brass);animation:tabin .2s var(--ease)}
 @keyframes tabin{from{transform:scaleX(.3);opacity:0}to{transform:none;opacity:1}}
-.topbar{position:fixed;left:0;right:0;top:0;z-index:45;padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;background:rgba(var(--bgrgb),.78);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid rgba(var(--fg),.06);transform:translateY(-110%);opacity:0;transition:transform .26s var(--ease),opacity .2s var(--ease);pointer-events:none}
+.topbar{position:fixed;left:0;right:0;top:0;z-index:45;padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;background:rgba(var(--bgrgb),.78);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid rgba(var(--fg),.06);transform:translateY(-110%);opacity:0;transition:transform .2s var(--ease),opacity .2s var(--ease);pointer-events:none}
 .topbar.show{transform:none;opacity:1;pointer-events:auto}
 .rack{display:grid;grid-template-columns:repeat(var(--n),minmax(0,64px));gap:10px;justify-content:center}
 .rack .chipbtn{width:100%;height:auto;aspect-ratio:1}
@@ -377,7 +377,7 @@ html,body{background:var(--bg)}
 .keycap:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .shoe-w{position:relative;height:12px}
 .shoe-t{position:absolute;inset:0;border-radius:99px;background:var(--recess);overflow:hidden}
-.shoe-t i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,rgba(var(--acc),.45),var(--brass));transition:width .4s var(--ease)}
+.shoe-t i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,rgba(var(--acc),.45),var(--brass));transition:width .25s var(--ease)}
 .shoe-t u{position:absolute;top:0;bottom:0;width:1px;background:rgba(var(--fg),.2)}
 .shoe-c{position:absolute;top:-4px;height:20px;width:2px;margin-left:-1px;border-radius:2px;background:var(--rose);opacity:.7}
 @media (hover:hover){.keycap:hover{background:rgba(var(--fg),.11)}}
@@ -391,12 +391,12 @@ html,body{background:var(--bg)}
 .skillrow{display:flex;align-items:center;gap:10px;padding:11px 4px;border-radius:10px;transition:background .15s}
 .skillrow:active{background:rgba(var(--fg),.04)}
 @media (hover:hover){.skillrow:hover{background:rgba(var(--fg),.035)}}
-.syncpill{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;top:calc(env(safe-area-inset-top) + 10px);z-index:90;max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:9px 16px;border-radius:999px;font-size:13px;font-weight:500;color:var(--ivory);background:rgba(var(--bgrgb),.92);border:1px solid rgba(var(--acc),.35);box-shadow:0 12px 30px -12px rgba(0,0,0,.7);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:rise .3s var(--ease) both}
+.syncpill{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;top:calc(env(safe-area-inset-top) + 10px);z-index:90;max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:9px 16px;border-radius:999px;font-size:13px;font-weight:500;color:var(--ivory);background:rgba(var(--bgrgb),.92);border:1px solid rgba(var(--acc),.35);box-shadow:0 12px 30px -12px rgba(0,0,0,.7);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:rise .21s var(--ease) both}
 .syncpill b{color:var(--brass)}
 .dgrid,.dcol{display:contents}
 .deskonly{display:none}
-.cmdk-wrap{position:fixed;inset:0;z-index:95;display:flex;justify-content:center;align-items:flex-start;padding:14vh 16px 0;background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:spfade .15s ease both}
-.cmdk{width:100%;max-width:560px;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));border:1px solid rgba(var(--acc),.22);box-shadow:0 40px 90px -20px rgba(0,0,0,.8);animation:cmdkin .2s cubic-bezier(.2,.8,.2,1) both}
+.cmdk-wrap{position:fixed;inset:0;z-index:95;display:flex;justify-content:center;align-items:flex-start;padding:14vh 16px 0;background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:spfade .15s var(--ez) both}
+.cmdk{width:100%;max-width:560px;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));border:1px solid rgba(var(--acc),.22);box-shadow:0 40px 90px -20px rgba(0,0,0,.8);animation:cmdkin .2s var(--ez) both}
 @keyframes cmdkin{from{transform:translateY(-8px) scale(.98);opacity:0}to{transform:none;opacity:1}}
 .cmdk-in{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);color:var(--muted)}
 .cmdk-in input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--ivory);font-size:16px}
@@ -408,22 +408,22 @@ html,body{background:var(--bg)}
 .cmdk-empty{padding:22px 12px;text-align:center;font-size:13px;color:var(--muted)}
 .cmdk-foot{display:flex;gap:18px;padding:9px 16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
 .bj kbd{font:600 10.5px Inter,system-ui,sans-serif;padding:2px 6px;border-radius:6px;background:rgba(var(--fg),.08);border:1px solid rgba(var(--fg),.12);color:var(--ivory-d)}
-.dcol>section{animation:rise .42s var(--ease) both}
+.dcol>section{animation:rise .26s var(--ease) both}
 .dcol>section:nth-of-type(2){animation-delay:.05s}.dcol>section:nth-of-type(3){animation-delay:.1s}.dcol>section:nth-of-type(n+4){animation-delay:.15s}
 .dcol.o2>section:nth-of-type(1){animation-delay:.1s}.dcol.o2>section:nth-of-type(2){animation-delay:.15s}.dcol.o2>section:nth-of-type(n+3){animation-delay:.2s}
 .dcol.o3>section:nth-of-type(1){animation-delay:.15s}.dcol.o3>section:nth-of-type(n+2){animation-delay:.2s}
 @media (min-width:1024px){
 html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) transparent}
 .bottom-nav,.hdrgear,.shell>header .rulespill,.topbar .rulespill{display:none!important}
-.pillrail{display:block;position:fixed;left:248px;right:0;top:0;z-index:46;padding:46px 40px 0;pointer-events:none;transition:transform .34s cubic-bezier(.3,.75,.25,1)}
+.pillrail{display:block;position:fixed;left:248px;right:0;top:0;z-index:46;padding:46px 40px 0;pointer-events:none;transition:transform .24s var(--ez)}
 .pillrail>div{max-width:var(--W)}
-.pillrail .rulespill{pointer-events:auto;min-height:0;transform-origin:100% 0;transition:transform .34s cubic-bezier(.3,.75,.25,1),background .15s,border-color .15s}
+.pillrail .rulespill{pointer-events:auto;min-height:0;transform-origin:100% 0;transition:transform .24s var(--ez),background .15s,border-color .15s}
 .pillrail .rulespill:hover{background:rgba(var(--fg),.09);border-color:rgba(var(--acc),.4)}
 html.scrolled .pillrail{transform:translateY(-37px)}
 html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .topbar{background:rgba(var(--bgrgb),.9);min-height:46px}
 .topbar>div{min-height:29px}
-.sn-glide{display:block;position:absolute;left:14px;right:14px;top:0;height:44px;border-radius:12px;background:rgba(var(--acc),.12);pointer-events:none;transition:transform .34s cubic-bezier(.3,.75,.25,1),opacity .2s}
+.sn-glide{display:block;position:absolute;left:14px;right:14px;top:0;height:44px;border-radius:12px;background:rgba(var(--acc),.12);pointer-events:none;transition:transform .24s var(--ez),opacity .2s}
 .sn-glide::before{content:"";position:absolute;left:-14px;top:25%;bottom:25%;width:3px;border-radius:0 3px 3px 0;background:var(--brass)}
 .sidenav>*{flex-shrink:0}
 .sidenav .sn-item.on{background:transparent}
@@ -455,7 +455,7 @@ html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .sn-rules{display:block;width:100%;text-align:left;padding:12px;margin-bottom:6px;border-radius:14px;background:rgba(var(--fg),.035);border:1px solid rgba(var(--fg),.07);transition:background .15s,border-color .15s}
 .sn-rules:hover{background:rgba(var(--fg),.06);border-color:rgba(var(--acc),.3)}
 .sheetwrap{justify-content:center!important;align-items:center;padding:40px}
-.sheetwrap .sheet{max-width:560px!important;max-height:min(86vh,860px)!important;border-radius:22px;border-bottom:1px solid rgba(var(--acc),.16);box-shadow:0 40px 90px -20px rgba(0,0,0,.75);animation:sheetpop .22s cubic-bezier(.2,.8,.2,1)}
+.sheetwrap .sheet{max-width:560px!important;max-height:min(86vh,860px)!important;border-radius:22px;border-bottom:1px solid rgba(var(--acc),.16);box-shadow:0 40px 90px -20px rgba(0,0,0,.75);animation:sheetpop .22s var(--ez)}
 .sheetwrap .sheet>.sheetgrab>div:first-child{visibility:hidden;height:12px;padding:0}
 @keyframes sheetpop{from{transform:translateY(10px) scale(.98);opacity:0}to{transform:none;opacity:1}}
 @media (hover:hover){.card button.chippress:hover,.rulespill:hover,.iconbtn:hover{filter:brightness(var(--hov))}}
@@ -477,7 +477,7 @@ html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .dcol>:first-child>.card:first-child{margin-top:0}
 }
 :root[data-theme="light"] .sidenav{background:rgba(255,255,255,.7);border-right-color:rgba(15,27,61,.08)}
-.sheet{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);border-top-left-radius:22px;border-top-right-radius:22px;border:1px solid rgba(var(--acc),.16);border-bottom:none;box-shadow:0 -20px 50px -10px rgba(0,0,0,.8);animation:sheetin .28s cubic-bezier(.2,.8,.2,1)}
+.sheet{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);border-top-left-radius:22px;border-top-right-radius:22px;border:1px solid rgba(var(--acc),.16);border-bottom:none;box-shadow:0 -20px 50px -10px rgba(0,0,0,.8);animation:sheetin .22s var(--ez)}
 @keyframes sheetin{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 .sheetwrap{animation:scrimin .22s var(--ease)}
 @keyframes scrimin{from{background-color:transparent}}
@@ -521,7 +521,7 @@ input.in[type=date]::-webkit-date-and-time-value{text-align:left}
 .chipseg button:active{transform:scale(.96)}
 .chipseg button.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.6) inset}
 .chipseg.slide{position:relative}
-.chipseg.slide .thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));border-radius:9px;background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));box-shadow:0 1px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.6) inset;transform:translateX(calc(var(--i) * (100% + 4px)));transition:transform .3s cubic-bezier(.3,.85,.3,1)}
+.chipseg.slide .thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));border-radius:9px;background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));box-shadow:0 1px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.6) inset;transform:translateX(calc(var(--i) * (100% + 4px)));transition:transform .21s var(--ez)}
 .chipseg.slide button{position:relative;z-index:1;transition:color .2s var(--ease)}
 .chipseg.slide button.on{background:none;box-shadow:none}
 :root:not([data-theme="light"]) .chipseg button.on,:root:not([data-theme="light"]) .chipseg.slide .thumb{background:rgba(var(--acc),.14);box-shadow:0 0 0 1px rgba(var(--acc),.24) inset}
@@ -529,9 +529,9 @@ input.in[type=date]::-webkit-date-and-time-value{text-align:left}
 :root:not([data-theme="light"]) .chipseg.slide button.on{background:none;box-shadow:none}
 .in{transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease)}
 @media(hover:hover){.in:hover:not(:focus):not(:disabled){border-color:rgba(var(--fg),.24)}.chipseg button:not(.on):hover{color:var(--ivory-d)}.btn.ghost:hover{background:rgba(var(--fg),.12)}}
-@media(hover:hover) and (min-width:1024px){.card{transition:border-color .25s var(--ease)}.card:hover{border-color:rgba(var(--acc),.2)}.card .card:hover{border-color:rgba(var(--acc),.1)}.btn:not(.ghost):hover:not(:disabled){transform:translateY(-1px)}}
+@media(hover:hover) and (min-width:1024px){.card{transition:border-color .2s var(--ease)}.card:hover{border-color:rgba(var(--acc),.2)}.card .card:hover{border-color:rgba(var(--acc),.1)}.btn:not(.ghost):hover:not(:disabled){transform:translateY(-1px)}}
 @media(min-width:1024px){.shell>header h1{letter-spacing:-.028em}::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:rgba(var(--fg),.14);border-radius:999px;border:2px solid transparent;background-clip:content-box}::-webkit-scrollbar-thumb:hover{background:rgba(var(--fg),.26);background-clip:content-box;border:2px solid transparent}::-webkit-scrollbar-track{background:transparent}}
-.bar{transition:height .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1)}
+.bar{transition:height .24s var(--ez),width .24s var(--ez)}
 input[type=range]{accent-color:var(--brass)}
 .pc{width:86px;height:122px;border-radius:10px;background:linear-gradient(160deg,#FFFEFA 0%,#F7F2E7 78%,#EFE8D8 100%);color:#1C1C1E;position:relative;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.9) inset,0 2px 3px -1px rgba(0,0,0,.4),0 14px 26px -10px rgba(0,0,0,.8);font-family:Fraunces,Georgia,serif;user-select:none;flex-shrink:0}
 .pc.red{color:#C0262B}
@@ -581,37 +581,37 @@ input[type=range]{accent-color:var(--brass)}
 .shoe .pcback{position:absolute;inset:0;border-radius:9px}
 .felt{border-radius:16px;background:radial-gradient(120% 90% at 50% 0%,var(--felt1) 0%,var(--felt2) 60%,var(--felt3) 100%);box-shadow:inset 0 1px 0 rgba(var(--acc),.12),inset 0 22px 40px -24px rgba(0,0,0,.95)}
 @keyframes deal{0%{transform:translate(var(--dx),var(--dy)) rotate(var(--r0)) rotateY(70deg) scale(.9);opacity:0;filter:brightness(.7)}20%{opacity:1}100%{transform:translate(0,0) rotate(var(--r1)) rotateY(0) scale(1);opacity:1;filter:brightness(1)}}
-.dealt{animation:deal .5s cubic-bezier(.22,.9,.3,1) both;animation-delay:var(--d);transform-style:preserve-3d;backface-visibility:hidden;will-change:transform,opacity}
+.dealt{animation:deal .34s var(--ez) both;animation-delay:var(--d);transform-style:preserve-3d;backface-visibility:hidden;will-change:transform,opacity}
 .tbl{perspective:900px}
 .felt{isolation:isolate}
-.feltprint{position:absolute;left:50%;top:50%;width:min(100%,520px);transform:translate(-50%,-46%);z-index:-1;pointer-events:none;color:rgb(var(--fg));opacity:.15;overflow:visible;transition:opacity .5s var(--ease)}
+.feltprint{position:absolute;left:50%;top:50%;width:min(100%,520px);transform:translate(-50%,-46%);z-index:-1;pointer-events:none;color:rgb(var(--fg));opacity:.15;overflow:visible;transition:opacity .31s var(--ease)}
 .felt.busy .feltprint{opacity:.06}
 .feltprint .fp-l{fill:none;stroke:currentColor;stroke-width:.7;opacity:.8}
 .feltprint text{fill:currentColor;font-family:Inter,system-ui,sans-serif;font-weight:600}
 .feltprint .fp-t{font-size:12.5px;letter-spacing:.26em}
 .feltprint .fp-s{font-size:8px;letter-spacing:.3em}
 @keyframes shoe{0%,100%{transform:translateX(0)}30%{transform:translateX(-6px)}}
-.shoe.go{animation:shoe .5s ease-out}
+.shoe.go{animation:shoe .31s var(--ez)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.rise{animation:rise .26s var(--ease) both}
-.rise>div>section,.rise>section,.rise>div>.stagger{animation:rise .42s var(--ease) both}
+.rise{animation:rise .2s var(--ease) both}
+.rise>div>section,.rise>section,.rise>div>.stagger{animation:rise .26s var(--ease) both}
 .rise>div>section:nth-of-type(2),.rise>section:nth-of-type(2){animation-delay:.05s}
 .rise>div>section:nth-of-type(3),.rise>section:nth-of-type(3){animation-delay:.1s}
 .rise>div>section:nth-of-type(4),.rise>section:nth-of-type(4){animation-delay:.15s}
 .rise>div>section:nth-of-type(n+5),.rise>section:nth-of-type(n+5){animation-delay:.2s}
-.navbtn.on .navicon svg{animation:navpop .38s cubic-bezier(.3,1.6,.5,1)}
+.navbtn.on .navicon svg{animation:navpop .27s var(--ez)}
 @keyframes navpop{0%{transform:scale(.78)}100%{transform:scale(1)}}
-.growy{transform-box:fill-box;animation:growy .45s cubic-bezier(.2,.8,.2,1) both}
+.growy{transform-box:fill-box;animation:growy .28s var(--ez) both}
 @keyframes growy{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 /* entrance motion, shared by every chart and meter: --ee is an easy ease (slow out, slow in) for things that travel, --eo a soft landing for things that grow */
 /* --trace is how long a line takes to draw; everything that should land when the line arrives (.late) is timed off it, so one number sets the pace */
-:root{--ee:cubic-bezier(.33,0,.67,1);--eo:cubic-bezier(.22,1,.36,1);--trace:.66s}
+:root{--ee:cubic-bezier(.45,0,.16,1);--eo:cubic-bezier(.45,0,.16,1);--trace:.46s}
 .drawline{animation:drawline var(--trace) var(--ee) .08s backwards}
 .late{animation-delay:calc(var(--trace) + .04s)!important}
 @keyframes drawline{from{stroke-dasharray:1 1;stroke-dashoffset:1}to{stroke-dasharray:1 1;stroke-dashoffset:0}}
-.wipex{animation:wipex .62s var(--ee) .06s backwards}
+.wipex{animation:wipex .41s var(--ee) .06s backwards}
 @keyframes wipex{from{clip-path:inset(-6px 100% -6px -6px)}to{clip-path:inset(-6px -6px -6px -6px)}}
-.fadein{animation:fadein .4s var(--ease) backwards}
+.fadein{animation:fadein .25s var(--ease) backwards}
 :root{--win:52,211,153;--win-l:#6EE7B7}
 :root[data-theme="light"]{--win:16,138,86;--win-l:#0B6B43}
 .mcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
@@ -629,11 +629,11 @@ input[type=range]{accent-color:var(--brass)}
 .mcal .d.now{box-shadow:inset 0 0 0 1px rgba(var(--fg),.22)}
 .mbar{cursor:pointer;outline:none}.mbar:focus-visible rect:first-child{stroke:var(--brass);stroke-width:1.5}
 @keyframes fadein{from{opacity:0}}
-.popin{transform-box:fill-box;transform-origin:center;animation:popin .34s var(--eo) backwards}
+.popin{transform-box:fill-box;transform-origin:center;animation:popin .24s var(--eo) backwards}
 @keyframes popin{from{opacity:0;transform:scale(.3)}}
-.bary{transform-origin:50% 100%;animation:growy .48s var(--eo) backwards;animation-delay:calc(var(--i,0) * 22ms + 50ms)}
-.barlab{animation:fadein .3s var(--ease) backwards;animation-delay:calc(var(--i,0) * 22ms + 190ms)}
-.barx{transform-origin:0 50%;animation:growx .6s var(--eo) .08s backwards}
+.bary{transform-origin:50% 100%;animation:growy .3s var(--eo) backwards;animation-delay:calc(var(--i,0) * 22ms + 50ms)}
+.barlab{animation:fadein .21s var(--ease) backwards;animation-delay:calc(var(--i,0) * 22ms + 190ms)}
+.barx{transform-origin:0 50%;animation:growx .4s var(--eo) .08s backwards}
 @keyframes growx{from{transform:scaleX(0)}}
 .splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(90% 60% at 50% 40%,var(--velvet-l) 0%,var(--velvet) 40%,var(--bg) 80%,var(--bg-end) 100%)}
 .splash:not(.go)>*{opacity:0}
@@ -662,7 +662,7 @@ input[type=range]{accent-color:var(--brass)}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .shake{animation:shake .3s ease-out}
 @keyframes glow{0%{box-shadow:0 0 0 0 rgba(var(--acc),.7)}100%{box-shadow:0 0 0 14px rgba(var(--acc),0)}}
-.glow{animation:glow .6s ease-out}
+.glow{animation:glow .4s var(--ez)}
 .drain{position:absolute;left:0;top:0;height:4px;border-radius:0 2px 2px 0;width:100%;transform-origin:left;animation:drain var(--t) linear forwards;opacity:.9}
 @keyframes drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 .shimmer{position:relative;overflow:hidden}.shimmer::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:shimmer 2.4s ease-in-out infinite}
@@ -681,7 +681,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:rgba(var(--acc),.35)}
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--brass);border:1px solid rgba(0,0,0,.45)}
 @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.25)}100%{transform:scale(1)}}
-.pop{display:inline-block;animation:pop .35s ease}
+.pop{display:inline-block;animation:pop .24s var(--ez)}
 .burst{position:absolute;inset:0;pointer-events:none;overflow:visible}
 .burst i{position:absolute;left:50%;top:45%;width:5px;height:5px;border-radius:50%;background:var(--brass);opacity:0;animation:fly var(--t) ease-out forwards;animation-delay:var(--dl)}
 .burst i:nth-child(3n){background:var(--acc-hi)}.burst i:nth-child(4n){width:3px;height:3px}
@@ -708,7 +708,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 :root[data-theme="light"] .bottom-nav{box-shadow:none}
 .bottom-nav>div{position:relative;pointer-events:auto;max-width:27rem;padding:5px;border-radius:999px;background:linear-gradient(180deg,rgba(var(--fg),.1),rgba(var(--fg),.045)),rgba(var(--bgrgb),.5);-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9);box-shadow:0 14px 34px -14px rgba(0,0,0,.75),0 2px 8px -3px rgba(0,0,0,.4)}
 :root[data-theme="light"] .bottom-nav>div{background:rgba(255,255,255,.62);box-shadow:0 0 0 1px rgba(var(--fg),.06),0 14px 34px -16px rgba(var(--fg),.4),0 2px 8px -3px rgba(var(--fg),.16)}
-.navbtn{min-height:50px;border-radius:999px;padding:5px 0 3px;gap:2px;transition:color .18s var(--ease),transform .13s var(--ease),background .25s var(--ease)}
+.navbtn{min-height:50px;border-radius:999px;padding:5px 0 3px;gap:2px;transition:color .18s var(--ease),transform .13s var(--ease),background .2s var(--ease)}
 @media (max-width:350px){.bottom-nav{padding-left:6px;padding-right:6px}.bottom-nav>div{padding:4px}}
 .navbtn.on{background:linear-gradient(180deg,rgba(var(--fg),.16),rgba(var(--fg),.08));box-shadow:inset 0 1px 0 var(--gl-hi)}
 :root[data-theme="light"] .navbtn.on{background:rgba(var(--acc),.12);box-shadow:inset 0 1px 0 var(--gl-hi)}
@@ -735,7 +735,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .navglide{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px) / var(--n));transform:translateX(calc(var(--i) * 100%));border-radius:999px;pointer-events:none;background:linear-gradient(180deg,rgba(var(--acc),.22),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.16)}
 .navbtn{z-index:1}
 @media (max-width:350px){.navglide{top:4px;bottom:4px;left:4px;width:calc((100% - 8px) / var(--n))}}
-.gchip{background:linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.03));color:var(--ivory-d);border:1px solid rgba(var(--fg),.07);box-shadow:inset 0 1px 0 var(--gl-rim);transition:transform .35s var(--fluid),background .2s,color .2s,border-color .2s}
+.gchip{background:linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.03));color:var(--ivory-d);border:1px solid rgba(var(--fg),.07);box-shadow:inset 0 1px 0 var(--gl-rim);transition:transform .24s var(--fluid),background .2s,color .2s,border-color .2s}
 .gchip.on{background:linear-gradient(180deg,rgba(var(--acc),.24),rgba(var(--acc),.11));color:var(--ivory);border-color:rgba(var(--acc),.26);box-shadow:inset 0 1px 0 var(--gl-hi)}
 :root[data-theme="light"] .gchip.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));color:var(--ink);border-color:transparent}
 .chipseg:not(.rows):not(.brushes),.chipseg:not(.rows):not(.brushes) button{border-radius:999px}
@@ -744,8 +744,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* switches, sliders and wells. A switch's knob and a slider's handle are the same bead of clear glass: light, with a
    bright top and a soft shadow, a little wider than tall on the switch. Tracks and text boxes are cut into the surface:
    a shadow along the top edge inside, a hairline of light along the bottom. */
-.switch{width:50px;height:30px;border-radius:999px;background:rgba(var(--fg),.1);box-shadow:inset 0 1px 3px rgba(0,0,0,.4),inset 0 -1px 0 rgba(255,255,255,.05);transition:background .45s var(--ease)}
-.switch::after{top:3px;left:3px;width:28px;height:24px;border-radius:999px;background:linear-gradient(180deg,#fff,#e9efec);box-shadow:0 2px 7px rgba(0,0,0,.45),0 0 0 .5px rgba(0,0,0,.12),inset 0 1px 0 #fff;transition:transform .5s var(--fluid)}
+.switch{width:50px;height:30px;border-radius:999px;background:rgba(var(--fg),.1);box-shadow:inset 0 1px 3px rgba(0,0,0,.4),inset 0 -1px 0 rgba(255,255,255,.05);transition:background .28s var(--ease)}
+.switch::after{top:3px;left:3px;width:28px;height:24px;border-radius:999px;background:linear-gradient(180deg,#fff,#e9efec);box-shadow:0 2px 7px rgba(0,0,0,.45),0 0 0 .5px rgba(0,0,0,.12),inset 0 1px 0 #fff;transition:transform .31s var(--fluid)}
 .switch.on{background:linear-gradient(180deg,var(--brass),var(--acc-hi))}
 .switch.on::after{transform:translateX(16px);background:linear-gradient(180deg,#fff,#e9efec)}
 :root[data-theme="light"] .switch{background:rgba(var(--fg),.14);box-shadow:inset 0 1px 2px rgba(var(--fg),.18)}
@@ -756,12 +756,13 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 .in,.chipseg{box-shadow:inset 0 1px 2px rgba(0,0,0,.4),inset 0 -1px 0 rgba(255,255,255,.045)}
 :root[data-theme="light"] .in{box-shadow:inset 0 1px 2px rgba(var(--fg),.08)}
 .in:focus{box-shadow:inset 0 1px 2px rgba(0,0,0,.3),0 0 0 3px rgba(var(--acc),.18)}
-/* ---- fluid motion, kept quiet (Nick: smoother, subtler, more like liquid). Nothing bounces: one long ease-out
-   (--fluid) for everything. A selection flows to its new place — the edge facing the way it is going sets off first and
+/* ---- fluid motion, kept quiet (Nick: smoother, subtler, more like liquid — then: quicker, on more of an easy ease).
+   Nothing bounces, and there is ONE curve for the whole app: --ez, an easy ease (slow out of the gate, soft landing).
+   --ease, --fluid, --eo and --ee are all the same curve under their old names; durations are short (most .2–.3s). A selection flows to its new place — the edge facing the way it is going sets off first and
    the other edge catches up (Glider sets data-dir), so it stretches a little and settles. Pressed glass eases back.
    A sheet glides up and slows to a stop. On a computer a soft light drifts after the pointer across a card.
    All of it is off under "reduce motion". */
-:root{--fluid:cubic-bezier(.22,1,.36,1);--ez:cubic-bezier(.45,0,.16,1)}
+:root{--fluid:cubic-bezier(.45,0,.16,1);--ez:cubic-bezier(.45,0,.16,1)}
 .navglide{transition:transform .34s var(--ez)}
 .chipseg.slide .thumb{transition:transform .3s var(--ez)}
 /* where the browser has the separate translate property the slide uses it, which leaves scale free for the stretch */
@@ -776,7 +777,7 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
    kept on its own layer for good, so nothing is re-drawn when the slide starts or stops. */
 .navbtn.on .navicon svg{animation:none}
 .navbtn{will-change:transform}
-.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .5s var(--fluid),filter .2s,background .3s var(--ease),color .25s var(--ease),border-color .3s var(--ease)}
+.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .31s var(--fluid),filter .2s,background .21s var(--ease),color .2s var(--ease),border-color .21s var(--ease)}
 .btn:active,.iconbtn:active,.stepbtn:active,.rulespill:active,.chippress:active,.navbtn:active{transition-duration:.12s}
 .btn:active{transform:scale(.99)}.iconbtn:active,.stepbtn:active{transform:scale(.95)}.rulespill:active,.chippress:active,.navbtn:active{transform:scale(.975)}
 /* switching tab: the page that comes in is quick too, on the same easy ease, with a shorter stagger */
@@ -787,30 +788,30 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 .rise>div>section:nth-of-type(n+5),.rise>section:nth-of-type(n+5),.dcol>section:nth-of-type(n+4){animation-delay:.12s}
 .dcol.o2>section:nth-of-type(1){animation-delay:.05s}.dcol.o2>section:nth-of-type(2){animation-delay:.08s}.dcol.o2>section:nth-of-type(n+3){animation-delay:.11s}
 .dcol.o3>section:nth-of-type(1){animation-delay:.08s}.dcol.o3>section:nth-of-type(n+2){animation-delay:.11s}
-.chipseg.slide button{transition:color .26s var(--ease)}
-.topbar{transition:transform .5s var(--fluid),opacity .32s var(--ease)}
+.chipseg.slide button{transition:color .2s var(--ease)}
+.topbar{transition:transform .31s var(--fluid),opacity .22s var(--ease)}
 @media(hover:hover) and (min-width:1024px){.btn:not(.ghost):hover:active:not(:disabled){transform:scale(.99)}}
 /* every other movement in the app, on the same curve: nothing snaps and nothing uses a bare "ease" */
-.acts>button,.qa,.chipbtn,.opt,.xbtn{transition:transform .45s var(--fluid),filter .2s,background-color .3s var(--ease),background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease),opacity .3s var(--ease)}
+.acts>button,.qa,.chipbtn,.opt,.xbtn{transition:transform .28s var(--fluid),filter .2s,background-color .21s var(--ease),background .21s var(--ease),color .21s var(--ease),border-color .21s var(--ease),opacity .21s var(--ease)}
 .acts>button:active,.qa:active,.chipbtn:active,.opt:active{transition-duration:.1s}
-.tabs button{transition:color .35s var(--ease)}.tabs button.on::after{animation:tabin .5s var(--fluid)}
+.tabs button{transition:color .24s var(--ease)}.tabs button.on::after{animation:tabin .31s var(--fluid)}
 .rise{animation-duration:.3s;animation-timing-function:var(--ez)}
-.syncpill{animation:rise .5s var(--fluid) both}
-.cmdk-wrap{animation:scrimin .28s var(--ease)}.cmdk{animation:cmdkin .42s var(--fluid) both}
-.sheetwrap{animation:scrimin .32s var(--ease)}
-@media (min-width:1024px){.sheetwrap .sheet{animation:sheetpop .42s var(--fluid)}}
-.pillrail{transition:transform .5s var(--fluid)}
-.pillrail .rulespill{transition:background .3s var(--ease),border-color .3s var(--ease),transform .5s var(--fluid)}
-.sn-item,.sn-search,.sn-rules,.keycap,.skillrow,.chipseg button{transition:background .3s var(--ease),border-color .3s var(--ease),color .3s var(--ease)}
-.in{transition:border-color .3s var(--ease),box-shadow .3s var(--ease),background .3s var(--ease)}
-.card{transition:border-color .4s var(--ease)}
-.bar{transition:height .5s var(--fluid),width .5s var(--fluid)}.shoe-t i{transition:width .5s var(--fluid)}
-.shoe.go{animation:shoe .55s var(--fluid)}.pop{animation:pop .42s var(--fluid)}.glow{animation:glow .7s var(--fluid)}
+.syncpill{animation:rise .31s var(--fluid) both}
+.cmdk-wrap{animation:scrimin .22s var(--ease)}.cmdk{animation:cmdkin .26s var(--fluid) both}
+.sheetwrap{animation:scrimin .22s var(--ease)}
+@media (min-width:1024px){.sheetwrap .sheet{animation:sheetpop .26s var(--fluid)}}
+.pillrail{transition:transform .31s var(--fluid)}
+.pillrail .rulespill{transition:background .21s var(--ease),border-color .21s var(--ease),transform .31s var(--fluid)}
+.sn-item,.sn-search,.sn-rules,.keycap,.skillrow,.chipseg button{transition:background .21s var(--ease),border-color .21s var(--ease),color .21s var(--ease)}
+.in{transition:border-color .21s var(--ease),box-shadow .21s var(--ease),background .21s var(--ease)}
+.card{transition:border-color .25s var(--ease)}
+.bar{transition:height .31s var(--fluid),width .31s var(--fluid)}.shoe-t i{transition:width .31s var(--fluid)}
+.shoe.go{animation:shoe .34s var(--fluid)}.pop{animation:pop .26s var(--fluid)}.glow{animation:glow .46s var(--fluid)}
 .leave .dealt{animation:leave .2s var(--ease) forwards !important}
-.sheet{animation-name:sheetflu;animation-duration:.48s;animation-timing-function:var(--fluid)}
+.sheet{animation-name:sheetflu;animation-duration:.3s;animation-timing-function:var(--fluid)}
 @keyframes sheetflu{from{transform:translateY(26px);opacity:0}to{transform:none;opacity:1}}
 @media (hover:hover) and (min-width:1024px){
-.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .7s var(--ease);background:radial-gradient(340px circle at var(--mx,50%) var(--my,-30%),rgba(255,255,255,.038),transparent 72%)}
+.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .46s var(--ease);background:radial-gradient(340px circle at var(--mx,50%) var(--my,-30%),rgba(255,255,255,.038),transparent 72%)}
 :root[data-theme="light"] .card::after{background:radial-gradient(340px circle at var(--mx,50%) var(--my,-30%),rgba(var(--acc),.045),transparent 72%)}
 .card:hover::after{opacity:1}
 }
@@ -822,12 +823,12 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
    inner box does), so the rim and the blur stay put. Older browsers without color-mix keep a solid panel. */
 :root{--scrim:rgba(2,3,6,.4)}
 .cmdk{position:relative}
-.rulesscrim{animation:scrimin .3s var(--ease)}
+.rulesscrim{animation:scrimin .21s var(--ease)}
 .sheet,.cmdk,.card.rulesdlg{position:relative;border-color:transparent}
-.card.rulesdlg{border-radius:30px;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));box-shadow:0 30px 80px -20px rgba(0,0,0,.8);animation:sheetflu .5s var(--fluid) both}
+.card.rulesdlg{border-radius:30px;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));box-shadow:0 30px 80px -20px rgba(0,0,0,.8);animation:sheetflu .31s var(--fluid) both}
 :root[data-theme="light"] .card.rulesdlg{box-shadow:0 30px 80px -24px rgba(var(--fg),.45)}
 .sheet::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--gl-edge);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;pointer-events:none;z-index:3}
-.xbtn{color:var(--ivory-d);background:linear-gradient(180deg,rgba(var(--fg),.13),rgba(var(--fg),.05));box-shadow:inset 0 1px 0 var(--gl-hi);transition:transform .5s var(--fluid),background .3s var(--ease)}
+.xbtn{color:var(--ivory-d);background:linear-gradient(180deg,rgba(var(--fg),.13),rgba(var(--fg),.05));box-shadow:inset 0 1px 0 var(--gl-hi);transition:transform .31s var(--fluid),background .21s var(--ease)}
 .xbtn:active{transform:scale(.92);transition-duration:.12s}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) and (color:color-mix(in srgb,red 50%,transparent)){
 .sheet,.cmdk,.card.rulesdlg{background:radial-gradient(120% 70% at 0% 0%,var(--gl-sheen),transparent 60%),linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.02) 55%),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 58%,transparent),color-mix(in srgb,var(--sheet2) 72%,transparent) 55%);-webkit-backdrop-filter:blur(30px) saturate(1.9) brightness(1.12);backdrop-filter:blur(30px) saturate(1.9) brightness(1.12)}
@@ -936,10 +937,10 @@ input[type=range]:hover::-webkit-slider-thumb{filter:brightness(1.12)}
 .topbar{-webkit-mask-image:none;mask-image:none;padding-bottom:10px;background:linear-gradient(180deg,rgba(var(--bgrgb),.9),rgba(var(--bgrgb),.74))}
 .topbar::after{content:"";position:absolute;left:0;right:0;top:100%;height:20px;pointer-events:none;background:linear-gradient(180deg,rgba(var(--bgrgb),.74),rgba(var(--bgrgb),.3) 45%,rgba(var(--bgrgb),0))}
 /* pressed: the knob and the handle become a clear lens */
-.switch::after{transition:transform .5s var(--fluid),background .3s var(--ease),box-shadow .3s var(--ease)}
+.switch::after{transition:transform .31s var(--fluid),background .21s var(--ease),box-shadow .21s var(--ease)}
 .switch:active::after{transform:scale(1.12);background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.6));box-shadow:0 3px 10px rgba(0,0,0,.4),inset 0 0 0 var(--hair) rgba(255,255,255,.95),inset 0 0 6px rgba(255,255,255,.5)}
 .switch.on:active::after{transform:translateX(16px) scale(1.12)}
-input[type=range]::-webkit-slider-thumb{transition:transform .35s var(--fluid),background .3s var(--ease)}
+input[type=range]::-webkit-slider-thumb{transition:transform .24s var(--fluid),background .21s var(--ease)}
 input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14);background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,255,255,.62))}
 /* ---- One system for shape, surface and depth (Nick: "a full style upgrade ... sleek and clean and very silky smooth").
    Shape: three corner sizes and the capsule, nothing in between. --r-s 10px for the smallest pieces (key caps, the x1
@@ -1255,14 +1256,15 @@ const SUIT_PATHS = {
   "♣": <><circle cx="50" cy="27" r="20.5" /><circle cx="26.5" cy="58" r="20.5" /><circle cx="73.5" cy="58" r="20.5" /><circle cx="50" cy="52" r="11" /><path d="M46 56c0 18-5 31-13 41h34c-8-10-13-23-13-41z" /></>,
 };
 function Suit({ s }) { return <svg className="suit" viewBox="0 0 100 100" aria-hidden="true">{SUIT_PATHS[s]}</svg>; }
-function PlayingCard({ rank, suit, face, delay = 0, from = "shoe", style, big, small }) {
+const DEAL_FLY = 0.34;   // seconds a dealt card takes to arrive unless told otherwise (the .dealt rule in the css says the same)
+function PlayingCard({ rank, suit, face, delay = 0, from = "shoe", style, big, small, fly }) {
   const red = suit === "♥" || suit === "♦";
   const label = face || (rank === 11 ? "A" : rank === 10 ? ["10", "J", "Q", "K"][Math.abs((rank * 7 + suit.charCodeAt(0)) % 4)] : String(rank));
   const isFace = label === "J" || label === "Q" || label === "K";
   const pipRank = label === "10" ? 10 : rank;
-  useEffect(() => { sfx("card", delay); }, []); // eslint-disable-line
+  useEffect(() => { sfx("card", delay, { fly: fly || DEAL_FLY }); }, []); // eslint-disable-line
   return (
-    <div className={"pc dealt " + (red ? "red " : "") + (big ? "big" : small ? "sm" : "")} style={{ "--dx": from === "shoe" ? "140px" : "0px", "--dy": "-150px", "--r0": "14deg", "--r1": style?.rot || "0deg", "--d": `${delay}ms`, ...style }}>
+    <div className={"pc dealt " + (red ? "red " : "") + (big ? "big" : small ? "sm" : "")} style={{ "--dx": from === "shoe" ? "140px" : "0px", "--dy": "-150px", "--r0": "14deg", "--r1": style?.rot || "0deg", "--d": `${delay}ms`, ...(fly ? { animationDuration: `${fly}s` } : null), ...style }}>
       <div className="cn tl"><b className={label === "10" ? "ten" : ""}>{label}</b></div>
       <div className="cn br"><b className={label === "10" ? "ten" : ""}>{label}</b></div>
       {rank === 11 ? <div className="face ace"><Suit s={suit} /></div>
@@ -1313,7 +1315,7 @@ function FeltPrint() {
 }
 
 // <Flick d={ms} /> draws nothing: it plays the card sound for a face-down card, which isn't a PlayingCard
-function Flick({ d = 0 }) { useEffect(() => { sfx("card", d); }, []); return null; } // eslint-disable-line
+function Flick({ d = 0, fly }) { useEffect(() => { sfx("card", d, { fly: fly || DEAL_FLY }); }, []); return null; } // eslint-disable-line
 function useSoundPrefs() {
   const [v, setV] = useState(soundPrefs());
   useEffect(() => { const h = () => setV(soundPrefs()); window.addEventListener("bj-sound", h); return () => window.removeEventListener("bj-sound", h); }, []);
@@ -2423,7 +2425,7 @@ function useTimer(active) {
 const noMotion = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 // a number that glides to its new value with an easy ease (not rounded — for chart positions and decimals).
 // `from` is where it starts when the page opens; leave it out to start at the value itself.
-function useTween(target, dur = 700, from) {
+function useTween(target, dur = 460, from) {
   const start = from === undefined || !isFinite(target) || noMotion() ? target : from;
   const [v, setV] = useState(start);
   const cur = useRef(start);
@@ -2438,7 +2440,7 @@ function useTween(target, dur = 700, from) {
   return v;
 }
 // <Glide v={n} f={format} /> shows a number that glides to its new value when it changes; with `enter` it also counts up from zero when the page opens
-function Glide({ v, f, dur = 700, enter, round }) { const t = useTween(v, dur, enter ? 0 : undefined); return f(round ? Math.round(t) : t); }
+function Glide({ v, f, dur = 460, enter, round }) { const t = useTween(v, dur, enter ? 0 : undefined); return f(round ? Math.round(t) : t); }
 function useCountUp(target, dur = 550, enter) {
   const first = enter && !noMotion() ? 0 : target;
   const [v, setV] = useState(first);
@@ -2597,7 +2599,9 @@ function KeyBinder({ keys, onChange }) {
     </div>
   );
 }
-const DEAL_SPEEDS = [[0.5, "Snappy"], [0.75, "Quick"], [1, "Normal"], [1.3, "Easy"], [1.7, "Relaxed"]]; // dealing speed slider stops
+// dealing speed slider stops: the number multiplies every deal timing, so 0.25 is four times Normal's pace and 3 a third of it
+const DEAL_SPEEDS = [[0.25, "Blitz"], [0.35, "Fast"], [0.5, "Snappy"], [0.75, "Quick"], [1, "Normal"], [1.3, "Easy"], [1.7, "Relaxed"], [2.3, "Slow"], [3, "Very slow"]];
+const dealFly = (speed) => Math.max(0.12, 0.35 * speed);   // how long one card is in the air at that speed
 const PLAYALL_KEY = "bj-playall-v1";
 const readAll = (raw) => { let d = {}; try { d = JSON.parse(raw) || {}; } catch (_) {} const pts = Array.isArray(d.pts) ? d.pts.filter(isObj) : []; return { ...PLAYALL_DEF, ...d, pts }; };
 const PLAYALL_DEF = { hands: 0, clean: 0, net: 0, checks: 0, checksOk: 0, pts: [] };
@@ -2741,7 +2745,7 @@ function Chip({ v, onClick, disabled }) {
     </button>
   );
 }
-function HandView({ cards, label, bet, active, total, hidden, small, result, stagger = 0, base = 0, dur = 0.35 }) {
+function HandView({ cards, label, bet, active, total, hidden, small, result, stagger = 0, base = 0, dur = DEAL_FLY }) {
   return (
     <div className="rounded-xl px-2 pt-2 pb-1" style={{ background: active ? "rgba(var(--acc),.1)" : "transparent", boxShadow: active ? "0 0 0 1px rgba(var(--acc),.5)" : "none", minWidth: 120, maxWidth: "100%" }}>
       <div className="flex items-center justify-between mb-1">
@@ -2750,8 +2754,8 @@ function HandView({ cards, label, bet, active, total, hidden, small, result, sta
       </div>
       <div className="hand" style={{ minHeight: "calc(88px * var(--cz, 1))" }}>
         {cards.map((c, i) => { const d = base + i * stagger; return <div className="slot" key={hidden && i === 1 ? "hole" : c.id}>{hidden && i === 1
-          ? <><div className="pcback pcz dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": `${d}ms`, animationDuration: `${dur}s` }} /><Flick d={d} /></>
-          : <PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={d} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg", animationDuration: `${dur}s` }} />}</div>; })}
+          ? <><div className="pcback pcz dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": `${d}ms`, animationDuration: `${dur}s` }} /><Flick d={d} fly={dur} /></>
+          : <PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={d} fly={dur} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg" }} />}</div>; })}
       </div>
       {bet !== undefined && <div className="mono text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>bet ${bet}</div>}
     </div>
@@ -2793,7 +2797,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     if (prefsLoaded) { try { window.storage.set(PLAY_KEY, JSON.stringify(_playPrefs), false); } catch (_) {} }
   }, [showTotals, showCount, checkEvery, autoNext, speed, keys, prefsLoaded]);
   const ms = (x) => Math.round(x * speed);
-  const speedIdx = Math.max(0, DEAL_SPEEDS.findIndex(([v]) => Math.abs(v - speed) < 0.01));
+  const speedIdx = DEAL_SPEEDS.reduce((b, [v], i) => (Math.abs(v - speed) < Math.abs(DEAL_SPEEDS[b][0] - speed) ? i : b), 0);   // the nearest stop, whatever was saved
   const [shuffled, setShuffled] = useState(false);
   const sh = useRef(null);
   const hm = useRef(0); // mistakes in the current hand
@@ -2856,7 +2860,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     if (v === 0) { // sit out: watch one hand go by so you keep counting
       const other = [draw(), draw()]; const d = [draw(), draw(false)];
       setPhantom(other); setDealer(d); setHoleHidden(true); setHands([]);
-      setTimeout(() => { seeCard(d[1]); setHoleHidden(false); const full = dealerPlay(d, () => draw(), rules.h17); setDealer(full); setPhase("result"); setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (ok ? 1 : 0) })); setPts((p) => pushPt(p, 0)); bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (ok ? 1 : 0), pts: pushPt(a.pts, 0) })); logResult("play", ok, { kind: "sitout" }); }, 900);
+      setTimeout(() => { seeCard(d[1]); setHoleHidden(false); const full = dealerPlay(d, () => draw(), rules.h17); setDealer(full); setPhase("result"); setStats((s) => ({ ...s, hands: s.hands + 1, clean: s.clean + (ok ? 1 : 0) })); setPts((p) => pushPt(p, 0)); bumpAll((a) => ({ hands: a.hands + 1, clean: a.clean + (ok ? 1 : 0), pts: pushPt(a.pts, 0) })); logResult("play", ok, { kind: "sitout" }); }, ms(900));
       setPhase("dealing"); return;
     }
     const p = [draw(), draw()]; const d = [draw(), draw(false)];
@@ -2992,7 +2996,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   // hands off: when auto-continue is on the next hand deals itself, with longer to read a flagged mistake
   useEffect(() => {
     if (!autoNext || phase !== "result" || bank <= 0) return;
-    const t = setTimeout(() => nextHand(), ms(msg && !msg.ok ? 3200 : 1500));
+    const t = setTimeout(() => nextHand(), msg && !msg.ok ? Math.min(4200, Math.max(1800, ms(3200))) : Math.min(2800, Math.max(450, ms(1500))));
     return () => clearTimeout(t);
   }, [autoNext, phase, speed, bank]); // eslint-disable-line
 
@@ -3035,7 +3039,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   })();
 
   // the opening deal alternates player, dealer, player, hole — every later card lands as soon as it's drawn
-  const dealAnim = (seat) => (phase === "dealing" ? { stagger: ms(150), base: ms(seat * 75), dur: Math.max(0.22, 0.35 * speed) } : { dur: Math.max(0.22, 0.35 * speed) });
+  const dealAnim = (seat) => (phase === "dealing" ? { stagger: ms(150), base: ms(seat * 75), dur: dealFly(speed) } : { dur: dealFly(speed) });
   return (
     <div>
 
@@ -3183,7 +3187,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <Seg small value={checkEvery} options={[[3, "3"], [5, "5"], [10, "10"], [20, "20"], [0, "Off"]]} onChange={setCheckEvery} />
         </div>
         <div className="mt-4">
-          <div className="flex items-baseline justify-between"><span className="text-sm" style={{ color: "var(--ivory)" }}>Dealing speed</span><span className="text-[11px] mono" style={{ color: "var(--brass)" }}>{DEAL_SPEEDS[speedIdx][1]}</span></div>
+          <div className="flex items-baseline justify-between"><span className="text-sm" style={{ color: "var(--ivory)" }}>Dealing speed</span><span className="text-[11px] mono" style={{ color: "var(--brass)" }}>{DEAL_SPEEDS[speedIdx][1]}{speed !== 1 && <span style={{ color: "var(--muted)" }}> · {speed < 1 ? `${+(1 / speed).toFixed(1)}× faster` : `${+speed.toFixed(1)}× slower`}</span>}</span></div>
           <input type="range" min={0} max={DEAL_SPEEDS.length - 1} step={1} value={speedIdx} onChange={(e) => setSpeed(DEAL_SPEEDS[Number(e.target.value)][0])} className="w-full mt-1" aria-label="Dealing speed" />
           <div className="flex justify-between -mt-1" style={{ fontSize: 10, color: "var(--muted)" }}><span>faster</span><span>slower</span></div>
         </div>
@@ -3562,7 +3566,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
               const spark = cum.map((v, i) => `${i ? "L" : "M"}${(i / (cum.length - 1)) * 72},${(18 - ((v - lo) / rng) * 16).toFixed(1)}`).join("");
               return (
               <div className="homesess flex items-end justify-between gap-3">
-                <div className="min-w-0"><div className="disp mono text-3xl" style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}$<Glide v={Math.abs(netAnim)} enter round dur={600} f={(x) => x.toLocaleString()} /></div>
+                <div className="min-w-0"><div className="disp mono text-3xl" style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}$<Glide v={Math.abs(netAnim)} enter round dur={400} f={(x) => x.toLocaleString()} /></div>
                 <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{fmtH(totH)} played · expected {exp >= 0 ? "+" : "−"}${Math.abs(exp).toLocaleString()}</div></div>
                 {cum.length > 2 && <svg className="notdesk" width="72" height="20" viewBox="0 0 72 20" aria-hidden="true"><path className="drawline" pathLength="1" d={spark} fill="none" stroke={totR >= 0 ? "var(--brass)" : "var(--rose)"} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" opacity=".8" /></svg>}
                 {cum.length > 2 && (() => { const X = (i) => (i / (cum.length - 1)) * 300, Y = (v) => 66 - ((v - lo) / rng) * 60; const line = cum.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(""); const col = totR >= 0 ? "var(--brass)" : "var(--rose)"; return (
@@ -3692,7 +3696,7 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
         <line x1={P.l} x2={W - P.r} y1={y(0)} y2={y(0)} stroke="rgba(var(--fg),.14)" strokeWidth="1" />
         {/* keyed by what is drawn, so a new filter or a new session plays the trace again */}
         <g key={`${pts.length}|${last.act}|${last.exp}`}>
-        <path className="fadein" d={band} fill="rgba(var(--acc),.07)" style={{ animationDuration: ".6s" }} />
+        <path className="fadein" d={band} fill="rgba(var(--acc),.07)" style={{ animationDuration: ".4s" }} />
         <path className="fadein" d={line("exp")} fill="none" stroke="rgba(var(--fg),.4)" strokeWidth="1.5" strokeDasharray="3 4" style={{ animationDelay: ".1s" }} />
         <path className="drawline" pathLength="1" d={line("act")} fill="none" stroke={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
         <circle className="popin late" cx={x(pts.length - 1)} cy={y(last.act)} r="3.5" fill={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} />
@@ -3826,7 +3830,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
             {band >= 2 && <path className="fadein" d={bandPath(2)} fill="rgba(var(--fg),.035)" />}
             {band >= 1 && <path className="fadein" d={bandPath(1)} fill="rgba(var(--fg),.06)" />}
             {showExp && <path className="fadein" d={lineOf((p) => p.exp)} fill="none" stroke="rgba(var(--fg),.38)" strokeWidth="1.25" strokeDasharray="3 5" />}
-            <path d={lineOf((p) => p.act) + `L${xv(last).toFixed(1)},${y(0).toFixed(1)}L${xv(pts[0]).toFixed(1)},${y(0).toFixed(1)}Z`} fill="url(#pnlArea)" className="fadein" style={{ animationDuration: ".7s", animationDelay: ".12s" }} />
+            <path d={lineOf((p) => p.act) + `L${xv(last).toFixed(1)},${y(0).toFixed(1)}L${xv(pts[0]).toFixed(1)},${y(0).toFixed(1)}Z`} fill="url(#pnlArea)" className="fadein" style={{ animationDuration: ".46s", animationDelay: ".12s" }} />
             <path className="drawline" pathLength="1" d={lineOf((p) => p.act)} fill="none" stroke={col} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
             {picked && (<>
               <line x1={xv(sp)} x2={xv(sp)} y1={P.t} y2={H - P.b} stroke="rgba(var(--fg),.3)" strokeWidth="1" />
@@ -4248,7 +4252,7 @@ function LuckGauge({ z, pct }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" role="img" aria-label={`Luck percentile ${Math.round(pct * 100)}`}>
       <path d={fillL} fill="rgba(var(--acc),.16)" />
-      <path className="drawline" pathLength="1" d={curve} fill="none" stroke="rgba(var(--fg),.35)" strokeWidth="1.5" style={{ animationDuration: ".55s", animationDelay: "0s" }} />
+      <path className="drawline" pathLength="1" d={curve} fill="none" stroke="rgba(var(--fg),.35)" strokeWidth="1.5" style={{ animationDuration: ".4s", animationDelay: "0s" }} />
       <line x1={xOf(-3.5)} x2={xOf(3.5)} y1={base} y2={base} stroke="rgba(var(--fg),.15)" />
       {[-2, -1, 0, 1, 2].map((v) => <text key={v} x={xOf(v)} y={H - 2} textAnchor="middle" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{v === 0 ? "expected" : `${v > 0 ? "+" : "−"}${Math.abs(v)} SD`}</text>)}
       <line x1={xOf(zz)} x2={xOf(zz)} y1={yOf(zz) - 10} y2={base} stroke={col} strokeWidth="2" />
@@ -4436,7 +4440,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow">{filtered ? [period === "30" ? "Last 30 days" : period === "90" ? "Last 90 days" : period === "ytd" ? "This year" : "All time", casino !== "all" ? byCasino[0]?.name || "" : ""].filter(Boolean).join(" · ") : "All-time result"}</div>
-            <div className="disp mono mt-1" style={{ fontSize: 40, lineHeight: 1.05, color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)", letterSpacing: "-.02em" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={600} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
+            <div className="disp mono mt-1" style={{ fontSize: 40, lineHeight: 1.05, color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)", letterSpacing: "-.02em" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={400} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
             <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{list.length ? `${st.n} session${st.n === 1 ? "" : "s"} · ${fmtH(st.H)} · expected ${sgnMoney(st.E)}` : "No sessions yet"}</div>
           </div>
           <button onClick={() => setSheet("new")} className="btn shrink-0" style={{ width: "auto", padding: "10px 14px", fontSize: 14 }} aria-label="Log a session">+ Log</button>
@@ -5628,16 +5632,16 @@ function BetSpreadCalculator() {
         {tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
-        <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .6s" }}>
+        <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .4s var(--ez)" }}>
           <div className="grid grid-cols-2 gap-5">
             <div>
               <div className="eyebrow">Profit / hour</div>
-              <div className="disp text-4xl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={380} f={(x) => money(x)} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
+              <div className="disp text-4xl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={300} f={(x) => money(x)} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
               <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>expected, ± {money(r.sdHour)} (1 SD)</div>
             </div>
             <div>
               <div className="eyebrow">Risk of ruin</div>
-              <div className="disp text-4xl mt-1 mono" style={{ color: rorTone }}><Glide v={r.ror} enter dur={380} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
+              <div className="disp text-4xl mt-1 mono" style={{ color: rorTone }}><Glide v={r.ror} enter dur={300} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
               <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>chance of losing {money(+bankroll || 0)}</div>
             </div>
           </div>
@@ -5797,7 +5801,7 @@ function BetSpreadCalculator() {
                         {frontier.map((p, i) => { const sel = Math.round(p.cap * 100) === rorPct; return (
                           <button key={p.cap} onClick={() => setRorPct(Math.round(p.cap * 100))} className="relative flex-1 flex flex-col items-center justify-end h-full" aria-label={`${Math.round(p.cap * 100)}% risk`}>
                             {sel && !p.infeasible && <span className="absolute mono whitespace-nowrap" style={{ fontSize: 9, top: -13, color: "var(--brass)" }}>${p.ev.toFixed(0)}</span>}
-                            <div className="w-full rounded-t bary" style={{ "--i": i, height: p.infeasible ? 3 : `${Math.max(8, (p.ev / mx) * 100)}%`, background: p.infeasible ? "rgba(var(--neg),.35)" : sel ? "var(--brass)" : p.ev > r.evHour ? "rgba(var(--acc),.45)" : "rgba(var(--acc),.22)", transition: "height .35s var(--eo), background .2s" }} />
+                            <div className="w-full rounded-t bary" style={{ "--i": i, height: p.infeasible ? 3 : `${Math.max(8, (p.ev / mx) * 100)}%`, background: p.infeasible ? "rgba(var(--neg),.35)" : sel ? "var(--brass)" : p.ev > r.evHour ? "rgba(var(--acc),.45)" : "rgba(var(--acc),.22)", transition: "height .25s var(--ez), background .2s" }} />
                           </button>); })}
                       </div>
                     </div>

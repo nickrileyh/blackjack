@@ -91,7 +91,7 @@ const casCss = `
 .cpin.halo{fill:rgba(var(--neg),.2);stroke:rgba(var(--neg),.55);stroke-width:1}
 .cpin.pulse{fill:none;stroke:rgba(var(--neg),.6);stroke-width:1.2;animation:cpulse 2.6s ease-out infinite}
 .cpin.sel{fill:none;stroke:var(--ivory);stroke-width:1.6}
-.cpinsin{animation:cpinsin .45s cubic-bezier(.33,0,.67,1) .08s backwards}
+.cpinsin{animation:cpinsin .3s var(--ez) .06s backwards}
 @keyframes cpinsin{from{opacity:0}}
 @keyframes cpulse{0%{transform:scale(calc(var(--ik) * .55));opacity:.9}70%,100%{transform:scale(calc(var(--ik) * 1.5));opacity:0}}
 .cm-lab{font:600 11px Inter,system-ui,sans-serif;fill:var(--ivory);paint-order:stroke;stroke:var(--bg);stroke-width:3px;stroke-linejoin:round;pointer-events:none}

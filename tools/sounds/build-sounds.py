@@ -24,6 +24,10 @@ CLIPS = {
     # all seven shuffling strokes of the three-second recording, quickened to fit the "Shuffling" pause
     "shuffle": [("card-shuffle", 0.06, 2.98, 1.55)],
 }
+# the same five card recordings, quicker again at the same pitch, for the fast dealing speeds in Live play:
+# a card that flies in a tenth of a second needs a sound that fits inside it (sound.js picks the set by flight time)
+QUICK = 1.6
+CLIPS["cardq"] = [(n, a, b, round(t * QUICK, 2)) for n, a, b, t in CLIPS["card"]]
 STRETCHES = ["atempo={t}", "rubberband=tempo={t}:transients=crisp:detector=percussive", "rubberband=tempo={t}:transients=crisp:detector=percussive:window=short:phase=independent"]
 
 def read(path):

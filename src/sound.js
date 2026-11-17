@@ -18,12 +18,12 @@ try {
 const GROUP = { card: "table", chip: "table", shuffle: "table", right: "feedback", wrong: "feedback", win: "feedback", blackjack: "feedback", lose: "feedback", pass: "feedback" };
 const level = () => 1.4 * prefs.vol * prefs.vol;   // 0.8 on the slider is the level the sounds were balanced at
 // how loud each recording plays next to the others: cards are the most frequent, so they sit lowest
-const TRIM = { card: 0.4, chip: 0.44, shuffle: 0.4 };
+const TRIM = { card: 0.4, cardq: 0.4, chip: 0.44, shuffle: 0.4 };
 
 let ctx = null, out = null, room = null, noise = null, loading = null;
 const clips = {};           // group -> [{ buf, from }] once decoded
 const lastClip = {};        // so the same recording isn't played twice in a row
-let lastCard = 0;           // when the last card is scheduled, so cards that land together are heard one after another
+let lastCard = 0;           // when the last card lands, so cards that land together are heard one after another
 const lastAt = {};          // when each other sound last played, to drop accidental doubles
 const rnd = (a, b) => a + Math.random() * (b - a);
 
@@ -58,7 +58,11 @@ function load() {
       const done = (buf) => {
         const d = buf.getChannelData(0); let pk = 0; for (let i = 0; i < d.length; i++) { const v = Math.abs(d[i]); if (v > pk) pk = v; }
         let i0 = 0; while (i0 < d.length && Math.abs(d[i0]) < pk * 0.002) i0++;
-        res({ buf, from: Math.max(0, i0 / buf.sampleRate - 0.003) });
+        const from = Math.max(0, i0 / buf.sampleRate - 0.003);
+        // where the recording's loudest moment is (a card's snap as it lands), over 5 ms windows, counted from where it starts playing
+        const w = Math.max(1, Math.round(buf.sampleRate * 0.005)); let best = 0, at = 0;
+        for (let i = Math.round(from * buf.sampleRate); i + w <= d.length; i += w) { let e = 0; for (let j = i; j < i + w; j++) e += d[j] * d[j]; if (e > best) { best = e; at = i; } }
+        res({ buf, from, peak: Math.max(0, at / buf.sampleRate - from) });
       };
       const p = ctx.decodeAudioData(bytes.buffer, done, () => res(null));
       if (p && p.catch) p.catch(() => res(null));
@@ -73,13 +77,31 @@ if (typeof window !== "undefined") {
 }
 
 // ---- the recordings ----
-function clip(group, t, { gain = 1, rate = [0.985, 1.015] } = {}) {
-  const set = clips[group]; if (!set || !set.length) return;      // still decoding (the first instant after the first tap): stay silent
+function pick(group) {
+  const set = clips[group]; if (!set || !set.length) return null;  // still decoding (the first instant after the first tap): stay silent
   let i = Math.floor(Math.random() * set.length); if (set.length > 1 && i === lastClip[group]) i = (i + 1) % set.length;
-  lastClip[group] = i;
-  const s = ctx.createBufferSource(); s.buffer = set[i].buf; s.playbackRate.value = rnd(rate[0], rate[1]);
+  lastClip[group] = i; return set[i];
+}
+function play(c, group, t, { gain = 1, rate = [0.985, 1.015] } = {}) {
+  const s = ctx.createBufferSource(); s.buffer = c.buf; s.playbackRate.value = rnd(rate[0], rate[1]);
   const g = ctx.createGain(); g.gain.value = TRIM[group] * gain;
-  s.connect(g); g.connect(out); s.start(t, set[i].from);
+  s.connect(g); g.connect(out); s.start(t, c.from);
+}
+function clip(group, t, opts) { const c = pick(group); if (c) play(c, group, t, opts); }
+
+// A dealt card. `fly` is how long the card is in the air (seconds): the recording is placed so its snap falls where the
+// card lands, not where it sets off — so the sound keeps time with the cards at any dealing speed. A fast deal (under
+// a fifth of a second in the air) uses the quicker set of the same recordings, and lets cards follow each other closer.
+const LAND = 0.68;          // the share of its flight after which a card on the app's easy ease has all but arrived
+function card(t, now, fly) {
+  const group = fly && fly < 0.2 && clips.cardq && clips.cardq.length ? "cardq" : "card";
+  const c = pick(group); if (!c) return;
+  const gap = fly ? Math.max(0.035, Math.min(0.09, fly * 0.2)) : 0.09;   // at Normal pace the cards of a deal are 75 ms apart: let them be
+  let hit = t + (fly ? fly * LAND : c.peak);           // when the snap should be heard
+  if (hit < lastCard + gap) hit = lastCard + gap;      // cards that land together are heard one after another
+  if (hit - now > 4) return;                           // …but never a backlog
+  lastCard = hit;
+  play(c, group, Math.max(now, hit - c.peak), { gain: rnd(0.85, 1) });
 }
 
 // ---- the notes (optional) ----
@@ -100,7 +122,6 @@ function note(t, f, gain = 0.2, len = 0.34) {
 }
 
 const SOUNDS = {
-  card(t) { clip("card", t, { gain: rnd(0.85, 1) }); },
   chip(t) { clip("chip", t); },
   shuffle(t) { clip("shuffle", t, { rate: [1, 1] }); },
   right(t) { note(t, 1318.5, 0.19, 0.3); },
@@ -111,19 +132,17 @@ const SOUNDS = {
   pass(t) { [523.3, 784, 1046.5, 1318.5, 1568].forEach((f, i) => note(t + i * 0.075, f, 0.16, i === 4 ? 0.7 : 0.3)); },
 };
 
-export function sfx(name, delayMs = 0, force) {
-  if (!SOUNDS[name] || !prefs.on || (!force && !prefs[GROUP[name]])) return;
+// sfx(name, delayMs, true) plays even when that sound's group is switched off (the sample after changing a setting);
+// sfx("card", delayMs, { fly }) times a card's sound to its flight.
+export function sfx(name, delayMs = 0, opt) {
+  const force = opt === true, o = opt && typeof opt === "object" ? opt : {};
+  if ((name !== "card" && !SOUNDS[name]) || !prefs.on || (!force && !prefs[GROUP[name]])) return;
   const c = audio(); if (!c || c.state !== "running") return;   // not woken by a tap yet, or the page is asleep: stay silent rather than play late
   if (typeof document !== "undefined" && document.hidden) return;
   let t = c.currentTime + Math.max(0, delayMs) / 1000;
-  if (name === "card") {
-    if (t < lastCard + 0.09) t = lastCard + 0.09;        // cards that land together are heard one after another
-    if (t - c.currentTime > 2.5) return;                 // …but never a backlog
-    lastCard = t;
-  } else {
-    if (lastAt[name] != null && Math.abs(t - lastAt[name]) < 0.09) return;
-    lastAt[name] = t;
-  }
+  if (name === "card") { try { card(t, c.currentTime, o.fly); } catch (_) {} return; }
+  if (lastAt[name] != null && Math.abs(t - lastAt[name]) < 0.09) return;
+  lastAt[name] = t;
   try { SOUNDS[name](t); } catch (_) {}
 }
 // resolves once the recordings are decoded (for tests; the app never needs to wait)
