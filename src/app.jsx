@@ -839,7 +839,7 @@ button.lnk:hover,a.lnk:hover,button.underline:hover,a.underline:hover{filter:bri
 .qa:hover{background:rgba(var(--fg),.075);border-color:rgba(var(--acc),.34);color:var(--ivory)}
 .rowh{transition:background-color .2s var(--ease),box-shadow .2s var(--ease)}
 .rowh:hover{filter:none;background:rgba(var(--fg),.04);box-shadow:0 0 0 6px rgba(var(--fg),.04)}
-.card:has(>.cardbtn:hover){border-color:rgba(var(--acc),.42)}
+.card:has(>.cardbtn:hover)::before{background:linear-gradient(155deg,rgba(var(--acc),.8),rgba(var(--acc),.4) 22%,rgba(var(--acc),.26) 60%,rgba(var(--acc),.55))}
 .seat circle{transition:stroke .2s var(--ease)}
 .seat:hover circle+circle{stroke:var(--brass)}
 input[type=range]::-webkit-slider-thumb{transition:filter .2s var(--ease)}
