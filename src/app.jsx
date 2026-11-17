@@ -277,7 +277,7 @@ function compute({ bankroll, handsPerHour, bets, cal, spotsMap = {} }) {
 // ---------- UI ----------
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');/*FONTIMPORT*/
-:root{--recess:rgba(var(--sh),.55);--ease:cubic-bezier(.2,.85,.25,1);--bg:#07090A;--bg2:#0B0E10;--velvet:#0D1114;--velvet-l:#142024;--fg:236,241,238;--ivory:#ECF1EE;--ivory-d:#B3BDB9;--brass:#34D399;--brass-d:#18986A;--acc:52,211,153;--acc-hi:#7BEBC1;--rose:#FB7161;--neg:251,113,97;--neg-l:#FDB3AA;--muted:#7D8985;--ink:#03150E;--sh:1,4,4;--bgrgb:7,9,10;--felt1:#11261E;--felt2:#0B1914;--felt3:#060F0C;--sheet1:#121B1C;--sheet2:#090E10;--back1:#7A2232;--back2:#521623;--seg-hi:#F4F8F6;--seg-lo:#DCE6E1;--line:rgba(236,241,238,.11)}
+:root{--recess:rgba(var(--sh),.55);--ease:cubic-bezier(.05,.7,.1,1);--bg:#07090A;--bg2:#0B0E10;--velvet:#0D1114;--velvet-l:#142024;--fg:236,241,238;--ivory:#ECF1EE;--ivory-d:#B3BDB9;--brass:#34D399;--brass-d:#18986A;--acc:52,211,153;--acc-hi:#7BEBC1;--rose:#FB7161;--neg:251,113,97;--neg-l:#FDB3AA;--muted:#7D8985;--ink:#03150E;--sh:1,4,4;--bgrgb:7,9,10;--felt1:#11261E;--felt2:#0B1914;--felt3:#060F0C;--sheet1:#121B1C;--sheet2:#090E10;--back1:#7A2232;--back2:#521623;--seg-hi:#F4F8F6;--seg-lo:#DCE6E1;--line:rgba(236,241,238,.11)}
 :root[data-theme="gold"]{--bg:#05070B;--bg2:#090E16;--velvet:#0C1422;--velvet-l:#111B2E;--fg:246,239,226;--ivory:#F6EFE2;--ivory-d:#C9CDD6;--brass:#D9B56A;--brass-d:#A8863E;--acc:217,181,106;--acc-hi:#E6C57E;--rose:#E0574B;--neg:224,87,75;--neg-l:#F2B8AC;--muted:#98A0B0;--ink:#17110F;--sh:3,6,12;--bgrgb:5,7,11;--felt1:#111B2E;--felt2:#0B111D;--felt3:#070C14;--sheet1:#121A29;--sheet2:#0A0F18;--back1:#24466E;--back2:#18314F;--seg-hi:#FBF6EA;--seg-lo:#EDE5D2;--line:rgba(246,239,226,.12)}
 :root[data-theme="amethyst"]{--bg:#08060D;--bg2:#0D0A14;--velvet:#120D1C;--velvet-l:#1D1530;--fg:240,235,248;--ivory:#F0EBF8;--ivory-d:#C3BAD3;--brass:#B794F6;--brass-d:#8A63D6;--acc:183,148,246;--acc-hi:#D2BCFB;--rose:#FF7086;--neg:255,112,134;--neg-l:#FFB8C3;--muted:#8B8299;--ink:#140A24;--sh:4,2,9;--bgrgb:8,6,13;--felt1:#1D1530;--felt2:#130E21;--felt3:#0A0712;--sheet1:#17112A;--sheet2:#0C0915;--back1:#6E2A55;--back2:#4C1C3B;--seg-hi:#F6F2FC;--seg-lo:#E4DCF2;--line:rgba(240,235,248,.11)}
 :root[data-theme="copper"]{--bg:#0A0806;--bg2:#100C09;--velvet:#18110C;--velvet-l:#251A12;--fg:246,238,230;--ivory:#F6EEE6;--ivory-d:#CDBFB1;--brass:#E8955A;--brass-d:#B86A34;--acc:232,149,90;--acc-hi:#F4B888;--rose:#F25F5C;--neg:242,95,92;--neg-l:#F8B4B2;--muted:#968877;--ink:#1E0E04;--sh:8,5,2;--bgrgb:10,8,6;--felt1:#1F2A22;--felt2:#141C17;--felt3:#0B110D;--sheet1:#1C1510;--sheet2:#0F0B08;--back1:#2F4A5E;--back2:#203444;--seg-hi:#FBF5EF;--seg-lo:#EEE2D5;--line:rgba(246,238,230,.11)}
@@ -345,14 +345,14 @@ html,body{background:var(--bg)}
 .tabs{display:flex;gap:22px;border-bottom:1px solid rgba(var(--fg),.08);margin-bottom:18px}
 .tabs button{position:relative;padding:4px 2px 11px;font-size:15px;font-weight:600;color:var(--muted);transition:color .18s var(--ease)}
 .tabs button.on{color:var(--ivory)}
-.tabs button.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:2px;background:var(--brass);animation:tabin .16s var(--ease)}
+.tabs button.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:2px;background:var(--brass);animation:tabin .27s var(--ease)}
 @keyframes tabin{from{transform:scaleX(.3);opacity:0}to{transform:none;opacity:1}}
-.topbar{position:fixed;left:0;right:0;top:0;z-index:45;padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;background:rgba(var(--bgrgb),.78);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid rgba(var(--fg),.06);transform:translateY(-110%);opacity:0;transition:transform .16s var(--ease),opacity .16s var(--ease);pointer-events:none}
+.topbar{position:fixed;left:0;right:0;top:0;z-index:45;padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;background:rgba(var(--bgrgb),.78);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid rgba(var(--fg),.06);transform:translateY(-110%);opacity:0;transition:transform .27s var(--ease),opacity .16s var(--ease);pointer-events:none}
 .topbar.show{transform:none;opacity:1;pointer-events:auto}
 .rack{display:grid;grid-template-columns:repeat(var(--n),minmax(0,64px));gap:10px;justify-content:center}
 .rack .chipbtn{width:100%;height:auto;aspect-ratio:1}
 .switch{position:relative;width:46px;height:28px;border-radius:14px;background:rgba(var(--fg),.12);transition:background .16s var(--ease);flex-shrink:0}
-.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--ivory);box-shadow:0 2px 6px rgba(0,0,0,.5);transition:transform .17s var(--ease)}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--ivory);box-shadow:0 2px 6px rgba(0,0,0,.5);transition:transform .29s var(--ease)}
 .switch.on{background:var(--brass)}
 .switch.on::after{transform:translateX(18px);background:var(--seg-hi)}
 .qa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:76px;border-radius:16px;background:rgba(var(--fg),.04);border:1px solid rgba(var(--acc),.12);font-size:11.5px;font-weight:600;color:var(--ivory-d);transition:transform .13s var(--ease),background .16s var(--ease),border-color .16s var(--ease),color .16s var(--ease)}
@@ -378,7 +378,7 @@ html,body{background:var(--bg)}
 .keycap:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .shoe-w{position:relative;height:12px}
 .shoe-t{position:absolute;inset:0;border-radius:99px;background:var(--recess);overflow:hidden}
-.shoe-t i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,rgba(var(--acc),.45),var(--brass));transition:width .2s var(--ease)}
+.shoe-t i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,rgba(var(--acc),.45),var(--brass));transition:width .34s var(--ease)}
 .shoe-t u{position:absolute;top:0;bottom:0;width:1px;background:rgba(var(--fg),.2)}
 .shoe-c{position:absolute;top:-4px;height:20px;width:2px;margin-left:-1px;border-radius:2px;background:var(--rose);opacity:.7}
 @media (hover:hover){.keycap:hover{background:rgba(var(--fg),.11)}}
@@ -392,12 +392,12 @@ html,body{background:var(--bg)}
 .skillrow{display:flex;align-items:center;gap:10px;padding:11px 4px;border-radius:10px;transition:background .15s}
 .skillrow:active{background:rgba(var(--fg),.04)}
 @media (hover:hover){.skillrow:hover{background:rgba(var(--fg),.035)}}
-.syncpill{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;top:calc(env(safe-area-inset-top) + 10px);z-index:90;max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:9px 16px;border-radius:999px;font-size:13px;font-weight:500;color:var(--ivory);background:rgba(var(--bgrgb),.92);border:1px solid rgba(var(--acc),.35);box-shadow:0 12px 30px -12px rgba(0,0,0,.7);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:rise .16s var(--ease) both}
+.syncpill{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;top:calc(env(safe-area-inset-top) + 10px);z-index:90;max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:9px 16px;border-radius:999px;font-size:13px;font-weight:500;color:var(--ivory);background:rgba(var(--bgrgb),.92);border:1px solid rgba(var(--acc),.35);box-shadow:0 12px 30px -12px rgba(0,0,0,.7);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:rise .27s var(--ease) both}
 .syncpill b{color:var(--brass)}
 .dgrid,.dcol{display:contents}
 .deskonly{display:none}
 .cmdk-wrap{position:fixed;inset:0;z-index:95;display:flex;justify-content:center;align-items:flex-start;padding:14vh 16px 0;background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:spfade .15s var(--ez) both}
-.cmdk{width:100%;max-width:560px;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));border:1px solid rgba(var(--acc),.22);box-shadow:0 40px 90px -20px rgba(0,0,0,.8);animation:cmdkin .16s var(--ez) both}
+.cmdk{width:100%;max-width:560px;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));border:1px solid rgba(var(--acc),.22);box-shadow:0 40px 90px -20px rgba(0,0,0,.8);animation:cmdkin .27s var(--ez) both}
 @keyframes cmdkin{from{transform:translateY(-8px) scale(.98);opacity:0}to{transform:none;opacity:1}}
 .cmdk-in{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);color:var(--muted)}
 .cmdk-in input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--ivory);font-size:16px}
@@ -409,22 +409,22 @@ html,body{background:var(--bg)}
 .cmdk-empty{padding:22px 12px;text-align:center;font-size:13px;color:var(--muted)}
 .cmdk-foot{display:flex;gap:18px;padding:9px 16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
 .bj kbd{font:600 10.5px Inter,system-ui,sans-serif;padding:2px 6px;border-radius:6px;background:rgba(var(--fg),.08);border:1px solid rgba(var(--fg),.12);color:var(--ivory-d)}
-.dcol>section{animation:rise .2s var(--ease) both}
+.dcol>section{animation:rise .34s var(--ease) both}
 .dcol>section:nth-of-type(2){animation-delay:.05s}.dcol>section:nth-of-type(3){animation-delay:.08s}.dcol>section:nth-of-type(n+4){animation-delay:.11s}
 .dcol.o2>section:nth-of-type(1){animation-delay:.08s}.dcol.o2>section:nth-of-type(2){animation-delay:.11s}.dcol.o2>section:nth-of-type(n+3){animation-delay:.15s}
 .dcol.o3>section:nth-of-type(1){animation-delay:.11s}.dcol.o3>section:nth-of-type(n+2){animation-delay:.15s}
 @media (min-width:1024px){
 html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) transparent}
 .bottom-nav,.hdrgear,.shell>header .rulespill,.topbar .rulespill{display:none!important}
-.pillrail{display:block;position:fixed;left:248px;right:0;top:0;z-index:46;padding:46px 40px 0;pointer-events:none;transition:transform .19s var(--ez)}
+.pillrail{display:block;position:fixed;left:248px;right:0;top:0;z-index:46;padding:46px 40px 0;pointer-events:none;transition:transform .32s var(--ez)}
 .pillrail>div{max-width:var(--W)}
-.pillrail .rulespill{pointer-events:auto;min-height:0;transform-origin:100% 0;transition:transform .19s var(--ez),background .15s,border-color .15s}
+.pillrail .rulespill{pointer-events:auto;min-height:0;transform-origin:100% 0;transition:transform .32s var(--ez),background .15s,border-color .15s}
 .pillrail .rulespill:hover{background:rgba(var(--fg),.09);border-color:rgba(var(--acc),.4)}
 html.scrolled .pillrail{transform:translateY(-37px)}
 html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .topbar{background:rgba(var(--bgrgb),.9);min-height:46px}
 .topbar>div{min-height:29px}
-.sn-glide{display:block;position:absolute;left:14px;right:14px;top:0;height:44px;border-radius:12px;background:rgba(var(--acc),.12);pointer-events:none;transition:transform .19s var(--ez),opacity .16s}
+.sn-glide{display:block;position:absolute;left:14px;right:14px;top:0;height:44px;border-radius:12px;background:rgba(var(--acc),.12);pointer-events:none;transition:transform .32s var(--ez),opacity .16s}
 .sn-glide::before{content:"";position:absolute;left:-14px;top:25%;bottom:25%;width:3px;border-radius:0 3px 3px 0;background:var(--brass)}
 .sidenav>*{flex-shrink:0}
 .sidenav .sn-item.on{background:transparent}
@@ -456,7 +456,7 @@ html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .sn-rules{display:block;width:100%;text-align:left;padding:12px;margin-bottom:6px;border-radius:14px;background:rgba(var(--fg),.035);border:1px solid rgba(var(--fg),.07);transition:background .15s,border-color .15s}
 .sn-rules:hover{background:rgba(var(--fg),.06);border-color:rgba(var(--acc),.3)}
 .sheetwrap{justify-content:center!important;align-items:center;padding:40px}
-.sheetwrap .sheet{max-width:560px!important;max-height:min(86vh,860px)!important;border-radius:22px;border-bottom:1px solid rgba(var(--acc),.16);box-shadow:0 40px 90px -20px rgba(0,0,0,.75);animation:sheetpop .17s var(--ez)}
+.sheetwrap .sheet{max-width:560px!important;max-height:min(86vh,860px)!important;border-radius:22px;border-bottom:1px solid rgba(var(--acc),.16);box-shadow:0 40px 90px -20px rgba(0,0,0,.75);animation:sheetpop .29s var(--ez)}
 .sheetwrap .sheet>.sheetgrab>div:first-child{visibility:hidden;height:12px;padding:0}
 @keyframes sheetpop{from{transform:translateY(10px) scale(.98);opacity:0}to{transform:none;opacity:1}}
 @media (hover:hover){.card button.chippress:hover,.rulespill:hover,.iconbtn:hover{filter:brightness(var(--hov))}}
@@ -478,9 +478,9 @@ html.scrolled .pillrail .rulespill{transform:scale(.86)}
 .dcol>:first-child>.card:first-child{margin-top:0}
 }
 :root[data-theme="light"] .sidenav{background:rgba(255,255,255,.7);border-right-color:rgba(15,27,61,.08)}
-.sheet{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);border-top-left-radius:22px;border-top-right-radius:22px;border:1px solid rgba(var(--acc),.16);border-bottom:none;box-shadow:0 -20px 50px -10px rgba(0,0,0,.8);animation:sheetin .17s var(--ez)}
+.sheet{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);border-top-left-radius:22px;border-top-right-radius:22px;border:1px solid rgba(var(--acc),.16);border-bottom:none;box-shadow:0 -20px 50px -10px rgba(0,0,0,.8);animation:sheetin .29s var(--ez)}
 @keyframes sheetin{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
-.sheetwrap{animation:scrimin .17s var(--ease)}
+.sheetwrap{animation:scrimin .22s var(--ease)}
 @keyframes scrimin{from{background-color:transparent}}
 .sheetwrap.out{animation:scrimout .17s var(--ease) forwards}
 .sheetwrap.out .sheet{animation:sheetout .17s var(--ez) forwards}
@@ -522,7 +522,7 @@ input.in[type=date]::-webkit-date-and-time-value{text-align:left}
 .chipseg button:active{transform:scale(.96)}
 .chipseg button.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.6) inset}
 .chipseg.slide{position:relative}
-.chipseg.slide .thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));border-radius:9px;background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));box-shadow:0 1px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.6) inset;transform:translateX(calc(var(--i) * (100% + 4px)));transition:transform .16s var(--ez)}
+.chipseg.slide .thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));border-radius:9px;background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));box-shadow:0 1px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.6) inset;transform:translateX(calc(var(--i) * (100% + 4px)));transition:transform .27s var(--ez)}
 .chipseg.slide button{position:relative;z-index:1;transition:color .16s var(--ease)}
 .chipseg.slide button.on{background:none;box-shadow:none}
 :root:not([data-theme="light"]) .chipseg button.on,:root:not([data-theme="light"]) .chipseg.slide .thumb{background:rgba(var(--acc),.14);box-shadow:0 0 0 1px rgba(var(--acc),.24) inset}
@@ -532,7 +532,7 @@ input.in[type=date]::-webkit-date-and-time-value{text-align:left}
 @media(hover:hover){.in:hover:not(:focus):not(:disabled){border-color:rgba(var(--fg),.24)}.chipseg button:not(.on):hover{color:var(--ivory-d)}.btn.ghost:hover{background:rgba(var(--fg),.12)}}
 @media(hover:hover) and (min-width:1024px){.card{transition:border-color .16s var(--ease)}.card:hover{border-color:rgba(var(--acc),.2)}.card .card:hover{border-color:rgba(var(--acc),.1)}.btn:not(.ghost):hover:not(:disabled){transform:translateY(-1px)}}
 @media(min-width:1024px){.shell>header h1{letter-spacing:-.028em}::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:rgba(var(--fg),.14);border-radius:999px;border:2px solid transparent;background-clip:content-box}::-webkit-scrollbar-thumb:hover{background:rgba(var(--fg),.26);background-clip:content-box;border:2px solid transparent}::-webkit-scrollbar-track{background:transparent}}
-.bar{transition:height .19s var(--ez),width .19s var(--ez)}
+.bar{transition:height .32s var(--ez),width .32s var(--ez)}
 input[type=range]{accent-color:var(--brass)}
 .pc{width:86px;height:122px;border-radius:10px;background:linear-gradient(160deg,#FFFEFA 0%,#F7F2E7 78%,#EFE8D8 100%);color:#1C1C1E;position:relative;box-shadow:0 0 0 1px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.9) inset,0 2px 3px -1px rgba(0,0,0,.4),0 14px 26px -10px rgba(0,0,0,.8);font-family:Fraunces,Georgia,serif;user-select:none;flex-shrink:0}
 .pc.red{color:#C0262B}
@@ -592,27 +592,27 @@ input[type=range]{accent-color:var(--brass)}
 .feltprint .fp-t{font-size:12.5px;letter-spacing:.26em}
 .feltprint .fp-s{font-size:8px;letter-spacing:.3em}
 @keyframes shoe{0%,100%{transform:translateX(0)}30%{transform:translateX(-6px)}}
-.shoe.go{animation:shoe .24s var(--ez)}
+.shoe.go{animation:shoe .41s var(--ez)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.rise{animation:rise .16s var(--ease) both}
-.rise>div>section,.rise>section,.rise>div>.stagger{animation:rise .2s var(--ease) both}
+.rise{animation:rise .27s var(--ease) both}
+.rise>div>section,.rise>section,.rise>div>.stagger{animation:rise .34s var(--ease) both}
 .rise>div>section:nth-of-type(2),.rise>section:nth-of-type(2){animation-delay:.05s}
 .rise>div>section:nth-of-type(3),.rise>section:nth-of-type(3){animation-delay:.08s}
 .rise>div>section:nth-of-type(4),.rise>section:nth-of-type(4){animation-delay:.11s}
 .rise>div>section:nth-of-type(n+5),.rise>section:nth-of-type(n+5){animation-delay:.15s}
-.navbtn.on .navicon svg{animation:navpop .21s var(--ez)}
+.navbtn.on .navicon svg{animation:navpop .36s var(--ez)}
 @keyframes navpop{0%{transform:scale(.78)}100%{transform:scale(1)}}
-.growy{transform-box:fill-box;animation:growy .22s var(--ez) both}
+.growy{transform-box:fill-box;animation:growy .37s var(--ez) both}
 @keyframes growy{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 /* entrance motion, shared by every chart and meter: --ee and --eo are both the app's one ease-out now (see --ez): fast off the mark, a soft landing */
 /* --trace is how long a line takes to draw; everything that should land when the line arrives (.late) is timed off it, so one number sets the pace */
-:root{--ee:cubic-bezier(.2,.85,.25,1);--eo:cubic-bezier(.2,.85,.25,1);--trace:.36s}
+:root{--ee:cubic-bezier(.05,.7,.1,1);--eo:cubic-bezier(.05,.7,.1,1);--trace:.6s}
 .drawline{animation:drawline var(--trace) var(--ee) .08s backwards}
 .late{animation-delay:calc(var(--trace) + .04s)!important}
 @keyframes drawline{from{stroke-dasharray:1 1;stroke-dashoffset:1}to{stroke-dasharray:1 1;stroke-dashoffset:0}}
-.wipex{animation:wipex .32s var(--ee) .06s backwards}
+.wipex{animation:wipex .54s var(--ee) .06s backwards}
 @keyframes wipex{from{clip-path:inset(-6px 100% -6px -6px)}to{clip-path:inset(-6px -6px -6px -6px)}}
-.fadein{animation:fadein .2s var(--ease) backwards}
+.fadein{animation:fadein .26s var(--ease) backwards}
 :root{--win:52,211,153;--win-l:#6EE7B7}
 :root[data-theme="light"]{--win:16,138,86;--win-l:#0B6B43}
 .mcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
@@ -630,11 +630,11 @@ input[type=range]{accent-color:var(--brass)}
 .mcal .d.now{box-shadow:inset 0 0 0 1px rgba(var(--fg),.22)}
 .mbar{cursor:pointer;outline:none}.mbar:focus-visible rect:first-child{stroke:var(--brass);stroke-width:1.5}
 @keyframes fadein{from{opacity:0}}
-.popin{transform-box:fill-box;transform-origin:center;animation:popin .19s var(--eo) backwards}
+.popin{transform-box:fill-box;transform-origin:center;animation:popin .32s var(--eo) backwards}
 @keyframes popin{from{opacity:0;transform:scale(.3)}}
-.bary{transform-origin:50% 100%;animation:growy .23s var(--eo) backwards;animation-delay:calc(var(--i,0) * 22ms + 50ms)}
-.barlab{animation:fadein .16s var(--ease) backwards;animation-delay:calc(var(--i,0) * 22ms + .14s)}
-.barx{transform-origin:0 50%;animation:growx .31s var(--eo) .08s backwards}
+.bary{transform-origin:50% 100%;animation:growy .39s var(--eo) backwards;animation-delay:calc(var(--i,0) * 22ms + 50ms)}
+.barlab{animation:fadein .21s var(--ease) backwards;animation-delay:calc(var(--i,0) * 22ms + .14s)}
+.barx{transform-origin:0 50%;animation:growx .53s var(--eo) .08s backwards}
 @keyframes growx{from{transform:scaleX(0)}}
 .splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(90% 60% at 50% 40%,var(--velvet-l) 0%,var(--velvet) 40%,var(--bg) 80%,var(--bg-end) 100%)}
 .splash:not(.go)>*{opacity:0}
@@ -663,7 +663,7 @@ input[type=range]{accent-color:var(--brass)}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .shake{animation:shake .3s ease-out}
 @keyframes glow{0%{box-shadow:0 0 0 0 rgba(var(--acc),.7)}100%{box-shadow:0 0 0 14px rgba(var(--acc),0)}}
-.glow{animation:glow .31s var(--ez)}
+.glow{animation:glow .53s var(--ez)}
 .drain{position:absolute;left:0;top:0;height:4px;border-radius:0 2px 2px 0;width:100%;transform-origin:left;animation:drain var(--t) linear forwards;opacity:.9}
 @keyframes drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 .shimmer{position:relative;overflow:hidden}.shimmer::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:shimmer 2.4s ease-in-out infinite}
@@ -682,7 +682,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:rgba(var(--acc),.35)}
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--brass);border:1px solid rgba(0,0,0,.45)}
 @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.25)}100%{transform:scale(1)}}
-.pop{display:inline-block;animation:pop .19s var(--ez)}
+.pop{display:inline-block;animation:pop .32s var(--ez)}
 .burst{position:absolute;inset:0;pointer-events:none;overflow:visible}
 .burst i{position:absolute;left:50%;top:45%;width:5px;height:5px;border-radius:50%;background:var(--brass);opacity:0;animation:fly var(--t) ease-out forwards;animation-delay:var(--dl)}
 .burst i:nth-child(3n){background:var(--acc-hi)}.burst i:nth-child(4n){width:3px;height:3px}
@@ -736,7 +736,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .navglide{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px) / var(--n));transform:translateX(calc(var(--i) * 100%));border-radius:999px;pointer-events:none;background:linear-gradient(180deg,rgba(var(--acc),.22),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.16)}
 .navbtn{z-index:1}
 @media (max-width:350px){.navglide{top:4px;bottom:4px;left:4px;width:calc((100% - 8px) / var(--n))}}
-.gchip{background:linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.03));color:var(--ivory-d);border:1px solid rgba(var(--fg),.07);box-shadow:inset 0 1px 0 var(--gl-rim);transition:transform .19s var(--fluid),background .16s,color .16s,border-color .16s}
+.gchip{background:linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.03));color:var(--ivory-d);border:1px solid rgba(var(--fg),.07);box-shadow:inset 0 1px 0 var(--gl-rim);transition:transform .32s var(--fluid),background .16s,color .16s,border-color .16s}
 .gchip.on{background:linear-gradient(180deg,rgba(var(--acc),.24),rgba(var(--acc),.11));color:var(--ivory);border-color:rgba(var(--acc),.26);box-shadow:inset 0 1px 0 var(--gl-hi)}
 :root[data-theme="light"] .gchip.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));color:var(--ink);border-color:transparent}
 .chipseg:not(.rows):not(.brushes),.chipseg:not(.rows):not(.brushes) button{border-radius:999px}
@@ -746,7 +746,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
    bright top and a soft shadow, a little wider than tall on the switch. Tracks and text boxes are cut into the surface:
    a shadow along the top edge inside, a hairline of light along the bottom. */
 .switch{width:50px;height:30px;border-radius:999px;background:rgba(var(--fg),.1);box-shadow:inset 0 1px 3px rgba(0,0,0,.4),inset 0 -1px 0 rgba(255,255,255,.05);transition:background .22s var(--ease)}
-.switch::after{top:3px;left:3px;width:28px;height:24px;border-radius:999px;background:linear-gradient(180deg,#fff,#e9efec);box-shadow:0 2px 7px rgba(0,0,0,.45),0 0 0 .5px rgba(0,0,0,.12),inset 0 1px 0 #fff;transition:transform .24s var(--fluid)}
+.switch::after{top:3px;left:3px;width:28px;height:24px;border-radius:999px;background:linear-gradient(180deg,#fff,#e9efec);box-shadow:0 2px 7px rgba(0,0,0,.45),0 0 0 .5px rgba(0,0,0,.12),inset 0 1px 0 #fff;transition:transform .41s var(--fluid)}
 .switch.on{background:linear-gradient(180deg,var(--brass),var(--acc-hi))}
 .switch.on::after{transform:translateX(16px);background:linear-gradient(180deg,#fff,#e9efec)}
 :root[data-theme="light"] .switch{background:rgba(var(--fg),.14);box-shadow:inset 0 1px 2px rgba(var(--fg),.18)}
@@ -759,32 +759,35 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 .in:focus{box-shadow:inset 0 1px 2px rgba(0,0,0,.3),0 0 0 3px rgba(var(--acc),.18)}
 /* ---- fluid motion, kept quiet (Nick: smoother, subtler, more like liquid — then: quicker, starting fast).
    Nothing bounces, and there is ONE curve for the whole app: --ez, an ease OUT only (Nick: "i only want an easy ease
-   out, when all the animations start it should be fast"). It sets off at full speed, is half way there in the first
-   eighth of its time and eases to a stop; it never eases IN. --ease, --fluid, --eo and --ee are all the same curve
-   under their old names; durations are short (most .16–.24s). A selection flows to its new place — the edge facing the way it is going sets off first and
+   out, when all the animations start it should be fast", then "make the ease at the end more dramatic, a slow smooth
+   finish"). It sets off at full speed, is half way there in the first sixteenth of its time, four fifths of the way
+   in the first fifth, and spends the rest gliding to a stop; it never eases IN. --ease, --fluid, --eo and --ee are
+   all the same curve under their old names. Things that move take .3-.48s so the long finish has room to be seen
+   (the fast part is over in well under a tenth of a second); colour changes stay at .16s. A selection flows to its new place — the edge facing the way it is going sets off first and
    the other edge catches up (Glider sets data-dir), so it stretches a little and settles. Pressed glass eases back.
    A sheet glides up and slows to a stop. On a computer a soft light drifts after the pointer across a card.
    All of it is off under "reduce motion". */
-:root{--fluid:cubic-bezier(.2,.85,.25,1);--ez:cubic-bezier(.2,.85,.25,1)}
-.navglide{transition:transform .27s var(--ez)}
-.chipseg.slide .thumb{transition:transform .23s var(--ez)}
-/* where the browser has the separate translate property the slide uses it, which leaves scale free for the stretch */
-@supports (translate:0px){
-.navglide{transform:none;translate:calc(var(--i) * 100%) 0;transition:translate .27s var(--ez)}
-.chipseg.slide .thumb{transform:none;translate:calc(var(--i) * (100% + 4px)) 0;transition:translate .23s var(--ez)}
-}
-.navglide,.sn-glide{will-change:transform}
-.sn-glide{transition:transform .28s var(--ez),opacity .2s}
+:root{--fluid:cubic-bezier(.05,.7,.1,1);--ez:cubic-bezier(.05,.7,.1,1)}
+/* A selection that travels (the tab bar's glass, a segment's thumb, the sidebar's highlight) has a curve of its own,
+   --ez-slide. --ez covers a third of the way in its first frame, which is right for something that grows or fades in
+   place but makes a highlight that crosses the tab bar jump: Nick saw it "glitch" on his phone. --ez-slide sets off
+   just as promptly but never moves more than half its own width in a frame, and has the same long, slow finish.
+   The tab bar's glass and a segment's thumb are moved by Glider (one transform animation from script: slide and
+   stretch together), so they have no CSS transition; the rule below only places them. */
+:root{--ez-slide:cubic-bezier(.22,.68,.1,1)}
+.navglide,.chipseg.slide .thumb{transition:none}
+.navglide,.sn-glide,.chipseg.slide .thumb{will-change:transform}
+.sn-glide{transition:transform .48s var(--ez-slide),opacity .2s}
 /* the tab icons do not move or change weight when the selection changes: only their colour eases over, while the glass
    slides underneath. (They used to shrink and pop back, and the line got thicker, which read as a glitch.) Each tab is
    kept on its own layer for good, so nothing is re-drawn when the slide starts or stops. */
 .navbtn.on .navicon svg{animation:none}
 .navbtn{will-change:transform}
-.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .24s var(--fluid),filter .16s,background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease)}
+.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .41s var(--fluid),filter .16s,background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease)}
 .btn:active,.iconbtn:active,.stepbtn:active,.rulespill:active,.chippress:active,.navbtn:active{transition-duration:.12s}
 .btn:active{transform:scale(.99)}.iconbtn:active,.stepbtn:active{transform:scale(.95)}.rulespill:active,.chippress:active,.navbtn:active{transform:scale(.975)}
 /* switching tab: the page that comes in is quick too, on the same ease-out, with a shorter stagger */
-.rise>div>section,.rise>section,.rise>div>.stagger,.dcol>section{animation-duration:.28s;animation-timing-function:var(--ez)}
+.rise>div>section,.rise>section,.rise>div>.stagger,.dcol>section{animation-duration:.48s;animation-timing-function:var(--ez)}
 .rise>div>section:nth-of-type(2),.rise>section:nth-of-type(2),.dcol>section:nth-of-type(2){animation-delay:.03s}
 .rise>div>section:nth-of-type(3),.rise>section:nth-of-type(3),.dcol>section:nth-of-type(3){animation-delay:.06s}
 .rise>div>section:nth-of-type(4),.rise>section:nth-of-type(4){animation-delay:.09s}
@@ -792,26 +795,26 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 .dcol.o2>section:nth-of-type(1){animation-delay:.05s}.dcol.o2>section:nth-of-type(2){animation-delay:.08s}.dcol.o2>section:nth-of-type(n+3){animation-delay:.08s}
 .dcol.o3>section:nth-of-type(1){animation-delay:.08s}.dcol.o3>section:nth-of-type(n+2){animation-delay:.08s}
 .chipseg.slide button{transition:color .16s var(--ease)}
-.topbar{transition:transform .24s var(--fluid),opacity .17s var(--ease)}
+.topbar{transition:transform .41s var(--fluid),opacity .17s var(--ease)}
 @media(hover:hover) and (min-width:1024px){.btn:not(.ghost):hover:active:not(:disabled){transform:scale(.99)}}
 /* every other movement in the app, on the same curve: nothing snaps and nothing uses a bare "ease" */
-.acts>button,.qa,.chipbtn,.opt,.xbtn{transition:transform .22s var(--fluid),filter .16s,background-color .16s var(--ease),background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease),opacity .16s var(--ease)}
+.acts>button,.qa,.chipbtn,.opt,.xbtn{transition:transform .37s var(--fluid),filter .16s,background-color .16s var(--ease),background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease),opacity .16s var(--ease)}
 .acts>button:active,.qa:active,.chipbtn:active,.opt:active{transition-duration:.1s}
-.tabs button{transition:color .19s var(--ease)}.tabs button.on::after{animation:tabin .24s var(--fluid)}
-.rise{animation-duration:.23s;animation-timing-function:var(--ez)}
-.syncpill{animation:rise .24s var(--fluid) both}
-.cmdk-wrap{animation:scrimin .17s var(--ease)}.cmdk{animation:cmdkin .2s var(--fluid) both}
-.sheetwrap{animation:scrimin .17s var(--ease)}
-@media (min-width:1024px){.sheetwrap .sheet{animation:sheetpop .2s var(--fluid)}}
-.pillrail{transition:transform .24s var(--fluid)}
-.pillrail .rulespill{transition:background .16s var(--ease),border-color .16s var(--ease),transform .24s var(--fluid)}
+.tabs button{transition:color .19s var(--ease)}.tabs button.on::after{animation:tabin .41s var(--fluid)}
+.rise{animation-duration:.39s;animation-timing-function:var(--ez)}
+.syncpill{animation:rise .41s var(--fluid) both}
+.cmdk-wrap{animation:scrimin .22s var(--ease)}.cmdk{animation:cmdkin .34s var(--fluid) both}
+.sheetwrap{animation:scrimin .22s var(--ease)}
+@media (min-width:1024px){.sheetwrap .sheet{animation:sheetpop .34s var(--fluid)}}
+.pillrail{transition:transform .41s var(--fluid)}
+.pillrail .rulespill{transition:background .16s var(--ease),border-color .16s var(--ease),transform .41s var(--fluid)}
 .sn-item,.sn-search,.sn-rules,.keycap,.skillrow,.chipseg button{transition:background .16s var(--ease),border-color .16s var(--ease),color .16s var(--ease)}
 .in{transition:border-color .16s var(--ease),box-shadow .16s var(--ease),background .16s var(--ease)}
 .card{transition:border-color .2s var(--ease)}
-.bar{transition:height .24s var(--fluid),width .24s var(--fluid)}.shoe-t i{transition:width .24s var(--fluid)}
-.shoe.go{animation:shoe .27s var(--fluid)}.pop{animation:pop .2s var(--fluid)}.glow{animation:glow .36s var(--fluid)}
+.bar{transition:height .41s var(--fluid),width .41s var(--fluid)}.shoe-t i{transition:width .41s var(--fluid)}
+.shoe.go{animation:shoe .46s var(--fluid)}.pop{animation:pop .34s var(--fluid)}.glow{animation:glow .61s var(--fluid)}
 .leave .dealt{animation:leave .2s var(--ease) forwards !important}
-.sheet{animation-name:sheetflu;animation-duration:.23s;animation-timing-function:var(--fluid)}
+.sheet{animation-name:sheetflu;animation-duration:.39s;animation-timing-function:var(--fluid)}
 @keyframes sheetflu{from{transform:translateY(26px);opacity:0}to{transform:none;opacity:1}}
 @media (hover:hover) and (min-width:1024px){
 .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .36s var(--ease);background:radial-gradient(340px circle at var(--mx,50%) var(--my,-30%),rgba(255,255,255,.038),transparent 72%)}
@@ -826,12 +829,12 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
    inner box does), so the rim and the blur stay put. Older browsers without color-mix keep a solid panel. */
 :root{--scrim:rgba(2,3,6,.4)}
 .cmdk{position:relative}
-.rulesscrim{animation:scrimin .16s var(--ease)}
+.rulesscrim{animation:scrimin .21s var(--ease)}
 .sheet,.cmdk,.card.rulesdlg{position:relative;border-color:transparent}
-.card.rulesdlg{border-radius:30px;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));box-shadow:0 30px 80px -20px rgba(0,0,0,.8);animation:sheetflu .24s var(--fluid) both}
+.card.rulesdlg{border-radius:30px;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));box-shadow:0 30px 80px -20px rgba(0,0,0,.8);animation:sheetflu .41s var(--fluid) both}
 :root[data-theme="light"] .card.rulesdlg{box-shadow:0 30px 80px -24px rgba(var(--fg),.45)}
 .sheet::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--gl-edge);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;pointer-events:none;z-index:3}
-.xbtn{color:var(--ivory-d);background:linear-gradient(180deg,rgba(var(--fg),.13),rgba(var(--fg),.05));box-shadow:inset 0 1px 0 var(--gl-hi);transition:transform .24s var(--fluid),background .16s var(--ease)}
+.xbtn{color:var(--ivory-d);background:linear-gradient(180deg,rgba(var(--fg),.13),rgba(var(--fg),.05));box-shadow:inset 0 1px 0 var(--gl-hi);transition:transform .41s var(--fluid),background .16s var(--ease)}
 .xbtn:active{transform:scale(.92);transition-duration:.12s}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) and (color:color-mix(in srgb,red 50%,transparent)){
 .sheet,.cmdk,.card.rulesdlg{background:radial-gradient(120% 70% at 0% 0%,var(--gl-sheen),transparent 60%),linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.02) 55%),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 58%,transparent),color-mix(in srgb,var(--sheet2) 72%,transparent) 55%);-webkit-backdrop-filter:blur(30px) saturate(1.9) brightness(1.12);backdrop-filter:blur(30px) saturate(1.9) brightness(1.12)}
@@ -940,10 +943,10 @@ input[type=range]:hover::-webkit-slider-thumb{filter:brightness(1.12)}
 .topbar{-webkit-mask-image:none;mask-image:none;padding-bottom:10px;background:linear-gradient(180deg,rgba(var(--bgrgb),.9),rgba(var(--bgrgb),.74))}
 .topbar::after{content:"";position:absolute;left:0;right:0;top:100%;height:20px;pointer-events:none;background:linear-gradient(180deg,rgba(var(--bgrgb),.74),rgba(var(--bgrgb),.3) 45%,rgba(var(--bgrgb),0))}
 /* pressed: the knob and the handle become a clear lens */
-.switch::after{transition:transform .24s var(--fluid),background .16s var(--ease),box-shadow .16s var(--ease)}
+.switch::after{transition:transform .41s var(--fluid),background .16s var(--ease),box-shadow .16s var(--ease)}
 .switch:active::after{transform:scale(1.12);background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.6));box-shadow:0 3px 10px rgba(0,0,0,.4),inset 0 0 0 var(--hair) rgba(255,255,255,.95),inset 0 0 6px rgba(255,255,255,.5)}
 .switch.on:active::after{transform:translateX(16px) scale(1.12)}
-input[type=range]::-webkit-slider-thumb{transition:transform .19s var(--fluid),background .16s var(--ease)}
+input[type=range]::-webkit-slider-thumb{transition:transform .32s var(--fluid),background .16s var(--ease)}
 input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14);background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,255,255,.62))}
 /* ---- One system for shape, surface and depth (Nick: "a full style upgrade ... sleek and clean and very silky smooth").
    Shape: three corner sizes and the capsule, nothing in between. --r-s 10px for the smallest pieces (key caps, the x1
@@ -1665,21 +1668,45 @@ function FillChart({ R, devs }) {
   );
 }
 
-// A selection that flows from one option to the next like a drop of liquid. CSS slides it (the `translate` property)
-// on the app's ease-out: it sets off at full speed and eases into where it is going (--ez; Nick: fast when it
-// starts, an easy ease only at the end). This adds the stretch: it is a little longer and a hair thinner while it
-// is moving fastest, just after it sets off, and its own size again as it lands.
-// The stretch is the `scale` property through the Web Animations API, about the middle and timed to the slide (`ms`),
-// so the whole movement runs on the compositor (no layout, no repaint) and stays smooth while the page behind it is
-// busy; a second tap while it is still moving starts the stretch again from the size it has.
-function Glider({ cls, at, style, ms = 270 }) {
+// A selection that flows from one option to the next like a drop of liquid (the tab bar's glass, a segment's thumb).
+// CSS only places it (transform: translateX from --i); this moves it, as ONE animation of `transform` through the
+// Web Animations API: the slide and the stretch are baked into the same keyframes, a frame apart, so the browser
+// runs a single compositor animation. It used to be a CSS slide on `translate` plus a separate `scale` animation;
+// with the app's fast-start curve the glass covered a third of the bar and popped 13% wider in its first frame,
+// which Nick saw as the highlight glitching on his phone.
+//   position: --ez-slide (cubic-bezier(.22,.68,.1,1)) — off the mark at once, never more than about half its own
+//             width in a frame, then the long slow finish;
+//   stretch:  follows its speed (longer and a hair thinner while it is fast, its own size as it glides in), eased
+//             in over the first few frames so it never pops, and gentler than before (9% at most).
+// A second tap while it is still moving carries on from where, and how stretched, it is.
+const bezFn = (x1, y1, x2, y2) => (p) => {
+  if (p <= 0) return 0; if (p >= 1) return 1;
+  const bx = (t) => 3 * (1 - t) * (1 - t) * t * x1 + 3 * (1 - t) * t * t * x2 + t * t * t, by = (t) => 3 * (1 - t) * (1 - t) * t * y1 + 3 * (1 - t) * t * t * y2 + t * t * t;
+  let lo = 0, hi = 1; for (let k = 0; k < 22; k++) { const m = (lo + hi) / 2; if (bx(m) < p) lo = m; else hi = m; }
+  return by((lo + hi) / 2);
+};
+const slideEase = bezFn(0.22, 0.68, 0.1, 1);
+const GLIDE_N = 32;   // keyframes: about one a frame
+const GLIDE_P = Array.from({ length: GLIDE_N + 1 }, (_, k) => slideEase(k / GLIDE_N));
+const GLIDE_V = (() => { const v = GLIDE_P.map((_, k) => GLIDE_P[Math.min(GLIDE_N, k + 1)] - GLIDE_P[Math.max(0, k - 1)]), mx = Math.max(...v); return v.map((x) => x / mx); })();   // speed, 0 to 1
+function Glider({ cls, at, style, ms = 480, gap = 0 }) {
   const el = useRef(null), prev = useRef(at), run = useRef(null);
   useLayoutEffect(() => {
     const d = at - prev.current, n = el.current; prev.current = at;
     if (!d || !n || !n.animate || noMotion()) return;
-    const sx = 1 + Math.min(0.14, 0.045 + 0.024 * Math.abs(d)), sy = 1 - (sx - 1) * 0.14, ez = "cubic-bezier(.2,.85,.25,1)";   // the app's ease-out: the slide is fastest as it sets off, so that is where it stretches
-    let from = "1 1"; try { if (run.current && run.current.playState === "running") { from = getComputedStyle(n).scale || "1 1"; if (from === "none") from = "1 1"; run.current.cancel(); } } catch (_) {}
-    try { run.current = n.animate([{ scale: from, easing: ez }, { scale: `${sx.toFixed(3)} ${sy.toFixed(3)}`, offset: 0.2, easing: ez }, { scale: "1 1" }], { duration: ms }); } catch (_) {}
+    const step = n.offsetWidth + gap, x1 = at * step;
+    let x0 = (at - d) * step, s0 = 1;
+    try {
+      if (run.current && run.current.playState === "running") { const m = new DOMMatrixReadOnly(getComputedStyle(n).transform); if (isFinite(m.m41)) { x0 = m.m41; s0 = m.a || 1; } }
+      if (run.current) run.current.cancel();
+    } catch (_) {}
+    const amp = Math.min(0.09, 0.03 + 0.015 * Math.abs(x1 - x0) / Math.max(1, step)), ramp = Math.max(1, Math.round(60 / (ms / GLIDE_N)));   // the stretch eases in over about 60 ms
+    const frames = GLIDE_P.map((pp, k) => {
+      const r = k >= ramp ? 1 : (k / ramp) * (k / ramp) * (3 - 2 * (k / ramp));
+      const sx = 1 + (s0 - 1) * (1 - r) + amp * GLIDE_V[k] * r, sy = 1 - (sx - 1) * 0.14;
+      return { transform: `translateX(${(x0 + (x1 - x0) * pp).toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`, offset: k / GLIDE_N };
+    });
+    try { run.current = n.animate(frames, { duration: ms, easing: "linear" }); } catch (_) {}
   }, [at]);
   return <i ref={el} className={cls} aria-hidden="true" style={style} />;
 }
@@ -1688,7 +1715,7 @@ function Seg({ value, options, onChange, cols, style, small }) {
   const n = options.length, at = options.findIndex(([v]) => v === value), slide = !cols || cols >= n;
   return (
     <div className={"chipseg" + (slide ? " slide" : " rows")} role="group" style={{ gridTemplateColumns: `repeat(${cols || n}, minmax(0,1fr))`, "--n": n, "--i": Math.max(0, at), ...style }}>
-      {slide && at >= 0 && <Glider cls="thumb" at={at} ms={230} />}
+      {slide && at >= 0 && <Glider cls="thumb" at={at} ms={400} gap={4} />}
       {options.map(([v, l]) => (
         <button key={String(v)} className={value === v ? "on" : ""} onClick={() => onChange(v)} style={{ height: 36, padding: "0 6px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: small ? 12 : undefined }}>{l}</button>
       ))}
@@ -2453,7 +2480,9 @@ function useTimer(active) {
 const noMotion = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 // a number that glides to its new value, fast at first and easing to a stop (not rounded — for chart positions and decimals).
 // `from` is where it starts when the page opens; leave it out to start at the value itself.
-function useTween(target, dur = 360, from) {
+// The app's one curve (--ez in the css), for motion driven from script: progress at time p, 0 to 1.
+const ezOut = bezFn(0.05, 0.7, 0.1, 1);
+function useTween(target, dur = 600, from) {
   const start = from === undefined || !isFinite(target) || noMotion() ? target : from;
   const [v, setV] = useState(start);
   const cur = useRef(start);
@@ -2461,14 +2490,14 @@ function useTween(target, dur = 360, from) {
     if (target === cur.current) return;
     if (!isFinite(target) || !isFinite(cur.current) || noMotion()) { cur.current = target; setV(target); return; }
     const a = cur.current, t0 = performance.now(); let raf;
-    const step = (t) => { const p = Math.min(1, (t - t0) / dur); const e = 1 - Math.pow(1 - p, 3.4); const nv = p >= 1 ? target : a + (target - a) * e; cur.current = nv; setV(nv); if (p < 1) raf = requestAnimationFrame(step); };
+    const step = (t) => { const p = Math.min(1, (t - t0) / dur); const e = ezOut(p); const nv = p >= 1 ? target : a + (target - a) * e; cur.current = nv; setV(nv); if (p < 1) raf = requestAnimationFrame(step); };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [target, dur]);
   return v;
 }
 // <Glide v={n} f={format} /> shows a number that glides to its new value when it changes; with `enter` it also counts up from zero when the page opens
-function Glide({ v, f, dur = 360, enter, round }) { const t = useTween(v, dur, enter ? 0 : undefined); return f(round ? Math.round(t) : t); }
+function Glide({ v, f, dur = 600, enter, round }) { const t = useTween(v, dur, enter ? 0 : undefined); return f(round ? Math.round(t) : t); }
 function useCountUp(target, dur = 550, enter) {
   const first = enter && !noMotion() ? 0 : target;
   const [v, setV] = useState(first);
@@ -3594,7 +3623,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
               const spark = cum.map((v, i) => `${i ? "L" : "M"}${(i / (cum.length - 1)) * 72},${(18 - ((v - lo) / rng) * 16).toFixed(1)}`).join("");
               return (
               <div className="homesess flex items-end justify-between gap-3">
-                <div className="min-w-0"><div className="disp mono text-3xl" style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}$<Glide v={Math.abs(netAnim)} enter round dur={320} f={(x) => x.toLocaleString()} /></div>
+                <div className="min-w-0"><div className="disp mono text-3xl" style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}$<Glide v={Math.abs(netAnim)} enter round dur={520} f={(x) => x.toLocaleString()} /></div>
                 <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{fmtH(totH)} played · expected {exp >= 0 ? "+" : "−"}${Math.abs(exp).toLocaleString()}</div></div>
                 {cum.length > 2 && <svg className="notdesk" width="72" height="20" viewBox="0 0 72 20" aria-hidden="true"><path className="drawline" pathLength="1" d={spark} fill="none" stroke={totR >= 0 ? "var(--brass)" : "var(--rose)"} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" opacity=".8" /></svg>}
                 {cum.length > 2 && (() => { const X = (i) => (i / (cum.length - 1)) * 300, Y = (v) => 66 - ((v - lo) / rng) * 60; const line = cum.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(""); const col = totR >= 0 ? "var(--brass)" : "var(--rose)"; return (
@@ -3724,7 +3753,7 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
         <line x1={P.l} x2={W - P.r} y1={y(0)} y2={y(0)} stroke="rgba(var(--fg),.14)" strokeWidth="1" />
         {/* keyed by what is drawn, so a new filter or a new session plays the trace again */}
         <g key={`${pts.length}|${last.act}|${last.exp}`}>
-        <path className="fadein" d={band} fill="rgba(var(--acc),.07)" style={{ animationDuration: ".31s" }} />
+        <path className="fadein" d={band} fill="rgba(var(--acc),.07)" style={{ animationDuration: ".4s" }} />
         <path className="fadein" d={line("exp")} fill="none" stroke="rgba(var(--fg),.4)" strokeWidth="1.5" strokeDasharray="3 4" style={{ animationDelay: ".1s" }} />
         <path className="drawline" pathLength="1" d={line("act")} fill="none" stroke={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
         <circle className="popin late" cx={x(pts.length - 1)} cy={y(last.act)} r="3.5" fill={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} />
@@ -3858,7 +3887,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
             {band >= 2 && <path className="fadein" d={bandPath(2)} fill="rgba(var(--fg),.035)" />}
             {band >= 1 && <path className="fadein" d={bandPath(1)} fill="rgba(var(--fg),.06)" />}
             {showExp && <path className="fadein" d={lineOf((p) => p.exp)} fill="none" stroke="rgba(var(--fg),.38)" strokeWidth="1.25" strokeDasharray="3 5" />}
-            <path d={lineOf((p) => p.act) + `L${xv(last).toFixed(1)},${y(0).toFixed(1)}L${xv(pts[0]).toFixed(1)},${y(0).toFixed(1)}Z`} fill="url(#pnlArea)" className="fadein" style={{ animationDuration: ".36s", animationDelay: ".12s" }} />
+            <path d={lineOf((p) => p.act) + `L${xv(last).toFixed(1)},${y(0).toFixed(1)}L${xv(pts[0]).toFixed(1)},${y(0).toFixed(1)}Z`} fill="url(#pnlArea)" className="fadein" style={{ animationDuration: ".47s", animationDelay: ".12s" }} />
             <path className="drawline" pathLength="1" d={lineOf((p) => p.act)} fill="none" stroke={col} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
             {picked && (<>
               <line x1={xv(sp)} x2={xv(sp)} y1={P.t} y2={H - P.b} stroke="rgba(var(--fg),.3)" strokeWidth="1" />
@@ -4280,7 +4309,7 @@ function LuckGauge({ z, pct }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" role="img" aria-label={`Luck percentile ${Math.round(pct * 100)}`}>
       <path d={fillL} fill="rgba(var(--acc),.16)" />
-      <path className="drawline" pathLength="1" d={curve} fill="none" stroke="rgba(var(--fg),.35)" strokeWidth="1.5" style={{ animationDuration: ".31s", animationDelay: "0s" }} />
+      <path className="drawline" pathLength="1" d={curve} fill="none" stroke="rgba(var(--fg),.35)" strokeWidth="1.5" style={{ animationDuration: ".52s", animationDelay: "0s" }} />
       <line x1={xOf(-3.5)} x2={xOf(3.5)} y1={base} y2={base} stroke="rgba(var(--fg),.15)" />
       {[-2, -1, 0, 1, 2].map((v) => <text key={v} x={xOf(v)} y={H - 2} textAnchor="middle" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{v === 0 ? "expected" : `${v > 0 ? "+" : "−"}${Math.abs(v)} SD`}</text>)}
       <line x1={xOf(zz)} x2={xOf(zz)} y1={yOf(zz) - 10} y2={base} stroke={col} strokeWidth="2" />
@@ -4468,7 +4497,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow">{filtered ? [period === "30" ? "Last 30 days" : period === "90" ? "Last 90 days" : period === "ytd" ? "This year" : "All time", casino !== "all" ? byCasino[0]?.name || "" : ""].filter(Boolean).join(" · ") : "All-time result"}</div>
-            <div className="disp mono mt-1" style={{ fontSize: 40, lineHeight: 1.05, color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)", letterSpacing: "-.02em" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={320} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
+            <div className="disp mono mt-1" style={{ fontSize: 40, lineHeight: 1.05, color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)", letterSpacing: "-.02em" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={520} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
             <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{list.length ? `${st.n} session${st.n === 1 ? "" : "s"} · ${fmtH(st.H)} · expected ${sgnMoney(st.E)}` : "No sessions yet"}</div>
           </div>
           <button onClick={() => setSheet("new")} className="btn shrink-0" style={{ width: "auto", padding: "10px 14px", fontSize: 14 }} aria-label="Log a session">+ Log</button>
@@ -5660,16 +5689,16 @@ function BetSpreadCalculator() {
         {tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
-        <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .31s var(--ez)" }}>
+        <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .5s var(--ez)" }}>
           <div className="grid grid-cols-2 gap-5">
             <div>
               <div className="eyebrow">Profit / hour</div>
-              <div className="disp text-4xl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={240} f={(x) => money(x)} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
+              <div className="disp text-4xl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={400} f={(x) => money(x)} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
               <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>expected, ± {money(r.sdHour)} (1 SD)</div>
             </div>
             <div>
               <div className="eyebrow">Risk of ruin</div>
-              <div className="disp text-4xl mt-1 mono" style={{ color: rorTone }}><Glide v={r.ror} enter dur={240} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
+              <div className="disp text-4xl mt-1 mono" style={{ color: rorTone }}><Glide v={r.ror} enter dur={400} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
               <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>chance of losing {money(+bankroll || 0)}</div>
             </div>
           </div>
@@ -5699,9 +5728,9 @@ function BetSpreadCalculator() {
             </div>
             {sess ? (
               <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={270} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={270} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Chance of a losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={270} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>finish below where you started</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Chance of a losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>finish below where you started</div></div>
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>peak to low{sess.dd90 == null ? "" : ` · 1 in 10: −${money(Math.round(sess.dd90 / 25) * 25)}`}</div></div>
               </div>
             ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
@@ -5829,7 +5858,7 @@ function BetSpreadCalculator() {
                         {frontier.map((p, i) => { const sel = Math.round(p.cap * 100) === rorPct; return (
                           <button key={p.cap} onClick={() => setRorPct(Math.round(p.cap * 100))} className="relative flex-1 flex flex-col items-center justify-end h-full" aria-label={`${Math.round(p.cap * 100)}% risk`}>
                             {sel && !p.infeasible && <span className="absolute mono whitespace-nowrap" style={{ fontSize: 9, top: -13, color: "var(--brass)" }}>${p.ev.toFixed(0)}</span>}
-                            <div className="w-full rounded-t bary" style={{ "--i": i, height: p.infeasible ? 3 : `${Math.max(8, (p.ev / mx) * 100)}%`, background: p.infeasible ? "rgba(var(--neg),.35)" : sel ? "var(--brass)" : p.ev > r.evHour ? "rgba(var(--acc),.45)" : "rgba(var(--acc),.22)", transition: "height .2s var(--ez), background .16s" }} />
+                            <div className="w-full rounded-t bary" style={{ "--i": i, height: p.infeasible ? 3 : `${Math.max(8, (p.ev / mx) * 100)}%`, background: p.infeasible ? "rgba(var(--neg),.35)" : sel ? "var(--brass)" : p.ev > r.evHour ? "rgba(var(--acc),.45)" : "rgba(var(--acc),.22)", transition: "height .34s var(--ez), background .16s" }} />
                           </button>); })}
                       </div>
                     </div>
@@ -5939,7 +5968,7 @@ function BetSpreadCalculator() {
       </nav>
       <nav className="bottom-nav" aria-label="Sections">
         <div className="flex">
-          {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(navTab === "count" ? "train" : navTab); return at >= 0 ? <Glider cls="navglide" at={at} ms={270} style={{ "--i": at, "--n": ks.length }} /> : null; })()}
+          {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(navTab === "count" ? "train" : navTab); return at >= 0 ? <Glider cls="navglide" at={at} ms={480} style={{ "--i": at, "--n": ks.length }} /> : null; })()}
           {NAV_ITEMS.filter(([k]) => k !== "plan").map(([k, l, icon]) => { const on = navTab === k || (k === "train" && navTab === "count"); return (
             <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
               <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>

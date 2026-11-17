@@ -91,7 +91,7 @@ const casCss = `
 .cpin.halo{fill:rgba(var(--neg),.2);stroke:rgba(var(--neg),.55);stroke-width:1}
 .cpin.pulse{fill:none;stroke:rgba(var(--neg),.6);stroke-width:1.2;animation:cpulse 2.6s ease-out infinite}
 .cpin.sel{fill:none;stroke:var(--ivory);stroke-width:1.6}
-.cpinsin{animation:cpinsin .23s var(--ez) .05s backwards}
+.cpinsin{animation:cpinsin .39s var(--ez) .05s backwards}
 @keyframes cpinsin{from{opacity:0}}
 @keyframes cpulse{0%{transform:scale(calc(var(--ik) * .55));opacity:.9}70%,100%{transform:scale(calc(var(--ik) * 1.5));opacity:0}}
 .cm-lab{font:600 11px Inter,system-ui,sans-serif;fill:var(--ivory);paint-order:stroke;stroke:var(--bg);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
@@ -171,11 +171,13 @@ function CasinoMap({ map, pins, focus, sel, placing, miles, regionWord, onRegion
     return clamp({ k, x: size.w / 2 - ((r.main[0] + r.main[2]) / 2) * k, y: size.h / 2 - ((r.main[1] + r.main[3]) / 2) * k });
   };
   const stop = () => { if (raf.current) cancelAnimationFrame(raf.current); raf.current = 0; };
+  // the app's one curve, cubic-bezier(.05,.7,.1,1): off at full speed, then a long glide to a stop
+  const ezOutMap = (p) => { if (p <= 0) return 0; if (p >= 1) return 1; const bx = (t) => 3 * (1 - t) * (1 - t) * t * 0.05 + 3 * (1 - t) * t * t * 0.1 + t * t * t, by = (t) => 3 * (1 - t) * (1 - t) * t * 0.7 + 3 * (1 - t) * t * t + t * t * t; let lo = 0, hi = 1; for (let i = 0; i < 22; i++) { const m = (lo + hi) / 2; if (bx(m) < p) lo = m; else hi = m; } return by((lo + hi) / 2); };
   const animTo = (to) => {
     stop(); const from = vr.current; if (!from || reduceMotion()) { setView(to); return; }
-    const c0 = [(size.w / 2 - from.x) / from.k, (size.h / 2 - from.y) / from.k], c1 = [(size.w / 2 - to.x) / to.k, (size.h / 2 - to.y) / to.k], t0 = performance.now(), dur = 320;   // the map zooms the way everything else moves: straight off the mark, easing to a stop
+    const c0 = [(size.w / 2 - from.x) / from.k, (size.h / 2 - from.y) / from.k], c1 = [(size.w / 2 - to.x) / to.k, (size.h / 2 - to.y) / to.k], t0 = performance.now(), dur = 520;   // the map zooms the way everything else moves: straight off the mark, easing to a stop
     const step = (now) => {
-      const u = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - u, 3.4);
+      const u = Math.min(1, (now - t0) / dur), e = ezOutMap(u);
       const k = from.k * Math.pow(to.k / from.k, e), cx = c0[0] + (c1[0] - c0[0]) * e, cy = c0[1] + (c1[1] - c0[1]) * e;
       setView(u >= 1 ? to : { k, x: size.w / 2 - cx * k, y: size.h / 2 - cy * k });
       raf.current = u < 1 ? requestAnimationFrame(step) : 0;
