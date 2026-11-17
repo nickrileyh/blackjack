@@ -612,6 +612,22 @@ input[type=range]{accent-color:var(--brass)}
 .wipex{animation:wipex .62s var(--ee) .06s backwards}
 @keyframes wipex{from{clip-path:inset(-6px 100% -6px -6px)}to{clip-path:inset(-6px -6px -6px -6px)}}
 .fadein{animation:fadein .4s var(--ease) backwards}
+:root{--win:52,211,153;--win-l:#6EE7B7}
+:root[data-theme="light"]{--win:16,138,86;--win-l:#0B6B43}
+.mcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.mcal .wd{font:600 9.5px Inter;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;padding-bottom:2px}
+.mcal .d{position:relative;height:50px;border-radius:9px;background:rgba(var(--fg),.03);display:flex;align-items:flex-end;justify-content:center;padding:0 2px 9px;min-width:0}
+.mcal .d.off{background:none}
+.mcal .d>i{position:absolute;top:5px;left:7px;font:500 9.5px Inter;font-style:normal;color:var(--muted)}
+.mcal .d>b{font:600 11.5px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:-.02em;white-space:nowrap}
+.mcal .d>u{position:absolute;top:5px;right:6px;font:600 8.5px Inter;text-decoration:none;color:var(--muted)}
+.mcal .d.up{background:rgba(var(--win),var(--a))}.mcal .d.up>b{color:var(--win-l)}.mcal .d.up>i{color:rgba(var(--win),.85)}
+.mcal .d.dn{background:rgba(var(--neg),var(--a))}.mcal .d.dn>b{color:var(--neg-l)}.mcal .d.dn>i{color:rgba(var(--neg),.9)}
+.mcal .d.ev>b{color:var(--ivory-d)}
+.mcal button.d{cursor:pointer;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+.mcal button.d:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(var(--fg),.16)}
+.mcal .d.now{box-shadow:inset 0 0 0 1px rgba(var(--fg),.22)}
+.mbar{cursor:pointer;outline:none}.mbar:focus-visible rect:first-child{stroke:var(--brass);stroke-width:1.5}
 @keyframes fadein{from{opacity:0}}
 .popin{transform-box:fill-box;transform-origin:center;animation:popin .34s var(--eo) backwards}
 @keyframes popin{from{opacity:0;transform:scale(.3)}}
@@ -927,7 +943,8 @@ input[type=range]::-webkit-slider-thumb{transition:transform .35s var(--fluid),b
 input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14);background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,255,255,.62))}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
-@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}
+.mcal button.d{transition:none}.mcal button.d:hover{transform:none}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -4200,7 +4217,49 @@ function LuckGauge({ z, pct }) {
   );
 }
 
-function MonthBars({ months }) {
+const useWide = () => {   // the same 1180px line the two-column desktop layout turns on at
+  const q = "(min-width:1180px)";
+  const [w, setW] = useState(() => typeof matchMedia !== "undefined" && matchMedia(q).matches);
+  useEffect(() => { if (typeof matchMedia === "undefined") return; const m = matchMedia(q), f = () => setW(m.matches); m.addEventListener("change", f); return () => m.removeEventListener("change", f); }, []);
+  return w;
+};
+
+// One month, day by day: winning days green, losing days red, each with its amount. Deeper colour = bigger day.
+// A day with one session opens it; a day with several shows how many and names them on hover.
+function MonthCal({ k, list, onOpen }) {
+  const [y, m] = k.split("-").map(Number);
+  const nDays = new Date(y, m, 0).getDate(), lead = new Date(y, m - 1, 1).getDay(), today = localDay();
+  const by = new Map();
+  list.forEach((s) => { if (monthKey(s.date) !== k) return; const d = +s.date.slice(8), o = by.get(d) || { net: 0, h: 0, items: [] }; o.net += s.result; o.h += +s.hours || 0; o.items.push(s); by.set(d, o); });
+  const days = [...by.values()], peak = Math.max(1, ...days.map((o) => Math.abs(o.net)));
+  const net = days.reduce((a, o) => a + o.net, 0), hrs = days.reduce((a, o) => a + o.h, 0);
+  const ups = days.filter((o) => o.net > 0).length, dns = days.filter((o) => o.net < 0).length;
+  return (
+    <div className="fadein mt-4 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
+      <div className="flex items-baseline justify-between mb-3">
+        <div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{monthName(k)}</div>
+        <div className="mono text-xs" style={{ color: net > 0 ? "var(--win-l)" : net < 0 ? "var(--neg-l)" : "var(--ivory-d)" }}>{sgnMoney(net)} <span style={{ color: "var(--muted)" }}>· {fmtH(hrs)}</span></div>
+      </div>
+      <div className="mcal" role="grid" aria-label={`${monthName(k)}, day by day`}>
+        {["S", "M", "T", "W", "T", "F", "S"].map((w, i) => <div key={"w" + i} className="wd">{w}</div>)}
+        {Array.from({ length: lead }, (_, i) => <div key={"l" + i} className="d off" />)}
+        {Array.from({ length: nDays }, (_, i) => {
+          const d = i + 1, o = by.get(d), date = `${k}-${String(d).padStart(2, "0")}`, now = date === today ? " now" : "";
+          if (!o) return <div key={d} className={"d" + now}><i>{d}</i></div>;
+          const cls = "d " + (o.net > 0 ? "up" : o.net < 0 ? "dn" : "ev") + now, a = (0.13 + 0.25 * (Math.abs(o.net) / peak)).toFixed(3);
+          const tip = o.items.map((s) => `${s.where || "—"}  ${sgnMoney(s.result)}  ${fmtH(s.hours)}`).join("\n");
+          const inner = <><i>{d}</i>{o.items.length > 1 && <u>×{o.items.length}</u>}<b>{o.net ? (o.net > 0 ? "+" : "") + shortMoney(o.net) : "$0"}</b></>;
+          return o.items.length === 1
+            ? <button key={d} className={cls} style={{ "--a": a }} title={tip} onClick={() => onOpen(o.items[0])} aria-label={`${monthName(k, true)} ${d}: ${sgnMoney(o.net)}`}>{inner}</button>
+            : <div key={d} className={cls} style={{ "--a": a }} title={tip}>{inner}</div>;
+        })}
+      </div>
+      <div className="text-[11px] mt-2.5" style={{ color: "var(--muted)" }}>{ups} winning day{ups === 1 ? "" : "s"} · {dns} losing</div>
+    </div>
+  );
+}
+
+function MonthBars({ months, sel, onPick }) {
   if (months.length < 2) return null;
   const up = Math.max(0, ...months.map((m) => m.net)), dn = Math.max(0, ...months.map((m) => -m.net));
   const H = dn && up ? 132 : 104, W = 320, P = { t: 14, b: 18 }, lab = 13; // room for the value label on each side that has bars
@@ -4209,8 +4268,9 @@ function MonthBars({ months }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" role="img" aria-label="Results by month">
       <line x1="0" x2={W} y1={y0} y2={y0} stroke="rgba(var(--fg),.15)" />
-      {months.map((m, i) => { const cx = (i + 0.5) * (W / months.length), h = Math.max(1.5, Math.abs(m.net) * sc); return (
-        <g key={m.k}>
+      {months.map((m, i) => { const cw = W / months.length, cx = (i + 0.5) * cw, h = Math.max(1.5, Math.abs(m.net) * sc); const pick = onPick ? { className: "mbar", role: "button", tabIndex: 0, "aria-pressed": sel === m.k, "aria-label": `${monthName(m.k)}: show the days`, onClick: () => onPick(m.k), onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPick(m.k); } } } : {}; return (
+        <g key={m.k} {...pick} style={{ opacity: sel && sel !== m.k ? 0.38 : 1, transition: "opacity .2s" }}>
+          {onPick && <rect x={cx - cw / 2 + 1} width={cw - 2} y="1" height={H - 2} rx="6" fill={sel === m.k ? "rgba(var(--fg),.05)" : "transparent"} />}
           <rect className="growy" style={{ transformOrigin: m.net >= 0 ? "50% 100%" : "50% 0%", animationDelay: `${i * 0.04}s` }} x={cx - bw / 2} width={bw} y={m.net >= 0 ? y0 - h : y0} height={h} rx="3" fill={m.net >= 0 ? "var(--brass)" : "var(--rose)"} opacity=".9" />
           {months.length <= 8 && <text x={cx} y={m.net >= 0 ? y0 - h - 4 : y0 + h + 10} textAnchor="middle" fill="var(--ivory-d)" style={{ font: "600 9px Inter" }}>{shortMoney(m.net)}</text>}
           <text x={cx} y={H - 3} textAnchor="middle" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{monthName(m.k, true)}</text>
@@ -4233,6 +4293,8 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
   const [sessions, setSessions] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [sheet, setSheet] = useState(null); // null | "new" | session
+  const wide = useWide();
+  const [calPick, setCalPick] = useState(null);   // the month whose days are open under "By month" (wide screens only)
   const [spreadFor, setSpreadFor] = useState(null); // { id, cfg, current } — the spread/rules prompt after logging
   const [period, setPeriod] = useState("all");
   const [casino, setCasino] = useState("all");
@@ -4287,6 +4349,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
     const m = new Map(); list.forEach((s) => { const k = monthKey(s.date); const o = m.get(k) || { k, net: 0, h: 0, n: 0 }; o.net += s.result; o.h += +s.hours || 0; o.n++; m.set(k, o); });
     return [...m.values()].sort((a, b) => a.k.localeCompare(b.k)).slice(-12);
   }, [list]);
+  const calMonth = wide && calPick && months.some((m) => m.k === calPick) ? calPick : null;
   const lows = list.filter((s) => s.low != null && +s.hours > 0);
   const lowCheck = useMemo(() => {
     if (!lows.length) return null;
@@ -4443,8 +4506,9 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
         {/* months */}
         {months.length >= 2 && (
           <section className="card p-5 mb-4">
-            <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">By month</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{months.length} months</div></div>
-            <MonthBars months={months} />
+            <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">By month</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{wide && !calMonth ? "click a month for its days" : `${months.length} months`}</div></div>
+            <MonthBars months={months} sel={calMonth} onPick={wide ? (k) => setCalPick(calPick === k ? null : k) : undefined} />
+            {calMonth && <MonthCal key={calMonth} k={calMonth} list={list} onOpen={setSheet} />}
           </section>
         )}
 
