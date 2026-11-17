@@ -180,7 +180,7 @@ export function MoreHub({ go, bankroll }) {
     ["plan", "Plan", <><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8.5 3.5v3M15.5 3.5v3M8 13.5h3M8 16.5h6" /></>, next.first ? `Next up: ${next.first.c.name}` : "Where to play next and how your bankroll grows"],
   ];
   return (
-    <div className="rise">
+    <div className="rise inturn">
       <section className="card overflow-hidden mb-4">
         {rows.map(([k, name, icon, sub]) => (
           <button key={k} className="mrow big" onClick={() => go(k)}>
@@ -226,7 +226,7 @@ export function TrainHub({ go }) {
     ]],
   ];
   return (
-    <div className="rise">
+    <div className="rise inturn">
       <FocusCard log={log} go={go} />
       {groups.map(([title, items]) => (
         <div key={title} className="mb-4">
@@ -283,8 +283,8 @@ export const phoneCss = `
 .shell>header h1.long{font-size:clamp(21px,6vw,27px);letter-spacing:-.025em;white-space:nowrap}
 .shell>header .rulespill{min-width:0}
 /* Train: the answer stands where the answer buttons were */
-.resin{animation:resin .32s var(--ez) backwards}
-@keyframes resin{from{opacity:0;transform:translateY(8px)}}
+.resin{animation:resin .42s var(--ez-soft) backwards}
+@keyframes resin{from{opacity:0;transform:translate3d(0,10px,0);filter:blur(4px)}}
 /* the strategy table and its answer buttons fit one screen: smaller cards, no labels inside the felt (the line under
    it names both hands), and shorter still on a short screen */
 .cz-train{--cz:1}.tblrows{gap:8px}

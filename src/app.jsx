@@ -422,10 +422,6 @@ html,body{background:var(--bg)}
 .cmdk-empty{padding:22px 12px;text-align:center;font-size:13px;color:var(--muted)}
 .cmdk-foot{display:flex;gap:18px;padding:9px 16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
 .bj kbd{font:600 10.5px Inter,system-ui,sans-serif;padding:2px 6px;border-radius:6px;background:rgba(var(--fg),.08);border:1px solid rgba(var(--fg),.12);color:var(--ivory-d)}
-.dcol>section{animation:rise .34s var(--ease) both}
-.dcol>section:nth-of-type(2){animation-delay:.05s}.dcol>section:nth-of-type(3){animation-delay:.08s}.dcol>section:nth-of-type(n+4){animation-delay:.11s}
-.dcol.o2>section:nth-of-type(1){animation-delay:.08s}.dcol.o2>section:nth-of-type(2){animation-delay:.11s}.dcol.o2>section:nth-of-type(n+3){animation-delay:.15s}
-.dcol.o3>section:nth-of-type(1){animation-delay:.11s}.dcol.o3>section:nth-of-type(n+2){animation-delay:.15s}
 @media (min-width:1024px){
 html{overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(var(--fg),.16) transparent}
 .bottom-nav,.hdrgear,.shell>header .rulespill,.topbar .rulespill{display:none!important}
@@ -611,11 +607,6 @@ input[type=range]{accent-color:var(--brass)}
 .shoe.go{animation:shoe .41s var(--ez)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .rise{animation:rise .27s var(--ease) both}
-.rise>div>section,.rise>section,.rise>div>.stagger{animation:rise .34s var(--ease) both}
-.rise>div>section:nth-of-type(2),.rise>section:nth-of-type(2){animation-delay:.05s}
-.rise>div>section:nth-of-type(3),.rise>section:nth-of-type(3){animation-delay:.08s}
-.rise>div>section:nth-of-type(4),.rise>section:nth-of-type(4){animation-delay:.11s}
-.rise>div>section:nth-of-type(n+5),.rise>section:nth-of-type(n+5){animation-delay:.15s}
 .navbtn.on .navicon svg{animation:navpop .36s var(--ez)}
 @keyframes navpop{0%{transform:scale(.78)}100%{transform:scale(1)}}
 .growy{transform-box:fill-box;animation:growy .37s var(--ez) both}
@@ -802,14 +793,6 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 .btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .41s var(--fluid),filter .16s,background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease)}
 .btn:active,.iconbtn:active,.stepbtn:active,.rulespill:active,.chippress:active,.navbtn:active{transition-duration:.12s}
 .btn:active{transform:scale(.99)}.iconbtn:active,.stepbtn:active{transform:scale(.95)}.rulespill:active,.chippress:active,.navbtn:active{transform:scale(.975)}
-/* switching tab: the page that comes in is quick too, on the same ease-out, with a shorter stagger */
-.rise>div>section,.rise>section,.rise>div>.stagger,.dcol>section{animation-duration:.48s;animation-timing-function:var(--ez)}
-.rise>div>section:nth-of-type(2),.rise>section:nth-of-type(2),.dcol>section:nth-of-type(2){animation-delay:.03s}
-.rise>div>section:nth-of-type(3),.rise>section:nth-of-type(3),.dcol>section:nth-of-type(3){animation-delay:.06s}
-.rise>div>section:nth-of-type(4),.rise>section:nth-of-type(4){animation-delay:.09s}
-.rise>div>section:nth-of-type(n+5),.rise>section:nth-of-type(n+5),.dcol>section:nth-of-type(n+4){animation-delay:.09s}
-.dcol.o2>section:nth-of-type(1){animation-delay:.05s}.dcol.o2>section:nth-of-type(2){animation-delay:.08s}.dcol.o2>section:nth-of-type(n+3){animation-delay:.08s}
-.dcol.o3>section:nth-of-type(1){animation-delay:.08s}.dcol.o3>section:nth-of-type(n+2){animation-delay:.08s}
 .chipseg.slide button{transition:color .16s var(--ease)}
 .topbar{transition:transform .41s var(--fluid),opacity .17s var(--ease)}
 @media(hover:hover) and (min-width:1024px){.btn:not(.ghost):hover:active:not(:disabled){transform:scale(.99)}}
@@ -1071,6 +1054,58 @@ body{background:none}
 .kbrow kbd{min-width:22px;text-align:center;font-size:11px;padding:3px 7px}
 @media (max-width:640px){.kbgrid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.tc-cell.lit{animation:none!important}.tc-cell,.tc-h,.tc-l{transition:none!important}}
+/* ---- Arriving: everything comes in out of a soft blur, one after another ----
+   Nick: "smoooooooth motion ... adding directional blur and maybe lowering opacity at beginning of animation", with
+   cards arriving in turn and softer sheets and pop-ups. Each entrance is two animations on the same element:
+   the travel, on the app's curve (--ez: off at once, a long glide to rest), and the fade with the blur, on a gentler
+   ease-out (--ez-soft) so the sharpening can be seen instead of being over in the first frame. Nothing eases in.
+   The blur is the ordinary blur filter riding the movement: one a browser can animate on the graphics card. A blur in
+   one direction only needs an SVG filter, which Safari draws slowly, so it is not used.
+   The stagger only applies while the shell carries data-enter (App sets it for a moment when a page opens), so a
+   card that turns up later — the math after an answer, a saved list — comes straight in with no wait. */
+:root{--ez-soft:cubic-bezier(.22,.61,.36,1);--arr-y:18px;--arr-blur:7px;--arr-step:48ms}
+@media (max-width:1023px){:root{--arr-y:14px;--arr-blur:5px}}
+@keyframes arrmove{from{transform:translate3d(0,var(--arr-y),0) scale(.985)}}
+@keyframes arrfade{from{opacity:0;filter:blur(var(--arr-blur))}}
+@keyframes pagein{from{opacity:0}}
+.shell>.rise{animation:pagein .26s var(--ez-soft) backwards}
+.dcol>*,.shell>.rise>div>section,.rise>div>.stagger,.inturn>*{animation:arrmove .62s var(--ez) backwards,arrfade .46s var(--ez-soft) backwards}
+.dcol>:nth-child(2),.inturn>:nth-child(2){--ai:1}.dcol>:nth-child(3),.inturn>:nth-child(3){--ai:2}.dcol>:nth-child(4),.inturn>:nth-child(4){--ai:3}.dcol>:nth-child(5),.inturn>:nth-child(5){--ai:4}.dcol>:nth-child(6),.inturn>:nth-child(6){--ai:5}.dcol>:nth-child(7),.inturn>:nth-child(7){--ai:6}.dcol>:nth-child(n+8),.inturn>:nth-child(n+8){--ai:7;--arr-blur:0px}
+.dcol.o2>*,.dcol.o3>*,.dcol.cont>*{--ac:.5}
+@media (max-width:1179px){.dcol.o2>*,.dcol.o3>*,.dcol.cont>*{--ac:3;--arr-blur:0px}}
+.shell[data-enter] .dcol>*,.shell[data-enter] .inturn>*{animation-delay:calc((var(--ai,0) + var(--ac,0)) * var(--arr-step))}
+/* small things that appear in place (an answer, a note, an unfolded explanation) sharpen as they rise */
+@keyframes rise{from{opacity:0;transform:translate3d(0,9px,0);filter:blur(4px)}to{opacity:1;transform:none}}
+@keyframes riseplain{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.rise.dgrid,.felt.rise{animation-name:riseplain}
+/* sheets and pop-ups: the glass panel glides up and fades in, and what is on it comes into focus a beat behind.
+   The blur is on the contents, never on the panel: the panel is blurring the page behind it already. */
+@keyframes panelup{from{transform:translate3d(0,34px,0)}}
+@keyframes panelpop{from{transform:translate3d(0,16px,0) scale(.965)}}
+@keyframes panelfade{from{opacity:0}}
+@keyframes focusin{from{opacity:0;filter:blur(9px)}}
+@keyframes paneldown{to{transform:translate3d(0,22px,0) scale(.985);opacity:0}}
+.sheet{animation:panelup .58s var(--ez) backwards,panelfade .36s var(--ez-soft) backwards}
+@media (min-width:1024px){.sheetwrap .sheet{animation:panelpop .54s var(--ez) backwards,panelfade .34s var(--ez-soft) backwards}}
+.sheet>.sheetgrab,.sheet>.sheetbody,.card.rulesdlg>*,.cmdk>*{animation:focusin .44s var(--ez-soft) backwards}
+.sheetwrap,.rulesscrim,.cmdk-wrap{animation:scrimin .36s var(--ez-soft)}
+.sheetwrap.out{animation:scrimout .22s var(--ez-soft) forwards}
+.sheetwrap.out .sheet{animation:paneldown .22s var(--ez-soft) forwards}
+.sheetwrap.out .sheet>*{animation:none}
+.card.rulesdlg{animation:panelpop .56s var(--ez) backwards,panelfade .36s var(--ez-soft) backwards}
+.cmdk{animation:cmdkmove .46s var(--ez) backwards,panelfade .3s var(--ez-soft) backwards}
+@keyframes cmdkmove{from{transform:translate3d(0,-12px,0) scale(.975)}}
+.syncpill{animation:rise .5s var(--ez-soft) both}
+.rise{animation-duration:.44s;animation-timing-function:var(--ez-soft)}
+/* a dealt card is a little soft while it is moving fastest, and sharp as it lands */
+@keyframes deal{0%{transform:translate(var(--dx),var(--dy)) rotate(var(--r0)) rotateY(70deg) scale(.9);opacity:0;filter:brightness(.7) blur(3px)}20%{opacity:1}100%{transform:translate(0,0) rotate(var(--r1)) rotateY(0) scale(1);opacity:1;filter:brightness(1) blur(0px)}}
+@media (prefers-reduced-motion:reduce){.dcol>*,.shell>.rise,.shell>.rise>div>section,.rise>div>.stagger,.inturn>*,.sheet,.sheet>*,.card.rulesdlg,.card.rulesdlg>*,.cmdk,.cmdk>*,.sheetwrap,.rulesscrim,.cmdk-wrap,.syncpill,.rise{animation:none!important}}
+/* ---- Tightened: one gutter, level columns, tidier line breaks ----
+   On a wide screen the space under a card now equals the space between the two columns (it was 16px against 20px);
+   headings break into even lines and paragraphs never leave one word alone on the last line. */
+@media (min-width:1180px){.dcol>.mb-4,.dcol>*>.card.mb-4{margin-bottom:20px}}
+.bj h1,.bj h2,.bj h3,.bj .disp{text-wrap:balance}
+.bj p{text-wrap:pretty}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}
@@ -2104,8 +2139,8 @@ function Trainer({ rules, setRules, spread }) {
       {view === "drill" && <>
 
 
-      {/* card */}
-      {cur && (
+      {/* card (in a wrapper: the entrance belongs to the wrapper, so the shake on a wrong answer can't play it again) */}
+      {cur && (<div>
         <section className={"card p-5 mb-4 " + (result ? (result.ok ? "rim-ok" : "rim-bad shake") : "")}>
           <div className="flex justify-between text-xs mb-3 mono ph-hide" style={{ color: "var(--muted)" }}>
             <span>{session.right}/{session.asked} this session{streak >= 2 ? <> · <span style={{ color: "var(--brass)" }}>{streak} in a row</span></> : null}</span>
@@ -2165,7 +2200,7 @@ function Trainer({ rules, setRules, spread }) {
             <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}><Toggle label="Deal the next hand automatically" on={auto} onChange={(v) => { setAuto(v); if (!v) pause(); }} /></div>
           </div>
         </section>
-      )}
+      </div>)}
       </>}
       </div><div className="dcol o2 stick">
       {view === "drill" && <>
@@ -4476,7 +4511,7 @@ function Sheet({ title, onClose: shut, children }) {
   const [out, setOut] = useState(false); const gone = useRef(false);
   const live = useRef(true); useEffect(() => () => { live.current = false; }, []);
   const leave = () => { shut(); setTimeout(() => { if (live.current) { gone.current = false; setOut(false); const el = box.current; if (el) { el.style.transition = ""; el.style.transform = ""; } } }, 80); };   // still here? the owner kept it open
-  const onClose = () => { if (gone.current) return; gone.current = true; if (noMotion()) { leave(); return; } setOut(true); setTimeout(leave, 170); };
+  const onClose = () => { if (gone.current) return; gone.current = true; if (noMotion()) { leave(); return; } setOut(true); setTimeout(leave, 220); };
   useEffect(() => {
     const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
     const k = (e) => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", k);
@@ -4490,7 +4525,7 @@ function Sheet({ title, onClose: shut, children }) {
   const dEnd = (e) => {
     const d = drag.current; if (!d || d.id !== e.pointerId) return; drag.current = null;
     const fast = d.dy > 36 && d.dy / Math.max(1, e.timeStamp - d.t) > 0.55;
-    if (e.type !== "pointercancel" && (d.dy > 110 || fast)) { const el = box.current; settle(el ? el.offsetHeight : 600, 190); if (!gone.current) { gone.current = true; setOut(true); setTimeout(leave, 170); } } else if (d.dy) settle(0, 240);
+    if (e.type !== "pointercancel" && (d.dy > 110 || fast)) { const el = box.current; settle(el ? el.offsetHeight : 600, 190); if (!gone.current) { gone.current = true; setOut(true); setTimeout(leave, 220); } } else if (d.dy) settle(0, 240);
   };
   const ui = (
     <div className={"bj sheetwrap fixed inset-0 flex flex-col justify-end" + (out ? " out" : "")} style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} {...backdrop(onClose)} role="dialog" aria-label={title}>
@@ -5903,7 +5938,12 @@ function BetSpreadCalculator() {
   useEffect(() => { const t = setTimeout(() => { const idle = window.requestIdleCallback || ((f) => setTimeout(f, 1)); idle(() => warmCasinos()); }, 3600); return () => clearTimeout(t); }, []);
   // a new page starts at its top, in the same paint it appears in (not while the old page is still showing)
   const tabSeen = useRef(tab);
-  useLayoutEffect(() => { if (tabSeen.current !== tab) { tabSeen.current = tab; try { window.scrollTo(0, 0); } catch (_) {} } }, [tab]);
+  // while a page is opening its cards arrive one after another (the stagger in the css reads data-enter); afterwards
+  // anything that turns up comes straight in. Set by hand, so React never touches it.
+  const shellRef = useRef(null), enterT = useRef(0);
+  const markEnter = (ms) => { const el = shellRef.current; if (!el) return; el.setAttribute("data-enter", ""); clearTimeout(enterT.current); enterT.current = setTimeout(() => { try { el.removeAttribute("data-enter"); } catch (_) {} }, ms); };
+  useLayoutEffect(() => { markEnter(2600); return () => clearTimeout(enterT.current); }, []); // eslint-disable-line
+  useLayoutEffect(() => { if (tabSeen.current !== tab) { tabSeen.current = tab; markEnter(1500); try { window.scrollTo(0, 0); } catch (_) {} } }, [tab]); // eslint-disable-line
   const [rules, setRulesRaw] = useState(DEFAULT_RULES);
   const [setupOpen, setSetupOpen] = useState(false);
   const [firstRun, setFirstRun] = useState(true);
@@ -6110,7 +6150,7 @@ function BetSpreadCalculator() {
       {setupOpen && <RulesModal rules={rules} onSave={saveRules} onClose={() => setSetupOpen(false)} first={firstRun} />}
       {cmd && <CommandPalette items={cmdItems} onClose={() => setCmd(false)} />}
       {keysOpen && <ShortcutsSheet onClose={() => setKeysOpen(false)} mac={isMac} />}
-      <div className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
+      <div ref={shellRef} className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
         <header className="mb-5 flex items-end justify-between gap-3">
           <div className="shrink-0">
