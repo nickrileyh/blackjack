@@ -2,10 +2,9 @@
 // the session timer and Home's casino-trip card. They live here so work on them doesn't collide with app.jsx.
 // Like casinos.jsx: nothing imported from app.jsx may be used while this file loads, only inside components.
 import { useState, useEffect, useMemo } from "react";
-import { Sheet, SESS_KEY, casinoKey, localDay, loadLog, rulesShort, FocusCard, TESTS_KEY, testsOf, TEST_DEFS, THEME_KEY, THEME_LIST } from "./app.jsx";
+import { Sheet, SESS_KEY, casinoKey, localDay, loadLog, FocusCard, TESTS_KEY, testsOf, TEST_DEFS } from "./app.jsx";
 import { usePlayNext, scoreTone } from "./planner.jsx";
 import { useWhere, nearestCasinos, distLabel, CAS_KEY } from "./casinos.jsx";
-import { soundPrefs } from "./sound.js";
 
 // the phone layout is everything under the line where the sidebar takes over
 export function useNarrow() {
@@ -167,34 +166,28 @@ export function TripCard({ go, bankroll }) {
 }
 
 // ======================= the More tab =======================
-// Casinos, Plan and Settings sit behind one tab on a phone; each says what is in it right now.
-export function MoreHub({ go, rules, onRules, bankroll }) {
-  const [cas, setCas] = useState(null), [theme, setTheme] = useState("Emerald"), t = useSessionTimer();
+// Casinos and Plan sit behind one tab on a phone. Kept to those two rows on purpose (Nick asked for this menu to be
+// cleaned up): Settings is the gear in the top right of every page, the rules are the pill beside it, and logging a
+// session is on Home and Sessions.
+export function MoreHub({ go, bankroll }) {
+  const [cas, setCas] = useState(null);
   useEffect(() => { (async () => {
     try { const r = await window.storage.get(CAS_KEY, false); const d = r && r.value ? JSON.parse(r.value) : null, m = Array.isArray(d && d.marks) ? d.marks.filter((x) => x && !x.hidden) : []; setCas({ n: m.filter((x) => x.status || x.custom).length, x: m.filter((x) => x.status === "backed").length }); } catch (_) { setCas({ n: 0, x: 0 }); }
-    try { const r = await window.storage.get(THEME_KEY, false); const k = r && r.value; const f = THEME_LIST.find((x) => x[0] === k); if (f) setTheme(f[1]); } catch (_) {}
   })(); }, []);
   const next = usePlayNext(bankroll, true);
-  let sound = true; try { sound = soundPrefs().on !== false; } catch (_) {}
-  const tiles = [
-    ["casinos", "Casinos", <><path d="M12 20.8s-6.6-5.9-6.6-10.9a6.6 6.6 0 0 1 13.2 0c0 5-6.6 10.9-6.6 10.9z" /><circle cx="12" cy="9.9" r="2.4" /></>, cas && cas.n ? `${cas.n} yours` : "Map & reports", cas && cas.x ? `${cas.x} backed off` : "Near me · scouting"],
-    ["plan", "Plan", <><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8.5 3.5v3M15.5 3.5v3M8 13.5h3M8 16.5h6" /></>, next.first ? <span className="truncate block">{next.first.c.name}</span> : "Where to play", next.first ? `Next up · ${next.when}` : "Rotation · bankroll growth"],
+  const rows = [
+    ["casinos", "Casinos", <><path d="M12 20.8s-6.6-5.9-6.6-10.9a6.6 6.6 0 0 1 13.2 0c0 5-6.6 10.9-6.6 10.9z" /><circle cx="12" cy="9.9" r="2.4" /></>, cas && cas.n ? `${cas.n} of yours${cas.x ? ` · ${cas.x} backed off` : ""}` : "The map, scouting reports and what is near you"],
+    ["plan", "Plan", <><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8.5 3.5v3M15.5 3.5v3M8 13.5h3M8 16.5h6" /></>, next.first ? `Next up: ${next.first.c.name}` : "Where to play next and how your bankroll grows"],
   ];
   return (
     <div className="rise">
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        {tiles.map(([k, name, icon, big, sub]) => (
-          <button key={k} className="card ptile" onClick={() => go(k)}>
-            <span className="flex items-center justify-between"><span className="ticon"><Ico s={19}>{icon}</Ico></span><Chev /></span>
-            <span className="block text-[13px] font-semibold mt-3" style={{ color: "var(--ivory-d)" }}>{name}</span>
-            <span className="block text-[18px] font-semibold mt-0.5 truncate" style={{ color: "var(--ivory)", letterSpacing: "-.015em" }}>{big}</span>
-            <span className="block text-[11.5px] mt-0.5 truncate" style={{ color: "var(--muted)" }}>{sub}</span>
+      <section className="card overflow-hidden mb-4">
+        {rows.map(([k, name, icon, sub]) => (
+          <button key={k} className="mrow big" onClick={() => go(k)}>
+            <span className="ticon"><Ico s={20}>{icon}</Ico></span>
+            <span className="min-w-0 flex-1"><span className="block text-[16px] font-semibold" style={{ color: "var(--ivory)" }}>{name}</span><span className="block text-[12px] truncate" style={{ color: "var(--muted)" }}>{sub}</span></span>
+            <Chev />
           </button>))}
-      </div>
-      <section className="card mb-4 overflow-hidden">
-        <button className="mrow" onClick={() => go("settings")}><span className="min-w-0 flex-1"><span className="block text-sm font-semibold" style={{ color: "var(--ivory)" }}>Settings</span><span className="block text-[11.5px] truncate" style={{ color: "var(--muted)" }}>{theme} theme · sound {sound ? "on" : "off"} · sync · backup</span></span><Chev /></button>
-        <button className="mrow" onClick={onRules}><span className="min-w-0 flex-1"><span className="block text-sm font-semibold" style={{ color: "var(--ivory)" }}>Game rules</span><span className="block text-[11.5px] mono truncate" style={{ color: "var(--muted)" }}>{rulesShort(rules)}</span></span><span className="text-xs font-semibold" style={{ color: "var(--brass)" }}>Change</span><Chev /></button>
-        <button className="mrow" onClick={() => go("sessions", { log: true })}><span className="min-w-0 flex-1"><span className="block text-sm font-semibold" style={{ color: "var(--ivory)" }}>Log a session</span><span className="block text-[11.5px] truncate" style={{ color: "var(--muted)" }}>{t ? "A session timer is running on Home" : "Hours, casino and result"}</span></span><Chev /></button>
       </section>
     </div>
   );
@@ -269,6 +262,7 @@ export const phoneCss = `
 .mrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 16px;min-height:60px}
 .mrow+.mrow{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
 .mrow:active{background:rgba(var(--fg),.05)}
+.mrow.big{min-height:72px;padding:15px 16px;gap:14px}.mrow.big .ticon{width:42px;height:42px;border-radius:14px}
 .trow{display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;border-radius:18px;background:rgba(var(--fg),.035);box-shadow:var(--gl-lens)}
 .trow:active{background:rgba(var(--fg),.06)}
 .tclock{font-size:46px;line-height:1.05;font-weight:700;letter-spacing:-.03em;color:var(--ivory);font-variant-numeric:tabular-nums;transition:opacity .2s var(--ez)}
@@ -287,7 +281,8 @@ export const phoneCss = `
 /* large titles and a little more air between the title and the page */
 .shell>header{margin-bottom:18px}
 .shell>header h1{font-size:clamp(28px,8.4vw,34px);letter-spacing:-.03em}
-.shell>header h1.long{font-size:clamp(23px,6.6vw,28px);letter-spacing:-.025em;white-space:nowrap}
+.shell>header h1.long{font-size:clamp(21px,6vw,27px);letter-spacing:-.025em;white-space:nowrap}
+.shell>header .rulespill{min-width:0}
 /* Train: the answer comes up as a bar over the tab bar, with Next under the thumb */
 .bj.resbar{min-height:0}
 .resbar{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 84px);z-index:44;max-height:62vh;overflow-y:auto;padding:12px;border-radius:24px;background:linear-gradient(180deg,rgba(var(--bgrgb),.9),rgba(var(--bgrgb),.94));-webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);box-shadow:var(--gl-lens),0 22px 44px -18px rgba(0,0,0,.75);animation:resbarin .3s var(--ez) backwards}
@@ -309,6 +304,8 @@ export const phoneCss = `
 .acts.pad>button:nth-child(-n+2){grid-column:span 3;min-height:58px;font-size:17px!important}
 .acts.pad>button:nth-child(3):last-child{grid-column:span 6}
 .acts.pad>button:nth-child(3):nth-last-child(2),.acts.pad>button:nth-child(4):last-child{grid-column:span 3}
+/* Home: Your skills is the last card */
+.homepage>.dgrid{display:flex;flex-direction:column}.homepage .ph-last{order:5}
 /* Sessions: the log comes right after the result on a phone */
 .sesspage>.dgrid{display:flex;flex-direction:column}
 .sesspage .ph-a{order:-2}.sesspage .ph-b{order:-1}

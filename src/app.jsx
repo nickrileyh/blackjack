@@ -1034,7 +1034,7 @@ function SeatPicker({ seats, onChange, twoHands }) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1"><span className="eyebrow">Players at the table</span><span className="text-[11px]" style={{ color: "var(--muted)" }}>including you</span></div>
-      <svg viewBox="0 0 320 74" className="w-full block" style={{ maxHeight: 80 }} role="img" aria-label={`${seats} of 7 seats taken`}>
+      <svg viewBox="0 0 320 74" className="w-full block ph-hide" style={{ maxHeight: 80 }} role="img" aria-label={`${seats} of 7 seats taken`}>
         <path d={`M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)} A 134 44 0 0 1 ${pts[6][0].toFixed(1)} ${pts[6][1].toFixed(1)}`} fill="none" stroke="rgba(var(--acc),.22)" strokeWidth="1.2" />
         {pts.map(([x, y], i) => {
           const you = i === seats - 1, taken = i < seats - 1, second = extra && i === seats;
@@ -2196,9 +2196,10 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
           </div>}
 
           <button className="btn mt-3" onClick={start}>{shoe ? "Deal" : "Shuffle and deal"}</button>
-          <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>
-            {mode === "pairs" ? "Two cards at once: cancel a high against a low instantly, only count the leftovers. " : ""}A real {decks}-deck shoe is shuffled, one card is burned, and cards deal from where the last drill stopped until the cut card comes out.{carry ? " You're carrying the running count between drills — casino conditions." : " Each drill starts a fresh count."} {shoe && shoe.pos > 1 ? `Shoe is at card ${shoe.pos} of ${shoe.cut} (${decksLeft.toFixed(1)} decks left). Running count carried in: ${fmtTC(shoe.rc)}.` : ""}
-          </p>
+          {shoe && shoe.pos > 1 && <p className="text-[11px] mt-3 mono" style={{ color: "var(--muted)" }}>Card {shoe.pos} of {shoe.cut} · {decksLeft.toFixed(1)} decks left · count carried in {fmtTC(shoe.rc)}</p>}
+          <Info label="How it works">
+            {mode === "pairs" ? "Two cards at once: cancel a high against a low instantly, only count the leftovers. " : ""}A real {decks}-deck shoe is shuffled, one card is burned, and cards deal from where the last drill stopped until the cut card comes out.{carry ? " You're carrying the running count between drills — casino conditions." : " Each drill starts a fresh count."} Work up to 0.5s per card with zero misses before you play.
+          </Info>
         </section>
       )}
 
@@ -2307,9 +2308,8 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
             <div key={k} className="rounded-xl py-2" style={{ background: bg }}><div className="mono font-semibold">{v}</div><div className="text-xs" style={{ color: "var(--ivory-d)" }}>{k}</div></div>
           ))}
         </div>
-        <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
-          <span className="text-xs" style={{ color: "var(--muted)" }}>Work up to 0.5s per card with zero misses before you play.</span>
-          <button onClick={newShoe} className="text-xs underline underline-offset-2 whitespace-nowrap shrink-0 ml-3 lnk" style={{ color: "var(--muted)" }}>New shoe</button>
+        <div className="text-right mt-3">
+          <button onClick={newShoe} className="text-xs underline underline-offset-2 whitespace-nowrap lnk" style={{ color: "var(--muted)" }}>New shoe</button>
         </div>
       </section>
       {/* lifetime stats — below the drill */}
@@ -3992,7 +3992,7 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
   const refreshLog = async () => { _logCache = null; setLog(await loadLog()); };
   const timing = !!useSessionTimer(); // a running session goes to the top of the page
   return (
-    <div className="dgrid wl"><div className="dcol">
+    <div className="homepage"><div className="dgrid wl"><div className="dcol">
       {go && timing && <TripCard go={go} bankroll={bankroll} />}
       <FocusCard log={log} go={go} />
       {go && (
@@ -4008,7 +4008,7 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
       <SkillsCard log={log} go={go} />
       </div><div className="dcol o2 flipd">
       <LevelPanel rules={rules} bets={bets} log={log} refreshLog={refreshLog} go={go} evHour={evHour} openSessions={() => go && go("sessions")} />
-    </div></div>
+    </div></div></div>
   );
 }
 const SKILL_GO = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], pairs: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }], totals: ["count", { drill: "totals" }], play: ["play", {}] };
@@ -4062,9 +4062,9 @@ function SkillsCard({ log, go }) {
       return { k, name, acc, delta, sub: recent ? `${r.w} rep${r.w === 1 ? "" : "s"} this week` : `last practiced ${days === 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`}` };
     });
   }, [log]);
-  if (!log) return null;
+  if (!log || !rows.length) return null; // nothing practised yet: no card (the Train menu is where to start)
   return (
-    <section className="card p-5 mb-4">
+    <section className="card p-5 mb-4 ph-last">
       <div className="flex items-baseline justify-between mb-1">
         <div className="eyebrow">Your skills</div>
         {rows.length > 0 && <span className="text-[11px]" style={{ color: "var(--muted)" }}>accuracy · last 7 days</span>}
@@ -4684,7 +4684,6 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
               </div>
             </div>); })}
           {list.length > histN && <button onClick={() => setShowAll(!showAll)} className="w-full text-xs font-semibold py-2 lnk" style={{ color: "var(--brass)" }}>{showAll ? "Show fewer" : `Show all ${list.length}`}</button>}
-          <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Tap a session to edit it or change the spread it was played with.</p>
         </section>
       </>}
       </div></div>
@@ -5059,10 +5058,11 @@ const NAV_ITEMS = [
   ["casinos", "Casinos", <><path d="M12 20.8s-6.6-5.9-6.6-10.9a6.6 6.6 0 0 1 13.2 0c0 5-6.6 10.9-6.6 10.9z" /><circle cx="12" cy="9.9" r="2.4" /></>],
   ["plan", "Plan", <><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8.5 3.5v3M15.5 3.5v3M8 13.5h3M8 16.5h6" /></>], // wide screens only: left out of the phone's bottom bar
 ];
-// the phone's six tabs; Casinos, Plan and Settings are the pages behind More. Bet spread keeps a tab of its own:
+// the phone's six tabs; Casinos and Plan are the pages behind More (Settings is the gear, top right of every page).
+// Bet spread keeps a tab of its own:
 // Nick uses it the most (it was tried under More and he asked for it back at once).
 const PHONE_TABS = [["progress", "Home"], ["trainhub", "Train"], ["play", "Play"], ["calc", "Spread"], ["sessions", "Sessions"], ["more", "More"]];
-const MORE_PAGES = ["casinos", "plan", "settings"];
+const MORE_PAGES = ["casinos", "plan"];
 const MORE_ICON = <><circle cx="5.5" cy="12" r="1.5" fill="currentColor" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /><circle cx="18.5" cy="12" r="1.5" fill="currentColor" /></>;
 // Jump-to palette (⌘K / Ctrl K / "/"): type a few letters, arrow to a row, Enter. Every page, drill and setting is in it.
 function CommandPalette({ items, onClose }) {
@@ -5676,12 +5676,17 @@ function BetSpreadCalculator() {
   const narrow = useNarrow();
   useEffect(() => { if (!narrow && (tab === "more" || tab === "trainhub")) go(tab === "more" ? "progress" : trainSub); }, [narrow, tab]); // eslint-disable-line
   const isTrain = (t) => t === "train" || t === "count" || t === "trainhub";
-  const back = !narrow ? null : MORE_PAGES.includes(tab) ? ["more", "More"] : tab === "train" || tab === "count" ? ["trainhub", "Train"] : null;
+  // Settings is the gear in the top right of every page on a phone (Nick: "put the settings button in the top right
+  // always"): it opens Settings from anywhere, and the gear or the link back returns to the page you came from.
+  const cameFrom = useRef("progress");
+  const toSettings = () => go(navTab === "settings" ? cameFrom.current : "settings");
+  const gear = <button onClick={toSettings} className="iconbtn hdrgear shrink-0" aria-label={navTab === "settings" ? "Close settings" : "Settings"} aria-pressed={navTab === "settings"}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>;
+  const back = !narrow ? null : MORE_PAGES.includes(tab) ? ["more", "More"] : tab === "train" || tab === "count" ? ["trainhub", "Train"] : tab === "settings" ? [cameFrom.current, "Back"] : null;
   const pageTitle = narrow && tab === "train" ? ({ drill: "Practice", fill: "Fill the chart", charts: "Charts" })[_trainView] || "Train"
     : narrow && tab === "count" ? ({ count: "Running count", tc: "True count", totals: "Hand totals", tests: "Tests" })[_lastDrill] || "Drills"
     : ({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", trainhub: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan", more: "More" })[tab];
   const backBtn = back && <button className="hdrback" onClick={() => go(back[0])}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>{back[1]}</button>;
-  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; if (o?.pre) _logPre = o.pre; if (o?.near) openCasinoNear(); const same = t === tab; setNavTab(t); if (same) setTab(t); else startTransition(() => setTab(t)); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } if (same) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) {} } };
+  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; if (o?.pre) _logPre = o.pre; if (o?.near) openCasinoNear(); if (t === "settings" && navTab !== "settings") cameFrom.current = navTab; const same = t === tab; setNavTab(t); if (same) setTab(t); else startTransition(() => setTab(t)); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } if (same) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) {} } };
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
   const [cmd, setCmd] = useState(false);
   // desktop sidebar: one highlight that glides to the current page instead of jumping between rows
@@ -5742,27 +5747,28 @@ function BetSpreadCalculator() {
           <div className="shrink-0">
             {tab === "progress" && <div className="eyebrow mb-1.5">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>}
             {backBtn}
-            <h1 className={"leading-none font-semibold" + (pageTitle.length > 11 ? " long" : "")}>{pageTitle}</h1>
+            <h1 className={"leading-none font-semibold" + (pageTitle.length > 9 ? " long" : "")}>{pageTitle}</h1>
           </div>
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
             <span className="mono">{rulesShort(rules)}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
           </button>
+            {gear}
           </div>
         </header>
         <div className="pillrail"><div className="mx-auto flex justify-end">
           <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </div></div>
         <TopBar title={pageTitle} onBack={back ? () => go(back[0]) : null}>
-          {narrow && tab === "calc" && <span className="mono text-[12px] font-semibold whitespace-nowrap" style={{ color: "var(--ivory-d)" }}><span style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span> · <span style={{ color: rorTone }}>{pct(r.ror, 1)}</span> risk</span>}
-          <button onClick={() => setSetupOpen(true)} className={"rulespill shrink-0" + (narrow && tab === "calc" ? " hidden" : "")} style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
+          {narrow && tab === "calc" && <span className="mono text-[12px] font-semibold whitespace-nowrap ml-auto" style={{ color: "var(--ivory-d)" }}><span style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span> · <span style={{ color: rorTone }}>{pct(r.ror, 1)}</span> risk</span>}
+          <span className="flex items-center gap-2 min-w-0">{!(narrow && tab === "calc") && <button onClick={() => setSetupOpen(true)} className="rulespill" style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>}{gear}</span>
         </TopBar>
         <div className="sbar" aria-hidden="true" />
 
 
         {(tab === "train" || tab === "count") && !narrow && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
-        {tab === "more" ? <MoreHub key="mo" go={go} rules={rules} onRules={() => setSetupOpen(true)} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
+        {tab === "more" ? <MoreHub key="mo" go={go} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .5s var(--ez)" }}>
@@ -5790,7 +5796,9 @@ function BetSpreadCalculator() {
           <Info label="What's N₀?">
             N₀ is how many rounds until expected profit equals one standard deviation of luck — how long before skill beats variance. {isFinite(r.n0) ? (r.n0 < 30000 ? "Under 30,000 is strong." : r.n0 < 80000 ? "Under 80,000 is playable." : `At ${Math.round(r.n0 / rphEff).toLocaleString()} hours, the spread is too flat — bet less at negative counts and more at high ones.`) : ""}
           </Info>
-          <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
+        </section>
+        <section className="card p-5 mb-4">
+          <div>
             <div className="flex items-end justify-between gap-3 mb-3">
               <div>
                 <div className="eyebrow">Your session</div>
@@ -5839,7 +5847,7 @@ function BetSpreadCalculator() {
               </div>
             ))}
           </div>
-          <div className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Bar height is bet size; brightness is how often that count shows up. Red means you're betting into the house's edge.</div>
+          <Info label="How to read this">Bar height is bet size; brightness is how often that count shows up. Red means you're betting into the house's edge.</Info>
         </section>
 
         {/* inputs */}
@@ -6009,7 +6017,7 @@ function BetSpreadCalculator() {
           Risk of ruin uses e^(−2·EV·bankroll / variance) with your spread's simulated EV and variance (checked against simulated bankroll paths) and assumes you never resize your bets. Real results depend on playing accuracy and the game you actually get. Counting is legal, but casinos can ask you to leave.
         </p>
         </div>}
-        <p className="text-center text-[10px] mt-10" style={{ color: "var(--muted)", opacity: .7 }}>Strategy and indices follow Blackjack Apprenticeship's {rules.h17 ? "H17" : "S17"} charts · practice tool, not gambling advice</p>
+        {tab === "settings" && <p className="text-center text-[10px] mt-10" style={{ color: "var(--muted)", opacity: .7 }}>Strategy and indices follow Blackjack Apprenticeship's {rules.h17 ? "H17" : "S17"} charts · practice tool, not gambling advice</p>}
       </div>
       <nav className="sidenav" aria-label="Sections" ref={snav}>
         <div className="sn-brand">
@@ -6058,6 +6066,6 @@ function BetSpreadCalculator() {
 // shared with src/casinos.jsx (the Casinos page lives in its own file)
 export { Sheet, Seg, ChipRow, ConfirmLink, More, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav, Info, money, shortMoney, fmtTC, pct };
 // used by the phone layout's own pieces (src/phone.jsx)
-export { FocusCard, TESTS_KEY, testsOf, TEST_DEFS, THEME_KEY, THEME_LIST };
+export { FocusCard, TESTS_KEY, testsOf, TEST_DEFS };
 // used by the Plan tab (src/planner.jsx) and the arithmetic checks
 export { tailFix, shoeRounds, useDeferred, COUNTS, calFor, compute, autoRph, roundFreqs, spotsAt, momentAt, optimizeSpread, optimizeForProfit, correctPlay, rulesLabel, pDip, PhiN, DEFAULT_RULES, DEFAULT_BETS, SKILLS, sessEv, sessSd, loadLog, sessionDrawdown, sessionCash };
