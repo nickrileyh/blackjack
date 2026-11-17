@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, Fragment, createContext, useContext, startTransition } from "react";
 import { createPortal } from "react-dom";
-import CasinosPage, { openCasinoAdd, warmCasinos } from "./casinos.jsx";
+import CasinosPage, { openCasinoAdd, openCasinoNear, warmCasinos } from "./casinos.jsx";
 import { startSmooth } from "./smooth.js";
 import { PlanPage } from "./planner.jsx";
 import { sfx, soundPrefs, setSoundPrefs } from "./sound.js";
 import { coverCal } from "./cover.js";
+import { useNarrow, TripCard, TimerCard, MoreHub, TrainHub, phoneCss, timerDo, useSessionTimer } from "./phone.jsx";
 
 // ---------- model ----------
 const COUNTS = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
@@ -1386,16 +1387,16 @@ function Table({ cards, dealer, tc, rcs, qkey, leaving }) {
       <div className="shoe go">
         {[0, 1, 2, 3].map((i) => <div key={i} className="pcback" style={{ transform: `translate(${i * 1.5}px,${-i * 1.5}px)`, opacity: 1 - i * 0.12 }} />)}
       </div>
-      <div className="flex flex-col items-start gap-3">
+      <div className="flex flex-col items-start gap-3 tblrows">
         <div>
-          <div className="eyebrow mb-2">Dealer</div>
+          <div className="eyebrow mb-2 ph-hide">Dealer</div>
           <div className="flex">
             <PlayingCard key={"d" + qkey} rank={dealer.rank} suit={dealer.suit} delay={0} style={{ rot: "-1deg", "--ld": "0ms" }} />
             <div className="pcback pcz dealt" style={{ width: 86, height: 122, borderRadius: 9, marginLeft: 8, "--dx": "140px", "--dy": "-150px", "--r0": "12deg", "--r1": "3deg", "--d": "140ms", "--ld": "30ms" }} /><Flick key={"f" + qkey} d={140} />
           </div>
         </div>
         <div className="self-end text-right">
-          <div className="eyebrow mb-2">You</div>
+          <div className="eyebrow mb-2 ph-hide">You</div>
           <div className="flex justify-end">
             <PlayingCard key={"p0" + qkey} rank={cards[0].rank} suit={cards[0].suit} delay={300} style={{ rot: "-2deg", "--ld": "0ms" }} />
             <PlayingCard key={"p1" + qkey} rank={cards[1].rank} suit={cards[1].suit} delay={460} style={{ rot: "2deg", marginLeft: 8, "--ld": "30ms" }} />
@@ -1736,6 +1737,7 @@ const useNav = (fn) => useEffect(() => { const h = (e) => fn(e.detail || {}); wi
 function Trainer({ rules, setRules }) {
   const [mode, setMode] = useState(_trainMode); // basic | dev | mixed
   useEffect(() => { _trainMode = mode; }, [mode]);
+  const narrow = useNarrow(); // on a phone the answer comes up as a bar over the tabs, with Next under the thumb
   const [view, setView] = useState(_trainView); // drill | fill | charts
   useEffect(() => { _trainView = view; }, [view]);
   useNav((o) => { if (o.trainView) setView(o.trainView); if (o.trainMode && o.trainMode !== mode) { setMode(o.trainMode); setCur(null); setResult(null); } });
@@ -1925,7 +1927,7 @@ function Trainer({ rules, setRules }) {
   );
   return (
     <div>
-      <div className="segw"><Seg value={view} options={[["drill", "Practice"], ["fill", "Fill chart"], ["charts", "Charts"]]} onChange={setView} style={{ marginBottom: 12 }} /></div>
+      <div className="segw ph-hide"><Seg value={view} options={[["drill", "Practice"], ["fill", "Fill chart"], ["charts", "Charts"]]} onChange={setView} style={{ marginBottom: 12 }} /></div>
 
       {view === "charts" ? <Charts R={rules} devs={DEVS} /> : view === "fill" ? <FillChart R={rules} devs={DEVS} /> : null}
       <div className="dgrid wl"><div className="dcol">
@@ -1938,7 +1940,7 @@ function Trainer({ rules, setRules }) {
       {/* card */}
       {cur && (
         <section className={"card p-5 mb-4 " + (result ? (result.ok ? "rim-ok" : "rim-bad shake") : "")}>
-          <div className="flex justify-between text-xs mb-3 mono" style={{ color: "var(--muted)" }}>
+          <div className="flex justify-between text-xs mb-3 mono ph-hide" style={{ color: "var(--muted)" }}>
             <span>{session.right}/{session.asked} this session{streak >= 2 ? <> · <span style={{ color: "var(--brass)" }}>{streak} in a row</span></> : null}</span>
             <span>{mastered}/{pool.length} locked in</span>
           </div>
@@ -1948,7 +1950,7 @@ function Trainer({ rules, setRules }) {
             <span>{cur.kind === "dev" ? cur.dev.hand : cur.hand}</span>
           </div>
 
-          <div className="acts grid gap-2 mt-5" style={{ gridTemplateColumns: cur.opts ? `repeat(${Math.min(cur.opts.length, 5)}, 1fr)` : "1fr 1fr" }}>
+          <div className={"acts grid gap-2 mt-5" + (cur.opts ? " pad" : "")} style={{ gridTemplateColumns: cur.opts ? `repeat(${Math.min(cur.opts.length, 5)}, 1fr)` : "1fr 1fr" }}>
             {(cur.opts || [cur.dev.below, cur.dev.above]).map((o, i) => {
               const isAns = result && o === cur.answer;
               const isPick = result && o === result.choice && !result.ok;
@@ -1966,13 +1968,14 @@ function Trainer({ rules, setRules }) {
             })}
           </div>
 
-          <div className="mt-4">
+          {(() => { const res = (<>
             <div className="rounded-xl px-4 py-3 relative overflow-hidden" style={{ minHeight: 64, background: result ? (result.ok ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)") : "rgba(var(--fg),.045)", transition: "background .25s" }}>
               {timer && result && <div className="drain" style={{ "--t": result.ok ? "1.4s" : "3.4s", background: result.ok ? "var(--brass)" : "var(--rose)" }} />}
               {result ? (
                 <div className="rise">
-                  <div className="font-semibold" style={{ color: result.ok ? "var(--brass)" : "var(--neg-l)" }}>
-                    {result.ok ? "Right." : `${cur.opts ? label(cur.answer) : cur.answer}.`}
+                  <div className="font-semibold flex items-baseline justify-between gap-3" style={{ color: result.ok ? "var(--brass)" : "var(--neg-l)" }}>
+                    <span>{result.ok ? "Right." : `${cur.opts ? label(cur.answer) : cur.answer}.`}</span>
+                    {narrow && <span className="mono text-[11px] font-medium" style={{ color: "var(--muted)" }}>{session.right}/{session.asked}{streak >= 2 ? ` · ${streak} in a row` : ""}</span>}
                   </div>
                   <p className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>{why(cur)}</p>
                 </div>
@@ -1985,6 +1988,10 @@ function Trainer({ rules, setRules }) {
               <button onClick={() => { pause(); setMore((m) => !m); }} disabled={!result} className="btn ghost">{more ? "Hide odds" : "Odds"}</button>
               <button onClick={next} disabled={!result || leaving} className="btn col-span-2">Next hand</button>
             </div>
+          </>);
+            // phone: nothing until there is an answer, then a bar that floats over the tab bar (drawn outside the card, which shakes on a miss)
+            return narrow ? (result ? createPortal(<div className={"bj resbar " + (result.ok ? "ok" : "bad")} key={cur.qkey}>{res}</div>, document.body) : null) : <div className="mt-4">{res}</div>; })()}
+          <div className={narrow ? "mt-3" : ""}>
             <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>H</b> hit · <b>S</b> stand · <b>D</b> double · <b>P</b> split{rules.surrender ? <> · <b>R</b> surrender</> : null} · <b>O</b> odds · <b>Enter</b> next</div>
             <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}><Toggle label="Deal the next hand automatically" on={auto} onChange={(v) => { setAuto(v); if (!v) pause(); }} /></div>
           </div>
@@ -3959,7 +3966,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
   return portalTarget ? createPortal(ui, portalTarget) : ui;
 }
 const SESS_KEY = "bj-sessions-v1";
-function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go }) {
+function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }) {
   const [log, setLog] = useState(null);
   const [skill, setSkill] = useState("strategy");
   const [sessions, setSessions] = useState([]);
@@ -3983,18 +3990,21 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go }) {
   const expEV = ex.exp, sd = ex.sd;
   const z = sd ? (totR - expEV) / sd : 0;
   const refreshLog = async () => { _logCache = null; setLog(await loadLog()); };
+  const timing = !!useSessionTimer(); // a running session goes to the top of the page
   return (
     <div className="dgrid wl"><div className="dcol">
+      {go && timing && <TripCard go={go} bankroll={bankroll} />}
+      <FocusCard log={log} go={go} />
       {go && (
         <div className="grid grid-cols-4 gap-2 mb-4">
-          {[["Log session", () => go("sessions", { log: true }), <><path d="M12 5v14M5 12h14" /></>],
+          {[["Strategy", () => go("train", { trainView: "drill" }), <><path d="M4 6.5h16M4 12h16M4 17.5h10" /></>],
             ["Count drill", () => go("count", { drill: "count" }), <><rect x="6" y="3.5" width="12" height="17" rx="2" /><path d="M9.5 9h5M12 6.5v5M9.5 16h5" /></>],
-            ["Strategy", () => go("train"), <><path d="M4 6.5h16M4 12h16M4 17.5h10" /></>],
-            ["Live play", () => go("play"), <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3.6" /></>]].map(([l, fn, ic]) => (
+            ["Live play", () => go("play"), <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3.6" /></>],
+            ["Log session", () => go("sessions", { log: true }), <><path d="M12 5v14M5 12h14" /></>]].map(([l, fn, ic]) => (
             <button key={l} className="qa" onClick={fn}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ic}</svg>{l}</button>))}
         </div>
       )}
-      <FocusCard log={log} go={go} />
+      {go && !timing && <TripCard go={go} bankroll={bankroll} />}
       <SkillsCard log={log} go={go} />
       </div><div className="dcol o2 flipd">
       <LevelPanel rules={rules} bets={bets} log={log} refreshLog={refreshLog} go={go} evHour={evHour} openSessions={() => go && go("sessions")} />
@@ -4273,8 +4283,10 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
   const editing = !!initial;
   const [f, setF] = useState(() => initial
     ? { date: initial.date, where: initial.where || "", hours: String(initial.hours ?? ""), won: initial.result >= 0, result: String(Math.abs(initial.result)), notes: initial.notes || "", low: initial.low != null ? String(Math.abs(initial.low)) : "", seats: initial.seats || null, heat: initial.heat || "none" }
+    : _logPre ? { date: _logPre.date || localDay(), where: _logPre.where || "", hours: String(_logPre.hours || ""), won: true, result: "", notes: "", low: "", seats: seats0 || null, heat: "none" }
     : { date: localDay(), where: _logWhere || casinos[0] || "", hours: "", won: true, result: "", notes: "", low: "", seats: seats0 || null, heat: "none" });
-  useEffect(() => { _logWhere = ""; }, []);
+  const timed = useRef(!initial && !!(_logPre && _logPre.timed)); // came from the session timer: saving it clears the clock
+  useEffect(() => { _logWhere = ""; _logPre = null; }, []);
   const [more, setMore] = useState(editing && (initial.low != null || initial.heat && initial.heat !== "none" || initial.seats));
   const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
   const amt = Math.abs(+String(f.result).replace(/[^0-9.]/g, "")) || 0;
@@ -4282,11 +4294,12 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
   const save = () => {
     if (!ok) return;
     const low = f.low === "" ? null : -Math.abs(+String(f.low).replace(/[^0-9.]/g, "") || 0);
-    onSave({ date: f.date, where: f.where.trim(), hours: Math.round(+f.hours * 100) / 100, result: f.won ? amt : -amt, notes: f.notes.trim(), low, seats: f.seats || null, heat: f.heat });
+    onSave({ date: f.date, where: f.where.trim(), hours: Math.round(+f.hours * 100) / 100, result: f.won ? amt : -amt, notes: f.notes.trim(), low, seats: f.seats || null, heat: f.heat }, { timed: timed.current });
   };
   return (
     <Sheet title={editing ? "Edit session" : "Log a session"} onClose={onClose}>
       {editing && <SessionLuck s={initial} evHour={evHour} sdHour={sdHour} />}
+      {timed.current && <p className="text-xs -mt-2 mb-3" style={{ color: "var(--brass)" }}>From your session timer. Check the hours, then enter the result.</p>}
       <div className="grid grid-cols-2 gap-2 mb-3">
         <label className="block"><span className="eyebrow block mb-1.5">Date</span><input className="in" type="date" value={f.date} onChange={(e) => set("date", e.target.value)} /></label>
         <label className="block"><span className="eyebrow block mb-1.5">Hours</span><input className="in mono" type="number" inputMode="decimal" step="0.25" placeholder="0" value={f.hours} onChange={(e) => set("hours", e.target.value)} /></label>
@@ -4422,7 +4435,8 @@ function StatTile({ k, v, sub, tone, enter }) {
   );
 }
 
-function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
+function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }) {
+  const narrow = useNarrow();
   const [sessions, setSessions] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [sheet, setSheet] = useState(null); // null | "new" | session
@@ -4513,7 +4527,8 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
     try { await navigator.clipboard.writeText(csv); setExportMsg("Copied as CSV — paste into Sheets, Excel or Notes."); } catch (_) { setExportMsg("Couldn't copy on this device."); }
   };
 
-  const shownHist = showAll ? list.slice().reverse() : list.slice().reverse().slice(0, 12);
+  const histN = narrow ? 6 : 12; // on a phone the log sits right under the result, so it starts short
+  const shownHist = showAll ? list.slice().reverse() : list.slice().reverse().slice(0, histN);
   const groups = []; shownHist.forEach((s) => { const k = monthKey(s.date); if (!groups.length || groups[groups.length - 1].k !== k) groups.push({ k, items: [] }); groups[groups.length - 1].items.push(s); });
   const monthTot = (k) => months.find((m) => m.k === k) || list.filter((s) => monthKey(s.date) === k).reduce((a, s) => ({ net: a.net + s.result, h: a.h + (+s.hours || 0) }), { net: 0, h: 0 });
   const up = st.R >= 0;
@@ -4521,11 +4536,12 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
 
   if (!loaded) return null;
   return (
-    <div>
+    <div className="sesspage">
       <div className={"dgrid" + (list.length ? "" : " solo")}><div className="dcol">
+      <div className="ph-a"><TimerCard go={go} /></div>
       {/* hero */}
       {sessions.length > 0 && (
-      <section className="card p-5 mb-3 overflow-hidden">
+      <section className="card p-5 mb-3 overflow-hidden ph-a">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow">{filtered ? [period === "30" ? "Last 30 days" : period === "90" ? "Last 90 days" : period === "ytd" ? "This year" : "All time", casino !== "all" ? byCasino[0]?.name || "" : ""].filter(Boolean).join(" · ") : "All-time result"}</div>
@@ -4551,7 +4567,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
 
       {/* filters */}
       {sessions.length > 0 && (
-        <div className="mb-4 space-y-2">
+        <div className="mb-4 space-y-2 ph-a">
           <Seg value={period} options={[["all", "All time"], ["ytd", "This year"], ["90", "90 days"], ["30", "30 days"]]} onChange={setPeriod} small />
           {casinos.length > 1 && <ChipRow small value={casino} options={[["all", "All casinos"], ...casinos.map((c) => [c.toLowerCase(), c])]} onChange={setCasino} />}
           {casino !== "all" && (
@@ -4564,7 +4580,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
       )}
 
       {!sessions.length && (
-        <section className="card p-6 mb-4 text-center">
+        <section className="card p-6 mb-4 text-center ph-a">
           <div className="text-base font-semibold">Track every session</div>
           <p className="text-sm mt-1 mb-4" style={{ color: "var(--ivory-d)" }}>Log wins and losses and see how you're running against what your spread should earn — by casino, by month, and against luck.</p>
           <button className="btn" style={{ display: "block", maxWidth: 360, margin: "0 auto" }} onClick={() => setSheet("new")}>Log your first session</button>
@@ -4646,7 +4662,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
         )}
 
         {/* history */}
-        <section className="card p-5 mb-4">
+        <section className="card p-5 mb-4 ph-b">
           <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">History</div><button onClick={exportCsv} className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }}>Export CSV</button></div>
           {exportMsg && <div className="text-xs mb-2" style={{ color: "var(--brass)" }}>{exportMsg}</div>}
           {groups.map((g) => { const mt = monthTot(g.k); return (
@@ -4667,7 +4683,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
                   </button>))}
               </div>
             </div>); })}
-          {list.length > 12 && <button onClick={() => setShowAll(!showAll)} className="w-full text-xs font-semibold py-2 lnk" style={{ color: "var(--brass)" }}>{showAll ? "Show fewer" : `Show all ${list.length}`}</button>}
+          {list.length > histN && <button onClick={() => setShowAll(!showAll)} className="w-full text-xs font-semibold py-2 lnk" style={{ color: "var(--brass)" }}>{showAll ? "Show fewer" : `Show all ${list.length}`}</button>}
           <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Tap a session to edit it or change the spread it was played with.</p>
         </section>
       </>}
@@ -4676,8 +4692,9 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
       {sheet && <SessionSheet initial={sheet === "new" ? null : sheet} casinos={casinos} seats0={seats} evHour={evHour} sdHour={sdHour} onClose={() => setSheet(null)}
         onDelete={() => { saveSessions(sessions.filter((x) => x.id !== sheet.id)); setSheet(null); }}
         onEditSpread={sheet !== "new" ? () => { const sv = sheet; setSheet(null); setSpreadFor({ id: sv.id, cfg: sv.snap?.cfg || { ...cfgNow, seats: sv.seats || cfgNow.seats }, current: !sv.snap?.cfg, legacy: !sv.snap?.cfg }); } : null}
-        onSave={(v) => {
+        onSave={(v, meta) => {
           if (sheet === "new") {
+            if (meta && meta.timed) timerDo.clear();
             const id = Date.now(), cfg = { ...cfgNow, seats: v.seats || cfgNow.seats };
             saveSessions([...sessions, { ...v, id, snap: snapFromCfg(cfg) }]);
             setSpreadFor({ id, cfg, current: true });
@@ -4765,7 +4782,7 @@ function DrillHub({ rules, bets, minBet }) {
   const [testResult, setTestResult] = useState(null);
   return (
     <div>
-      <div className="mb-4"><ChipRow value={drill} options={[["count", "Running count"], ["tc", "True count"], ["totals", "Hand totals"], ["tests", "Tests"]]} onChange={(d) => { setDrill(d); setTest(null); setTestResult(null); }} /></div>
+      <div className="mb-4 ph-hide"><ChipRow value={drill} options={[["count", "Running count"], ["tc", "True count"], ["totals", "Hand totals"], ["tests", "Tests"]]} onChange={(d) => { setDrill(d); setTest(null); setTestResult(null); }} /></div>
       {drill === "count" && <Counter decks0={rules.decks} pen0={rules.pen} />}
       <div className="narrow">
       {drill === "tc" && <TCDrill decks={rules.decks} />}
@@ -5042,6 +5059,11 @@ const NAV_ITEMS = [
   ["casinos", "Casinos", <><path d="M12 20.8s-6.6-5.9-6.6-10.9a6.6 6.6 0 0 1 13.2 0c0 5-6.6 10.9-6.6 10.9z" /><circle cx="12" cy="9.9" r="2.4" /></>],
   ["plan", "Plan", <><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8.5 3.5v3M15.5 3.5v3M8 13.5h3M8 16.5h6" /></>], // wide screens only: left out of the phone's bottom bar
 ];
+// the phone's six tabs; Casinos, Plan and Settings are the pages behind More. Bet spread keeps a tab of its own:
+// Nick uses it the most (it was tried under More and he asked for it back at once).
+const PHONE_TABS = [["progress", "Home"], ["trainhub", "Train"], ["play", "Play"], ["calc", "Spread"], ["sessions", "Sessions"], ["more", "More"]];
+const MORE_PAGES = ["casinos", "plan", "settings"];
+const MORE_ICON = <><circle cx="5.5" cy="12" r="1.5" fill="currentColor" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /><circle cx="18.5" cy="12" r="1.5" fill="currentColor" /></>;
 // Jump-to palette (⌘K / Ctrl K / "/"): type a few letters, arrow to a row, Enter. Every page, drill and setting is in it.
 function CommandPalette({ items, onClose }) {
   const [q, setQ] = useState(""); const [at, setAt] = useState(0); const list = useRef(null);
@@ -5081,7 +5103,7 @@ function CommandPalette({ items, onClose }) {
     </div>
   );
 }
-function TopBar({ title, children }) {
+function TopBar({ title, children, onBack }) {
   const [show, setShow] = useState(false);
   useEffect(() => { const f = () => { const on = window.scrollY > 64; setShow(on); document.documentElement.classList.toggle("scrolled", on); }; f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
   // while it is tucked away the keyboard must not land on it (Tab used to stop on an invisible title first)
@@ -5089,7 +5111,8 @@ function TopBar({ title, children }) {
   return (
     <div ref={bar} className={"topbar" + (show ? " show" : "")} aria-hidden={!show}>
       <div className="mx-auto flex items-center justify-between gap-3" style={{ maxWidth: "42rem" }}>
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[15px] font-semibold truncate" style={{ letterSpacing: "-.01em" }}>{title}</button>
+        <span className="flex items-center min-w-0">{onBack && <button className="tbback ph-only" onClick={onBack} aria-label="Back"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg></button>}
+        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[15px] font-semibold truncate" style={{ letterSpacing: "-.01em" }}>{title}</button></span>
         {children}
       </div>
     </div>
@@ -5097,6 +5120,7 @@ function TopBar({ title, children }) {
 }
 let _openLog = false;
 let _logWhere = ""; // casino name handed over by the Casinos page's "Log a session"
+let _logPre = null; // a session handed over by the timer: { where, hours, date, timed }
 const THEME_KEY = "bj-theme-v1";
 const THEME_LIST = [["emerald", "Emerald", "#34D399", "#0D1114", "#1A2024"], ["sapphire", "Dark blue", "#7AA2FF", "#0D1020", "#1A1F3A"], ["gold", "Classic gold", "#D9B56A", "#0C1422", "#1A2234"], ["amethyst", "Amethyst", "#B794F6", "#120D1C", "#211A33"], ["copper", "Copper", "#E8955A", "#18110C", "#281D15"], ["graphite", "Graphite", "#D6D6DB", "#121214", "#1F1F23"], ["light", "White & blue", "#1E3FA8", "#EEF2F8", "#FFFFFF"], ["kiera", "Kiera", "#EF6698", "#F7E8EF", "#FFFFFF"]];
 // Kiera is a light theme: it uses every "light" layout rule (data-theme="light") and repaints the colours on top (data-skin)
@@ -5105,7 +5129,7 @@ function ThemePicker() {
   const [t, setT] = useState(() => { try { return localStorage.getItem("bj:" + THEME_KEY) || "emerald"; } catch (_) { return "emerald"; } });
   useEffect(() => { applyTheme(t); try { window.storage.set(THEME_KEY, t, false); } catch (_) {} }, [t]);
   return (
-    <div className="grid grid-cols-2 gap-2.5">
+    <div className="grid grid-cols-2 gap-2.5 themerow">
       {THEME_LIST.map(([k, l, acc, bg, card]) => { const on = t === k, lightT = k === "light" || k === "kiera"; return (
         <button key={k} onClick={() => setT(k)} aria-pressed={on} className="rounded-2xl p-2.5 text-left chippress" style={{ background: "rgba(var(--fg),.03)", border: on ? "2px solid var(--brass)" : "1px solid rgba(var(--fg),.1)", padding: on ? 9 : 10 }}>
           <div className="rounded-xl p-2 mb-2 overflow-hidden" style={{ height: 82, background: bg, border: lightT ? "1px solid rgba(15,27,61,.08)" : "1px solid rgba(255,255,255,.05)" }}>
@@ -5478,7 +5502,7 @@ export default function App() {
       const t = Date.now();
       if (_sync.connecting || t - born < 6000 || (resumed && t - resumed < 6000)) return true;
       // load on its own when you're just looking (Today, Sessions, Spread, Settings) and not mid-tap or typing
-      return ["progress", "sessions", "calc", "settings"].includes(_curTab || "progress") && t - lastInput > 3000 && !busyUI();
+      return ["progress", "sessions", "calc", "settings", "more", "trainhub"].includes(_curTab || "progress") && t - lastInput > 3000 && !busyUI();
     };
     const onInput = () => { lastInput = Date.now(); };
     const onApplied = (e) => {
@@ -5646,7 +5670,18 @@ function BetSpreadCalculator() {
   const maxBar = Math.max(1, ...r.rows.map((x) => x.bet));
   const [trainSub, setTrainSub] = useState("train");
   useEffect(() => { if (tab === "train" || tab === "count") setTrainSub(tab); }, [tab]);
-  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; const same = t === tab; setNavTab(t); if (same) setTab(t); else startTransition(() => setTab(t)); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } if (same) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) {} } };
+  // The phone layout (under 1024px) has six tabs: Home, Train, Play, Spread, Sessions, More. Train and More are menus
+  // (TrainHub, MoreHub in src/phone.jsx); the pages behind them carry a link back to their menu. The sidebar on a
+  // computer lists every page, so the two menus are never shown there.
+  const narrow = useNarrow();
+  useEffect(() => { if (!narrow && (tab === "more" || tab === "trainhub")) go(tab === "more" ? "progress" : trainSub); }, [narrow, tab]); // eslint-disable-line
+  const isTrain = (t) => t === "train" || t === "count" || t === "trainhub";
+  const back = !narrow ? null : MORE_PAGES.includes(tab) ? ["more", "More"] : tab === "train" || tab === "count" ? ["trainhub", "Train"] : null;
+  const pageTitle = narrow && tab === "train" ? ({ drill: "Practice", fill: "Fill the chart", charts: "Charts" })[_trainView] || "Train"
+    : narrow && tab === "count" ? ({ count: "Running count", tc: "True count", totals: "Hand totals", tests: "Tests" })[_lastDrill] || "Drills"
+    : ({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", trainhub: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan", more: "More" })[tab];
+  const backBtn = back && <button className="hdrback" onClick={() => go(back[0])}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>{back[1]}</button>;
+  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; if (o?.pre) _logPre = o.pre; if (o?.near) openCasinoNear(); const same = t === tab; setNavTab(t); if (same) setTab(t); else startTransition(() => setTab(t)); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } if (same) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) {} } };
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
   const [cmd, setCmd] = useState(false);
   // desktop sidebar: one highlight that glides to the current page instead of jumping between rows
@@ -5690,6 +5725,7 @@ function BetSpreadCalculator() {
     ["Drills", "Casino-ready tests", () => go("count", { drill: "tests" })],
     ["Actions", "Log a session", () => go("sessions", { log: true }), "add new result"],
     ["Actions", "Add a casino", () => { openCasinoAdd(); go("casinos", { add: true }); }, "map pin new"],
+    ["Actions", "Casinos near me", () => go("casinos", { near: true }), "distance closest location nearby"],
     ["Actions", "Change game rules", () => setSetupOpen(true), "decks h17 s17 surrender penetration", rulesShort(rules)],
   ].map(([group, label, run, more, note]) => ({ group, label, run, more, note }));
 
@@ -5697,34 +5733,36 @@ function BetSpreadCalculator() {
     <RulesCtx.Provider value={rules}><div className="bj bjroot">
       <canvas ref={glowRef} className="glowbg" aria-hidden="true" />
       <style>{css}</style>
+      <style>{phoneCss}</style>
       {setupOpen && <RulesModal rules={rules} onSave={saveRules} onClose={() => setSetupOpen(false)} first={firstRun} />}
       {cmd && <CommandPalette items={cmdItems} onClose={() => setCmd(false)} />}
-      <div className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
+      <div className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
         <header className="mb-5 flex items-end justify-between gap-3">
           <div className="shrink-0">
             {tab === "progress" && <div className="eyebrow mb-1.5">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>}
-            <h1 className="leading-none font-semibold">{({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan" })[tab]}</h1>
+            {backBtn}
+            <h1 className={"leading-none font-semibold" + (pageTitle.length > 11 ? " long" : "")}>{pageTitle}</h1>
           </div>
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
             <span className="mono">{rulesShort(rules)}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
           </button>
-            <button onClick={() => go(navTab === "settings" ? "progress" : "settings")} className="iconbtn hdrgear shrink-0" aria-label={tab === "settings" ? "Close settings" : "Settings"} aria-pressed={tab === "settings"}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg></button>
           </div>
         </header>
         <div className="pillrail"><div className="mx-auto flex justify-end">
           <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </div></div>
-        <TopBar title={({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan" })[tab]}>
-          <button onClick={() => setSetupOpen(true)} className="rulespill shrink-0" style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
+        <TopBar title={pageTitle} onBack={back ? () => go(back[0]) : null}>
+          {narrow && tab === "calc" && <span className="mono text-[12px] font-semibold whitespace-nowrap" style={{ color: "var(--ivory-d)" }}><span style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span> · <span style={{ color: rorTone }}>{pct(r.ror, 1)}</span> risk</span>}
+          <button onClick={() => setSetupOpen(true)} className={"rulespill shrink-0" + (narrow && tab === "calc" ? " hidden" : "")} style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </TopBar>
         <div className="sbar" aria-hidden="true" />
 
 
-        {(tab === "train" || tab === "count") && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
-        {tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
+        {(tab === "train" || tab === "count") && !narrow && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
+        {tab === "more" ? <MoreHub key="mo" go={go} rules={rules} onRules={() => setSetupOpen(true)} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .5s var(--ez)" }}>
@@ -6006,9 +6044,9 @@ function BetSpreadCalculator() {
       </nav>
       <nav className="bottom-nav" aria-label="Sections">
         <div className="flex">
-          {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(navTab === "count" ? "train" : navTab); return at >= 0 ? <Glider cls="navglide" at={at} ms={480} style={{ "--i": at, "--n": ks.length }} /> : null; })()}
-          {NAV_ITEMS.filter(([k]) => k !== "plan").map(([k, l, icon]) => { const on = navTab === k || (k === "train" && navTab === "count"); return (
-            <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
+          {(() => { const at = PHONE_TABS.findIndex(([k]) => (k === "trainhub" ? isTrain(navTab) : k === "more" ? navTab === "more" || MORE_PAGES.includes(navTab) : navTab === k)); return at >= 0 ? <Glider cls="navglide" at={at} ms={480} style={{ "--i": at, "--n": PHONE_TABS.length }} /> : null; })()}
+          {PHONE_TABS.map(([k, l]) => { const on = k === "trainhub" ? isTrain(navTab) : k === "more" ? navTab === "more" || MORE_PAGES.includes(navTab) : navTab === k, icon = k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]; return (
+            <button key={k} onClick={() => go(k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
               <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
               <span>{l}</span>
             </button>); })}
@@ -6019,5 +6057,7 @@ function BetSpreadCalculator() {
 }
 // shared with src/casinos.jsx (the Casinos page lives in its own file)
 export { Sheet, Seg, ChipRow, ConfirmLink, More, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav, Info, money, shortMoney, fmtTC, pct };
+// used by the phone layout's own pieces (src/phone.jsx)
+export { FocusCard, TESTS_KEY, testsOf, TEST_DEFS, THEME_KEY, THEME_LIST };
 // used by the Plan tab (src/planner.jsx) and the arithmetic checks
 export { tailFix, shoeRounds, useDeferred, COUNTS, calFor, compute, autoRph, roundFreqs, spotsAt, momentAt, optimizeSpread, optimizeForProfit, correctPlay, rulesLabel, pDip, PhiN, DEFAULT_RULES, DEFAULT_BETS, SKILLS, sessEv, sessSd, loadLog, sessionDrawdown, sessionCash };

@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect, useRef, memo } from "react";
 import { Sheet, Seg, ChipRow, ConfirmLink, More, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav } from "./app.jsx";
 import { unpack, albersUsa, azimuthal, regionMap, countryMap, fitBox, regionAt } from "./casino-map.js";
 import { GEO_US, GEO_CA, GEO_WORLD, CASINO_ROWS, CASINO_INTEL } from "./casino-data.js";
-import { TableScoreCard, useCasinoScores, scoreTone, wideScreen } from "./planner.jsx";
+import { TableScoreCard, useCasinoScores, scoreTone, milesBetween } from "./planner.jsx";
 
 export const CAS_KEY = "bj-casinos-v1"; // your marks and your own casinos — backed up and synced
 const CAS_UI_KEY = "bj-casinos-ui"; // which country you were looking at — this device only
@@ -91,6 +91,8 @@ const casCss = `
 .cpin.halo{fill:rgba(var(--neg),.2);stroke:rgba(var(--neg),.55);stroke-width:1}
 .cpin.pulse{fill:none;stroke:rgba(var(--neg),.6);stroke-width:1.2;animation:cpulse 2.6s ease-out infinite}
 .cpin.sel{fill:none;stroke:var(--ivory);stroke-width:1.6}
+.cpin.me{fill:var(--ivory);stroke:var(--brass);stroke-width:2.6}
+.cpin.meh{fill:rgba(var(--acc),.22);stroke:rgba(var(--acc),.5);stroke-width:1}
 .cpinsin{animation:cpinsin .39s var(--ez) .05s backwards}
 @keyframes cpinsin{from{opacity:0}}
 @keyframes cpulse{0%{transform:scale(calc(var(--ik) * .55));opacity:.9}70%,100%{transform:scale(calc(var(--ik) * 1.5));opacity:0}}
@@ -134,7 +136,7 @@ const MapBase = memo(function MapBase({ map, focus }) {
     </>
   );
 });
-const MapPins = memo(function MapPins({ pins, sel }) {
+const MapPins = memo(function MapPins({ pins, sel, me }) {
   const others = [], been = [], backed = [];
   pins.forEach((p) => (p.kind === "backed" ? backed : p.kind === "been" ? been : others).push(p));
   const at = (p) => `translate(${p.x.toFixed(2)},${p.y.toFixed(2)})`;
@@ -145,10 +147,11 @@ const MapPins = memo(function MapPins({ pins, sel }) {
       {been.map((p) => <g key={p.id} transform={at(p)}><circle className="cpin b" r="5" /></g>)}
       {backed.map((p) => <g key={p.id} transform={at(p)}><circle className="cpin pulse" r="13" /><circle className="cpin halo" r="10.5" /><circle className="cpin x" r="5.5" /></g>)}
       {selP && <g transform={at(selP)}><circle className="cpin sel" r="9.5" /></g>}
+      {me && <g transform={at(me)}><circle className="cpin meh" r="11" /><circle className="cpin me" r="4.6" /></g>}
     </>
   );
 });
-function CasinoMap({ map, pins, focus, sel, placing, miles, regionWord, onRegion, onPins, onPlace, onCancelPlace }) {
+function CasinoMap({ map, pins, me, focus, sel, placing, miles, regionWord, onRegion, onPins, onPlace, onCancelPlace }) {
   const wrap = useRef(null), ptrs = useRef(new Map()), gest = useRef(null), raf = useRef(0), tapped = useRef(null);
   const [size, setSize] = useState(null), [view, setView] = useState(null), [settled, setSettled] = useState(null), [drag, setDrag] = useState(false);
   const vr = useRef(null); vr.current = view;
@@ -293,7 +296,7 @@ function CasinoMap({ map, pins, focus, sel, placing, miles, regionWord, onRegion
         <svg viewBox={`0 0 ${size.w} ${size.h}`} aria-hidden="true">
           <g transform={`translate(${view.x.toFixed(2)},${view.y.toFixed(2)}) scale(${view.k})`} style={{ "--ik": 1 / view.k, "--ps": Math.min(2.6, 1 + Math.max(0, Math.log2(z)) * 0.3) }}>
             <MapBase map={map} focus={focus} />
-            <g className="cpinsin"><MapPins pins={pins} sel={sel} /></g>
+            <g className="cpinsin"><MapPins pins={pins} sel={sel} me={me} /></g>
           </g>
           <g className="cm-labs" style={{ opacity: settled === view ? 1 : 0 }}>{labels.map((l) => <text key={l.id} className="cm-lab" x={l.x} y={l.y} textAnchor={l.a}>{l.t}</text>)}</g>
         </svg>
@@ -311,7 +314,7 @@ function CasinoMap({ map, pins, focus, sel, placing, miles, regionWord, onRegion
 }
 
 // ---------- rows and sheets ----------
-function CasinoRow({ c, place, onOpen, score }) {
+function CasinoRow({ c, place, onOpen, score, dist }) {
   const st = statusOf(c), m = c.mark || {}, g = (m.games || [])[0];
   const it = c.intel, quick = !g && it ? [it.tablesN ? `${it.tablesN} tables` : null, it.min ? `from $${it.min}` : null].filter(Boolean) : [];
   const sub = [place, g && g.rules ? rulesShort(g.rules) : null, ...quick, m.heat ? `${HEATS[m.heat - 1][1].toLowerCase()} heat` : null].filter(Boolean).join(" · ");
@@ -319,7 +322,7 @@ function CasinoRow({ c, place, onOpen, score }) {
     <button className="crow" onClick={() => onOpen(c)}>
       <span className={"cdot" + (st === "backed" ? " x" : st === "been" ? " b" : "")} aria-hidden="true" />
       <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{sub}</span></span>
-      <span className="flex items-center gap-2">{score && <span className="deskonly text-right leading-none" title={`Table score ${score.score}: the best game here against your usual game (50)`}><span className="block mono text-[13px] font-semibold" style={{ color: scoreTone(score.score) }}>{score.score}</span><span className="block text-[8.5px] font-semibold uppercase mt-0.5" style={{ color: "var(--muted)", letterSpacing: ".08em" }}>score</span></span>}{st === "backed" ? <span className="ctag x">backed off</span> : st === "been" ? <span className="ctag b">been</span> : c.intel ? <span className="ctag n">report</span> : null}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)" }}><path d="M9 6l6 6-6 6" /></svg></span>
+      <span className="flex items-center gap-2">{dist && <span className="mono text-xs whitespace-nowrap" style={{ color: "var(--ivory-d)" }}>{dist}</span>}{score && <span className="text-right leading-none" title={`Table score ${score.score}: the best game here against your usual game (50)`}><span className="block mono text-[13px] font-semibold" style={{ color: scoreTone(score.score) }}>{score.score}</span><span className="block text-[8.5px] font-semibold uppercase mt-0.5" style={{ color: "var(--muted)", letterSpacing: ".08em" }}>score</span></span>}{dist ? null : st === "backed" ? <span className="ctag x">backed off</span> : st === "been" ? <span className="ctag b">been</span> : c.intel ? <span className={"ctag n" + (score ? " ph-hide" : "")}>report</span> : null}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)" }}><path d="M9 6l6 6-6 6" /></svg></span>
     </button>
   );
 }
@@ -518,6 +521,34 @@ function LinkSheet({ name, all, onLink, onAddNew, onClose }) {
 }
 
 // ---------- the page ----------
+// ---------- where you are ("Near me") ----------
+// Asked for only when "Near me" is tapped. It stays on this device: it sorts the list by distance and is never saved
+// or sent anywhere. One answer is shared by the Casinos page and the session timer while the app is open.
+let _pos = null, _posState = "idle"; // idle | asking | ok | denied | off
+const posSubs = new Set();
+const setPos = (state, pos) => { _posState = state; if (pos !== undefined) _pos = pos; posSubs.forEach((f) => f()); };
+export function askWhere() {
+  if (_posState === "asking") return;
+  if (typeof navigator === "undefined" || !navigator.geolocation) { setPos("off"); return; }
+  setPos("asking");
+  try {
+    navigator.geolocation.getCurrentPosition(
+      (p) => setPos("ok", { lat: p.coords.latitude, lon: p.coords.longitude, t: Date.now() }),
+      (e) => setPos(e && e.code === 1 ? "denied" : "off"),
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 });
+  } catch (_) { setPos("off"); }
+}
+export function useWhere() {
+  const [, bump] = useState(0);
+  useEffect(() => { const f = () => bump((n) => n + 1); posSubs.add(f); return () => { posSubs.delete(f); }; }, []);
+  return { pos: _pos, state: _posState, ask: askWhere };
+}
+export const distLabel = (mi, miles = true) => { const v = miles ? mi : mi * 1.609344; return (v < 10 ? Math.round(v * 10) / 10 : Math.round(v)).toLocaleString() + (miles ? " mi" : " km"); };
+// the casinos closest to a spot, nearest first (the session timer offers them as where you are)
+export async function nearestCasinos(pos, n = 3) {
+  const all = await loadCasinoAll();
+  return all.filter((c) => isFinite(c.lat + c.lon) && !(c.mark && c.mark.hidden)).map((c) => ({ c, mi: milesBetween(pos, c) })).sort((a, b) => a.mi - b.mi).slice(0, n);
+}
 let _casUi = null; // country and focused state, kept while the app is open
 // everything known about every casino: the built-in list with your marks on top, plus the ones you added
 function buildAll(marksList, sessions) {
@@ -553,7 +584,8 @@ export default function CasinosPage({ rules, onUseRules, go }) {
   const [showHidden, setShowHidden] = useState(false);
   const [more, setMore] = useState(false);
   const mapCard = useRef(null);
-  const [wide] = useState(wideScreen); // table scores are a wide-screen extra
+  const where = useWhere(), near = filter === "near";
+  const pickFilter = (v) => { setFilter(v); if (v === "near") { setFocus(null); setQ(""); if (where.state !== "ok" || Date.now() - where.pos.t > 6e5) where.ask(); } };
   useEffect(() => { (async () => {
     let d = null, s = [], ui = null;
     try { const r = await window.storage.get(CAS_KEY, false); if (r?.value) d = JSON.parse(r.value); } catch (_) {}
@@ -562,8 +594,8 @@ export default function CasinosPage({ rules, onUseRules, go }) {
     setSessions(Array.isArray(s) ? s : []); setData({ marks: Array.isArray(d && d.marks) ? d.marks.filter((m) => m && m.id) : [] });
   })(); }, []);
   useEffect(() => { _casUi = { cc, focus }; try { window.storage.set(CAS_UI_KEY, JSON.stringify({ cc }), false); } catch (_) {} }, [cc, focus]);
-  useNav((o) => { if (o.add) { _casAdd = false; startAdd(); } if (o.open) { _casOpen = null; setOpen(o.open); } });
-  useEffect(() => { if (_casAdd) { _casAdd = false; startAdd(); } if (_casOpen) { setOpen(_casOpen); _casOpen = null; } }, []); // eslint-disable-line
+  useNav((o) => { if (o.add) { _casAdd = false; startAdd(); } if (o.open) { _casOpen = null; setOpen(o.open); } if (o.near) { _casNear = false; pickFilter("near"); } });
+  useEffect(() => { if (_casAdd) { _casAdd = false; startAdd(); } if (_casOpen) { setOpen(_casOpen); _casOpen = null; } if (_casNear) { _casNear = false; pickFilter("near"); } }, []); // eslint-disable-line
   const save = (marks) => { setData({ marks }); try { window.storage.set(CAS_KEY, JSON.stringify({ v: 1, marks }), false); } catch (_) {} };
   const patchMark = (id, patch, base) => {
     const cur = data.marks.find((m) => m.id === id), next = { ...(cur || base || { id }), ...patch, t: Date.now() };
@@ -598,12 +630,15 @@ export default function CasinosPage({ rules, onUseRules, go }) {
     const rank = { backed: 0, been: 1, none: 2 }, sort = (L) => L.slice().sort((a, b) => rank[statusOf(a)] - rank[statusOf(b)] || a.name.localeCompare(b.name));
     const byFilter = (c) => { const s = statusOf(c); return filter === "all" || (filter === "intel" ? !!c.intel : filter === "been" ? s !== "none" : s === "backed"); };
     if (searching) { const raw = q.trim().toLowerCase(); return sort(visible.filter((c) => { const hay = (c.name + " " + c.city + " " + c.st + " " + (map.names[c.st] || "")).toLowerCase(); if (hay.includes(raw)) return true; const t = tokens(hay); return words.length > 0 && words.every((x) => t.some((y) => y.startsWith(x))); })); }
+    // near me: every casino in this country by distance, whatever its status
+    if (filter === "near") return where.pos ? visible.filter((c) => isFinite(c.lat + c.lon)).map((c) => [milesBetween(where.pos, c), c]).sort((a, b) => a[0] - b[0]).slice(0, 80).map((x) => x[1]) : [];
     if (focus) return sort(visible.filter((c) => c.st === focus && byFilter(c)));
     if (filter !== "all") return sort(visible.filter(byFilter));
     return sort(visible.filter((c) => c.custom || statusOf(c) !== "none" || hasNotes(c.mark)));
-  }, [visible, q, focus, filter, map]); // eslint-disable-line
+  }, [visible, q, focus, filter, map, where.pos]); // eslint-disable-line
+  const me = useMemo(() => { if (!near || !where.pos) return null; let st; try { st = cc === "USA" && map.geo ? regionAt(map.geo, where.pos.lon, where.pos.lat) || undefined : undefined; } catch (_) {} const p = map.proj.fwd(where.pos.lon, where.pos.lat, st); return p ? { x: p[0], y: p[1] } : null; }, [near, where.pos, map, cc]);
   useEffect(() => { setMore(false); }, [q, focus, filter, cc]);
-  const title = searching ? `${list.length} match${list.length === 1 ? "" : "es"}` : focus ? `${map.names[focus] || focus}${filter === "backed" ? " · backed off" : filter === "been" ? " · been" : filter === "intel" ? " · reports" : ""}` : filter === "backed" ? "Backed off" : filter === "been" ? "Where you've been" : filter === "intel" ? "Scouting reports" : "Your casinos";
+  const title = searching ? `${list.length} match${list.length === 1 ? "" : "es"}` : near ? "Near you" : focus ? `${map.names[focus] || focus}${filter === "backed" ? " · backed off" : filter === "been" ? " · been" : filter === "intel" ? " · reports" : ""}` : filter === "backed" ? "Backed off" : filter === "been" ? "Where you've been" : filter === "intel" ? "Scouting reports" : "Your casinos";
   const regionCounts = useMemo(() => { const o = {}; visible.forEach((c) => { if (c.st) o[c.st] = (o[c.st] || 0) + 1; }); return o; }, [visible]);
 
   const toMap = () => { try { const el = mapCard.current; if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start", behavior: reduceMotion() ? "auto" : "smooth" }); } catch (_) {} };
@@ -621,8 +656,8 @@ export default function CasinosPage({ rules, onUseRules, go }) {
   const pickCountry = (id) => { setCountrySheet(false); if (id !== cc) { setCc(id); setFocus(null); setFilter("all"); setQ(""); } };
   const openCasino = (c) => { setPick(null); setOpen(c.id); };
 
-  const shownList = more ? list : list.slice(0, 40);
-  const scores = useCasinoScores(shownList, wide);
+  const shownList = more ? list : list.slice(0, near ? 12 : 40);
+  const scores = useCasinoScores(shownList, true);
   if (!everything) return <div><style>{casCss}</style></div>;
   const cname = countryName(cc), cur = open && everything.all.find((c) => c.id === open);
   const shown = shownList;
@@ -636,32 +671,40 @@ export default function CasinosPage({ rules, onUseRules, go }) {
             <button className="cpick" onClick={() => setCountrySheet(true)} aria-label={`Country: ${cname}. Change`}><span className="truncate">{cname}</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></button>
             <button onClick={() => startAdd()} className="text-[13px] font-semibold shrink-0 rounded-full px-3.5 chippress" style={{ height: 34, background: "rgba(var(--acc),.14)", color: "var(--brass)" }}>+ Add casino</button>
           </div>
-          <CasinoMap map={map} pins={pins} focus={focus} sel={open} placing={!!placing} miles={cc === "USA"} regionWord={cc === "USA" ? "state" : "province"}
-            onRegion={(id) => { setFocus(id); if (id) setQ(""); }} onPins={(L) => { if (L.length === 1) setOpen(L[0].id); else setPick(L.map((p) => p.id)); }}
+          <CasinoMap map={map} pins={pins} me={me} focus={focus} sel={open} placing={!!placing} miles={cc === "USA"} regionWord={cc === "USA" ? "state" : "province"}
+            onRegion={(id) => { setFocus(id); if (id) { setQ(""); if (near) setFilter("all"); } }} onPins={(L) => { if (L.length === 1) setOpen(L[0].id); else setPick(L.map((p) => p.id)); }}
             onPlace={placed} onCancelPlace={() => { const was = placing; setPlacing(null); if (was && was !== "add") setOpen(was); }} />
           <div className="px-4 py-3">
-            <ChipRow small value={filter} onChange={setFilter} options={[["all", "All"], ["been", <span key="b" className="flex items-center gap-1.5"><span className="cdot b" />Been {counts.been}</span>], ["backed", <span key="x" className="flex items-center gap-1.5"><span className="cdot x" style={{ boxShadow: "none" }} />Backed off {counts.backed}</span>], ...(counts.intel ? [["intel", "Reports"]] : [])]} />
+            <ChipRow small value={filter} onChange={pickFilter} options={[["all", "All"], ["near", <span key="n" className="flex items-center gap-1.5"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 3 3 10.5l7.5 3 3 7.5z" /></svg>Near me</span>], ["been", <span key="b" className="flex items-center gap-1.5"><span className="cdot b" />Been {counts.been}</span>], ["backed", <span key="x" className="flex items-center gap-1.5"><span className="cdot x" style={{ boxShadow: "none" }} />Backed off {counts.backed}</span>], ...(counts.intel ? [["intel", "Reports"]] : [])]} />
           </div>
         </section>
       </div><div className="dcol o2">
         <section className="card p-5 mb-4">
           <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: map.hasRegions ? "minmax(0,1fr) minmax(0,.8fr)" : "1fr" }}>
             <input className="in" style={{ height: 44, fontSize: 15 }} type="search" placeholder="Search casinos" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search casinos" autoComplete="off" enterKeyHint="search" />
-            {map.hasRegions && <select className="in csel" value={focus || ""} onChange={(e) => { setFocus(e.target.value || null); setQ(""); if (e.target.value) toMap(); }} aria-label={cc === "USA" ? "State" : "Province"}>
+            {map.hasRegions && <select className="in csel" value={focus || ""} onChange={(e) => { setFocus(e.target.value || null); setQ(""); if (e.target.value) { toMap(); if (near) setFilter("all"); } }} aria-label={cc === "USA" ? "State" : "Province"}>
               <option value="">{cc === "USA" ? "All states" : "All provinces"}</option>
               {map.regions.slice().sort((a, b) => a.n.localeCompare(b.n)).map((r) => <option key={r.id} value={r.id}>{r.n}{regionCounts[r.id] ? ` (${regionCounts[r.id]})` : ""}</option>)}
             </select>}
           </div>
           <div className="flex items-baseline justify-between gap-3 mb-1">
             <div className="eyebrow">{title}</div>
-            {!searching && list.length > 0 && <div className="mono text-xs" style={{ color: "var(--muted)" }}>{list.length}</div>}
+            {!searching && !near && list.length > 0 && <div className="mono text-xs" style={{ color: "var(--muted)" }}>{list.length}</div>}
+            {near && !searching && where.pos && <button className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => where.ask()}>{where.state === "asking" ? "Finding you…" : "Update"}</button>}
           </div>
-          {shown.map((c) => <CasinoRow key={c.id} c={c} place={searching || !focus ? [c.city, c.st].filter(Boolean).join(", ") : placeOf(c)} onOpen={openCasino} score={scores.get(c)} />)}
-          {list.length > shown.length && <button onClick={() => setMore(true)} className="w-full text-xs font-semibold py-2.5 lnk" style={{ color: "var(--brass)" }}>Show all {list.length}</button>}
-          {!list.length && (emptyAll
+          {shown.map((c) => <CasinoRow key={c.id} c={c} place={searching || !focus ? [c.city, c.st].filter(Boolean).join(", ") : placeOf(c)} onOpen={openCasino} score={scores.get(c)} dist={near && !searching && where.pos ? distLabel(milesBetween(where.pos, c), cc === "USA") : null} />)}
+          {list.length > shown.length && <button onClick={() => setMore(true)} className="w-full text-xs font-semibold py-2.5 lnk" style={{ color: "var(--brass)" }}>{near && !searching ? "Show more" : `Show all ${list.length}`}</button>}
+          {near && !searching && list.length > 0 && <p className="text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Nearest first, in a straight line. Your location stays on this device.</p>}
+          {near && !searching && !list.length ? (
+            <div className="text-center py-6">
+              <div className="text-sm font-semibold">{where.state === "asking" || where.state === "idle" ? "Finding where you are…" : where.state === "denied" ? "Location is switched off for this app" : where.state === "ok" ? `No casinos listed in ${cname}` : "Couldn't find where you are"}</div>
+              <p className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{where.state === "asking" || where.state === "idle" ? "Your phone may ask whether to allow it. It stays on this device." : where.state === "denied" ? "Allow location for this app in your phone's settings, then tap Near me again. Or pick a state on the map." : where.state === "ok" ? "Pick the country you're in with the button above the map." : "Check that location is switched on, then try again."}</p>
+              {(where.state === "off" || where.state === "denied") && <button className="text-xs font-semibold lnk mt-2" style={{ color: "var(--brass)" }} onClick={() => where.ask()}>Try again</button>}
+            </div>
+          ) : !list.length && (emptyAll
             ? <div className="text-center py-6"><div className="text-sm font-semibold">{counts.all ? "Mark where you've played" : `No casinos listed for ${cname} yet`}</div><p className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{counts.all ? `${map.hasRegions ? (cc === "USA" ? "Tap a state on the map" : "Tap a province on the map") : "Tap a pin on the map"} or search by name. Casinos you've been to, been backed off from or written notes on collect here.` : "Add the ones you play with “+ Add casino”, then tap the map where each one is."}</p></div>
             : <p className="text-sm text-center py-6" style={{ color: "var(--muted)" }}>{searching ? `Nothing in ${cname} matches “${q.trim()}”.` : focus ? (filter === "all" ? `No casinos with blackjack tables listed in ${map.names[focus] || focus}.` : filter === "intel" ? `No scouting reports for ${map.names[focus] || focus} yet.` : `None in ${map.names[focus] || focus} yet.`) : filter === "backed" ? "You haven't been backed off anywhere. Long may it last." : filter === "intel" ? "No scouting reports here yet." : "Nowhere marked yet."}</p>)}
-          {(searching || focus) && !list.length && <div className="text-center -mt-2 mb-1"><button className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => startAdd(searching ? q.trim() : "")}>+ Add {searching ? `“${q.trim()}”` : "a casino here"}</button></div>}
+          {(searching || focus) && !near && !list.length && <div className="text-center -mt-2 mb-1"><button className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => startAdd(searching ? q.trim() : "")}>+ Add {searching ? `“${q.trim()}”` : "a casino here"}</button></div>}
           {hiddenN > 0 && !searching && <div className="text-center mt-2"><button className="text-xs underline underline-offset-2 lnk" style={{ color: "var(--muted)" }} onClick={() => setShowHidden(!showHidden)}>{showHidden ? "Stop showing hidden casinos" : `${hiddenN} hidden — show`}</button></div>}
         </section>
         {everything.loose.length > 0 && !searching && (
@@ -703,5 +746,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
     </div>
   );
 }
+let _casNear = false; // set by Home's "Near me" before the page opens
+export const openCasinoNear = () => { _casNear = true; };
 let _casAdd = false; // set by the Jump-to palette's "Add a casino" before the page opens
 export const openCasinoAdd = () => { _casAdd = true; };
