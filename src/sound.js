@@ -92,7 +92,7 @@ function clip(group, t, opts) { const c = pick(group); if (c) play(c, group, t, 
 // A dealt card. `fly` is how long the card is in the air (seconds): the recording is placed so its snap falls where the
 // card lands, not where it sets off — so the sound keeps time with the cards at any dealing speed. A fast deal (under
 // a fifth of a second in the air) uses the quicker set of the same recordings, and lets cards follow each other closer.
-const LAND = 0.68;          // the share of its flight after which a card on the app's easy ease has all but arrived
+const LAND = 0.5;           // the share of its flight after which a card on the app's ease-out has all but arrived (95% of the way)
 function card(t, now, fly) {
   const group = fly && fly < 0.2 && clips.cardq && clips.cardq.length ? "cardq" : "card";
   const c = pick(group); if (!c) return;

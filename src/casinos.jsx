@@ -78,7 +78,7 @@ const casCss = `
 .cmap:focus-visible{box-shadow:inset 0 0 0 2px var(--brass)}
 .cmap svg{display:block;width:100%;height:100%}
 .cm-land{fill:rgba(var(--fg),.04)}
-.cm-reg{fill:rgba(var(--fg),.09);transition:fill .2s var(--ease)}
+.cm-reg{fill:rgba(var(--fg),.09);transition:fill .16s var(--ease)}
 .cm-reg.on{fill:rgba(var(--acc),.17)}
 .cmap.solo .cm-reg{fill:rgba(var(--fg),.12);stroke:rgba(var(--fg),.34);stroke-width:1;vector-effect:non-scaling-stroke}
 @media (hover:hover){.cmap.regs:not(.placing) .cm-reg:hover{fill:rgba(var(--fg),.14)}.cmap.regs:not(.placing) .cm-reg.on:hover{fill:rgba(var(--acc),.2)}}
@@ -91,7 +91,7 @@ const casCss = `
 .cpin.halo{fill:rgba(var(--neg),.2);stroke:rgba(var(--neg),.55);stroke-width:1}
 .cpin.pulse{fill:none;stroke:rgba(var(--neg),.6);stroke-width:1.2;animation:cpulse 2.6s ease-out infinite}
 .cpin.sel{fill:none;stroke:var(--ivory);stroke-width:1.6}
-.cpinsin{animation:cpinsin .3s var(--ez) .06s backwards}
+.cpinsin{animation:cpinsin .23s var(--ez) .05s backwards}
 @keyframes cpinsin{from{opacity:0}}
 @keyframes cpulse{0%{transform:scale(calc(var(--ik) * .55));opacity:.9}70%,100%{transform:scale(calc(var(--ik) * 1.5));opacity:0}}
 .cm-lab{font:600 11px Inter,system-ui,sans-serif;fill:var(--ivory);paint-order:stroke;stroke:var(--bg);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
@@ -101,7 +101,7 @@ const casCss = `
 .cm-btn:active{transform:scale(.92)}.cm-btn:disabled{opacity:.35}
 @media (hover:hover){.cm-btn:hover:not(:disabled){color:var(--ivory)}}
 .cm-btn:focus-visible,.crow:focus-visible,.cpick:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
-.cm-banner{position:absolute;left:10px;top:10px;right:54px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 8px 12px;border-radius:12px;font-size:12.5px;font-weight:600;color:var(--ivory);background:rgba(var(--bgrgb),.9);border:1px solid rgba(var(--acc),.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:rise .22s var(--ease) both}
+.cm-banner{position:absolute;left:10px;top:10px;right:54px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 8px 12px;border-radius:12px;font-size:12.5px;font-weight:600;color:var(--ivory);background:rgba(var(--bgrgb),.9);border:1px solid rgba(var(--acc),.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:rise .17s var(--ease) both}
 .cm-hint{position:absolute;left:10px;bottom:10px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:500;color:var(--ivory-d);background:rgba(var(--bgrgb),.72);border:1px solid rgba(var(--fg),.08);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none}
 .cm-scale{position:absolute;right:12px;bottom:11px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:10px;font-weight:600;color:var(--muted);pointer-events:none}
 .cm-scale span{display:block;height:5px;border:1.5px solid rgba(var(--fg),.45);border-top:0;border-radius:0 0 2px 2px}
@@ -173,9 +173,9 @@ function CasinoMap({ map, pins, focus, sel, placing, miles, regionWord, onRegion
   const stop = () => { if (raf.current) cancelAnimationFrame(raf.current); raf.current = 0; };
   const animTo = (to) => {
     stop(); const from = vr.current; if (!from || reduceMotion()) { setView(to); return; }
-    const c0 = [(size.w / 2 - from.x) / from.k, (size.h / 2 - from.y) / from.k], c1 = [(size.w / 2 - to.x) / to.k, (size.h / 2 - to.y) / to.k], t0 = performance.now(), dur = 420;
+    const c0 = [(size.w / 2 - from.x) / from.k, (size.h / 2 - from.y) / from.k], c1 = [(size.w / 2 - to.x) / to.k, (size.h / 2 - to.y) / to.k], t0 = performance.now(), dur = 320;   // the map zooms the way everything else moves: straight off the mark, easing to a stop
     const step = (now) => {
-      const u = Math.min(1, (now - t0) / dur), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+      const u = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - u, 3.4);
       const k = from.k * Math.pow(to.k / from.k, e), cx = c0[0] + (c1[0] - c0[0]) * e, cy = c0[1] + (c1[1] - c0[1]) * e;
       setView(u >= 1 ? to : { k, x: size.w / 2 - cx * k, y: size.h / 2 - cy * k });
       raf.current = u < 1 ? requestAnimationFrame(step) : 0;
