@@ -347,7 +347,7 @@ function CountrySheet({ value, counts, onPick, onClose }) {
   );
 }
 function GameEditor({ g, set, onRemove, onUse, used }) {
-  const R = g.rules, setR = (k, v) => set({ ...g, rules: { ...R, [k]: v } });
+  const R = g.rules || {}, setR = (k, v) => set({ ...g, rules: { ...R, [k]: v } }); // a saved game with no rules (old or hand-edited data) opens empty instead of failing
   const [more, setMore] = useState(() => !dasOn(R) || dblRule(R) !== "any" || maxHandsOf(R) !== 4 || !!R.rsa);
   const row = (label, control) => <div className="grid items-center gap-3" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,190px)" }}><span className="text-sm" style={{ color: "var(--ivory-d)" }}>{label}</span>{control}</div>;
   const num = (k, ph, pre) => <div className="relative">{pre && <span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>{pre}</span>}<input className="in mono" style={pre ? { paddingLeft: 24 } : undefined} type="number" inputMode="numeric" min="0" placeholder={ph} value={g[k] ?? ""} onChange={(e) => set({ ...g, [k]: e.target.value === "" ? "" : Math.max(0, Number(e.target.value)) })} aria-label={ph} /></div>;

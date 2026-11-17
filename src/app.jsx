@@ -5637,7 +5637,7 @@ function BetSpreadCalculator() {
   const sess = useMemo(() => (sessBase ? { ...sessBase, ddMed: sessDd ? sessBase.fx.d50 * sessDd.med : null, dd90: sessDd ? sessBase.fx.d90 * sessDd.p90 : null } : null), [sessBase, sessDd]);
   const mix = useMemo(() => mixOf(r.rows, cal), [r, cal]);
   // your own spread as this page prices it, for the Plan tab's bankroll side
-  const mine = useMemo(() => { let rps = 0; try { rps = shoeRounds(r.rf, bets, spotsMap, cal, rules.pen); } catch (_) {} return { ev: r.evHour, sd: r.sdHour, ror: r.ror, mn: Math.max(0, +minBet || 0), bets, rph: rphEff, rps, loses: !(r.evHour > 0) }; }, [r, bets, spotsMap, cal, rules.pen, minBet, rphEff]);
+  const mine = useMemo(() => { let rps = 0; try { rps = shoeRounds(r.rf, bets, spotsMap, cal, rules.pen); } catch (_) {} return { ev: r.evHour, sd: r.sdHour, ror: r.ror, mn: Math.max(0, +minBet || 0), bets, rph: rphEff, rps, loses: !(r.evHour > 0), sessHours: sessT }; }, [r, bets, spotsMap, cal, rules.pen, minBet, rphEff, sessT]);
   const rorTarget = rorPct / 100;
   const [optResult, setOptResult] = useState(null);
   const [frontier, setFrontier] = useState(null);

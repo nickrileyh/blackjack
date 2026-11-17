@@ -4,7 +4,7 @@
 // Run:  tools/checks/run.sh
 process.env.TZ = "America/New_York"; // the date checks cross a clock change
 import { COUNTS, calFor, compute, pDip, PhiN, DEFAULT_RULES, optimizeSpread } from "./app.jsx";
-import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, schedule, addDays, daysBetween, reportGame, scoreTone, gamesAt, ladderModel, averageGame, bankrollHistory } from "./planner.jsx";
+import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, nextUp, addDays, daysBetween, reportGame, scoreTone, gamesAt, ladderModel, averageGame, bankrollHistory } from "./planner.jsx";
 let bad = 0, n = 0; const ok = (name, cond, info = "") => { n++; if (!cond) { bad++; console.log("FAIL", name, info); } };
 const near = (name, a, b, tol) => ok(name, Math.abs(a - b) <= tol, `got ${a} want ${b} ±${tol}`);
 const base = { rules: { ...DEFAULT_RULES, h17: true, surrender: true, decks: 6, pen: 75 }, seats: 4, spotsMap: {}, minBet: 25, maxBet: 500, hphAuto: true, handsPerHour: 100 };
@@ -154,16 +154,18 @@ near("one back-off rests 90 days from the back-off", restOf(cas("a", { n: 2, las
 near("a second back-off rests 180", restOf(cas("a", { n: 2, last: "2026-11-10", dates: ["2026-11-01", "2026-11-10"], backed: "2026-11-10", backedN: 2 }), R).until, addDays(D("2026-11-10"), 180), 0);
 ok("never played is ready", restOf(cas("a", null, { status: "been" }), R).until === null);
 { const today = D("2026-11-16"), rows = ["a", "b", "c", "d", "e", "f", "g"].map((id) => { const c = cas(id, null, { status: "been" }); return { c, ...restOf(c, R) }; });
-  const plan = schedule(rows, today, R, 2, 6, () => 50);
-  ok("two a week lands on days 0, 4, 7, 11, 14, 18", plan.map((v) => daysBetween(today, v.t)).join() === "0,4,7,11,14,18", plan.map((v) => daysBetween(today, v.t)).join());
-  ok("with enough casinos nobody is visited twice", new Set(plan.map((v) => v.c.id)).size === 6);
-  const two = [cas("a", { n: 1, last: "2026-11-14", dates: ["2026-11-14"] }), cas("b", { n: 1, last: "2026-11-02", dates: ["2026-11-02"] }, { heat: 2 })].map((c) => ({ c, ...restOf(c, R) })), p2 = schedule(two, today, R, 3, 8, () => 50), seen = {};
-  let fine = true; p2.forEach((v) => { const r = two.find((x) => x.c.id === v.c.id), gap = v.c.id === "b" ? 21 : 7; if (seen[v.c.id] == null ? r.until && v.t < r.until : daysBetween(seen[v.c.id], v.t) < gap) fine = false; seen[v.c.id] = v.t; });
-  ok("no visit lands inside a casino's rest", fine, p2.map((v) => v.c.id + daysBetween(today, v.t)).join(" "));
+  const plan = nextUp(rows, today, () => 50);
+  ok("one pick and two alternates", plan.length === 3 && new Set(plan.map((v) => v.c.id)).size === 3 && plan.every((v) => v.ready && v.t === today), plan.map((v) => v.c.id).join());
+  ok("fewer casinos, fewer alternates", nextUp(rows.slice(0, 2), today, () => 50).length === 2 && nextUp([], today, () => 50).length === 0);
+  // a is resting until the 21st, b (medium heat) until the 23rd, c has never been played: c first, then by the day each is back
+  const mix = [cas("a", { n: 1, last: "2026-11-14", dates: ["2026-11-14"] }), cas("b", { n: 1, last: "2026-11-02", dates: ["2026-11-02"] }, { heat: 2 }), cas("c", null, { status: "been" })].map((c) => ({ c, ...restOf(c, R) })), p2 = nextUp(mix, today, () => 50);
+  ok("a ready casino comes before a resting one, then the soonest back", p2.map((v) => v.c.id).join() === "c,a,b" && p2[0].ready && !p2[1].ready, p2.map((v) => v.c.id + daysBetween(today, v.t)).join(" "));
+  ok("a resting casino is offered for the day its rest ends, never sooner", p2.slice(1).every((v) => v.t === mix.find((x) => x.c.id === v.c.id).until && v.t > today));
   const sc = (c) => (c.id === "g" ? 100 : 0), tie = ["f", "g"].map((id) => { const c = cas(id, { n: 1, last: id === "g" ? "2026-11-02" : "2026-11-01", dates: [] }); return { c, ...restOf(c, R) }; });
-  ok("a much better game wins a near-tie on rest", schedule(tie, today, R, 1, 1, sc)[0].c.id === "g"); ok("without scores the longer-rested goes first", schedule(tie, today, R, 1, 1, () => null)[0].c.id === "f");
-  const bk = [cas("x", { n: 1, last: "2026-09-01", dates: ["2026-09-01"], backed: "2026-09-01", backedN: 1 })].map((c) => ({ c, ...restOf(c, R) }));
-  ok("a backed-off casino comes back only when its rest ends", daysBetween(D("2026-09-01"), schedule(bk, today, R, 2, 1, () => 50)[0].t) === 90);
+  ok("a much better game wins a near-tie on rest", nextUp(tie, today, sc)[0].c.id === "g"); ok("without scores the longer-rested goes first", nextUp(tie, today, () => null)[0].c.id === "f");
+  const bk = [cas("x", { n: 1, last: "2026-09-01", dates: ["2026-09-01"], backed: "2026-09-01", backedN: 1 })].map((c) => ({ c, ...restOf(c, R) })), pb = nextUp(bk, today, () => 50);
+  ok("a backed-off casino comes back only when its rest ends", pb.length === 1 && !pb[0].ready && pb[0].back && daysBetween(D("2026-09-01"), pb[0].t) === 90);
+  ok("once that rest is over it is offered as a first visit back", nextUp(bk, D("2026-12-05"), () => 50)[0].ready && nextUp(bk, D("2026-12-05"), () => 50)[0].back);
 }
 
 // ---- reading a scouting report's game lines
