@@ -606,6 +606,9 @@ input[type=range]{accent-color:var(--brass)}
 @keyframes shoe{0%,100%{transform:translateX(0)}30%{transform:translateX(-6px)}}
 .shoe.go{animation:shoe .41s var(--ez)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}
+.stats.three{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pnote2{font-size:11.5px;line-height:1.45;border-radius:12px;padding:8px 12px;background:rgba(var(--neg),.09)}
 .rise{animation:rise .27s var(--ease) both}
 .navbtn.on .navicon svg{animation:navpop .36s var(--ez)}
 @keyframes navpop{0%{transform:scale(.78)}100%{transform:scale(1)}}
@@ -2178,13 +2181,10 @@ function Trainer({ rules, setRules, spread }) {
       </>}
 
 
-      <section className="card px-5 py-4">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs" style={{ color: "var(--muted)" }}>Progress is saved on this device.</span>
-          <ConfirmLink label="Reset progress" confirm="Tap again — wipes trainer mastery" onConfirm={reset} />
-        </div>
-        <Info label="How it works">Hands you miss come back right away. Hands you get right come back less and less often until they're locked in.</Info>
-      </section>
+      <div className="flex items-start justify-between gap-4 px-1 pb-2">
+        <div className="-mt-3 min-w-0"><Info label="How it works">Hands you miss come back right away. Hands you get right come back less and less often until they're locked in. Progress is saved on this device.</Info></div>
+        <ConfirmLink label="Reset progress" confirm="Tap again — wipes trainer mastery" onConfirm={reset} />
+      </div>
       </div></div>
     </div>
   );
@@ -4708,10 +4708,10 @@ function MonthBars({ months, sel, onPick }) {
 
 function StatTile({ k, v, sub, tone, enter }) {
   return (
-    <div className={"rounded-2xl px-3.5 py-3" + (enter ? " rise" : "")} style={{ background: "rgba(var(--fg),.035)", border: "1px solid rgba(var(--fg),.05)" }}>
-      <div className="text-[10.5px] font-semibold uppercase" style={{ color: "var(--muted)", letterSpacing: ".08em" }}>{k}</div>
-      <div className="mono text-lg font-semibold mt-0.5" style={{ color: tone || "var(--ivory)" }}>{v}</div>
-      {sub && <div className="text-[11px] leading-snug" style={{ color: "var(--muted)" }}>{sub}</div>}
+    <div className={"min-w-0" + (enter ? " rise" : "")}>
+      <div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)", letterSpacing: ".09em" }}>{k}</div>
+      <div className="mono text-[17px] font-semibold mt-0.5" style={{ color: tone || "var(--ivory)" }}>{v}</div>
+      {sub && <div className="text-[11px] leading-snug mt-px" style={{ color: "var(--muted)" }}>{sub}</div>}
     </div>
   );
 }
@@ -4835,12 +4835,12 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
         </div>
         {list.length >= 2 && <div className="mt-4"><PnlChart sessions={list} evHour={evHour} sdHour={sdHour} ddMed={null} onExpand={() => setPnlFull(true)} /></div>}
         {list.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 mt-1 text-center">
+          <div className="stats three mt-3 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
             {[["Per hour", sgnMoney(st.perHour), `exp ${sgnMoney(st.expHour)}`], ["Won", `${Math.round(st.winRate * 100)}%`, `${st.wins} of ${st.n}`], ["Avg session", sgnMoney(st.avg), fmtH(st.avgH)]].map(([k, v, s]) => (
-              <div key={k} className="rounded-xl py-2" style={{ background: "rgba(var(--sh),.4)" }}>
-                <div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)", letterSpacing: ".08em" }}>{k}</div>
-                <div className="mono text-sm font-semibold mt-0.5">{v}</div>
-                <div className="text-[10px]" style={{ color: "var(--muted)" }}>{s}</div>
+              <div key={k} className="min-w-0">
+                <div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)", letterSpacing: ".09em" }}>{k}</div>
+                <div className="mono text-[17px] font-semibold mt-0.5">{v}</div>
+                <div className="text-[11px] mt-px" style={{ color: "var(--muted)" }}>{s}</div>
               </div>))}
           </div>
         )}
@@ -4881,14 +4881,15 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
             <div className="mt-4">
               <div className="flex items-baseline justify-between text-xs"><span style={{ color: "var(--ivory-d)" }}>Long run</span><span className="mono" style={{ color: "var(--muted)" }}>{fmtH(Math.round(st.H))} of {Math.round(n0Hours).toLocaleString()}h</span></div>
               <div className="h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full bar barx" style={{ width: `${Math.max(1.5, longRun * 100)}%`, background: "linear-gradient(90deg,var(--brass-d),var(--brass))" }} /></div>
-              <p className="text-[11px] mt-1.5" style={{ color: "var(--muted)" }}>{longRun < 1 ? `Until about ${Math.round(n0Hours).toLocaleString()} hours (N₀ ${n0Logged ? "across your logged sessions" : "at your current spread"}), luck outweighs your edge — results this early say little about skill.` : "Past N₀ — your edge now outweighs a 1-SD swing of luck."}</p>
+              <Info label="What the long run is">{longRun < 1 ? `Until about ${Math.round(n0Hours).toLocaleString()} hours (N₀ ${n0Logged ? "across your logged sessions" : "at your current spread"}), luck outweighs your edge, so results this early say little about skill.` : "Past N₀: your edge now outweighs a 1-SD swing of luck."}</Info>
             </div>
           )}
         </section>
 
         {/* stats */}
-        <div className="eyebrow mb-2 px-1">Stats</div>
-        <div className="grid grid-cols-2 gap-2 mb-4" ref={statsRef}>
+        <section className="card p-5 mb-4">
+        <div className="eyebrow mb-3">Stats</div>
+        <div className="stats" ref={statsRef}>
           <StatTile k="Best session" v={st.best ? sgnMoney(st.best.result) : "—"} sub={st.best ? `${dateShort(st.best.date)}${st.best.where ? " · " + st.best.where : ""}` : ""} tone="var(--brass)" />
           <StatTile k="Worst session" v={st.worst ? sgnMoney(st.worst.result) : "—"} sub={st.worst ? `${dateShort(st.worst.date)}${st.worst.where ? " · " + st.worst.where : ""}` : ""} tone={st.worst && st.worst.result < 0 ? "var(--neg-l)" : undefined} />
           <StatTile k="Drawdown" v={st.mdd ? `−\u2060${money(Math.round(st.mdd))}` : "$0"} sub={ddE ? `median for your hours\u00a0−\u2060${money(Math.round(ddE.med / 25) * 25)}` : "biggest drop from a peak"} tone={ddE && st.mdd > ddE.med ? "var(--neg-l)" : undefined} />
@@ -4900,8 +4901,9 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
           <StatTile enter k="Your swings" v={st.n >= 5 ? `±${money(Math.round(st.realSd))}/hr` : "—"} sub={st.n >= 5 ? `model ±${money(Math.round(st.modelSd))}/hr${st.n < 20 ? " · rough until ~20 sessions" : ""}` : "after 5 sessions"} tone={st.n >= 5 && sdRatio > 1.35 ? "var(--neg-l)" : undefined} />
           </>}
         </div>
-        <More open={moreStats} onClick={() => setMoreStats((v) => !v)} className="-mt-2 mb-4 px-1">{moreStats ? "Fewer stats" : "More stats"}</More>
-        {st.n >= 8 && sdRatio > 1.35 && <p className="text-[11px] -mt-2 mb-4 px-1" style={{ color: "var(--neg-l)" }}>Your results swing {Math.round((sdRatio - 1) * 100)}% more than your spread predicts. Common causes: betting above the ramp, extra hands, or wrong game settings (penetration, players).</p>}
+        <More open={moreStats} onClick={() => setMoreStats((v) => !v)} className="mt-4">{moreStats ? "Fewer stats" : "More stats"}</More>
+        </section>
+        {st.n >= 8 && sdRatio > 1.35 && <p className="pnote2 mb-4" style={{ color: "var(--neg-l)" }}>Your results swing {Math.round((sdRatio - 1) * 100)}% more than your spread predicts. Common causes: betting above the ramp, extra hands, or wrong game settings (penetration, players).</p>}
         {lowCheck && (
           <section className="card p-4 mb-4">
             <div className="flex items-baseline justify-between"><div className="eyebrow">In-session dips</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{lowCheck.n} logged</div></div>
@@ -4929,16 +4931,14 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
                   </div>
                 </button>))}
             </div>
-            {casinos.length > 1 && (casino === "all"
-              ? <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Tap a casino to filter everything on this page.</p>
-              : <button onClick={() => setCasino("all")} className="w-full mt-3 text-xs font-semibold py-2 rounded-lg" style={{ color: "var(--brass)", background: "rgba(var(--acc),.08)" }}>Show all casinos</button>)}
+            {casinos.length > 1 && casino !== "all" && (<button onClick={() => setCasino("all")} className="w-full mt-3 text-xs font-semibold py-2 rounded-lg" style={{ color: "var(--brass)", background: "rgba(var(--acc),.08)" }}>Show all casinos</button>)}
           </section>
         )}
 
         {/* months */}
         {months.length >= 2 && (
           <section className="card p-5 mb-4">
-            <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">By month</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{wide && !calMonth ? "click a month for its days" : `${months.length} months`}</div></div>
+            <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">By month</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{`${months.length} months`}</div></div>
             <MonthBars months={months} sel={calMonth} onPick={wide ? (k) => setCalPick(calPick === k ? null : k) : undefined} />
             {calMonth && <MonthCal key={calMonth} k={calMonth} list={list} onOpen={setSheet} />}
           </section>
@@ -5032,7 +5032,7 @@ function Backup() {
   return (
     <section className="card p-5 mt-4">
       <div className="eyebrow mb-1">Backup</div>
-      <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Everything is saved on this device and survives restarts. Export a copy now and then in case you switch devices or clear your browser's data.</p>
+      <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Everything is saved on this device. Export a copy before you switch devices or clear your browser's data.</p>
       <div className="grid grid-cols-2 gap-2 mb-2">
         <button className="btn ghost" onClick={exportAll}>Export</button>
         <button className="btn ghost" onClick={importAll} disabled={!text.trim()}>Restore</button>
@@ -5416,7 +5416,7 @@ function ThemePicker() {
   // where the browser can (Chrome, Safari 18), the old look dissolves into the new one instead of switching in a frame
   const pick = (k) => {
     if (k === t) return;
-    if (typeof document !== "undefined" && document.startViewTransition && !noMotion()) { try { document.startViewTransition(() => { flushSync(() => setT(k)); applyTheme(k); }); return; } catch (_) {} }
+    if (typeof document !== "undefined" && document.startViewTransition && !noMotion()) { try { const vt = document.startViewTransition(() => { flushSync(() => setT(k)); applyTheme(k); }); const quiet = () => {}; [vt.ready, vt.finished, vt.updateCallbackDone].forEach((x) => x && x.catch && x.catch(quiet)); return; } catch (_) {} }
     setT(k);
   };
   return (
@@ -5445,8 +5445,7 @@ function SettingsPage({ rules, onRules, seats, go, onKeys }) {
     <div>
       <div className="dgrid two"><div className="dcol">
       <section className="card p-5 mb-4">
-        <div className="eyebrow mb-1">Appearance</div>
-        <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>Pick a look. Cards and chips keep their real colors.</p>
+        <div className="eyebrow mb-3">Appearance</div>
         <ThemePicker />
       </section>
       <SoundCard />
@@ -5464,7 +5463,8 @@ function SettingsPage({ rules, onRules, seats, go, onKeys }) {
       <ResetSkills />
       <section className="card p-5 mb-4">
         <div className="eyebrow mb-2">About the numbers</div>
-        <p className="text-xs leading-relaxed" style={{ color: "var(--ivory-d)" }}>Strategy follows Blackjack Apprenticeship's charts with the Illustrious 18 and Fab 4. The calculator rests on 64 billion simulated rounds: 25 billion measure the edge and swing at every count for every deck count, rule set, table size and penetration; 30 billion measure how often each count comes up when you play every hand, sit out or spread to two hands; 2.7 billion were played twice, with and without each table rule (double after split, doubling limits, split limits, resplitting aces, 6 to 5); and 5.9 billion check the strategy itself, playing every basic strategy decision and every count play each possible way from the same cards. The results are checked against full card-by-card simulations. Everything stays on this device.</p>
+        <p className="text-xs" style={{ color: "var(--ivory-d)" }}>Blackjack Apprenticeship's charts with the Illustrious 18 and Fab 4, and a calculator measured on 64 billion simulated rounds. Everything stays on this device.</p>
+        <Info label="What was measured">The calculator rests on 64 billion simulated rounds: 25 billion measure the edge and swing at every count for every deck count, rule set, table size and penetration; 30 billion measure how often each count comes up when you play every hand, sit out or spread to two hands; 2.7 billion were played twice, with and without each table rule (double after split, doubling limits, split limits, resplitting aces, 6 to 5); and 5.9 billion check the strategy itself, playing every basic strategy decision and every count play each possible way from the same cards. The results are checked against full card-by-card simulations.</Info>
       </section>
       </div></div>
     </div>
@@ -5725,7 +5725,7 @@ function SyncCard() {
         {st.cfg?.token && <span className="text-[11px] font-semibold" style={{ color: "var(--brass)" }}>On</span>}
       </div>
       {!st.cfg?.token ? (<>
-        <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Keep your phone and computer on the same sessions, spread, training and tests. It all goes to a private Gist on your own GitHub account and nowhere else.</p>
+        <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Keeps your phone and computer in step, through a private Gist on your own GitHub account and nowhere else.</p>
         <div className="flex gap-2">
           <input className="in mono text-[12px] flex-1 min-w-0" placeholder="ghp_…" value={key} onChange={(e) => setKey(e.target.value)} autoCapitalize="off" autoCorrect="off" spellCheck={false} />
           <button className="btn shrink-0" style={{ width: "auto", padding: "0 16px" }} onClick={connect} disabled={busy || key.trim().length < 20}>{busy ? "Connecting…" : "Connect"}</button>
@@ -6218,7 +6218,6 @@ function BetSpreadCalculator() {
             <div className="flex items-end justify-between gap-3 mb-3">
               <div>
                 <div className="eyebrow">Your session</div>
-                <div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>Type how long you plan to play</div>
               </div>
               <div className="relative" style={{ width: 110 }}>
                 <input className="in mono" type="number" inputMode="decimal" step="0.25" min="0" max="48" value={sessHours} aria-label="Session hours"
@@ -6263,7 +6262,7 @@ function BetSpreadCalculator() {
               </div>
             ))}
           </div>
-          <Info label="How to read this">Bar height is bet size; brightness is how often that count shows up. Red means you're betting into the house's edge.</Info>
+          <Info label="How to read this">Bar height is bet size; brightness is how often that count shows up. Red means you're betting into the house's edge. A $0 bet means you sit out at that count.</Info>
         </section>
 
         {/* inputs */}
@@ -6284,7 +6283,7 @@ function BetSpreadCalculator() {
             <Field label="Table minimum" prefix="$" value={minBet} onChange={setMinBet} step={5} />
             <Field label="Table maximum" prefix="$" value={maxBet} onChange={setMaxBet} step={50} hint={maxBet !== "" && +maxBet < (+minBet || 0) ? "Below the minimum — the optimizer will use the minimum" : maxBet === "" ? "No max — the optimizer won't cap your bets" : undefined} />
           </div>
-          <Info label="Where these numbers come from">Edges and swings come from {CAL_ROUNDS(rules.decks, seats)} million simulated rounds of {rules.decks}-deck {rules.h17 ? "H17" : "S17"}{rules.surrender ? " with surrender" : ""} with {seats === 1 ? "you alone at the table" : rules.decks >= 6 ? "other players at the table" : `${seats} players at the table`}, and count frequencies from separate runs for your table size, at {rules.pen}% penetration, played with BJA strategy, the Illustrious 18{rules.surrender ? " and Fab 4" : ""}. Assumes accurate counting and play.{devsOn(rules) ? "" : " Deviations are off in the game rules, so these numbers are for basic strategy on every hand: no count plays and no insurance."}</Info>
+          <Info label="Where these numbers come from">Edges and swings come from {CAL_ROUNDS(rules.decks, seats)} million simulated rounds of {rules.decks}-deck {rules.h17 ? "H17" : "S17"}{rules.surrender ? " with surrender" : ""} with {seats === 1 ? "you alone at the table" : rules.decks >= 6 ? "other players at the table" : `${seats} players at the table`}, and count frequencies from separate runs for your table size, at {rules.pen}% penetration, played with BJA strategy, the Illustrious 18{rules.surrender ? " and Fab 4" : ""}. Assumes accurate counting and play.{devsOn(rules) ? "" : " Deviations are off in the game rules, so these numbers are for basic strategy on every hand: no count plays and no insurance."} Risk of ruin uses e^(−2·EV·bankroll / variance) with your spread's simulated EV and variance (checked against simulated bankroll paths) and assumes you never resize your bets. Real results depend on playing accuracy and the game you actually get. Counting is legal, but casinos can ask you to leave.</Info>
         </section>
 
         </div><div className="dcol o3">
@@ -6317,7 +6316,6 @@ function BetSpreadCalculator() {
           {seats === 1 && COUNTS.some((c) => !((Number(bets[c]) || 0) > 0)) && (!((Number(bets[0]) || 0) > 0)
             ? <p className="text-[11px] mt-3 rounded-lg px-3 py-2" style={{ background: "rgba(var(--neg),.12)", color: "var(--neg-l)" }}>Heads-up, every shoe starts at a true count of 0 — with $0 there you'd never play a hand. Bet the minimum at 0, or set the players to the table you're back-counting.</p>
             : <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Heads-up there's no sitting out: a $0 count means you leave the table the first time the count drops there and start fresh on a new shoe.</p>)}
-          <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>A $0 bet means you sit out at that count.</p>
           {showFreq && <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Share of rounds dealt at each true count for this shoe, table and spread{seats === 1 && COUNTS.some((c) => !((Number(bets[c]) || 0) > 0)) ? " — counting only the rounds you're at the table for" : ""}.</p>}
         </section>
         {wide && spreadLoaded && <SavedSpreads bets={bets} spotsMap={spotsMap} bankroll={+bankroll || 0} cal={cal} rphOf={rphOf} now={r} onUse={loadSpread} />}
@@ -6325,7 +6323,7 @@ function BetSpreadCalculator() {
         {/* optimizer */}
         <section id="sp-opt" className="card focusrim p-5">
           <div className="eyebrow mb-1">Optimizer</div>
-          <p className="text-sm mb-4" style={{ color: "var(--ivory-d)" }}>Pick a goal — it finds the best spread for your bankroll and table.</p>
+          <div className="mb-3" />
 
           <div className="chipseg mb-4" role="group" aria-label="Objective">
             <button className={objective === "risk" ? "on" : ""} onClick={() => setObjective("risk")}>Cap my risk</button>
@@ -6366,7 +6364,7 @@ function BetSpreadCalculator() {
                     <div className="flex gap-1 mt-1">
                       {frontier.map((p, i) => <span key={p.cap} className="flex-1 text-center mono" style={{ fontSize: 8, color: Math.round(p.cap * 100) === rorPct ? "var(--brass)" : "var(--muted)" }}>{Math.round(p.cap * 100)}</span>)}
                     </div>
-                    <div className="text-[10px] text-center mt-1" style={{ color: "var(--muted)" }}>$/hr at each risk cap. Bars above the dashed line beat your current spread. Red stubs aren't reachable.</div>
+                    <Info label="Reading the bars">Dollars an hour at each risk cap. Bars above the dashed line beat your current spread. Red stubs aren't reachable.</Info>
                   </div>
                 );
               })()}
@@ -6430,9 +6428,6 @@ function BetSpreadCalculator() {
         </section>
         </div></div>
 
-        <p className="text-[11px] mt-5 leading-relaxed" style={{ color: "var(--muted)" }}>
-          Risk of ruin uses e^(−2·EV·bankroll / variance) with your spread's simulated EV and variance (checked against simulated bankroll paths) and assumes you never resize your bets. Real results depend on playing accuracy and the game you actually get. Counting is legal, but casinos can ask you to leave.
-        </p>
         </div>}
         {tab === "settings" && <p className="text-center text-[10px] mt-10" style={{ color: "var(--muted)", opacity: .7 }}>Strategy and indices follow Blackjack Apprenticeship's {rules.h17 ? "H17" : "S17"} charts · practice tool, not gambling advice</p>}
       </div>
