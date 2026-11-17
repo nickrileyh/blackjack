@@ -717,7 +717,22 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 :root[data-theme="light"] .gchip.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));color:var(--ink);border-color:transparent}
 .chipseg:not(.rows):not(.brushes),.chipseg:not(.rows):not(.brushes) button{border-radius:999px}
 .in{border-radius:14px}.in.sm{border-radius:10px}
-@media (min-width:1024px){.sheetwrap .sheet{border-radius:30px}.cmdk{border-radius:24px}}
+@media (min-width:1024px){.sheetwrap .sheet{border-radius:30px;border-color:transparent}.cmdk{border-radius:24px}}
+/* switches, sliders and wells. A switch's knob and a slider's handle are the same bead of clear glass: light, with a
+   bright top and a soft shadow, a little wider than tall on the switch. Tracks and text boxes are cut into the surface:
+   a shadow along the top edge inside, a hairline of light along the bottom. */
+.switch{width:50px;height:30px;border-radius:999px;background:rgba(var(--fg),.1);box-shadow:inset 0 1px 3px rgba(0,0,0,.4),inset 0 -1px 0 rgba(255,255,255,.05);transition:background .45s var(--ease)}
+.switch::after{top:3px;left:3px;width:28px;height:24px;border-radius:999px;background:linear-gradient(180deg,#fff,#e9efec);box-shadow:0 2px 7px rgba(0,0,0,.45),0 0 0 .5px rgba(0,0,0,.12),inset 0 1px 0 #fff;transition:transform .5s var(--fluid)}
+.switch.on{background:linear-gradient(180deg,var(--brass),var(--acc-hi))}
+.switch.on::after{transform:translateX(16px);background:linear-gradient(180deg,#fff,#e9efec)}
+:root[data-theme="light"] .switch{background:rgba(var(--fg),.14);box-shadow:inset 0 1px 2px rgba(var(--fg),.18)}
+:root[data-theme="light"] .switch.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo))}
+input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:999px;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+input[type=range]::-webkit-slider-thumb{width:28px;height:22px;border-radius:999px;background:linear-gradient(180deg,#fff,#e9efec);border:0;box-shadow:0 2px 7px rgba(0,0,0,.5),0 0 0 .5px rgba(0,0,0,.14),inset 0 1px 0 #fff;margin-top:-8.5px}
+input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;background:linear-gradient(180deg,#fff,#e9efec);border:0;box-shadow:0 2px 7px rgba(0,0,0,.5)}
+.in,.chipseg{box-shadow:inset 0 1px 2px rgba(0,0,0,.4),inset 0 -1px 0 rgba(255,255,255,.045)}
+:root[data-theme="light"] .in{box-shadow:inset 0 1px 2px rgba(var(--fg),.08)}
+.in:focus{box-shadow:inset 0 1px 2px rgba(0,0,0,.3),0 0 0 3px rgba(var(--acc),.18)}
 /* ---- fluid motion, kept quiet (Nick: smoother, subtler, more like liquid). Nothing bounces: one long ease-out
    (--fluid) for everything. A selection flows to its new place — the edge facing the way it is going sets off first and
    the other edge catches up (Glider sets data-dir), so it stretches a little and settles. Pressed glass eases back.
@@ -733,8 +748,11 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 }
 .navglide,.sn-glide{will-change:transform}
 .sn-glide{transition:transform .62s var(--fluid),opacity .25s}
-.navbtn.on .navicon svg{animation:navpop .5s var(--fluid)}
-@keyframes navpop{from{transform:scale(.9)}to{transform:scale(1)}}
+/* the tab icons do not move or change weight when the selection changes: only their colour eases over, while the glass
+   slides underneath. (They used to shrink and pop back, and the line got thicker, which read as a glitch.) Each tab is
+   kept on its own layer for good, so nothing is re-drawn when the slide starts or stops. */
+.navbtn.on .navicon svg{animation:none}
+.navbtn{will-change:transform}
 .btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .5s var(--fluid),filter .2s,background .3s var(--ease),color .25s var(--ease),border-color .3s var(--ease)}
 .btn:active,.iconbtn:active,.stepbtn:active,.rulespill:active,.chippress:active,.navbtn:active{transition-duration:.12s}
 .btn:active{transform:scale(.99)}.iconbtn:active,.stepbtn:active{transform:scale(.95)}.rulespill:active,.chippress:active,.navbtn:active{transform:scale(.975)}
@@ -742,6 +760,23 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .rise>div>section,.rise>section,.rise>div>.stagger,.dcol>section{animation-duration:.6s;animation-timing-function:var(--fluid)}
 .topbar{transition:transform .5s var(--fluid),opacity .32s var(--ease)}
 @media(hover:hover) and (min-width:1024px){.btn:not(.ghost):hover:active:not(:disabled){transform:scale(.99)}}
+/* every other movement in the app, on the same curve: nothing snaps and nothing uses a bare "ease" */
+.acts>button,.qa,.chipbtn,.opt,.xbtn{transition:transform .45s var(--fluid),filter .2s,background-color .3s var(--ease),background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease),opacity .3s var(--ease)}
+.acts>button:active,.qa:active,.chipbtn:active,.opt:active{transition-duration:.1s}
+.tabs button{transition:color .35s var(--ease)}.tabs button.on::after{animation:tabin .5s var(--fluid)}
+.rise{animation-duration:.42s;animation-timing-function:var(--fluid)}
+.syncpill{animation:rise .5s var(--fluid) both}
+.cmdk-wrap{animation:spfade .28s var(--ease) both}.cmdk{animation:cmdkin .42s var(--fluid) both}
+.sheetwrap{animation:scrimin .32s var(--ease)}
+@media (min-width:1024px){.sheetwrap .sheet{animation:sheetpop .42s var(--fluid)}}
+.pillrail{transition:padding-top .5s var(--fluid)}
+.pillrail .rulespill{transition:padding .5s var(--fluid),font-size .5s var(--fluid),background .3s var(--ease),border-color .3s var(--ease),transform .5s var(--fluid)}
+.sn-item,.sn-search,.sn-rules,.keycap,.skillrow,.chipseg button{transition:background .3s var(--ease),border-color .3s var(--ease),color .3s var(--ease)}
+.in{transition:border-color .3s var(--ease),box-shadow .3s var(--ease),background .3s var(--ease)}
+.card{transition:border-color .4s var(--ease)}
+.bar{transition:height .5s var(--fluid),width .5s var(--fluid)}.shoe-t i{transition:width .5s var(--fluid)}
+.shoe.go{animation:shoe .55s var(--fluid)}.pop{animation:pop .42s var(--fluid)}.glow{animation:glow .7s var(--fluid)}
+.leave .dealt{animation:leave .2s var(--ease) forwards !important}
 .sheet{animation-name:sheetflu;animation-duration:.48s;animation-timing-function:var(--fluid)}
 @keyframes sheetflu{from{transform:translateY(26px);opacity:0}to{transform:none;opacity:1}}
 @media (hover:hover) and (min-width:1024px){
@@ -750,26 +785,32 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .card:hover::after{opacity:1}
 }
 .cmdk-wrap{backdrop-filter:none;-webkit-backdrop-filter:none}
-/* sheets, the game-rules dialog and the Jump-to palette: the page shows through, softly, where the browser can do it.
-   The rules dialog is the same glass as a sheet: its panel never scrolls (an inner box does), so the rim stays put. */
+/* Sheets, the game-rules dialog and the Jump-to palette are the clearest glass in the app: the page stays visible
+   behind them, blurred and a little brighter, so they read as a pane held over it and not as a dark box. For that the
+   scrim is lighter than it used to be, the fill is thinner, and each has the rim. None of the three scrolls itself (an
+   inner box does), so the rim and the blur stay put. Older browsers without color-mix keep a solid panel. */
+:root{--scrim:rgba(2,3,6,.4)}
 .cmdk{position:relative}
-.rulesscrim{animation:scrimin .22s var(--ease)}
+.rulesscrim{animation:scrimin .3s var(--ease)}
+.sheet,.cmdk,.card.rulesdlg{position:relative;border-color:transparent}
 .card.rulesdlg{border-radius:30px;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));box-shadow:0 30px 80px -20px rgba(0,0,0,.8);animation:sheetflu .5s var(--fluid) both}
 :root[data-theme="light"] .card.rulesdlg{box-shadow:0 30px 80px -24px rgba(var(--fg),.45)}
+.sheet::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--gl-edge);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;pointer-events:none;z-index:3}
+.xbtn{color:var(--ivory-d);background:linear-gradient(180deg,rgba(var(--fg),.13),rgba(var(--fg),.05));box-shadow:inset 0 1px 0 var(--gl-hi);transition:transform .5s var(--fluid),background .3s var(--ease)}
+.xbtn:active{transform:scale(.92);transition-duration:.12s}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) and (color:color-mix(in srgb,red 50%,transparent)){
-.sheet,.cmdk{background:linear-gradient(180deg,var(--gl-hi),var(--gl-hi) 1px,transparent 1px),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 78%,transparent),color-mix(in srgb,var(--sheet2) 86%,transparent) 40%);backdrop-filter:blur(34px) saturate(1.8);-webkit-backdrop-filter:blur(34px) saturate(1.8)}
-.card.rulesdlg{background:linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 74%,transparent),color-mix(in srgb,var(--sheet2) 84%,transparent) 45%);backdrop-filter:blur(34px) saturate(1.8);-webkit-backdrop-filter:blur(34px) saturate(1.8)}
-:root[data-theme="light"] .card.rulesdlg{background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.76))}
+.sheet,.cmdk,.card.rulesdlg{background:radial-gradient(120% 70% at 0% 0%,var(--gl-sheen),transparent 60%),linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.02) 55%),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 58%,transparent),color-mix(in srgb,var(--sheet2) 72%,transparent) 55%);-webkit-backdrop-filter:blur(30px) saturate(1.9) brightness(1.12);backdrop-filter:blur(30px) saturate(1.9) brightness(1.12)}
+:root[data-theme="light"] .sheet,:root[data-theme="light"] .cmdk,:root[data-theme="light"] .card.rulesdlg{background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(255,255,255,.7));-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8)}
 }
 /* on a phone a sheet floats: inset from the screen edges, round all the way round */
 @media (max-width:1023px){
 .sheetwrap{padding:0 8px max(8px,calc(env(safe-area-inset-bottom) - 16px))}
-.sheet{border-radius:34px;border-bottom:1px solid rgba(var(--acc),.16);box-shadow:0 -10px 50px -10px rgba(0,0,0,.8)}
+.sheet{border-radius:34px;border-bottom:1px solid transparent;box-shadow:0 -10px 50px -10px rgba(0,0,0,.7)}
 .sheet>div:last-child{padding-bottom:22px!important}
 }
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
-@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip{transition:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -1421,18 +1462,18 @@ function FillChart({ R, devs }) {
 }
 
 // A selection that flows from one option to the next like a drop of liquid. CSS slides it (the `translate` property,
-// one long ease-out); this adds the stretch: for a moment it is a little longer and a hair thinner, anchored at the edge
-// that leads, so the trailing edge is what catches up and nothing ever overshoots where it is going. The stretch is the
-// `scale` property through the Web Animations API, so the whole movement runs on the compositor (no layout, no
-// repaint) and stays smooth while the page behind it is busy. A longer jump stretches a little more, up to a limit.
+// one long ease-out); this adds the stretch: for a moment it is a little longer and a hair thinner, then it settles.
+// The stretch is the `scale` property through the Web Animations API, about the middle, so the whole movement runs on
+// the compositor (no layout, no repaint), stays smooth while the page behind it is busy, and a second tap while it is
+// still moving simply starts the stretch again from where it is. A longer jump stretches a little more, up to a limit.
 function Glider({ cls, at, style }) {
-  const el = useRef(null), prev = useRef(at);
+  const el = useRef(null), prev = useRef(at), run = useRef(null);
   useLayoutEffect(() => {
     const d = at - prev.current, n = el.current; prev.current = at;
     if (!d || !n || !n.animate || noMotion()) return;
-    const sx = 1 + Math.min(0.2, 0.06 + 0.035 * Math.abs(d)), sy = 1 - (sx - 1) * 0.16;
-    n.style.transformOrigin = d > 0 ? "100% 50%" : "0% 50%";
-    try { n.animate([{ scale: "1 1", easing: "cubic-bezier(.25,.6,.3,1)" }, { scale: `${sx.toFixed(3)} ${sy.toFixed(3)}`, offset: 0.3, easing: "cubic-bezier(.35,0,.2,1)" }, { scale: "1 1" }], { duration: 620 }); } catch (_) {}
+    const sx = 1 + Math.min(0.16, 0.05 + 0.028 * Math.abs(d)), sy = 1 - (sx - 1) * 0.14;
+    let from = "1 1"; try { if (run.current && run.current.playState === "running") { from = getComputedStyle(n).scale || "1 1"; if (from === "none") from = "1 1"; run.current.cancel(); } } catch (_) {}
+    try { run.current = n.animate([{ scale: from, easing: "cubic-bezier(.25,.6,.3,1)" }, { scale: `${sx.toFixed(3)} ${sy.toFixed(3)}`, offset: 0.28, easing: "cubic-bezier(.35,0,.2,1)" }, { scale: "1 1" }], { duration: 640 }); } catch (_) {}
   }, [at]);
   return <i ref={el} className={cls} aria-hidden="true" style={style} />;
 }
@@ -2085,7 +2126,7 @@ function RulesModal({ rules, onSave, onClose, first }) {
       <div className="card rulesdlg w-full max-w-md relative" style={{ maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
         {/* the glass panel itself never scrolls (its rim and blur stay put); this inner box does */}
         <div className="p-5 relative" style={{ overflowY: "auto", minHeight: 0 }}>
-        {close && <button onClick={close} aria-label="Close without saving" className="absolute rounded-full flex items-center justify-center" style={{ zIndex: 2, top: 14, right: 14, width: 32, height: 32, background: "rgba(var(--fg),.08)", color: "var(--ivory-d)", fontSize: 18 }}>×</button>}
+        {close && <button onClick={close} aria-label="Close without saving" className="xbtn absolute rounded-full flex items-center justify-center" style={{ zIndex: 2, top: 14, right: 14, width: 32, height: 32, fontSize: 18 }}>×</button>}
         <div className="eyebrow mb-1">{first ? "Before you start" : "Game rules"}</div>
         <div className="disp text-2xl font-semibold mb-1" style={{ paddingRight: first ? 0 : 30 }}>What game do you play?</div>
         <p className="text-xs mb-5" style={{ color: "var(--ivory-d)" }}>These drive the charts, deviations, odds, and every drill. Change them any time from the top of the screen.</p>
@@ -3917,15 +3958,16 @@ function Sheet({ title, onClose: shut, children }) {
   };
   const ui = (
     <div className={"bj sheetwrap fixed inset-0 flex flex-col justify-end" + (out ? " out" : "")} style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} {...backdrop(onClose)} role="dialog" aria-label={title}>
-      <div ref={box} className="sheet mx-auto w-full" style={{ maxWidth: "42rem", maxHeight: "92vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+      <div ref={box} className="sheet mx-auto w-full" style={{ maxWidth: "42rem", maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
         <div className="sheetgrab" onPointerDown={dStart} onPointerMove={dMove} onPointerUp={dEnd} onPointerCancel={dEnd}>
         <div className="flex justify-center pt-2 pb-1"><span style={{ width: 38, height: 4, borderRadius: 4, background: "rgba(var(--fg),.18)" }} /></div>
         <div className="flex items-center justify-between px-5 pt-1 pb-3">
           <div className="text-lg font-semibold" style={{ letterSpacing: "-.01em" }}>{title}</div>
-          <button onClick={onClose} aria-label="Close" className="rounded-full flex items-center justify-center" style={{ width: 32, height: 32, background: "rgba(var(--fg),.08)", color: "var(--ivory-d)", fontSize: 18 }}>×</button>
+          <button onClick={onClose} aria-label="Close" className="xbtn rounded-full flex items-center justify-center" style={{ width: 32, height: 32, fontSize: 18 }}>×</button>
         </div>
         </div>
-        <div className="px-5" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 20px)" }}>{children}</div>
+        {/* the glass panel itself never scrolls (its rim, blur and title stay put); this box does */}
+        <div className="sheetbody px-5" style={{ overflowY: "auto", minHeight: 0, overscrollBehavior: "contain", paddingBottom: "calc(env(safe-area-inset-bottom) + 20px)" }}>{children}</div>
       </div>
     </div>
   );
@@ -5605,7 +5647,7 @@ function BetSpreadCalculator() {
         <div className="sn-label">Menu</div>
         {NAV_ITEMS.map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
           <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"sn-item" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg>
             <span>{l}</span>
           </button>); })}
         <div className="sn-foot">
@@ -5628,7 +5670,7 @@ function BetSpreadCalculator() {
           {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(tab === "count" ? "train" : tab); return at >= 0 ? <Glider cls="navglide" at={at} style={{ "--i": at, "--n": ks.length }} /> : null; })()}
           {NAV_ITEMS.filter(([k]) => k !== "plan").map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
             <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
-              <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
+              <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
               <span>{l}</span>
             </button>); })}
         </div>
