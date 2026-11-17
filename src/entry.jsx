@@ -10,6 +10,8 @@ window.storage = {
 };
 // the Ask tab is gone: clear the API key and chats it kept on this device
 try { localStorage.removeItem("bj:__ask-key"); localStorage.removeItem("bj:bj-ask-v1"); } catch {}
+// Train's "On the chart" card is gone too: clear its "Always show" setting
+try { localStorage.removeItem("bj:bj-trainchart-v1"); } catch {}
 // Saved data in a shape the app doesn't expect (a wrong file pasted into Restore, a half-written sync) used to blank the
 // whole app for good. Before anything reads it: a list that isn't a list is set aside under "__bad-…" (kept, not
 // deleted), entries that aren't records are dropped, and a session's hours and result are made numbers.

@@ -1019,7 +1019,7 @@ body{background:none}
 .felt{background-image:var(--feltimg,radial-gradient(120% 90% at 50% 0%,var(--felt1) 0%,var(--felt2) 60%,var(--felt3) 100%));background-size:100% 100%;background-repeat:no-repeat}
 .bottom-nav{background:linear-gradient(to top,rgba(var(--bgrgb),.86),rgba(var(--bgrgb),.78) 18%,rgba(var(--bgrgb),.6) 40%,rgba(var(--bgrgb),.36) 60%,rgba(var(--bgrgb),.15) 80%,rgba(var(--bgrgb),.04) 92%,rgba(var(--bgrgb),0))}
 .topbar::after{height:24px;background:linear-gradient(180deg,rgba(var(--bgrgb),.74),rgba(var(--bgrgb),.62) 18%,rgba(var(--bgrgb),.4) 42%,rgba(var(--bgrgb),.2) 64%,rgba(var(--bgrgb),.07) 84%,rgba(var(--bgrgb),0))}
-/* ---- Desktop extras: Home's practice chart and latest sessions, the chart beside the trainer, saved spreads, the shortcuts list ---- */
+/* ---- Desktop extras: Home's practice chart and latest sessions, saved spreads, the shortcuts list ---- */
 .pdays{display:flex;gap:6px;margin-top:14px}
 .pday{flex:1 1 0;min-width:0;text-align:center}
 .pday>span{display:block;font-size:10px;margin-top:6px}
@@ -1028,18 +1028,6 @@ body{background:none}
 .hrecent{margin-top:14px;border-top:1px solid var(--line);padding-top:6px}
 .hrow{display:grid;grid-template-columns:58px minmax(0,1fr) 46px 70px;gap:10px;align-items:baseline;font-size:12.5px;padding:6px 0}
 .hrow+.hrow{border-top:1px solid rgba(var(--fg),.06)}
-.tc-grid{display:grid;gap:3px}
-.tc-h,.tc-l{font-size:10.5px;font-weight:600;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:color .16s var(--ez)}
-.tc-h{padding-bottom:3px}.tc-l{justify-content:flex-end;padding-right:7px}
-.tc-h.on,.tc-l.on{color:var(--brass)}
-.tc-cell{height:23px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:rgba(var(--fg),.05);transition:opacity .2s var(--ez)}
-.tc-cell.cross{background:rgba(var(--fg),.1)}
-.tc-cell.here{background:rgba(var(--acc),.34);box-shadow:0 0 0 1.5px rgba(var(--acc),.8)}
-.tc-grid.shown .tc-cell{opacity:.4}
-.tc-grid.shown .tc-cell.cross{opacity:.62}
-.tc-grid.shown .tc-cell.here{opacity:1;box-shadow:0 0 0 2px var(--ivory)}
-.tc-cell.lit{animation:tcpop .42s var(--ez) backwards;position:relative;z-index:1}
-@keyframes tcpop{from{transform:scale(1.7)}}
 .svrow{display:grid;grid-template-columns:minmax(0,1fr) 68px 58px 60px 46px;gap:10px;align-items:center;padding:9px 0}
 .svrow+.svrow{border-top:1px solid rgba(var(--fg),.07)}
 .svrow.eyebrow{padding:4px 0 6px}
@@ -1053,7 +1041,6 @@ body{background:none}
 .kbkeys i{font-style:normal;font-size:10.5px;color:var(--muted)}
 .kbrow kbd{min-width:22px;text-align:center;font-size:11px;padding:3px 7px}
 @media (max-width:640px){.kbgrid{grid-template-columns:1fr}}
-@media (prefers-reduced-motion:reduce){.tc-cell.lit{animation:none!important}.tc-cell,.tc-h,.tc-l{transition:none!important}}
 /* ---- Arriving: everything comes in out of a soft blur, one after another ----
    Nick: "smoooooooth motion ... adding directional blur and maybe lowering opacity at beginning of animation", with
    cards arriving in turn and softer sheets and pop-ups. Each entrance is two animations on the same element:
@@ -1615,61 +1602,6 @@ function Grid({ title, rows, R, alt }) {
     </div>
   );
 }
-// Train on a wide screen: the chart beside the hand. Before the answer it only marks where the hand sits (its row and
-// the dealer's column) so it can't give the play away; once the hand is answered the plays show and its cell is lit.
-// "Always show" keeps the plays up, for learning the chart rather than testing it (saved on this device).
-const TCHART_KEY = "bj:bj-trainchart-v1";
-const chartSpot = (c) => {
-  if (!c) return null;
-  const hand = c.kind === "dev" ? c.dev.hand : c.hand, up = c.kind === "dev" ? c.dev.up : c.up; let m;
-  if ((m = /^Hard (\d+)/.exec(hand))) return { cat: "hard", row: Math.max(8, Math.min(17, +m[1])), up };
-  if ((m = /^A,(\d)(?!\d)/.exec(hand)) && +m[1] >= 2 && +m[1] <= 9) return { cat: "soft", row: +m[1], up };
-  if ((m = /^(A|\d+),(A|\d+)$/.exec(hand)) && m[1] === m[2]) return { cat: "pair", row: m[1] === "A" ? 11 : +m[1], up };
-  return null;
-};
-const CHART_SETS = {
-  hard: ["Hard totals", [17, 16, 15, 14, 13, 12, 11, 10, 9, 8], (v) => (v === 8 ? "≤8" : String(v)), hardRule],
-  soft: ["Soft totals", [9, 8, 7, 6, 5, 4, 3, 2], (v) => `A,${v}`, softRule],
-  pair: ["Pairs", [11, 10, 9, 8, 7, 6, 5, 4, 3, 2], (v) => `${upLabel(v)},${upLabel(v)}`, pairRule],
-};
-function TrainChart({ cur, result, R }) {
-  const [always, setAlways] = useState(() => { try { return localStorage.getItem(TCHART_KEY) === "1"; } catch (_) { return false; } });
-  const flip = () => setAlways((v) => { try { localStorage.setItem(TCHART_KEY, v ? "0" : "1"); } catch (_) {} return !v; });
-  const at = chartSpot(cur), show = always || !!result, d = cur && cur.kind === "dev" ? cur.dev : null;
-  if (!cur) return null;
-  const set = at ? CHART_SETS[at.cat] : null;
-  // five rows of the chart, the hand's own in the middle where it can be: the neighbours are where the mistakes are made,
-  // and the card stays short enough to sit under the math panel without pushing anything off a laptop screen
-  const rowsNear = set ? (() => { const i = set[1].indexOf(at.row), a = Math.max(0, Math.min(set[1].length - 5, i - 2)); return set[1].slice(a, a + 5); })() : [];
-  const low = (a) => (ACT[a] || a).toLowerCase();
-  const devLine = !d ? null : d.id === "ins" ? `Insurance: take it at ${idxLabel(d)} and up, otherwise skip it.`
-    : d.edge ? `${d.name}: ${edgeRule(d)}.`
-    : devLow(d) ? `${d.name}: ${low(d.below)} at ${idxLabel(d)} and below, otherwise ${low(d.above)}.`
-    : `${d.name}: ${low(d.above)} at ${idxLabel(d)} and up, otherwise ${low(d.below)}.`;
-  return (
-    <section className="card p-5 mb-4 tchart">
-      <div className="flex items-baseline justify-between gap-3 mb-3">
-        <div className="eyebrow">On the chart{set ? ` · ${set[0]}` : ""}</div>
-        <button className="text-[11px] font-semibold lnk" style={{ color: "var(--brass)" }} onClick={flip} aria-pressed={always}>{always ? "Hide until answered" : "Always show"}</button>
-      </div>
-      {set && (
-        <div className={"tc-grid mono" + (show ? " shown" : "")} style={{ gridTemplateColumns: `38px repeat(${UP.length}, minmax(0,1fr))` }} aria-hidden={!show}>
-          <div />
-          {UP.map((u) => <div key={u} className={"tc-h" + (u === at.up ? " on" : "")}>{upLabel(u)}</div>)}
-          {rowsNear.map((v) => (
-            <Fragment key={v}>
-              <div className={"tc-l" + (v === at.row ? " on" : "")}>{set[2](v)}</div>
-              {UP.map((u) => { const here = v === at.row && u === at.up, cross = v === at.row || u === at.up, a = here && result ? cur.answer : set[3](v, u, R); return (
-                <div key={u} className={"tc-cell" + (here ? " here" : cross ? " cross" : "") + (here && result ? " lit" : "")} style={show ? { background: ACOL[a] || "var(--brass)", color: a === "D" || !ACOL[a] ? "#1B1407" : "#FFF8EC" } : undefined}>{show ? a : ""}</div>); })}
-            </Fragment>))}
-        </div>
-      )}
-      {show ? (devLine ? <p className="text-xs mt-3" style={{ color: "var(--ivory-d)" }}><span style={{ color: "var(--brass)" }}>Count play.</span> {devLine}</p>
-        : null)
-        : <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>{set ? "Its row and column are marked. The plays show once you answer." : "This one goes by the count, not the chart. Its index shows once you answer."}</p>}
-    </section>
-  );
-}
 // Wide screens only: what each count play adds to the spread set on Bet spread, in dollars an hour. It is the page's
 // own $/hr worked out once more with that one play left to basic strategy (src/cover.js holds what skipping each one
 // costs at every count), so a play is worth more the more is bet at the counts where it comes up.
@@ -2228,8 +2160,6 @@ function Trainer({ rules, setRules, spread }) {
       {/* wide screens: the math for every hand as it is answered, right or wrong; it stays up while the next hand is dealt,
           so dealing on automatically doesn't take it away before it has been read */}
       {wide && lastMath && <Odds key={lastMath.c.qkey} side c={lastMath.c} picked={lastMath.picked} R={rules} stale={!result || !cur || cur.qkey !== lastMath.c.qkey} />}
-      {/* under it, the chart with this hand's cell (blank until the hand is answered) */}
-      {wide && cur && <TrainChart cur={cur} result={leaving ? null : result} R={rules} />}
 
       {/* weak spots */}
       {weakest.length > 0 && (
