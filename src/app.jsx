@@ -452,6 +452,7 @@ html.scrolled .pillrail .rulespill{font-size:11px;padding:5px 9px 5px 11px}
 .homechart{width:100%;height:120px;margin-top:18px}
 .dgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px;align-items:start}
 .dgrid.solo{display:block}
+.dgrid.two{grid-template-rows:auto 1fr}.dgrid.two>.dcol.o2{grid-column:2;grid-row:1 / span 2}.dgrid.two>.dcol.cont{grid-column:1;grid-row:2}
 .dcol{display:block;min-width:0}
 .dcol>:first-child>.card:first-child{margin-top:0}
 }
@@ -984,7 +985,7 @@ function SoundCard() {
   return (
     <section className="card p-5 mb-4">
       <div className="eyebrow mb-3">Sound</div>
-      <Toggle label="Sound effects" sub="Quiet and short. Your phone's silent switch mutes them too." on={p.on} onChange={(v) => set({ on: v })} />
+      <Toggle label="Sound effects" sub="Quiet and short. A phone's silent switch mutes them too." on={p.on} onChange={(v) => set({ on: v })} />
       <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--line)", opacity: p.on ? 1 : 0.4, pointerEvents: p.on ? "auto" : "none", transition: "opacity .2s" }} aria-hidden={!p.on}>
         <div>
           <div className="flex items-baseline justify-between"><span className="text-sm" style={{ color: "var(--ivory)" }}>Volume</span><span className="text-[11px] mono" style={{ color: "var(--brass)" }}>{Math.round(p.vol * 100)}%</span></div>
@@ -1508,7 +1509,7 @@ function Trainer({ rules, setRules }) {
       {view !== "drill" && masteryCard}
       {view === "drill" && <>
       {/* mode */}
-      <Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(null); setResult(null); }} style={{ marginBottom: 12 }} />
+      <div className="segw"><Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(null); setResult(null); }} style={{ marginBottom: 12 }} /></div>
 
 
       {/* card */}
@@ -4056,7 +4057,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow }) {
         <section className="card p-6 mb-4 text-center">
           <div className="text-base font-semibold">Track every session</div>
           <p className="text-sm mt-1 mb-4" style={{ color: "var(--ivory-d)" }}>Log wins and losses and see how you're running against what your spread should earn — by casino, by month, and against luck.</p>
-          <button className="btn" onClick={() => setSheet("new")}>Log your first session</button>
+          <button className="btn" style={{ display: "block", maxWidth: 360, margin: "0 auto" }} onClick={() => setSheet("new")}>Log your first session</button>
         </section>
       )}
 
@@ -4616,7 +4617,7 @@ function SettingsPage({ rules, onRules, seats, go }) {
   );
   return (
     <div>
-      <div className="dgrid"><div className="dcol">
+      <div className="dgrid two"><div className="dcol">
       <section className="card p-5 mb-4">
         <div className="eyebrow mb-1">Appearance</div>
         <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>Pick a look. Cards and chips keep their real colors.</p>
@@ -4633,6 +4634,7 @@ function SettingsPage({ rules, onRules, seats, go }) {
       <SyncCard />
       <AskKeyCard />
       <div className="mb-4"><Backup /></div>
+      </div><div className="dcol cont">
       <ResetSkills />
       <section className="card p-5 mb-4">
         <div className="eyebrow mb-2">About the numbers</div>
@@ -5343,7 +5345,7 @@ function BetSpreadCalculator() {
                     <div className="relative" style={{ paddingTop: 14 }}>
                       {r.evHour > 0 && (
                         <div className="absolute inset-x-0 z-10 pointer-events-none" style={{ bottom: `${(curPct * 64) / 100}px`, borderTop: "1px dashed rgba(var(--fg),.45)" }}>
-                          <span className="absolute right-0 mono" style={{ fontSize: 9, top: -11, color: "var(--ivory-d)", background: "var(--bg2)", padding: "0 3px", borderRadius: 3 }}>now ${r.evHour.toFixed(0)}</span>
+                          <span className="absolute left-0 mono" style={{ fontSize: 9, top: -11, color: "var(--ivory-d)", background: "var(--bg2)", padding: "0 3px", borderRadius: 3 }}>now ${r.evHour.toFixed(0)}</span>
                         </div>
                       )}
                       <div className="flex items-end gap-1" style={{ height: 64 }}>

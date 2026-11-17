@@ -634,7 +634,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
         </section>
       </div><div className="dcol o2">
         <section className="card p-5 mb-4">
-          <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: map.hasRegions ? "minmax(0,1fr) minmax(0,.8fr)" : "1fr" }}>
+          <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: map.hasRegions ? "minmax(0,1fr) minmax(0,.8fr)" : "1fr" }}>
             <input className="in" style={{ height: 44, fontSize: 15 }} type="search" placeholder="Search casinos" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search casinos" autoComplete="off" enterKeyHint="search" />
             {map.hasRegions && <select className="in csel" value={focus || ""} onChange={(e) => { setFocus(e.target.value || null); setQ(""); if (e.target.value) toMap(); }} aria-label={cc === "USA" ? "State" : "Province"}>
               <option value="">{cc === "USA" ? "All states" : "All provinces"}</option>

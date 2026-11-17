@@ -561,7 +561,12 @@ export function AskPage() {
         </div>
         <KeySetup onSaved={() => setHasKey(true)} />
       </section>
-    </div></div>
+    </div>
+      <aside className="askside card" aria-label="Things you can ask">
+        <div className="eyebrow mb-1">Things you can ask</div>
+        {SUGGEST.map(([k, s], i) => <div key={s} className="py-2.5" style={{ borderTop: i ? "1px solid var(--line)" : "none" }}><div className="text-[11px] font-semibold mb-0.5" style={{ color: "var(--brass)" }}>{k}</div><div className="text-[13px]" style={{ color: "var(--ivory-d)", lineHeight: 1.45 }}>{s}</div></div>)}
+      </aside>
+    </div>
   );
   return (
     <div className="askgrid"><style>{CSS}</style>
