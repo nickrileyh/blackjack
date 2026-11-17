@@ -3,7 +3,9 @@
 // deals real blackjack with them from the same bankroll, thousands of times over, until the bankroll is gone or has
 // grown to K times its size, and prints the share that went broke beside the page's figure. "to Kx" is the page's own
 // formula for the same stopping rule, so that is the number the dealt share should match.
-// Run:  tools/checks/ruin.sh            (or pass a JSON list of [name, game, bankroll, limit %, bankrolls, K])
+// Before that it deals 30 million rounds a game and prints what the bets earn an hour and how far they swing, dealt,
+// beside the page's $/hr and swing.
+// Run:  tools/checks/ruin.sh            (or pass a JSON list of [name, game, bankroll, limit %, bankrolls, K, rounds])
 import { COUNTS, DEFAULT_RULES } from "./app.jsx";
 import { scoreGame } from "./planner.jsx";
 import { makeGame } from "./sim.js";
@@ -15,11 +17,18 @@ const CASES = process.argv[2] ? JSON.parse(process.argv[2]) : [
   ["6 decks S17 $15-500, $6k", { rules: { decks: 6, h17: false, das: true, pen: 75 }, min: 15, max: 500 }, 6000, 5, 5000, 3],
   ["8 decks H17 $15-2500, $10k", { rules: { decks: 8, h17: true, das: true, pen: 80 }, min: 15, max: 2500 }, 10000, 5, 4000, 2],
   ["6 decks H17 LS $25-500, $20k", { rules: D6, min: 25, max: 500 }, 20000, 5, 5000, 2]];
-for (const [name, g, B, cap, N, K] of CASES) {
+for (const [name, g, B, cap, N, K, M = 30e6] of CASES) {
   const setup = { ...base, bankroll: B, rorPct: cap }, x = scoreGame(setup, g), R = { ...DEFAULT_RULES, ...g.rules };
   const bets = COUNTS.map((c) => x.bets[c]), a = -Math.log(x.ror) / B, H = K * B;
   const want = (Math.exp(-a * B) - Math.exp(-a * H)) / (1 - Math.exp(-a * H));
   const game = makeGame(R, 4, 777 + B), one = () => 1;
+  // what the bets earn and how far they swing, dealt: M rounds at the page's own pace (rounds an hour)
+  if (M > 0) {
+    let sum = 0, sq = 0; for (let i = 0; i < M; i++) { const r = game.next(one), w = bets[r.b] * r.x0; sum += w; sq += w * w; }
+    const mu = sum / M, sd = Math.sqrt(sq / M - mu * mu), se = (sd / Math.sqrt(M)) * x.rph;
+    console.log(`${name}: page $${x.ev.toFixed(1)}/hr, dealt $${(mu * x.rph).toFixed(1)}/hr ±${(2 * se).toFixed(1)};  swing page $${x.sd.toFixed(0)}/hr, dealt $${(sd * Math.sqrt(x.rph)).toFixed(0)}/hr  [${(M / 1e6).toFixed(0)}M rounds]`);
+  }
+  if (!(N > 0)) continue;
   let bust = 0, rounds = 0; const t0 = Date.now();
   for (let i = 0; i < N; i++) {
     let b = B;

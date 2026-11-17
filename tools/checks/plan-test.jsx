@@ -4,7 +4,7 @@
 // Run:  tools/checks/run.sh
 process.env.TZ = "America/New_York"; // the date checks cross a clock change
 import { COUNTS, calFor, compute, pDip, PhiN, DEFAULT_RULES } from "./app.jsx";
-import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, schedule, addDays, daysBetween, reportGame, scoreTone } from "./planner.jsx";
+import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, schedule, addDays, daysBetween, reportGame, scoreTone, gamesAt } from "./planner.jsx";
 let bad = 0, n = 0; const ok = (name, cond, info = "") => { n++; if (!cond) { bad++; console.log("FAIL", name, info); } };
 const near = (name, a, b, tol) => ok(name, Math.abs(a - b) <= tol, `got ${a} want ${b} ±${tol}`);
 const base = { rules: { ...DEFAULT_RULES, h17: true, surrender: true, decks: 6, pen: 75 }, seats: 4, spotsMap: {}, minBet: 25, maxBet: 500, hphAuto: true, handsPerHour: 100 };
@@ -108,6 +108,38 @@ for (const [B, ev, sd, T] of [[6000, 4, 180, 208], [6000, 10, 350, 400], [20000,
   ok("sim: bankrolls never go below zero", up.pts.every((p) => p.lo >= 0 && p.lo <= p.mid && p.mid <= p.hi));
 }
 
+// ---- the whole ladder (move up, drop back) against a separate walk in 3-minute steps: every stat on "Where it's
+// heading" and the "getting there" shares, for the spread the page is usually shown with and for a rougher one
+for (const [B, ev, sd, T, risk] of [[20000, 17.35, 281, 416, 0.05], [6000, 9, 250, 832, 0.1], [20000, 17.35, 281, 832, 0.2]]) {
+  const bets = { "-3": 0, "-2": 0, "-1": 0, 0: 0, 1: 25, 2: 50, 3: 50, 4: 75, 5: 75, 6: 100 }, m = growthModel({ ev, sd, mn: 25, bets }, B, risk), lv = m.lv, tag = `ladder B ${B} risk ${risk} T ${T}`;
+  const sim = growthSim({ B, lv, hours: T }), last = sim.pts[sim.pts.length - 1], goal = B * 2;
+  let s = 246813579 >>> 0; const u = () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return (s + 0.5) / 4294967296; }, z = () => Math.sqrt(-2 * Math.log(u())) * Math.cos(2 * Math.PI * u());
+  const P = 6000, dt = 0.05, sq = Math.sqrt(dt), steps = Math.round(T / dt), fin = new Float64Array(P), dds = new Float64Array(P), ever = lv.map(() => 0), end = lv.map(() => 0);
+  let l0 = 0; lv.forEach((l, i) => { if (l.need <= B * 1.0005) l0 = i; });
+  let bust = 0, below = 0, hitGoal = 0;
+  for (let p = 0; p < P; p++) {
+    let b = B, l = l0, pk = B, dd = 0, mx = B, top = l0;
+    for (let i = 0; i < steps && b > 0; i++) {
+      b += lv[l].ev * dt + lv[l].sd * sq * z();
+      if (b <= 0) { b = 0; dd = pk; break; }
+      if (b > mx) mx = b; if (b > pk) pk = b; else if (pk - b > dd) dd = pk - b;
+      while (l < lv.length - 1 && b >= lv[l + 1].need) l++;
+      if (l > top) top = l;
+      while (l > 0 && b < lv[l].down) l--;
+    }
+    fin[p] = b; dds[p] = dd; if (b <= 0) bust++; if (b < B) below++; if (mx >= goal) hitGoal++; for (let j = 0; j <= top; j++) ever[j]++; end[l]++;
+  }
+  fin.sort(); dds.sort(); const q = (a, f) => a[Math.floor(f * P)], rel = (name, a, b, tol) => near(`${tag}: ${name}`, a, b, tol * Math.max(Math.abs(b), B * 0.2));
+  rel("typical bankroll", last.mid, q(fin, 0.5), 0.05); rel("10th percentile", last.lo, q(fin, 0.1), 0.08); rel("90th percentile", last.hi, q(fin, 0.9), 0.08);
+  rel("25th percentile", last.q1, q(fin, 0.25), 0.07); rel("75th percentile", last.q3, q(fin, 0.75), 0.07);
+  near(`${tag}: chance of a loss`, sim.below, below / P, 0.035); near(`${tag}: going broke`, sim.bust, bust / P, 0.02);
+  near(`${tag}: reaching a target`, goalStats(sim, goal).p, hitGoal / P, 0.035);
+  rel("typical worst dip", sim.ddMid, q(dds, 0.5), 0.08); rel("worst dip, 1 in 10", sim.ddBad, q(dds, 0.9), 0.08);
+  lv.forEach((x, j) => { near(`${tag}: share that reach $${x.m} tables`, sim.reach[j].p, ever[j] / P, 0.035); near(`${tag}: share ending at $${x.m} tables`, sim.end[j], end[j] / P, 0.035); });
+  ok(`${tag}: the bands nest`, sim.pts.every((p) => p.lo <= p.q1 && p.q1 <= p.mid && p.mid <= p.q3 && p.q3 <= p.hi));
+  if (B === 20000 && T === 416 && risk === 0.05) console.log(`  (ladder, $20k, 1 year: page ${Math.round(last.lo)} / ${Math.round(last.mid)} / ${Math.round(last.hi)}, separate walk ${Math.round(q(fin, 0.1))} / ${Math.round(q(fin, 0.5))} / ${Math.round(q(fin, 0.9))}; staying put would be ${Math.round(B + lv[l0].ev * T - 1.2816 * lv[l0].sd * Math.sqrt(T))} / ${Math.round(B + lv[l0].ev * T)} / ${Math.round(B + lv[l0].ev * T + 1.2816 * lv[l0].sd * Math.sqrt(T))})`);
+}
+
 // ---- rotation dates
 const D = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d).getTime(); }, R = restSet({ base: 7, backed: 90 });
 near("a week across the clock change is 7 days", daysBetween(D("2026-10-28"), D("2026-11-04")), 7, 0); near("adding 7 days lands on the same weekday at midnight", addDays(D("2026-10-28"), 7), D("2026-11-04"), 0);
@@ -143,6 +175,18 @@ const rg = (s) => reportGame(s);
   const d = rg("High limit: 6 decks, S17, DAS, LS, resplit aces to 3, $100–$3000, about 1.5 decks cut; 6 tables (Apr 2022 CBJN)."); ok("report: high limit", d && !d.rules.h17 && d.rules.surrender && d.rules.rsa && d.rules.pen === 75 && d.min === 100, JSON.stringify(d));
   ok("report: 6:5 tables are left out", rg("Low-limit tables: 6 decks, H17, $10–$500, all paying 6:5.") === null); ok("report: side games are left out", rg("Spanish 21: 6 decks, H17, $10–$500, about 3 tables.") === null);
   ok("report: a line without limits is left out", rg("6 decks, S17, DAS, no surrender per a 2014 forum post.") === null); }
+
+// ---- a report's summary game takes its doubling and resplit limits from the line that spells the same game out
+{
+  const it = { best: { decks: 2, h17: true, das: true, pen: 75, min: 25, max: 1000 }, games: ["Double deck pitch with cut card, H17, double on 9–11 only, DAS, no mid-shoe entry, $25–$1000, about 0.5 deck cut (Apr 2022 CBJN).", "6 decks, H17, DAS, late surrender, $15–$1000, about 1 deck cut (Apr 2022 CBJN)."] };
+  const gs = gamesAt({ intel: it });
+  ok("report: the same game isn't listed twice", gs.length === 2, JSON.stringify(gs.map((g) => g.label)));
+  ok("report: the best game keeps the doubling limit its line states", gs[0].rules.dbl === "9-11" && gs[0].rules.decks === 2 && gs[0].rules.pen === 75);
+  ok("report: the other game is untouched", gs[1].rules.decks === 6 && gs[1].rules.surrender === true && gs[1].rules.dbl === "any" && gs[1].rules.pen === 85, JSON.stringify(gs[1].rules));
+  const setup = { ...base, bankroll: 20000, rorPct: 5 }, free = scoreGame(setup, { rules: { ...gs[0].rules, dbl: "any" }, min: 25, max: 1000 }), tied = scoreGame(setup, gs[0]);
+  ok("report: a doubling limit lowers what the game earns", tied.ev < free.ev, `${tied.ev} vs ${free.ev}`);
+  ok("report: your own saved game is used instead of the report", gamesAt({ intel: it, mark: { games: [{ rules: { decks: 6, h17: true }, min: 10, max: 300 }] } }).length === 1);
+}
 
 // ---- a score's colour: one smooth run from red (0) to green (100)
 {
