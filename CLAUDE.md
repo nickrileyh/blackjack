@@ -225,6 +225,13 @@ Playing cards are drawn at fixed pixel sizes (`.pc`, `.pc.sm`, `.pc.big`) and sc
 
 `THEME_LIST` in `src/app.jsx` (Emerald, Dark blue, Classic gold, Amethyst, Copper, Graphite, White & blue, Kiera); each is one block of colour variables on `:root[data-theme=…]`. **Kiera** (pink with a green felt, from a palette Nick sent) is a light theme: `applyTheme` sets `data-theme="light"` so every light-theme layout rule applies, plus `data-skin="kiera"`, whose block repaints the colours. Add another light theme the same way; a rule that must beat a later light-theme rule needs both attributes in its selector.
 
+**What a theme should get right** (Nick: "improve all color themes make them look better", Nov 2026):
+- **The felt is a real colour, not near-black.** The six dark themes used to have felts barely lighter than the page, so the table — the centre of the app — had no colour. Now `--felt1` (the middle) is a deep, saturated colour at about a fifth of full brightness, falling to `--felt3` at the edge: green for Emerald and Copper, royal blue for Dark blue, navy for Classic gold, purple for Amethyst, charcoal for Graphite. Because a dark felt is now lighter than the page, `:root:not([data-theme="light"]) .felt` gives what is printed on it more light (`--muted` and `--line` from `--fg`) and a softer inner shadow. `src/smooth.js` paints the felt from these three variables, so a new felt needs nothing else.
+- **Card backs contrast with the felt**: red or burgundy on the green, blue and navy felts (Emerald, Dark blue, Classic gold, Copper), plum on Amethyst, grey on Graphite.
+- **Small grey text passes 6:1 on a card** in the dark themes and 5:1 on the page in the light ones (`--muted`; it was 4.9–5.4, and 3.8 on Kiera's pink page). When adding or changing a theme, check `--muted` on the card colour (page colour plus 4.5% of `--fg`), `--ink` on the accent, and the on-felt text on the felt.
+- **Kiera is Nick's own palette**: its hues stay. Only its small grey text and the depth of its green felt were adjusted (white text on the felt was 3.9:1).
+- The swatches in Settings come from `THEME_LIST` (accent, page, card): change them with the theme.
+
 ## Liquid glass (after iOS 26)
 
 Nick asked for an Apple-style liquid glass look, then for it to go further, "like iOS 26". It is one block at the end of the `css` string in `src/app.jsx` ("Liquid glass, after iOS 26"), driven by four variables: `--gl-edge` (the specular rim: a gradient brightest at the top-left and bottom-right corners), `--gl-hi` (the bright top edge on small controls), `--gl-rim` and `--gl-sheen` (a soft sheen from the top-left corner); the blur itself is written out where it is used. Light themes re-point them.
