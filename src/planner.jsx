@@ -4,7 +4,7 @@
 //  - PlanPage (the Plan tab): the casino rotation and the bankroll growth plan.
 // Like casinos.jsx, nothing from app.jsx may be used while this file loads — only inside functions.
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Sheet, compute, sessionCash, Seg, Info, rulesShort, money, shortMoney, sgnMoney, fmtTC, pct, COUNTS, calFor, autoRph, roundFreqs, optimizeSpread, DEFAULT_RULES } from "./app.jsx";
+import { Sheet, compute, sessionCash, tailFix, shoeRounds, useDeferred, Seg, Info, rulesShort, money, shortMoney, sgnMoney, fmtTC, pct, COUNTS, calFor, autoRph, roundFreqs, optimizeSpread, DEFAULT_RULES } from "./app.jsx";
 import { loadCasinoAll, openCasinoId } from "./casinos.jsx";
 import { loadSetup } from "./aitools.js";
 
@@ -38,15 +38,20 @@ export function scoreGame(setup, g) {
   // same bets — so the square is what makes a table twice too big count half.)
   const loses = !(res.ev > 0), over = !loses && res.ror > cap * 1.001;
   const va = res.va > 0 ? res.va : !loses && res.ror > 0 && res.ror < 1 ? (-2 * res.ev * B) / Math.log(res.ror) : 0;
-  return { ev: loses ? 0 : res.ev * rph, sd: Math.sqrt(va * rph), ror: loses ? 1 : res.ror, bets: res.bets, infeasible: over, fit: over ? Math.pow(Math.min(1, Math.log(Math.min(0.999999, res.ror)) / Math.log(cap)), 2) : 1, loses, rph, mn, mx };
+  let rps = 0; try { rps = shoeRounds(roundFreqs(res.bets, spotsMap, cal), res.bets, spotsMap, cal, R.pen); } catch (_) {}
+  return { rps, ev: loses ? 0 : res.ev * rph, sd: Math.sqrt(va * rph), ror: loses ? 1 : res.ror, bets: res.bets, infeasible: over, fit: over ? Math.pow(Math.min(1, Math.log(Math.min(0.999999, res.ror)) / Math.log(cap)), 2) : 1, loses, rph, mn, mx };
 }
 const verdictOf = (s, score) => { if (s.loses) return ["Walk", "No spread wins here when every hand is played."]; if (s.infeasible) return score >= 50 ? ["Maybe", "Better for you than your usual game, but too big for your bankroll at your risk limit."] : score >= 40 ? ["Maybe", "Close to your usual game, but too big for your bankroll at your risk limit."] : ["Walk", "Too big for your bankroll at your risk limit."]; return score >= 50 ? ["Sit", "As good as your usual game or better."] : score >= 40 ? ["Maybe", "Worth playing if nothing better is open."] : ["Walk", "Much worse for you than your usual game."]; };
 // 0–100 from what the game earns you per hour (your bankroll, every hand played, your risk limit) against your usual
 // game: the same money is 50, twice is 67, three times 75, half 33. It never tops out, so two great games still rank
 // against each other. Both sides are marked down by `fit` when they are too big for the bankroll, so 50 is always "as
 // good as your usual game".
+// Cash to bring so a session of `hours` runs out only 1 time in 20: the chance of ever dipping that far (pDip), with the
+// app's fitted correction for how results bunch up inside a shoe — the same sum as "bring with you" on Bet spread.
+export const cashFor = (x, hours) => (x && x.ev > 0 && x.sd > 0 && hours > 0 ? tailFix(x.rps || 0, hours * x.rph).c95 * sessionCash(0.05, x.ev, x.sd, hours) : 0);
+const upTo50 = (v) => Math.ceil(v / 50) * 50;
 const scoreOf = (ev, ref) => (!(ev > 0) ? 0 : ref > 0 ? Math.round((100 * ev) / (ev + ref)) : 100);
-const scoreFor = (x, ref) => (x.loses ? 0 : scoreOf(x.ev * x.fit, ref.ev * ref.fit));
+export const scoreFor = (x, ref) => (x.loses ? 0 : scoreOf(x.ev * x.fit, ref.ev * ref.fit));
 // the spread as a short line: neighbouring counts with the same bet are joined ("+2 $50 · +3–+4 $75")
 function spreadLine(bets) {
   const parts = []; let i = 0;
@@ -124,7 +129,7 @@ export function TableScoreCard({ casinos, onUseRules, appRules }) {
 // A game written out in a scouting report ("Main floor: 8 decks, H17, DAS, $15–$2,500, about 20 tables, 1.5 decks cut
 // off (…)") → the app's rule shape. Only lines that state decks, the soft-17 rule and both limits are used; side games
 // and 6:5 tables are left out. A rule the line doesn't mention is taken as not offered.
-function reportGame(line) {
+export function reportGame(line) {
   const s = String(line || "");
   if (/6\s*:\s*5|6 to 5|spanish|free bet|switch|super fun|double exposure|video|electronic|stadium/i.test(s)) return null;
   const w = s.match(/\b(single|double)[- ]deck\b/i), d = w || s.match(/(?<![\d.])([12468])[- ]decks?\b(?!\s*cut)/i), h = s.match(/\b([HS])17\b/), lim = s.match(/\$(\d[\d,]*)\s*[–-]\s*\$(\d[\d,]*)/);
@@ -195,7 +200,12 @@ export const wideScreen = () => { try { return window.matchMedia("(min-width:102
 
 // ---------- rotation ----------
 const DAY = 864e5;
-const dayOf = (d) => new Date(d + "T12:00:00").getTime();
+// Dates are whole local days (midnight), and days are added on the calendar, so a clock change never moves a date and
+// a session logged yesterday is "yesterday" at any time of day.
+const dayOf = (d) => { const [y, m, dd] = String(d).split("-").map(Number); return new Date(y, (m || 1) - 1, dd || 1).getTime(); };
+const startOfDay = (t) => { const x = new Date(t); x.setHours(0, 0, 0, 0); return x.getTime(); };
+export const addDays = (t, n) => { const x = new Date(t); x.setDate(x.getDate() + Math.round(n)); return x.getTime(); };
+export const daysBetween = (a, b) => Math.round((startOfDay(b) - startOfDay(a)) / DAY);
 const fmtDay = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 const fmtWeekday = (t) => new Date(t).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 const ago = (days) => (days <= 0 ? "today" : days === 1 ? "yesterday" : days < 60 ? `${days} days ago` : `${Math.round(days / 30)} months ago`);
@@ -203,10 +213,10 @@ const oneIn = (p) => (p < 0.005 ? "Almost never" : p > 0.5 ? `About ${Math.round
 // Rest after a visit, from two numbers you can change on the Plan page: `base` (days after an ordinary visit) and `backed`
 // (days after a back-off). Medium heat, being watched, or three visits in 30 days rests a casino three times the base;
 // High heat six times; a second back-off at the same casino twice the back-off rest.
-const restSet = (r) => ({ base: r.base, warm: r.base * 3, hot: r.base * 6, busy: r.base * 3, backed: r.backed, backedAgain: r.backed * 2 });
-// days a casino rests after a visit at time t (dates: every visit so far, in ms, t included)
+export const restSet = (r) => ({ base: r.base, warm: r.base * 3, hot: r.base * 6, busy: r.base * 3, backed: r.backed, backedAgain: r.backed * 2 });
+// days a casino rests after a visit on day t (dates: every visit so far, as days, t included)
 function restDays(c, t, dates, lastHeat, R) {
-  const m = c.mark || {}, recent = dates.filter((d) => d <= t && t - d <= 30 * DAY).length;
+  const m = c.mark || {}, recent = dates.filter((d) => d <= t && daysBetween(d, t) <= 30).length;
   let days = R.base, why = "";
   if (m.heat === 2) { days = R.warm; why = "medium heat"; }
   if (lastHeat === "watched" && days < R.warm) { days = R.warm; why = "watched last visit"; }
@@ -214,32 +224,33 @@ function restDays(c, t, dates, lastHeat, R) {
   if (m.heat === 3) { days = R.hot; why = "high heat"; }
   return { days, why };
 }
+// `until` is the first day the casino can be played again
 export function restOf(c, R) {
   const s = c.sess, m = c.mark || {}, dates = ((s && s.dates) || []).map(dayOf);
   const last = s && s.last ? dayOf(s.last) : null;
   if (m.status === "backed" || (s && s.backed)) {
     const on = [m.backedOn, s && s.backed].filter(Boolean).sort().pop(), from = on ? dayOf(on) : last;
     const n = Math.max(1, (s && s.backedN) || 0), days = n >= 2 ? R.backedAgain : R.backed;
-    return { kind: "backed", from, until: from ? from + days * DAY : null, last, dates, days, why: n >= 2 ? `backed off ${n} times` : "backed off" };
+    return { kind: "backed", from, until: from ? addDays(from, days) : null, last, dates, days, why: n >= 2 ? `backed off ${n} times` : "backed off" };
   }
   const { days, why } = last ? restDays(c, last, dates, s.lastHeat, R) : { days: 0, why: "" };
-  return { kind: "rest", from: last, until: last ? last + days * DAY : null, last, dates, days, why };
+  return { kind: "rest", from: last, until: last ? addDays(last, days) : null, last, dates, days, why };
 }
 // days rested × 0.75 at a score of 0, × 1 at 50 (or unknown), × 1.25 at 100
-const weightAt = (last, t, score) => ((last ? Math.max(0, t - last) / DAY : 365) + 1) * (0.75 + (score == null ? 50 : score) / 200);
-// The next n visits, one every `gap` days: each time the ready casino with the best mix of rest and game, which then
-// rests again. When nothing is ready the visit waits for the first casino to come back.
-function schedule(rows, now, R, gap, n, scoreOfC) {
+const weightAt = (last, t, score) => ((last ? Math.max(0, daysBetween(last, t)) : 365) + 1) * (0.75 + (score == null ? 50 : score) / 200);
+// The next n visits, `perWeek` a week from `today`: each goes to the ready casino with the best mix of rest and game,
+// which then rests again. When nothing is ready the visit waits for the first casino to come back.
+export function schedule(rows, today, R, perWeek, n, scoreOfC) {
   const st = rows.filter((r) => r.kind !== "backed" || r.until).map((r) => ({ r, last: r.last, dates: r.dates.slice(), until: r.until, back: r.kind === "backed" }));
-  const out = []; let t = now;
+  const out = [], gap = 7 / Math.max(1, perWeek); let d = 0;
   for (let i = 0; i < n && st.length; i++) {
-    let cand = st.filter((s) => !s.until || s.until <= t), wait = false;
-    if (!cand.length) { t = Math.min(...st.map((s) => s.until)); cand = st.filter((s) => s.until <= t); wait = true; }
+    let t = addDays(today, Math.round(d)), cand = st.filter((s) => !s.until || s.until <= t), wait = false;
+    if (!cand.length) { t = Math.min(...st.map((s) => s.until)); d = daysBetween(today, t); cand = st.filter((s) => s.until <= t); wait = true; }
     const pick = cand.reduce((a, b) => (weightAt(b.last, t, scoreOfC(b.r.c)) > weightAt(a.last, t, scoreOfC(a.r.c)) ? b : a));
     out.push({ t, c: pick.r.c, back: pick.back, wait });
     pick.last = t; pick.dates.push(t); pick.back = false;
-    pick.until = t + restDays(pick.r.c, t, pick.dates, null, R).days * DAY;
-    t += gap * DAY;
+    pick.until = addDays(t, restDays(pick.r.c, t, pick.dates, null, R).days);
+    d += gap;
   }
   return out;
 }
@@ -285,7 +296,7 @@ function Nums({ x, cap }) {
 const NUMCOLS = "34px 40px 44px";
 
 function useRotation(all, prefs, bankroll) {
-  const now = useMemo(() => Date.now(), []);
+  const now = useMemo(() => Date.now(), []), today = startOfDay(now);
   const R = restSet(prefs.rest);
   const rows = useMemo(() => (all || []).filter((c) => (c.sess && c.sess.n) || (c.mark && (c.mark.status === "been" || c.mark.status === "backed")))
     .filter((c) => !(c.mark && c.mark.hidden)).map((c) => ({ c, ...restOf(c, R) })), [all, prefs.rest.base, prefs.rest.backed]); // eslint-disable-line
@@ -298,20 +309,20 @@ function useRotation(all, prefs, bankroll) {
   }, [rows, all]);
   const scoreList = useMemo(() => [...rows.map((r) => r.c), ...near.map((x) => x.c)], [rows, near]);
   const sc = useCasinoScores(scoreList, true, { bankroll, rorPct: prefs.risk * 100 }), scoreN = (c) => { const x = sc.get(c); return x ? x.score : null; };
-  const isReady = (r) => r.kind !== "backed" && (!r.until || r.until <= now);
-  const ready = rows.filter(isReady).sort((a, b) => weightAt(b.last, now, scoreN(b.c)) - weightAt(a.last, now, scoreN(a.c)));
+  const isReady = (r) => (r.kind !== "backed" || !!r.until) && (!r.until || r.until <= today);
+  const ready = rows.filter(isReady).sort((a, b) => weightAt(b.last, today, scoreN(b.c)) - weightAt(a.last, today, scoreN(a.c)));
   const resting = rows.filter((r) => !isReady(r)).sort((a, b) => (a.until || Infinity) - (b.until || Infinity));
-  const plan = schedule(rows, now, R, 7 / prefs.perWeek, 6, scoreN);
+  const plan = schedule(rows, today, R, prefs.perWeek, 6, scoreN);
   const visits = {}; plan.forEach((v) => (visits[v.c.id] = [...(visits[v.c.id] || []), v.t]));
   // where your hours went over the last 90 days
-  const h90 = []; rows.forEach((r) => { const h = ((r.c.sess && r.c.sess.recs) || []).filter((x) => now - dayOf(x.date) <= 90 * DAY).reduce((s, x) => s + x.h, 0); if (h > 0) h90.push([r.c, h]); });
+  const h90 = []; rows.forEach((r) => { const h = ((r.c.sess && r.c.sess.recs) || []).filter((x) => daysBetween(dayOf(x.date), today) <= 90).reduce((s, x) => s + x.h, 0); if (h > 0) h90.push([r.c, h]); });
   h90.sort((a, b) => b[1] - a[1]);
   const tot = h90.reduce((s, x) => s + x[1], 0), heavy = h90.length > 0 && rows.length > 1 && tot >= 6 && h90[0][1] / tot > 0.5 ? h90[0] : null, share = Object.fromEntries(h90.map(([c, h]) => [c.id, h / tot]));
   const scout = near.map((x) => ({ ...x, s: sc.get(x.c) })).filter((x) => x.s && x.s.score >= 40).sort((a, b) => b.s.score - a.s.score || a.mi - b.mi).slice(0, 5);
-  return { now, R, rows, sc, isReady, ready, resting, plan, visits, heavy, tot, share, scout, cap: prefs.risk };
+  return { now, today, R, rows, sc, isReady, ready, resting, plan, visits, heavy, tot, share, scout, cap: prefs.risk };
 }
 function Rotation({ rot, prefs, setPrefs, onOpen }) {
-  const { now, R, rows, sc, isReady, ready, resting, plan, heavy, tot, share, scout, cap } = rot;
+  const { now, today, R, rows, sc, isReady, ready, resting, plan, heavy, tot, share, scout, cap } = rot;
   const setRest = (k, v) => setPrefs({ rest: { ...prefs.rest, [k]: v } });
   const numHead = <><span className="text-right">Score</span><span className="text-right">Risk</span><span className="text-right">$/hr</span></>;
   if (!rows.length) return <section className="card p-5 mb-4"><div className="eyebrow mb-1">Where to play</div><p className="text-sm" style={{ color: "var(--ivory-d)" }}>Nothing to plan yet. Log a session on the Sessions page, or mark a casino as "been" on the Casinos page, and this fills in: where to play next, when each casino is safe to go back to, and what each one is worth to you.</p></section>;
@@ -323,7 +334,7 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
       <div className="phead" style={{ gridTemplateColumns: `84px minmax(0,1fr) ${NUMCOLS}` }}><span>When</span><span>Casino</span>{numHead}</div>
       {plan.map((v, i) => { const x = sc.get(v.c), topScore = Math.max(0, ...plan.map((q) => (sc.get(q.c) || {}).score || 0)), note = v.back ? "first visit since the back-off — keep it short" : x && x.loses ? "no winning spread here — skip it" : x && x.score < 40 && topScore >= 50 ? "much weaker than your other casinos" : v.wait ? "nothing is ready sooner" : ""; return (
         <button key={i} className="prow" style={{ gridTemplateColumns: `84px minmax(0,1fr) ${NUMCOLS}` }} onClick={() => onOpen(v.c)}>
-          <span className="mono text-xs" style={{ color: i === 0 ? "var(--brass)" : "var(--ivory-d)" }}>{i === 0 && v.t - now < DAY / 2 ? "Now" : fmtWeekday(v.t)}</span>
+          <span className="mono text-xs" style={{ color: i === 0 ? "var(--brass)" : "var(--ivory-d)" }}>{v.t <= today ? "Today" : fmtWeekday(v.t)}</span>
           <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: i === 0 ? "var(--brass)" : "var(--ivory)" }}>{v.c.name}</span>{note && <span className="block text-[11px] truncate" style={{ color: note === "nothing is ready sooner" ? "var(--muted)" : "var(--neg-l)" }}>{note}</span>}</span>
           <Nums x={x} cap={cap} />
         </button>); })}
@@ -335,7 +346,7 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
       <div className="phead" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS} 92px` }}><span>Casino</span>{numHead}<span className="text-right">Rested</span></div>
       {[...ready, ...resting].map((r) => { const rd = isReady(r), frac = rd ? 1 : r.until && r.from ? Math.max(0.04, Math.min(0.96, (now - r.from) / Math.max(DAY, r.until - r.from))) : 0.04, sh = share[r.c.id]; return (
         <button key={r.c.id} className="prow" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS} 92px` }} onClick={() => onOpen(r.c)}>
-          <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{r.c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{r.last ? ago(Math.floor((now - r.last) / DAY)) : "no sessions"}{sh ? ` · ${Math.round(sh * 100)}% of hours` : ""}{r.why ? ` · ${r.why}` : ""}</span></span>
+          <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{r.c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{r.last ? ago(daysBetween(r.last, today)) : "no sessions"}{sh ? ` · ${Math.round(sh * 100)}% of hours` : ""}{r.why ? ` · ${r.why}` : ""}</span></span>
           <Nums x={sc.get(r.c)} cap={cap} />
           <span className="min-w-0"><span className="block text-[11px] font-semibold text-right mb-1" style={{ color: rd ? "var(--brass)" : r.kind === "backed" ? "var(--rose)" : "var(--ivory-d)" }}>{rd ? "Ready" : r.until ? `Back ${fmtDay(r.until)}` : "Backed off"}</span>
             <span className="ptrack block" aria-hidden="true"><i className={"barx " + (rd ? "ok" : r.kind === "backed" ? "x" : "")} style={{ width: `${frac * 100}%` }} /></span></span>
@@ -373,35 +384,72 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
 const TABLE_MINS = [5, 10, 15, 25, 50, 75, 100, 200, 500];
 const PLAN_RISKS = [[0.02, "2%"], [0.05, "5%"], [0.1, "10%"], [0.2, "20%"]];
 const HORIZONS = [[26, "6 months"], [52, "1 year"], [104, "2 years"]];
-function rng(seed) { let a = seed >>> 0; const u = () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; return () => Math.sqrt(-2 * Math.log(1 - u())) * Math.cos(2 * Math.PI * u()); }
-// 1,500 bankroll paths over `hours`: play the biggest table the bankroll covers, move up when it reaches the next
-// table's bankroll, drop back when it falls below `down` for the table being played. Returns the 10th / 50th / 90th
-// percentile at each step and what happened along the way.
-export function growthSim({ B, lv, hours, goal }) {
-  const N = 1500, steps = Math.max(8, Math.min(160, Math.round(hours / 2))), dt = hours / steps, sq = Math.sqrt(dt), z = rng(20261116);
-  let s0 = 0; lv.forEach((l, i) => { if (l.need <= B) s0 = i; });
-  const dds = new Float32Array(N), col = Array.from({ length: steps + 1 }, () => new Float32Array(N)), reach = lv.map(() => 0), end = lv.map(() => 0);
-  let bust = 0, below = 0; const goalAt = [];
+// seeded so the page shows the same picture every time the inputs are the same
+function rng(seed) { let a = seed >>> 0; const u = () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; return { u, z: () => Math.sqrt(-2 * Math.log(1 - u())) * Math.cos(2 * Math.PI * u()) }; }
+// The tables your bankroll can be played on. `safe` is the usual game's lowest-risk every-hand spread (from scoreGame):
+// scaled to another table minimum, EV grows with the minimum and variance with its square, so the smallest bankroll a
+// table can be played on at a risk of ruin is need = (m ÷ min) · sd² · −ln(risk) ÷ (2 · EV), and the risk has doubled
+// when the bankroll has fallen to need · ln(2·risk) ÷ ln(risk).
+export function growthModel(safe, bankroll, risk) {
+  if (!safe || safe.loses || !(safe.ev > 0) || !(safe.sd > 0) || !(bankroll > 0)) return null;
+  const minBet = safe.mn, top = Math.max(0, ...COUNTS.map((c) => +safe.bets[c] || 0));
+  const per = (safe.sd * safe.sd * -Math.log(risk)) / (2 * safe.ev), f = Math.log(Math.min(0.999, 2 * risk)) / Math.log(risk);
+  const mins = [...new Set([...TABLE_MINS, minBet])].sort((a, b) => a - b), at = mins.indexOf(minBet), has = bankroll * 1.0005; // a hair of slack so "exactly enough" counts
+  const mk = (m) => { const k = m / minBet; return { m, k, need: per * k, down: per * k * f, ev: safe.ev * k, sd: safe.sd * k, top: Math.round((top * k) / 5) * 5 }; };
+  let from = at; while (from > 0 && per * (mins[from] / minBet) > has) from--; // the biggest table you qualify for, if it is below yours
+  const lv = mins.slice(from).map(mk);
+  // from where you stand: the expected hours to each bigger table, and the chance of getting there before going broke,
+  // playing each table until the next one's bankroll is reached (a drifting walk between two walls)
+  let b = bankroll, hrs = 0, odds = 1, play = lv.filter((l) => l.need <= has).pop() || null;
+  lv.forEach((l) => {
+    if (l.need <= has) { l.state = l === play ? "now" : "ok"; return; }
+    if (!play) { l.state = "short"; return; }
+    const th = (2 * play.ev) / (play.sd * play.sd);
+    odds *= (1 - Math.exp(-th * b)) / (1 - Math.exp(-th * l.need)); l.chance = odds;
+    hrs += (l.need - b) / play.ev; l.hrs = hrs; l.state = "later"; b = l.need; play = l;
+  });
+  return { lv, cur: lv.filter((l) => l.state === "now").pop() || null, usual: minBet };
+}
+// 3,000 bankroll paths over `hours`: play the biggest table the bankroll covers, move up when it reaches the next
+// table's bankroll, drop back when it falls below `down` for the table being played. Steps are an hour or less of play
+// (up to 480 of them); inside each step the lowest and highest point of the path are drawn from their exact
+// distributions, so going broke and touching a target between two steps are both counted. Kept at up to 120 checkpoints:
+// the 10th / 50th / 90th percentile of the bankroll, and every path's highest point so far (for any target).
+export function growthSim({ B, lv, hours, N = 3000, seed = 20261116 }) {
+  const steps = Math.max(60, Math.min(480, Math.ceil(hours))), stride = Math.max(1, Math.round(steps / 120)), dt = hours / steps, sq = Math.sqrt(dt), { u, z } = rng(seed);
+  let s0 = 0; lv.forEach((l, i) => { if (l.need <= B * 1.0005) s0 = i; });
+  const cps = []; for (let i = stride; i < steps; i += stride) cps.push(i); cps.push(steps);
+  const col = [new Float32Array(N).fill(B), ...cps.map(() => new Float32Array(N))], top = cps.map(() => new Float32Array(N)), dds = new Float32Array(N), end = lv.map(() => 0);
+  let bust = 0, below = 0;
   for (let p = 0; p < N; p++) {
-    let b = B, l = s0, top = s0, dead = false, g = goal > B ? -1 : 0, pk = B, dd = 0; col[0][p] = b;
+    let b = B, l = s0, dead = false, hi = B, pk = B, dd = 0, c = 0;
     for (let i = 1; i <= steps; i++) {
       if (!dead) {
-        b += lv[l].ev * dt + lv[l].sd * sq * z();
-        if (b <= 0) { b = 0; dead = true; }
-        while (l < lv.length - 1 && b >= lv[l + 1].need) l++;
-        while (l > 0 && b < lv[l].down) l--;
-        if (l > top) top = l; if (g < 0 && b >= goal) g = i * dt;
-        if (b > pk) pk = b; else if (pk - b > dd) dd = pk - b;
+        const a = b, s = lv[l].sd * sq; b = a + lv[l].ev * dt + s * z();
+        const span = (b - a) * (b - a), lowest = (a + b - Math.sqrt(span - 2 * s * s * Math.log(1 - u()))) / 2, highest = (a + b + Math.sqrt(span - 2 * s * s * Math.log(1 - u()))) / 2;
+        if (pk - lowest > dd) dd = Math.min(pk, pk - lowest);
+        if (lowest <= 0) { b = 0; dead = true; if (a > hi) hi = a; }
+        else {
+          if (highest > hi) hi = highest; if (b > pk) pk = b;
+          while (l < lv.length - 1 && b >= lv[l + 1].need) l++;
+          while (l > 0 && b < lv[l].down) l--;
+        }
       }
-      col[i][p] = b;
+      if (i === cps[c]) { col[c + 1][p] = b; top[c][p] = hi; c++; }
     }
-    dds[p] = dd; if (dead) bust++; if (b < B) below++; if (g > 0) goalAt.push(g);
-    for (let j = s0 + 1; j <= top; j++) reach[j]++; end[l]++;
+    dds[p] = dd; if (dead) bust++; if (b < B) below++; end[l]++;
   }
   const q = (a, f) => a[Math.min(N - 1, Math.floor(f * N))];
-  const pts = col.map((a, i) => { a.sort(); return { h: i * dt, lo: q(a, 0.1), mid: q(a, 0.5), hi: q(a, 0.9) }; });
-  goalAt.sort((a, b) => a - b); dds.sort();
-  return { pts, s0, ddMid: q(dds, 0.5), ddBad: q(dds, 0.9), bust: bust / N, below: below / N, reach: reach.map((n) => n / N), end: end.map((n) => n / N), goalP: goalAt.length / N, goalMed: goalAt.length >= N / 2 ? goalAt[Math.floor(N / 2)] : null };
+  const pts = col.map((a, i) => { const x = Float32Array.from(a).sort(); return { h: i === 0 ? 0 : cps[i - 1] * dt, lo: q(x, 0.1), mid: q(x, 0.5), hi: q(x, 0.9) }; });
+  dds.sort();
+  return { pts, s0, N, top, cpH: cps.map((i) => i * dt), ddMid: q(dds, 0.5), ddBad: q(dds, 0.9), bust: bust / N, below: below / N, end: end.map((n) => n / N) };
+}
+// the chance of touching `goal` within the simulated span, and the hours by which half the paths have (null if fewer do)
+export function goalStats(sim, goal) {
+  const frac = (a) => { let n = 0; for (let i = 0; i < a.length; i++) if (a[i] >= goal) n++; return n / sim.N; };
+  const p = frac(sim.top[sim.top.length - 1]); let med = null;
+  if (p >= 0.5) for (let c = 0; c < sim.top.length; c++) if (frac(sim.top[c]) >= 0.5) { med = sim.cpH[c]; break; }
+  return { p, med };
 }
 function GrowthChart({ sim, B, lv, flat, hours, whenOf }) {
   const W = 520, H = 220, P = { l: 44, r: 62, t: 10, b: 22 }, pts = sim.pts;
@@ -427,34 +475,19 @@ function GrowthChart({ sim, B, lv, flat, hours, whenOf }) {
     </svg>
   );
 }
-function useGrowth(ref, bankroll, prefs) {
+function useGrowth(safe, bankroll, prefs) {
   const risk = prefs.risk, hpw = prefs.perWeek * prefs.sessHours, hours = prefs.weeks * hpw;
-  const whenOf = (h) => { const w = h / hpw; return w > 520 ? "10+ years" : new Date(Date.now() + w * 7 * DAY).toLocaleDateString(undefined, { month: "short", year: "numeric" }); };
-  const ok = !!ref && !ref.loses && ref.ev > 0 && ref.sd > 0 && bankroll > 0;
-  const model = useMemo(() => {
-    if (!ok) return null;
-    const minBet = ref.mn, top = Math.max(0, ...COUNTS.map((c) => +ref.bets[c] || 0));
-    const per = (ref.sd * ref.sd * -Math.log(risk)) / (2 * ref.ev), f = Math.log(Math.min(0.999, 2 * risk)) / Math.log(risk); // drop back once the risk has doubled
-    const mins = [...new Set([...TABLE_MINS, minBet])].sort((a, b) => a - b), at = mins.indexOf(minBet);
-    const mk = (m) => { const k = m / minBet; return { m, k, need: per * k, down: per * k * f, ev: ref.ev * k, sd: ref.sd * k, top: Math.round((top * k) / 5) * 5 }; };
-    let from = at; while (from > 0 && per * (mins[from] / minBet) > bankroll * 1.0005) from--; // the biggest table you qualify for, if it is below yours
-    const lv = mins.slice(from).map(mk);
-    let b = bankroll, hrs = 0, odds = 1, play = lv.filter((l) => l.need <= bankroll * 1.0005).pop() || null;
-    lv.forEach((l) => {
-      if (l.need <= bankroll * 1.0005) { l.state = l === play ? "now" : "ok"; return; }
-      if (!play) { l.state = "short"; return; }
-      const th = (2 * play.ev) / (play.sd * play.sd);
-      odds *= (1 - Math.exp(-th * b)) / (1 - Math.exp(-th * l.need)); l.chance = odds;
-      hrs += (l.need - b) / play.ev; l.hrs = hrs; l.state = "later"; b = l.need; play = l;
-    });
-    return { lv, cur: lv.filter((l) => l.state === "now").pop() || null, usual: minBet };
-  }, [ok, ref, risk, bankroll]);
+  const whenOf = (h) => { const w = h / hpw; return w > 520 ? "10+ years" : new Date(addDays(Date.now(), w * 7)).toLocaleDateString(undefined, { month: "short", year: "numeric" }); };
+  const model = useMemo(() => growthModel(safe, bankroll, risk), [safe, risk, bankroll]);
+  // the 3,000 futures are the heavy part: they follow a moment behind, and typing a target never re-deals them
+  const sim = useDeferred(model && hours > 0 ? JSON.stringify([bankroll, risk, hours, model.lv.map((l) => [l.m, Math.round(l.ev * 100), Math.round(l.sd)])]) : null, () => growthSim({ B: bankroll, lv: model.lv, hours }), true);
   const goal = +prefs.goal > bankroll ? +prefs.goal : bankroll * 2;
-  const sim = useMemo(() => (model && hours > 0 ? growthSim({ B: bankroll, lv: model.lv.map((l) => ({ ...l, need: l.need / 1.0005 })), hours, goal }) : null), [model, hours, bankroll, goal]);
-  return { risk, hpw, hours, whenOf, ok, model, goal, sim, loading: ref === undefined };
+  const goalS = useMemo(() => (sim ? goalStats(sim, goal) : null), [sim, goal]);
+  return { risk, hpw, hours, whenOf, model, goal, goalS, sim: sim && model && sim.end.length === model.lv.length ? sim : null, loading: safe === undefined || (!!model && !sim) };
 }
 function Growth({ gr, bankroll, prefs, setPrefs, go }) {
-  const { risk, hours, whenOf, model, goal, sim, loading } = gr;
+  const [more, setMore] = useState(false);
+  const { risk, hours, whenOf, model, goal, goalS, sim, loading } = gr;
   if (!model || !sim) return <section className="card p-5 mb-4"><div className="eyebrow mb-2">Growing your bankroll</div><p className="text-sm" style={{ color: "var(--ivory-d)" }}>{loading ? "Working it out…" : bankroll > 0 ? "No spread wins at your usual game when every hand is played, so there's nothing to grow into. Check the game rules and table limits." : "Set your bankroll on the Bet spread page first."} {!loading && <button className="font-semibold" style={{ color: "var(--brass)" }} onClick={() => go("calc")}>Open Bet spread ›</button>}</p></section>;
   const { lv, cur, usual } = model, start = lv[sim.s0], last = sim.pts[sim.pts.length - 1], flatEnd = bankroll + start.ev * hours, gain = last.mid - flatEnd;
   const shown = lv.filter((l, i) => i <= sim.s0 + 4), endTop = sim.end.reduce((b, p, i) => (p > sim.end[b] ? i : b), 0), span = HORIZONS.find((h) => h[0] === prefs.weeks)[1];
@@ -468,19 +501,22 @@ function Growth({ gr, bankroll, prefs, setPrefs, go }) {
       <GrowthChart sim={sim} B={bankroll} lv={lv} flat={start.ev} hours={hours} whenOf={whenOf} />
       <div className="flex gap-4 text-[11px] mt-1 mb-3" style={{ color: "var(--muted)" }}><span><span style={{ color: "var(--brass)" }}>━</span> typical</span><span><span style={{ color: "rgba(var(--acc),.5)" }}>█</span> 8 times in 10</span><span>┅ staying at ${start.m} tables</span></div>
       <div className="grid grid-cols-3 gap-2">
-        <Tile k="Typical bankroll" v={shortMoney(last.mid)} sub={`after ${span}. 8 times in 10 it lands between ${shortMoney(last.lo)} and ${shortMoney(last.hi)}.`} tone="var(--brass)" />
-        <Tile k="Moving up adds" v={gain > 50 ? sgnMoney(gain) : "Not yet"} sub={gain > 50 ? `to your typical bankroll after ${span}, compared with staying at $${start.m} tables the whole time.` : `Within ${span} you rarely get far enough past the next table for it to show. Give it longer.`} />
-        <Tile k="Table by then" v={`$${lv[endTop].m}`} sub={`the most likely table you'd be playing, ${Math.round(sim.end[endTop] * 100)}% of the time.`} />
-        <Tile k="Chance of a loss" v={`${Math.round(sim.below * 100)}%`} sub={`${oneIn(sim.below)}, bad luck leaves you with less than today's ${shortMoney(bankroll)} after ${span}.`} tone={sim.below > 0.3 ? "var(--neg-l)" : undefined} />
-        <Tile k="Worst dip" v={shortMoney(sim.ddMid)} sub={`the biggest drop from a high point you should expect along the way. 1 time in 10 it passes ${shortMoney(sim.ddBad)}.`} />
-        <Tile k="Going broke" v={sim.bust < 0.005 ? "<1%" : `${Math.round(sim.bust * 100)}%`} sub={`chance of losing the whole bankroll within ${span}, dropping back a table when the plan says to.`} tone={sim.bust > 0.05 ? "var(--neg-l)" : undefined} />
+        <Tile k="Typical bankroll" v={shortMoney(last.mid)} sub={`after ${span}. 8 times in 10: ${shortMoney(last.lo)} to ${shortMoney(last.hi)}.`} tone="var(--brass)" />
+        <Tile k="Chance of a loss" v={`${Math.round(sim.below * 100)}%`} sub={`${oneIn(sim.below)} you have less than today's ${shortMoney(bankroll)} after ${span}.`} tone={sim.below > 0.3 ? "var(--neg-l)" : undefined} />
+        <Tile k="Going broke" v={sim.bust < 0.005 ? "<1%" : `${Math.round(sim.bust * 100)}%`} sub={`chance of losing it all within ${span}, dropping back when the plan says to.`} tone={sim.bust > 0.05 ? "var(--neg-l)" : undefined} />
+        {more && <>
+          <Tile k="Moving up adds" v={gain > 50 ? sgnMoney(gain) : "Not yet"} sub={gain > 50 ? `to your typical bankroll, against staying at $${start.m} tables the whole time.` : `In ${span} you rarely get far past the next table. Give it longer.`} />
+          <Tile k="Table by then" v={`$${lv[endTop].m}`} sub={`the most likely table you're playing, ${Math.round(sim.end[endTop] * 100)}% of the time.`} />
+          <Tile k="Worst dip" v={shortMoney(sim.ddMid)} sub={`biggest drop from a high point to expect. 1 time in 10 it passes ${shortMoney(sim.ddBad)}.`} />
+        </>}
       </div>
+      <button type="button" onClick={() => setMore(!more)} className="text-xs font-semibold mt-3" style={{ color: "var(--brass)" }} aria-expanded={more}>{more ? "Fewer stats ▴" : "More stats — moving up, table by then, worst dip ▾"}</button>
       <div className="flex items-center justify-between gap-3 mt-4 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
         <label className="flex items-center gap-2 text-sm" style={{ color: "var(--ivory-d)" }}>Target
           <span className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24, width: 120, height: 38 }} type="number" inputMode="numeric" min="0" placeholder={String(Math.round(bankroll * 2))} value={prefs.goal} onChange={(e) => setPrefs({ goal: e.target.value })} aria-label="Target bankroll" /></span></label>
-        <span className="text-xs text-right" style={{ color: "var(--ivory-d)" }}><span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{Math.round(sim.goalP * 100)}%</span> chance of reaching {shortMoney(goal)} within {span}{sim.goalMed ? <>, typically by <span className="mono">{whenOf(sim.goalMed)}</span></> : ""}</span>
+        <span className="text-xs text-right" style={{ color: "var(--ivory-d)" }}><span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{Math.round(goalS.p * 100)}%</span> chance of reaching {shortMoney(goal)} within {span}{goalS.med != null ? <>, typically by <span className="mono">{whenOf(goalS.med)}</span></> : ""}</span>
       </div>
-      <Info label="Where these numbers come from">The plan plays every hand with the bets that keep risk lowest at your usual game, scaled to each table size, so "Move up" is the smallest bankroll each table can be played on at your limit. The chart deals 1,500 possible futures at your pace ({prefs.perWeek} × {prefs.sessHours} hours a week): the line is the middle one, the band holds 8 in 10, and the dashed line is the typical result if you never moved up. Luck can make it much faster or slower.</Info>
+      <Info label="Where these numbers come from">The plan plays every hand with the bets that keep risk lowest at your usual game, scaled to each table size, so "Move up" is the smallest bankroll each table can be played on at your limit. "Move up" and "Drop at" are exact for those bets. The chart deals 3,000 possible futures at your pace ({prefs.perWeek} × {prefs.sessHours} hours a week): the line is the middle one, the band holds 8 in 10, and the dashed line is the typical result if you never moved up. Luck can make it much faster or slower. Risk of ruin assumes you could always make the next bet, so with a bankroll of only a few big bets the real risk runs a little higher.</Info>
     </section>
     <section className="card p-5 mb-4">
       <div className="eyebrow">When to move up, when to drop back</div>
@@ -504,7 +540,7 @@ function Growth({ gr, bankroll, prefs, setPrefs, go }) {
 
 // ---------- a casino's details, as a pop-up on the Plan page ----------
 function CasinoPop({ c, rot, prefs, onClose, onCasinos }) {
-  const { now, rows, sc, isReady, visits, cap } = rot, row = rows.find((x) => x.c.id === c.id), x = sc.get(c), setup = sc.setup, ref = sc.ref, se = c.sess;
+  const { today, rows, sc, isReady, visits, cap } = rot, row = rows.find((x) => x.c.id === c.id), x = sc.get(c), setup = sc.setup, ref = sc.ref, se = c.sess;
   const rd = row && isReady(row), planned = (visits[c.id] || []).map(fmtWeekday);
   // the same bets dealt at this table and at your usual one: what the rules and penetration alone are worth
   const gameX = useMemo(() => {
@@ -516,7 +552,7 @@ function CasinoPop({ c, rot, prefs, onClose, onCasinos }) {
   }, [x, setup, ref]);
   const units = x && setup ? Math.round(setup.bankroll / x.mn) : null, topBet = x ? Math.max(0, ...COUNTS.map((k) => +x.bets[k] || 0)) : 0;
   const [verdict, why] = x ? verdictOf(x, x.score) : ["", ""];
-  const cash = x && x.ev > 0 ? Math.ceil(sessionCash(0.05, x.ev, x.sd, prefs.sessHours) / 50) * 50 : 0;
+  const cash = upTo50(cashFor(x, prefs.sessHours));
   const over = x && !x.loses && x.ror > cap * 1.001, needB = over && x.ror < 1 ? (setup.bankroll * Math.log(cap)) / Math.log(x.ror) : 0;
   const Fact = ({ k, v, sub, tone }) => <div className="flex items-start justify-between gap-4 py-2.5" style={{ borderTop: "1px solid var(--line)" }}><div className="min-w-0"><div className="text-sm" style={{ color: "var(--ivory)" }}>{k}</div><div className="text-[11.5px] leading-snug" style={{ color: "var(--muted)" }}>{sub}</div></div><div className="mono text-sm font-semibold text-right whitespace-nowrap" style={{ color: tone || "var(--ivory)" }}>{v}</div></div>;
   return (
@@ -525,7 +561,7 @@ function CasinoPop({ c, rot, prefs, onClose, onCasinos }) {
       <div className="rounded-xl px-4 py-3 mb-3" style={{ background: "rgba(var(--fg),.035)" }}>
         <div className="text-sm font-semibold" style={{ color: !row ? "var(--ivory)" : rd ? "var(--brass)" : row.kind === "backed" ? "var(--rose)" : "var(--ivory)" }}>{!row ? "Not in your rotation yet" : rd ? "Ready to play" : row.until ? `Resting until ${fmtWeekday(row.until)}` : "Backed off"}</div>
         <div className="text-xs mt-0.5" style={{ color: "var(--ivory-d)" }}>
-          {!row ? "You haven't logged a session here. Scout it, log the session, and it joins the rotation." : <>{row.last ? `Last visit ${ago(Math.floor((now - row.last) / DAY))}.` : "No sessions logged."}{!rd && row.days ? ` It rests ${row.days} days${row.why ? ` (${row.why})` : ""}.` : ""}{planned.length ? ` Planned: ${planned.join(", ")}.` : rd ? "" : " Not in the next six visits."}</>}
+          {!row ? "You haven't logged a session here. Scout it, log the session, and it joins the rotation." : <>{row.last ? `Last visit ${ago(daysBetween(row.last, today))}.` : "No sessions logged."}{!rd && row.days ? ` It rests ${row.days} days${row.why ? ` (${row.why})` : ""}.` : ""}{planned.length ? ` Planned: ${planned.join(", ")}.` : rd ? "" : " Not in the next six visits."}</>}
         </div>
       </div>
       {x ? <>
@@ -537,7 +573,7 @@ function CasinoPop({ c, rot, prefs, onClose, onCasinos }) {
           <Fact k="What it earns you" v={x.ev > 0 ? `${money(x.ev)}/hr` : "—"} sub={x.ev > 0 ? `On average, playing every hand with the ${over ? "safest" : "best"} bets your ${shortMoney(setup.bankroll)} allows here.${ref && ref.ev > 0 ? ` Your usual game earns ${money(ref.ev)}/hr the same way.` : ""}` : "No spread wins here when every hand is played."} />
           {!x.loses && <Fact k="Risk of ruin" v={pct(x.ror, x.ror < 0.0095 ? 1 : 0)} tone={over ? "var(--rose)" : undefined} sub={over ? `The chance of losing your whole bankroll if you kept playing these bets. That is over your ${pct(cap, 0)} limit even with the safest bets here${needB > 0 ? `: it takes about ${shortMoney(needB)} to play this table at ${pct(cap, 0)}` : ""}.` : `The chance of losing your whole bankroll if you kept playing these bets and never cut them. Inside your ${pct(cap, 0)} limit.`} />}
           {gameX != null && <Fact k="How good the game is" v={`${gameX >= 0 ? "+" : "−"}${Math.abs(Math.round(gameX * 100))}%`} sub={`Rules and penetration alone: the same bets earn this much ${gameX >= 0 ? "more" : "less"} here than at your usual table.`} />}
-          <Fact k="How it fits your bankroll" v={`${units} bets`} sub={`Your bankroll is ${units} of this table's $${x.mn} minimum. ${units < 200 ? "Thin: a bigger bankroll or a lower minimum would help a lot." : units < 400 ? "Workable. More bankroll would let you spread wider." : "Comfortable."}${topBet > x.mn ? ` It carries a $${x.mn}–$${topBet} spread (1 to ${Math.round((topBet / x.mn) * 10) / 10}).` : " It only carries flat minimum bets."}`} />
+          <Fact k="How it fits your bankroll" v={`${units} bets`} tone={over ? "var(--rose)" : undefined} sub={`Your bankroll is ${units} of this table's $${x.mn} minimum bets. ${over ? (needB > 0 ? `Playing every hand here at your limit takes about ${Math.round(needB / x.mn).toLocaleString()} (${shortMoney(needB)}), so it is too big for now.` : "That is too few for this table at your limit.") : topBet > x.mn ? `That is enough to spread $${x.mn}–$${topBet} (1 to ${Math.round((topBet / x.mn) * 10) / 10}) inside your limit.` : "Inside your limit, but only with flat minimum bets."}`} />
           {x.ev > 0 && <Fact k={`A ${prefs.sessHours}-hour session`} v={sgnMoney(x.ev * prefs.sessHours)} sub={`On average. Bring about ${money(cash)}: that covers 19 sessions in 20 without running out.`} />}
           <Fact k="The game scored" v={rulesShort({ ...DEFAULT_RULES, ...x.g.rules })} sub={`${x.g.label ? x.g.label + ", " : ""}$${x.mn}–$${x.mx}. ` + (x.mine ? `From what you saw and saved here${x.n > 1 ? ` (the best of your ${x.n} games for you)` : ""}.` : `From the scouting report${c.intel && c.intel.asOf ? ` (as of ${c.intel.asOf})` : ""}${x.n > 1 ? `, the best for you of the ${x.n} games it lists` : ""}. Save the game you see there on the Casinos page and the score uses yours instead.`)} />
         </div>
@@ -552,15 +588,15 @@ function CasinoPop({ c, rot, prefs, onClose, onCasinos }) {
 
 // ---------- the top of the page: your settings and the whole plan in a few lines ----------
 function Glance({ rot, gr, bankroll, prefs, setPrefs, onOpen, go }) {
-  const { now, rows, sc, ready, plan, R, cap } = rot, first = plan[0], ref = sc.ref, hpw = gr.hpw;
+  const { today, rows, sc, ready, plan, R, cap } = rot, first = plan[0], ref = sc.ref, hpw = gr.hpw;
   const xs = plan.map((v) => sc.get(v.c)).filter((x) => x && x.ev > 0), base = xs.length ? xs : ref && ref.ev > 0 ? [ref] : [];
   const mh = (hpw * 30) / 7, ev = base.reduce((s, x) => s + x.ev, 0) / (base.length || 1), sd = Math.sqrt(base.reduce((s, x) => s + x.sd * x.sd, 0) / (base.length || 1)), mEv = ev * mh, mSd = sd * Math.sqrt(mh);
-  const cash = ref && ref.ev > 0 ? Math.ceil(sessionCash(0.05, ref.ev, ref.sd, prefs.sessHours) / 50) * 50 : 0;
+  const cash = upTo50(cashFor(ref, prefs.sessHours));
   const next = gr.model ? gr.model.lv.find((l) => l.state === "later") : null, cur = gr.model && gr.model.cur;
   const need = Math.max(1, Math.ceil((prefs.perWeek * R.base) / 7)), active = rows.filter((x) => x.kind !== "backed").length;
-  const fx = first ? sc.get(first.c) : null, today = first && first.t - now < DAY / 2;
-  const notes = [];
-  if (ref && !ref.loses && ref.ror > cap * 1.001) notes.push([`Playing every hand at your usual $${ref.mn} tables runs ${pct(ref.ror, 0)} risk of ruin with ${shortMoney(bankroll)}, over your ${pct(cap, 0)} limit. ${cur ? `$${cur.m} tables fit your bankroll.` : "A bigger bankroll or a higher limit is needed for any table."}`, true]);
+  const fx = first ? sc.get(first.c) : null, isToday = first && first.t <= today;
+  const notes = [], usualLv = gr.model ? gr.model.lv.find((l) => l.m === gr.model.usual) : null;
+  if (ref && !ref.loses && ref.ror > cap * 1.001) notes.push([`Playing every hand at your usual $${ref.mn} tables runs ${pct(ref.ror, 0)} risk of ruin with ${shortMoney(bankroll)}, over your ${pct(cap, 0)} limit. ${cur ? `$${cur.m} tables fit your bankroll` : "No table fits your bankroll yet"}${usualLv ? `; $${usualLv.m} tables need ${shortMoney(usualLv.need)}.` : "."}`, true]);
   if (rows.length) notes.push(active >= need
     ? [`${ready.length} of your ${rows.length} casino${rows.length === 1 ? "" : "s"} ${ready.length === 1 ? "is" : "are"} ready. ${prefs.perWeek} session${prefs.perWeek === 1 ? "" : "s"} a week needs ${need} casino${need === 1 ? "" : "s"} to keep every visit rested, and you have ${active}.`, false]
     : [`${prefs.perWeek} sessions a week needs ${need} casinos to keep every visit rested, and you have ${active}. Add ${need - active} from "Worth scouting", or play fewer sessions.`, true]);
@@ -573,10 +609,10 @@ function Glance({ rot, gr, bankroll, prefs, setPrefs, onOpen, go }) {
         <div className="pset"><span className="eyebrow">Hours a session</span><Step v={prefs.sessHours} set={(v) => setPrefs({ sessHours: v })} min={1} max={12} f={(v) => `${v} h`} label="hours a session" /></div>
       </div>
       <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, minmax(0,1fr))" }}>
-        {first ? <button className="text-left min-w-0" onClick={() => onOpen(first.c)}><Tile k="Play next" v={first.c.name} sub={`${today ? "Ready now" : fmtWeekday(first.t)}${fx ? ` · score ${fx.score} · ${fx.loses ? "no winning spread" : pct(fx.ror, 0) + " risk"}` : ""}`} tone="var(--brass)" /></button> : <Tile k="Play next" v="—" sub="Log a session to start the rotation." />}
-        <Tile k="A normal month" v={base.length ? sgnMoney(mEv) : "—"} sub={base.length ? `on average over ${Math.round(mh)} hours. 8 months in 10 land between ${sgnMoney(mEv - 1.28 * mSd)} and ${sgnMoney(mEv + 1.28 * mSd)}.` : sc.ref === undefined ? "Working it out…" : "No winning spread yet."} />
-        <Tile k="Bring per session" v={cash ? money(cash) : "—"} sub={cash ? `for ${prefs.sessHours} hours at your usual table. Covers 19 sessions in 20 without running out.` : ""} />
-        <Tile k="Next move up" v={next ? `$${next.m} tables` : cur ? `$${cur.m} tables` : "—"} sub={next ? `when your bankroll reaches ${shortMoney(next.need)}, about ${gr.whenOf(next.hrs)} at your pace.` : cur ? "You're at the top of the list." : gr.model ? `$${gr.model.lv[0].m} tables need ${shortMoney(gr.model.lv[0].need)} at your risk limit.` : ""} />
+        {first ? <button className="text-left min-w-0" onClick={() => onOpen(first.c)}><Tile k="Play next" v={first.c.name} sub={`${isToday ? "Ready today" : fmtWeekday(first.t)}${fx ? ` · score ${fx.score} · ${fx.loses ? "no winning spread" : pct(fx.ror, 0) + " risk"}` : ""}`} tone="var(--brass)" /></button> : <Tile k="Play next" v="—" sub="Log a session to start the rotation." />}
+        <Tile k="A normal month" v={base.length ? sgnMoney(mEv) : "—"} sub={base.length ? `on average, over ${Math.round(mh)} hours. 8 months in 10: ${sgnMoney(mEv - 1.2816 * mSd)} to ${sgnMoney(mEv + 1.2816 * mSd)}.` : sc.ref === undefined ? "Working it out…" : "No winning spread yet."} />
+        <Tile k="Bring per session" v={cash ? money(cash) : "—"} sub={cash ? `for ${prefs.sessHours} hours at your usual $${ref.mn} table. Lasts the session 19 times in 20.` : ""} />
+        <Tile k="Next move up" v={next ? `$${next.m} tables` : cur ? `$${cur.m} tables` : "—"} sub={next ? `at a ${shortMoney(next.need)} bankroll, about ${gr.whenOf(next.hrs)} at your pace.` : cur ? "You're at the top of the list." : gr.model ? `$${gr.model.lv[0].m} tables need ${shortMoney(gr.model.lv[0].need)} at your risk limit.` : ""} />
       </div>
       {notes.map(([t, bad], i) => <p key={i} className="text-xs mt-3" style={{ color: bad ? "var(--neg-l)" : "var(--ivory-d)" }}>{t}</p>)}
       <Info label="How this page works">

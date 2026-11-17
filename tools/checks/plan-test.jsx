@@ -1,0 +1,123 @@
+// Independent checks of the Plan tab's arithmetic (src/planner.jsx): the per-casino optimizer results against the
+// calculator, table bankrolls against the risk-of-ruin formula, the bankroll simulation against closed forms and a
+// separate random walk, session cash, the rotation's dates, and the scouting-report reader.
+// Run:  tools/checks/run.sh
+process.env.TZ = "America/New_York"; // the date checks cross a clock change
+import { COUNTS, calFor, compute, pDip, PhiN, DEFAULT_RULES } from "./app.jsx";
+import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, schedule, addDays, daysBetween, reportGame } from "./planner.jsx";
+let bad = 0, n = 0; const ok = (name, cond, info = "") => { n++; if (!cond) { bad++; console.log("FAIL", name, info); } };
+const near = (name, a, b, tol) => ok(name, Math.abs(a - b) <= tol, `got ${a} want ${b} ±${tol}`);
+const base = { rules: { ...DEFAULT_RULES, h17: true, surrender: true, decks: 6, pen: 75 }, seats: 4, spotsMap: {}, minBet: 25, maxBet: 500, hphAuto: true, handsPerHour: 100 };
+const GAMES = [
+  { rules: base.rules, min: 25, max: 500 }, { rules: { decks: 6, h17: false, das: true, pen: 75 }, min: 15, max: 500 }, { rules: { decks: 8, h17: true, das: true, pen: 80 }, min: 15, max: 2500 },
+  { rules: { decks: 2, h17: true, das: true, pen: 60, dbl: "9-11" }, min: 25, max: 1000 }, { rules: { decks: 6, h17: true, pen: 70 }, min: 50, max: 1000 }, { rules: { decks: 6, h17: true, pen: 75, bj65: true }, min: 10, max: 500 }];
+
+// ---- every casino's numbers: the optimizer's result is re-priced by the calculator, and beaten by no simple ramp
+for (const B of [3000, 6000, 20000, 60000]) for (const cap of [2, 5, 20]) GAMES.forEach((g, gi) => {
+  const setup = { ...base, bankroll: B, rorPct: cap }, x = scoreGame(setup, g), tag = `B ${B} cap ${cap}% game ${gi}`;
+  const cal = calFor({ ...DEFAULT_RULES, ...g.rules }, 4), r = compute({ bankroll: B, handsPerHour: x.rph, bets: x.bets, cal, spotsMap: {} });
+  ok(`${tag}: every hand is played inside the table limits`, COUNTS.every((c, i) => x.bets[c] >= g.min && x.bets[c] <= g.max && (i === 0 || x.bets[c] >= x.bets[COUNTS[i - 1]])), JSON.stringify(x.bets));
+  if (x.loses) { ok(`${tag}: "no winning spread" is true of its bets`, r.evHour <= 0.01, `ev ${r.evHour}`); return; }
+  near(`${tag}: $/hr`, x.ev, r.evHour, 1e-6 * Math.max(1, r.evHour)); near(`${tag}: swing`, x.sd, r.sdHour, 1e-6 * r.sdHour); near(`${tag}: risk of ruin`, x.ror, r.ror, 1e-9);
+  ok(`${tag}: inside the limit unless flagged`, x.infeasible ? x.ror > cap / 100 : x.ror <= (cap / 100) * 1.001, `ror ${x.ror}`);
+  near(`${tag}: fit is (bankroll ÷ bankroll needed)²`, x.fit, x.infeasible ? Math.pow(Math.log(x.ror) / Math.log(cap / 100), 2) : 1, 1e-9);
+  // straight-line ramps from the minimum: none should be safer than the "safest" spread, or earn more inside the limit
+  let safest = 1, most = -1e9;
+  for (let top = g.min; top <= g.max; top += 5) for (let start = 0; start <= 3; start++) {
+    const bets = {}; COUNTS.forEach((c) => (bets[c] = c <= start ? g.min : Math.round((g.min + ((top - g.min) * (c - start)) / (6 - start)) / 5) * 5));
+    const q = compute({ bankroll: B, handsPerHour: x.rph, bets, cal, spotsMap: {} });
+    if (q.ror < safest) safest = q.ror; if (q.ror <= cap / 100 && q.evHour > most) most = q.evHour;
+  }
+  if (x.infeasible) ok(`${tag}: no ramp is safer than the safest spread`, x.ror <= safest * 1.01, `opt ${x.ror} ramp ${safest}`);
+  else ok(`${tag}: no ramp earns more inside the limit`, x.ev >= most * 0.99, `opt ${x.ev} ramp ${most}`);
+  // session cash: the chance of dipping that far is 5% before the shoe-clustering factor
+  const cash = cashFor(x, 4); if (x.ev > 0) ok(`${tag}: session cash`, cash > 0 && Math.abs(pDip(cash, x.ev, x.sd, 4) - 0.05) < 0.02, `pDip ${pDip(cash, x.ev, x.sd, 4)}`);
+});
+{ const setup = { ...base, bankroll: 6000, rorPct: 5 }, ref = scoreGame(setup, GAMES[0]);
+  near("your usual game scores 50", scoreFor(ref, ref), 50, 0); near("twice the money scores 67", scoreFor({ ...ref, ev: ref.ev * 2 }, ref), 67, 0);
+  near("half the money scores 33", scoreFor({ ...ref, ev: ref.ev / 2 }, ref), 33, 0); near("a losing game scores 0", scoreFor({ ...ref, loses: true }, ref), 0, 0); }
+
+// ---- table bankrolls: scaled bets at "move up" run exactly the risk limit, at "drop at" twice it
+for (const B of [6000, 40000]) for (const risk of [0.02, 0.05, 0.1, 0.2]) {
+  const setup = { ...base, bankroll: B, rorPct: 1e-7 }, safe = scoreGame(setup, GAMES[0]), m = growthModel(safe, B, risk), cal = calFor(base.rules, 4);
+  ok(`model B ${B} ${risk}: built`, !!m && m.lv.length > 1);
+  m.lv.forEach((l) => {
+    const bets = {}; COUNTS.forEach((c) => (bets[c] = safe.bets[c] * l.k));
+    near(`B ${B} ${risk} $${l.m}: risk at "move up"`, compute({ bankroll: l.need, handsPerHour: safe.rph, bets, cal, spotsMap: {} }).ror, risk, risk * 1e-6);
+    near(`B ${B} ${risk} $${l.m}: risk at "drop at"`, compute({ bankroll: l.down, handsPerHour: safe.rph, bets, cal, spotsMap: {} }).ror, 2 * risk, risk * 1e-6);
+    near(`B ${B} ${risk} $${l.m}: $/hr scales with the table`, l.ev, compute({ bankroll: B, handsPerHour: safe.rph, bets, cal, spotsMap: {} }).evHour, 1e-6 * l.ev);
+  });
+  const cur = m.cur; ok(`B ${B} ${risk}: "you're here" is the biggest table the bankroll covers`, !cur || (cur.need <= B * 1.0005 && m.lv.every((l) => l.need <= B * 1.0005 ? l.m <= cur.m : true)));
+  // "getting there": a separate fine-grained walk between going broke and the next table's bankroll
+  const nx = m.lv.find((l) => l.state === "later"), at = cur || null;
+  if (nx && at && nx === m.lv[m.lv.indexOf(at) + 1]) {
+    let s = 987654321 >>> 0; const u = () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return (s + 0.5) / 4294967296; }, z = () => Math.sqrt(-2 * Math.log(u())) * Math.cos(2 * Math.PI * u());
+    const dt = Math.pow((nx.need - B) / at.sd / 40, 2), P = 4000; let hit = 0, hrs = 0;
+    for (let p = 0; p < P; p++) { let b = B, t = 0; while (b > 0 && b < nx.need) { b += at.ev * dt + at.sd * Math.sqrt(dt) * z(); t += dt; } if (b >= nx.need) { hit++; hrs += t; } }
+    near(`B ${B} ${risk}: chance of reaching the next table`, nx.chance, hit / P, 0.035);
+  }
+}
+
+// ---- the bankroll simulation at one table, against closed forms
+for (const [B, ev, sd, T] of [[6000, 4, 180, 208], [6000, 10, 350, 400], [20000, 44, 1800, 416], [6000, 9, 250, 832], [8000, 12, 500, 8736]]) {
+  const s = growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }], hours: T }), last = s.pts[s.pts.length - 1], N = s.N, tag = `sim B ${B} ev ${ev} sd ${sd} T ${T}`;
+  const se = (p) => 3.5 * Math.sqrt((p * (1 - p)) / N) + 0.004, bust = pDip(B, ev, sd, T);
+  near(`${tag}: going broke`, s.bust, bust, se(bust));
+  if (bust < 0.02) {
+    const sdT = sd * Math.sqrt(T), g = B * 1.5;
+    near(`${tag}: typical bankroll`, last.mid, B + ev * T, (3.5 * 1.2533 * sdT) / Math.sqrt(N) + 0.03 * sdT);
+    near(`${tag}: 10th percentile`, last.lo, B + ev * T - 1.2816 * sdT, 0.12 * sdT); near(`${tag}: 90th percentile`, last.hi, B + ev * T + 1.2816 * sdT, 0.12 * sdT);
+    near(`${tag}: chance of a loss`, s.below, PhiN((-ev * Math.sqrt(T)) / sd), se(0.4) + bust);
+    near(`${tag}: reaching a target`, goalStats(s, g).p, pDip(g - B, -ev, sd, T), se(0.4) + bust);
+  }
+  near(`${tag}: tables add up`, s.end.reduce((a, b) => a + b, 0), 1, 1e-9);
+}
+{ // long enough to be "forever": the simulated ruin matches the risk-of-ruin formula the whole page is built on
+  const B = 5000, ev = 15, sd = 450, s = growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }], hours: 8736 * 4 });
+  near("sim: going broke over a very long time is the risk of ruin", s.bust, Math.exp((-2 * ev * B) / (sd * sd)), 0.03);
+  // moving up and dropping back: a table you can never reach changes nothing; the same seed gives the same picture
+  const one = growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }], hours: 400 }), two = growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }, { m: 10, need: 1e12, down: 5e11, ev: 2 * ev, sd: 2 * sd }], hours: 400 });
+  near("sim: an unreachable table changes nothing", two.pts[two.pts.length - 1].mid, one.pts[one.pts.length - 1].mid, 1e-6); near("sim: same inputs, same answer", growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }], hours: 400 }).bust, one.bust, 0);
+  const up = growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }, { m: 10, need: 6000, down: 4500, ev: 2 * ev, sd: 2 * sd }], hours: 2000 });
+  ok("sim: moving up widens the range", up.pts[up.pts.length - 1].hi > growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }], hours: 2000 }).pts.slice(-1)[0].hi);
+  ok("sim: bankrolls never go below zero", up.pts.every((p) => p.lo >= 0 && p.lo <= p.mid && p.mid <= p.hi));
+}
+
+// ---- rotation dates
+const D = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d).getTime(); }, R = restSet({ base: 7, backed: 90 });
+near("a week across the clock change is 7 days", daysBetween(D("2026-10-28"), D("2026-11-04")), 7, 0); near("adding 7 days lands on the same weekday at midnight", addDays(D("2026-10-28"), 7), D("2026-11-04"), 0);
+near("spring clock change too", addDays(D("2027-03-10"), 7), D("2027-03-17"), 0); near("yesterday evening to this morning is 1 day", daysBetween(new Date(2026, 10, 15, 22, 0).getTime(), new Date(2026, 10, 16, 8, 0).getTime()), 1, 0);
+const cas = (id, sess, mark) => ({ id, name: id, sess, mark });
+near("a plain visit rests 7 days", restOf(cas("a", { n: 1, last: "2026-11-09", dates: ["2026-11-09"] }), R).until, D("2026-11-16"), 0);
+near("watched last time rests 21", restOf(cas("a", { n: 1, last: "2026-11-09", dates: ["2026-11-09"], lastHeat: "watched" }), R).until, D("2026-11-30"), 0);
+near("three visits in 30 days rests 21", restOf(cas("a", { n: 3, last: "2026-11-09", dates: ["2026-10-15", "2026-11-01", "2026-11-09"] }), R).until, D("2026-11-30"), 0);
+near("two visits in 30 days rests 7", restOf(cas("a", { n: 3, last: "2026-11-09", dates: ["2026-10-01", "2026-11-01", "2026-11-09"] }), R).until, D("2026-11-16"), 0);
+near("high heat rests 42", restOf(cas("a", { n: 1, last: "2026-11-09", dates: ["2026-11-09"] }, { heat: 3 }), R).until, D("2026-12-21"), 0);
+near("one back-off rests 90 days from the back-off", restOf(cas("a", { n: 2, last: "2026-11-10", dates: ["2026-11-01", "2026-11-10"], backed: "2026-11-10", backedN: 1 }), R).until, addDays(D("2026-11-10"), 90), 0);
+near("a second back-off rests 180", restOf(cas("a", { n: 2, last: "2026-11-10", dates: ["2026-11-01", "2026-11-10"], backed: "2026-11-10", backedN: 2 }), R).until, addDays(D("2026-11-10"), 180), 0);
+ok("never played is ready", restOf(cas("a", null, { status: "been" }), R).until === null);
+{ const today = D("2026-11-16"), rows = ["a", "b", "c", "d", "e", "f", "g"].map((id) => { const c = cas(id, null, { status: "been" }); return { c, ...restOf(c, R) }; });
+  const plan = schedule(rows, today, R, 2, 6, () => 50);
+  ok("two a week lands on days 0, 4, 7, 11, 14, 18", plan.map((v) => daysBetween(today, v.t)).join() === "0,4,7,11,14,18", plan.map((v) => daysBetween(today, v.t)).join());
+  ok("with enough casinos nobody is visited twice", new Set(plan.map((v) => v.c.id)).size === 6);
+  const two = [cas("a", { n: 1, last: "2026-11-14", dates: ["2026-11-14"] }), cas("b", { n: 1, last: "2026-11-02", dates: ["2026-11-02"] }, { heat: 2 })].map((c) => ({ c, ...restOf(c, R) })), p2 = schedule(two, today, R, 3, 8, () => 50), seen = {};
+  let fine = true; p2.forEach((v) => { const r = two.find((x) => x.c.id === v.c.id), gap = v.c.id === "b" ? 21 : 7; if (seen[v.c.id] == null ? r.until && v.t < r.until : daysBetween(seen[v.c.id], v.t) < gap) fine = false; seen[v.c.id] = v.t; });
+  ok("no visit lands inside a casino's rest", fine, p2.map((v) => v.c.id + daysBetween(today, v.t)).join(" "));
+  const sc = (c) => (c.id === "g" ? 100 : 0), tie = ["f", "g"].map((id) => { const c = cas(id, { n: 1, last: id === "g" ? "2026-11-02" : "2026-11-01", dates: [] }); return { c, ...restOf(c, R) }; });
+  ok("a much better game wins a near-tie on rest", schedule(tie, today, R, 1, 1, sc)[0].c.id === "g"); ok("without scores the longer-rested goes first", schedule(tie, today, R, 1, 1, () => null)[0].c.id === "f");
+  const bk = [cas("x", { n: 1, last: "2026-09-01", dates: ["2026-09-01"], backed: "2026-09-01", backedN: 1 })].map((c) => ({ c, ...restOf(c, R) }));
+  ok("a backed-off casino comes back only when its rest ends", daysBetween(D("2026-09-01"), schedule(bk, today, R, 2, 1, () => 50)[0].t) === 90);
+}
+
+// ---- reading a scouting report's game lines
+const rg = (s) => reportGame(s);
+{ const a = rg("Main floor: 8 decks, H17, DAS, $15–$2,500, about 20 tables, 1.5 decks cut off (Current Blackjack News, Apr 2022).");
+  ok("report: main floor", a && a.label === "Main floor" && a.rules.decks === 8 && a.rules.h17 && a.rules.das && a.min === 15 && a.max === 2500 && a.rules.pen === 80 && !a.rules.surrender, JSON.stringify(a));
+  const b = rg("6 decks, H17, DAS, $15–$1000, about 1.8 decks cut (Apr 2022 CBJN)."); ok("report: '1.8 decks cut' is the cut, not 8 decks", b && b.rules.decks === 6 && b.rules.pen === 70, JSON.stringify(b));
+  const c = rg("Double deck, H17, double on 9–11 only, no mid-shoe entry, $50–$3000, about 1 deck cut (Apr 2022 CBJN)."); ok("report: double deck", c && c.rules.decks === 2 && c.rules.pen === 50 && c.rules.dbl === "9-11" && !c.rules.das, JSON.stringify(c));
+  const d = rg("High limit: 6 decks, S17, DAS, LS, resplit aces to 3, $100–$3000, about 1.5 decks cut; 6 tables (Apr 2022 CBJN)."); ok("report: high limit", d && !d.rules.h17 && d.rules.surrender && d.rules.rsa && d.rules.pen === 75 && d.min === 100, JSON.stringify(d));
+  ok("report: 6:5 tables are left out", rg("Low-limit tables: 6 decks, H17, $10–$500, all paying 6:5.") === null); ok("report: side games are left out", rg("Spanish 21: 6 decks, H17, $10–$500, about 3 tables.") === null);
+  ok("report: a line without limits is left out", rg("6 decks, S17, DAS, no surrender per a 2014 forum post.") === null); }
+
+console.log(bad ? `${bad} of ${n} plan checks FAILED` : `all ${n} plan checks passed`);
+process.exit(bad ? 1 : 0);

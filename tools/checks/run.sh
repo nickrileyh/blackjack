@@ -8,3 +8,7 @@ echo 'export { handValue, settle, isBlackjack, drawdownFromMix, patternOf };' >>
 cp tools/checks/math-test.jsx .build/math-test.jsx
 npx esbuild .build/math-test.jsx --bundle --platform=node --format=cjs --outfile=.build/math-test.cjs --loader:.js=jsx --log-level=error
 node .build/math-test.cjs
+# the Plan tab's arithmetic (src/planner.jsx)
+cp tools/checks/plan-test.jsx .build/plan-test.jsx
+npx esbuild .build/plan-test.jsx --bundle --platform=node --format=cjs --outfile=.build/plan-test.cjs --loader:.js=jsx --log-level=error
+node .build/plan-test.cjs

@@ -5482,4 +5482,4 @@ function BetSpreadCalculator() {
 // shared with src/casinos.jsx (the Casinos page lives in its own file)
 export { Sheet, Seg, ChipRow, ConfirmLink, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav, Info, money, shortMoney, fmtTC, pct };
 // used by the Ask tab (src/ask.jsx, src/aitools.js)
-export { COUNTS, calFor, compute, autoRph, roundFreqs, spotsAt, momentAt, optimizeSpread, optimizeForProfit, correctPlay, rulesLabel, pDip, PhiN, DEFAULT_RULES, DEFAULT_BETS, SKILLS, sessEv, sessSd, loadLog, sessionDrawdown, sessionCash };
+export { tailFix, shoeRounds, useDeferred, COUNTS, calFor, compute, autoRph, roundFreqs, spotsAt, momentAt, optimizeSpread, optimizeForProfit, correctPlay, rulesLabel, pDip, PhiN, DEFAULT_RULES, DEFAULT_BETS, SKILLS, sessEv, sessSd, loadLog, sessionDrawdown, sessionCash };
