@@ -487,7 +487,7 @@ html.scrolled .pillrail .rulespill{font-size:11px;padding:5px 9px 5px 11px}
 .btrow.freq{grid-template-columns:44px minmax(0,1fr) 44px 52px 56px 66px}
 @media (max-width:430px){.btrow{gap:6px;grid-template-columns:40px minmax(0,1fr) 40px 52px 58px}.btrow.freq{grid-template-columns:40px minmax(0,1fr) 40px 50px 52px}.btrow.freq>.evc{display:none}}
 @media (max-width:350px){.btrow,.btrow.freq{gap:5px;grid-template-columns:36px minmax(0,1fr) 36px 46px 50px}.btrow .tcl{font-size:12px}.btrow.eyebrow{font-size:9px!important;letter-spacing:.04em}.btrow .in.sm{padding-left:5px;padding-right:5px}}
-@media (max-width:350px){.card.rulesdlg{padding:14px}}
+@media (max-width:350px){.card.rulesdlg>div{padding:14px}}
 .sheetgrab{touch-action:none}
 @media (min-width:1024px){.sheetgrab{touch-action:auto}}
 .navbtn:active{transform:scale(.94)}
@@ -678,7 +678,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 :where(.card){position:relative}
 .card{border-radius:22px;border-color:transparent;background:radial-gradient(130% 90% at 0% 0%,var(--gl-sheen),transparent 55%),linear-gradient(180deg,rgba(var(--fg),.058),rgba(var(--fg),.022));box-shadow:inset 0 -1px 0 rgba(var(--sh),.45),0 16px 36px -20px rgba(0,0,0,.9)}
 .card .card{border-radius:16px}
-.card:not(.rulesdlg)::before,.bottom-nav>div::before,.cmdk::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--gl-edge);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none;z-index:1}
+.card::before,.bottom-nav>div::before,.cmdk::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--gl-edge);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none;z-index:1}
 :root[data-theme="light"] .card{border-color:rgba(var(--fg),.07);background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.8));box-shadow:0 1px 2px rgba(var(--fg),.06),0 10px 28px -16px rgba(var(--fg),.26)}
 /* the tab bar: a floating capsule, with the page fading out beneath it */
 .bottom-nav{padding:22px 12px max(10px,calc(env(safe-area-inset-bottom) - 12px));background:linear-gradient(to top,rgba(var(--bgrgb),.86),rgba(var(--bgrgb),.5) 55%,rgba(var(--bgrgb),0));backdrop-filter:none;-webkit-backdrop-filter:none;border-top:0;box-shadow:none;pointer-events:none}
@@ -709,33 +709,47 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .sn-glide::before,.sn-item.on::before{display:none}
 .sn-rules{border-radius:18px}
 .navbtn.on{background:none;box-shadow:none}
-.navglide{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px) / var(--n));border-radius:999px;pointer-events:none;transform:translateX(calc(var(--i) * 100%));transition:transform .5s var(--fluid);background:linear-gradient(180deg,rgba(var(--acc),.22),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.16)}
+.navglide{--w:calc((100% - 10px) / var(--n));position:absolute;top:5px;bottom:5px;left:calc(5px + var(--i) * var(--w));right:calc(5px + (var(--n) - 1 - var(--i)) * var(--w));border-radius:999px;pointer-events:none;background:linear-gradient(180deg,rgba(var(--acc),.22),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.16)}
 .navbtn{z-index:1}
-@media (max-width:350px){.navglide{top:4px;bottom:4px;left:4px;width:calc((100% - 8px) / var(--n))}}
+@media (max-width:350px){.navglide{--w:calc((100% - 8px) / var(--n));top:4px;bottom:4px;left:calc(4px + var(--i) * var(--w));right:calc(4px + (var(--n) - 1 - var(--i)) * var(--w))}}
 .gchip{background:linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.03));color:var(--ivory-d);border:1px solid rgba(var(--fg),.07);box-shadow:inset 0 1px 0 var(--gl-rim);transition:transform .35s var(--fluid),background .2s,color .2s,border-color .2s}
 .gchip.on{background:linear-gradient(180deg,rgba(var(--acc),.24),rgba(var(--acc),.11));color:var(--ivory);border-color:rgba(var(--acc),.26);box-shadow:inset 0 1px 0 var(--gl-hi)}
 :root[data-theme="light"] .gchip.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));color:var(--ink);border-color:transparent}
 .chipseg:not(.rows):not(.brushes),.chipseg:not(.rows):not(.brushes) button{border-radius:999px}
 .in{border-radius:14px}.in.sm{border-radius:10px}
 @media (min-width:1024px){.sheetwrap .sheet{border-radius:30px}.cmdk{border-radius:24px}}
-/* ---- fluid motion, very subtle: selections glide with a soft overshoot, pressed glass springs back, and on a computer a
-   faint light follows the pointer across a card. All of it is off under "reduce motion". */
-:root{--fluid:cubic-bezier(.3,1.3,.45,1)}
-.sn-glide{transition:transform .5s var(--fluid),opacity .2s}
-.chipseg.slide .thumb{transition:transform .42s var(--fluid)}
-.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .38s var(--fluid),filter .13s,background .2s,color .18s,border-color .2s}
-.btn:active,.iconbtn:active,.stepbtn:active,.rulespill:active,.chippress:active,.navbtn:active{transition-duration:.09s}
-.sheet{animation-name:sheetflu;animation-duration:.42s;animation-timing-function:cubic-bezier(.2,.9,.25,1)}
-@keyframes sheetflu{0%{transform:translateY(46px) scale(.985);opacity:.3}62%{transform:translateY(-3px) scale(1);opacity:1}100%{transform:none;opacity:1}}
+/* ---- fluid motion, kept quiet (Nick: smoother, subtler, more like liquid). Nothing bounces: one long ease-out
+   (--fluid) for everything. A selection flows to its new place — the edge facing the way it is going sets off first and
+   the other edge catches up (Glider sets data-dir), so it stretches a little and settles. Pressed glass eases back.
+   A sheet glides up and slows to a stop. On a computer a soft light drifts after the pointer across a card.
+   All of it is off under "reduce motion". */
+:root{--fluid:cubic-bezier(.22,1,.36,1)}
+.chipseg.slide .thumb{--w:calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));width:auto;transform:none;left:calc(4px + var(--i) * (var(--w) + 4px));right:calc(4px + (var(--n) - 1 - var(--i)) * (var(--w) + 4px))}
+.navglide,.chipseg.slide .thumb{transition:left .5s var(--fluid),right .5s var(--fluid)}
+.navglide[data-dir="r"],.chipseg.slide .thumb[data-dir="r"]{transition:left .6s var(--fluid),right .47s var(--fluid)}
+.navglide[data-dir="l"],.chipseg.slide .thumb[data-dir="l"]{transition:left .47s var(--fluid),right .6s var(--fluid)}
+.sn-glide{transition:transform .6s var(--fluid),opacity .25s}
+.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .5s var(--fluid),filter .2s,background .3s var(--ease),color .25s var(--ease),border-color .3s var(--ease)}
+.btn:active,.iconbtn:active,.stepbtn:active,.rulespill:active,.chippress:active,.navbtn:active{transition-duration:.12s}
+.btn:active{transform:scale(.99)}.iconbtn:active,.stepbtn:active{transform:scale(.95)}.rulespill:active,.chippress:active,.navbtn:active{transform:scale(.975)}
+.chipseg.slide button{transition:color .35s var(--ease)}
+.sheet{animation-name:sheetflu;animation-duration:.5s;animation-timing-function:var(--fluid)}
+@keyframes sheetflu{from{transform:translateY(36px);opacity:0}to{transform:none;opacity:1}}
 @media (hover:hover) and (min-width:1024px){
-.card:not(.rulesdlg)::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .45s var(--ease);background:radial-gradient(260px circle at var(--mx,50%) var(--my,-30%),rgba(255,255,255,.05),transparent 70%)}
-:root[data-theme="light"] .card:not(.rulesdlg)::after{background:radial-gradient(260px circle at var(--mx,50%) var(--my,-30%),rgba(var(--acc),.06),transparent 70%)}
+.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .7s var(--ease);background:radial-gradient(340px circle at var(--mx,50%) var(--my,-30%),rgba(255,255,255,.038),transparent 72%)}
+:root[data-theme="light"] .card::after{background:radial-gradient(340px circle at var(--mx,50%) var(--my,-30%),rgba(var(--acc),.045),transparent 72%)}
 .card:hover::after{opacity:1}
 }
-/* sheets and the Jump-to palette: the page shows through, softly, where the browser can do it */
+/* sheets, the game-rules dialog and the Jump-to palette: the page shows through, softly, where the browser can do it.
+   The rules dialog is the same glass as a sheet: its panel never scrolls (an inner box does), so the rim stays put. */
 .cmdk{position:relative}
+.rulesscrim{animation:scrimin .22s var(--ease)}
+.card.rulesdlg{border-radius:30px;background:linear-gradient(180deg,var(--sheet1),var(--sheet2));box-shadow:0 30px 80px -20px rgba(0,0,0,.8);animation:sheetflu .5s var(--fluid) both}
+:root[data-theme="light"] .card.rulesdlg{box-shadow:0 30px 80px -24px rgba(var(--fg),.45)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) and (color:color-mix(in srgb,red 50%,transparent)){
 .sheet,.cmdk{background:linear-gradient(180deg,var(--gl-hi),var(--gl-hi) 1px,transparent 1px),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 78%,transparent),color-mix(in srgb,var(--sheet2) 86%,transparent) 40%);backdrop-filter:blur(34px) saturate(1.8);-webkit-backdrop-filter:blur(34px) saturate(1.8)}
+.card.rulesdlg{background:linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 74%,transparent),color-mix(in srgb,var(--sheet2) 84%,transparent) 45%);backdrop-filter:blur(34px) saturate(1.8);-webkit-backdrop-filter:blur(34px) saturate(1.8)}
+:root[data-theme="light"] .card.rulesdlg{background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.76))}
 }
 /* on a phone a sheet floats: inset from the screen edges, round all the way round */
 @media (max-width:1023px){
@@ -744,8 +758,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .sheet>div:last-child{padding-bottom:22px!important}
 }
 /* "Reduce transparency" on the device: solid surfaces again */
-@media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
-@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip{transition:none!important}.sheet{animation:none!important}.card::after{display:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+@media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
+@media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip{transition:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -1396,12 +1410,21 @@ function FillChart({ R, devs }) {
   );
 }
 
+// A selection that flows from one option to the next like a drop of liquid: the edge facing the way it is going sets off
+// first and the other edge catches up, so it stretches a little on the way and settles to its own width. `data-dir` is
+// the way it last travelled ("r" or "l"); the CSS gives the two edges different durations from it.
+function Glider({ cls, at, style }) {
+  const prev = useRef(at), dir = useRef("");
+  if (at !== prev.current) dir.current = at > prev.current ? "r" : "l";
+  useEffect(() => { prev.current = at; }, [at]);
+  return <i className={cls} aria-hidden="true" data-dir={dir.current || undefined} style={style} />;
+}
 function Seg({ value, options, onChange, cols, style, small }) {
   // one row → the selected pill is a separate element that slides between options; wrapped rows keep the plain style
   const n = options.length, at = options.findIndex(([v]) => v === value), slide = !cols || cols >= n;
   return (
     <div className={"chipseg" + (slide ? " slide" : " rows")} role="group" style={{ gridTemplateColumns: `repeat(${cols || n}, minmax(0,1fr))`, "--n": n, "--i": Math.max(0, at), ...style }}>
-      {slide && at >= 0 && <i className="thumb" aria-hidden="true" />}
+      {slide && at >= 0 && <Glider cls="thumb" at={at} />}
       {options.map(([v, l]) => (
         <button key={String(v)} className={value === v ? "on" : ""} onClick={() => onChange(v)} style={{ height: 36, padding: "0 6px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: small ? 12 : undefined }}>{l}</button>
       ))}
@@ -2041,9 +2064,11 @@ function RulesModal({ rules, onSave, onClose, first }) {
     </div>
   );
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(8,5,7,.78)", backdropFilter: "blur(6px)", paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }} {...backdrop(close)} role="dialog" aria-label="Game rules">
-      <div className="card rulesdlg rise w-full max-w-md p-5 relative" style={{ background: "linear-gradient(180deg,var(--sheet1),var(--sheet2))", maxHeight: "92vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
-        {close && <button onClick={close} aria-label="Close without saving" className="absolute rounded-full flex items-center justify-center" style={{ top: 14, right: 14, width: 32, height: 32, background: "rgba(var(--fg),.08)", color: "var(--ivory-d)", fontSize: 18 }}>×</button>}
+    <div className="rulesscrim fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "var(--scrim)", paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }} {...backdrop(close)} role="dialog" aria-label="Game rules">
+      <div className="card rulesdlg w-full max-w-md relative" style={{ maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
+        {/* the glass panel itself never scrolls (its rim and blur stay put); this inner box does */}
+        <div className="p-5 relative" style={{ overflowY: "auto", minHeight: 0 }}>
+        {close && <button onClick={close} aria-label="Close without saving" className="absolute rounded-full flex items-center justify-center" style={{ zIndex: 2, top: 14, right: 14, width: 32, height: 32, background: "rgba(var(--fg),.08)", color: "var(--ivory-d)", fontSize: 18 }}>×</button>}
         <div className="eyebrow mb-1">{first ? "Before you start" : "Game rules"}</div>
         <div className="disp text-2xl font-semibold mb-1" style={{ paddingRight: first ? 0 : 30 }}>What game do you play?</div>
         <p className="text-xs mb-5" style={{ color: "var(--ivory-d)" }}>These drive the charts, deviations, odds, and every drill. Change them any time from the top of the screen.</p>
@@ -2073,6 +2098,7 @@ function RulesModal({ rules, onSave, onClose, first }) {
         </div>}
         <p className="text-[11px] mt-4" style={{ color: "var(--muted)" }}>Strategy follows the Blackjack Apprenticeship {draft.h17 ? "H17" : "S17"} chart{dasOn(draft) ? "" : " for no double after split"}{dblRule(draft) === "any" ? "" : `, with doubles only on ${dblRule(draft).replace("-", "–")}`}. Split aces get one card each. The dealer peeks for blackjack.{draft.bj65 ? " 6 to 5 blackjack costs about 1.4% — avoid it if you can." : ""}</p>
         <button className="btn mt-5" onClick={() => onSave(draft)}>{first ? "Start" : "Save"}</button>
+        </div>
       </div>
     </div>
   );
@@ -5042,10 +5068,17 @@ export default function App() {
   // One listener for the whole app, one write per frame; touch screens and "reduce motion" never get it.
   useEffect(() => {
     if (typeof matchMedia === "undefined" || !matchMedia("(hover:hover) and (min-width:1024px)").matches || noMotion()) return;
-    let raf = 0, ev = null;
-    const run = () => { raf = 0; let c = ev && ev.target && ev.target.closest ? ev.target.closest(".card") : null;
-      while (c) { const r = c.getBoundingClientRect(); c.style.setProperty("--mx", Math.round(ev.clientX - r.left) + "px"); c.style.setProperty("--my", Math.round(ev.clientY - r.top) + "px"); c = c.parentElement ? c.parentElement.closest(".card") : null; } };
-    const mv = (e) => { ev = e; if (!raf) raf = requestAnimationFrame(run); };
+    // the light eases toward the pointer (a fifth of the way each frame) and stops when it has caught up
+    let raf = 0, tx = 0, ty = 0, x = 0, y = 0, el = null, live = false;
+    const run = () => {
+      x += (tx - x) * 0.2; y += (ty - y) * 0.2;
+      let c = el;
+      while (c) { const r = c.getBoundingClientRect(); c.style.setProperty("--mx", (x - r.left).toFixed(1) + "px"); c.style.setProperty("--my", (y - r.top).toFixed(1) + "px"); c = c.parentElement ? c.parentElement.closest(".card") : null; }
+      raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.5 ? requestAnimationFrame(run) : 0;
+    };
+    const mv = (e) => { tx = e.clientX; ty = e.clientY; el = e.target && e.target.closest ? e.target.closest(".card") : null; if (!el || raf) return;
+      if (!live || Math.abs(tx - x) + Math.abs(ty - y) > 260) { x = tx; y = ty; live = true; } // coming from far away: start where the pointer is
+      raf = requestAnimationFrame(run); };
     window.addEventListener("pointermove", mv, { passive: true });
     return () => { window.removeEventListener("pointermove", mv); if (raf) cancelAnimationFrame(raf); };
   }, []);
@@ -5575,7 +5608,7 @@ function BetSpreadCalculator() {
       </nav>
       <nav className="bottom-nav" aria-label="Sections">
         <div className="flex">
-          {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(tab === "count" ? "train" : tab); return at >= 0 ? <i className="navglide" aria-hidden="true" style={{ "--i": at, "--n": ks.length }} /> : null; })()}
+          {(() => { const ks = NAV_ITEMS.filter(([k]) => k !== "plan").map(([k]) => k), at = ks.indexOf(tab === "count" ? "train" : tab); return at >= 0 ? <Glider cls="navglide" at={at} style={{ "--i": at, "--n": ks.length }} /> : null; })()}
           {NAV_ITEMS.filter(([k]) => k !== "plan").map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
             <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
               <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
