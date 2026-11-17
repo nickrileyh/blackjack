@@ -1022,15 +1022,7 @@ body{background:none}
 .felt{background-image:var(--feltimg,radial-gradient(120% 90% at 50% 0%,var(--felt1) 0%,var(--felt2) 60%,var(--felt3) 100%));background-size:100% 100%;background-repeat:no-repeat}
 .bottom-nav{background:linear-gradient(to top,rgba(var(--bgrgb),.86),rgba(var(--bgrgb),.78) 18%,rgba(var(--bgrgb),.6) 40%,rgba(var(--bgrgb),.36) 60%,rgba(var(--bgrgb),.15) 80%,rgba(var(--bgrgb),.04) 92%,rgba(var(--bgrgb),0))}
 .topbar::after{height:24px;background:linear-gradient(180deg,rgba(var(--bgrgb),.74),rgba(var(--bgrgb),.62) 18%,rgba(var(--bgrgb),.4) 42%,rgba(var(--bgrgb),.2) 64%,rgba(var(--bgrgb),.07) 84%,rgba(var(--bgrgb),0))}
-/* ---- Desktop extras: Home's dashboard, the chart beside the trainer, saved spreads, the shortcuts list ---- */
-.hstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;margin-bottom:16px}
-.hstat{display:block;width:100%;text-align:left;padding:17px 20px 16px;animation:rise .48s var(--ez) backwards}
-.hstat:nth-child(2){animation-delay:.03s}.hstat:nth-child(3){animation-delay:.06s}.hstat:nth-child(4){animation-delay:.09s}
-.hstat-v{display:block;font-size:27px;font-weight:600;letter-spacing:-.025em;line-height:1.1;margin-top:9px;white-space:nowrap}
-.hstat-u{font-size:15px;font-weight:500;opacity:.55;margin-left:1px;letter-spacing:0}
-.hstat-s{display:block;font-size:11.5px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hstat:active{opacity:.82}
-@media (hover:hover){.card.hstat:hover::before{background:linear-gradient(155deg,rgba(var(--acc),.8),rgba(var(--acc),.4) 22%,rgba(var(--acc),.26) 60%,rgba(var(--acc),.55))}}
+/* ---- Desktop extras: Home's practice chart and latest sessions, the chart beside the trainer, saved spreads, the shortcuts list ---- */
 .pdays{display:flex;gap:6px;margin-top:14px}
 .pday{flex:1 1 0;min-width:0;text-align:center}
 .pday>span{display:block;font-size:10px;margin-top:6px}
@@ -1064,7 +1056,7 @@ body{background:none}
 .kbkeys i{font-style:normal;font-size:10.5px;color:var(--muted)}
 .kbrow kbd{min-width:22px;text-align:center;font-size:11px;padding:3px 7px}
 @media (max-width:640px){.kbgrid{grid-template-columns:1fr}}
-@media (prefers-reduced-motion:reduce){.hstat,.tc-cell.lit{animation:none!important}.tc-cell,.tc-h,.tc-l{transition:none!important}}
+@media (prefers-reduced-motion:reduce){.tc-cell.lit{animation:none!important}.tc-cell,.tc-h,.tc-l{transition:none!important}}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}
@@ -4101,8 +4093,8 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
   return portalTarget ? createPortal(ui, portalTarget) : ui;
 }
 const SESS_KEY = "bj-sessions-v1";
-function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll, ror }) {
-  const wide = useWide(); // the dashboard pieces (numbers across the top, the practice chart) are for a wide screen only
+function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }) {
+  const wide = useWide(); // the practice chart is for a wide screen only
   const [log, setLog] = useState(null);
   const [skill, setSkill] = useState("strategy");
   const [sessions, setSessions] = useState([]);
@@ -4128,7 +4120,7 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll, 
   const refreshLog = async () => { _logCache = null; setLog(await loadLog()); };
   const timing = !!useSessionTimer(); // a running session goes to the top of the page
   return (
-    <div className="homepage">{wide && go && <HomeStats bankroll={bankroll} ev={evHour} sd={sdHour} ror={ror} ready={ready} log={log} go={go} />}<div className="dgrid wl"><div className="dcol">
+    <div className="homepage"><div className="dgrid wl"><div className="dcol">
       {go && timing && <TripCard go={go} bankroll={bankroll} />}
       <FocusCard log={log} go={go} />
       {go && (
@@ -4146,26 +4138,6 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll, 
       </div><div className="dcol o2 flipd">
       <LevelPanel rules={rules} bets={bets} log={log} refreshLog={refreshLog} go={go} evHour={evHour} openSessions={() => go && go("sessions")} />
     </div></div></div>
-  );
-}
-// Home on a wide screen: four numbers across the top, each one a way in to the page behind it
-function HomeStats({ bankroll, ev, sd, ror, ready, log, go }) {
-  const wk = useMemo(() => { const from = Date.now() - 7 * 864e5; let n = 0, ok = 0; (log || []).forEach((e) => { if (e.t >= from) { n++; ok += e.ok; } }); return { n, acc: n ? Math.round((ok / n) * 100) : null }; }, [log]);
-  const tiles = [
-    ["Bankroll", ready ? <>$<Glide v={bankroll} enter round f={(x) => x.toLocaleString()} /></> : "…", "Change it on Bet spread", "var(--ivory)", () => go("calc")],
-    ["Expected", ready ? <><Glide v={ev} enter f={(x) => money(x)} /><span className="hstat-u">/hr</span></> : "…", `± ${money(sd)} an hour`, ev >= 0 ? "var(--brass)" : "var(--rose)", () => go("calc")],
-    ["Risk of ruin", ready ? <><Glide v={ror} enter f={(x) => (x >= 0.9995 ? "100" : pct(x, ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="hstat-u">%</span></> : "…", "of losing the bankroll", ror < 0.02 ? "var(--brass)" : ror < 0.1 ? "var(--ivory)" : "var(--rose)", () => go("plan")],
-    ["Practice this week", log ? <><Glide v={wk.n} enter round f={(x) => x.toLocaleString()} /><span className="hstat-u">{wk.n === 1 ? " rep" : " reps"}</span></> : "…", wk.acc == null ? "Nothing yet this week" : `${wk.acc}% right`, "var(--ivory)", () => go("train", { trainView: "drill" })],
-  ];
-  return (
-    <div className="hstats">
-      {tiles.map(([k, v, sub, tone, fn]) => (
-        <button key={k} className="card hstat" onClick={fn}>
-          <span className="eyebrow block">{k}</span>
-          <span className="hstat-v mono" style={{ color: tone }}>{v}</span>
-          <span className="hstat-s">{sub}</span>
-        </button>))}
-    </div>
   );
 }
 // Home on a wide screen: the last two weeks of practice, a bar a day (taller = more reps, dimmer = more mistakes)
@@ -6076,7 +6048,7 @@ function BetSpreadCalculator() {
 
 
         {(tab === "train" || tab === "count") && !narrow && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
-        {tab === "more" ? <MoreHub key="mo" go={go} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} onKeys={() => setKeysOpen(true)} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} ror={r.ror} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
+        {tab === "more" ? <MoreHub key="mo" go={go} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} onKeys={() => setKeysOpen(true)} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .5s var(--ez)" }}>
