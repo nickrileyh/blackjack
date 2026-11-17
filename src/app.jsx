@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, Fragment, createContext, useContext, startTransition } from "react";
 import { createPortal } from "react-dom";
 import CasinosPage, { openCasinoAdd, warmCasinos } from "./casinos.jsx";
-import { GRAIN } from "./grain.js";
+import { startSmooth } from "./smooth.js";
 import { PlanPage } from "./planner.jsx";
 import { sfx, soundPrefs, setSoundPrefs } from "./sound.js";
 import { coverCal } from "./cover.js";
@@ -988,29 +988,36 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14);background:
 /* the rules pill inside the top bar sits on glass that is already blurred: a second blur there costs a phone a layer
    for nothing */
 .topbar .rulespill{-webkit-backdrop-filter:none;backdrop-filter:none}
-/* ---- Smooth gradients (Nick sent a photo of his Mac: rings round the light on a card, steps in the page's fade).
-   A screen has 256 levels of each colour and a soft glow on a dark surface crosses only a few of them, so it is drawn
-   as flat bands with edges you can see. Two cures, both here:
-   1. A dither over the whole app: .bjroot::after lays a tile of very faint specks (src/grain.js, made by
-      tools/grain/make-grain.py) on top of everything. Each speck is worth a level or two, which is enough to break up
-      every band edge under it and too little to see as grain. It is one layer, above everything, and it ignores taps.
-      It replaces the old grain that sat under the cards (and did nothing for the gradients inside them).
-   2. Glows fade on a curve, not a straight line: eight steps of a cosine, flat at the centre and flat where it ends,
-      so a glow has no visible rim. A two-stop fade to transparent always shows its edge; write new glows this way. */
+/* ---- Smooth gradients. Nick sent a photo of his Mac (rings round the light on a card, steps in the page's fade),
+   and then: "gradients still look rough running in Safari". A screen has 256 levels of each colour; a soft glow on a
+   dark surface crosses only a few of them, and a browser that rounds each pixel to the nearest level draws it as flat
+   bands with edges. Chrome dithers its gradients and hides this; Safari does not. A first try laid fine noise over the
+   whole app: it did nothing in Safari, because the bands are already drawn and the noise just averages out to the
+   eye. What works is dither added before the rounding, which CSS cannot do. So, in the dark themes:
+   - every large surface is ONE flat colour (page, cards, sheets, the palette, the splash): a flat colour cannot band;
+   - the three soft gradients worth keeping are painted a pixel at a time by src/smooth.js, with the dither in them:
+     the page's glow (the canvas .glowbg, fixed behind the content), the light under the pointer (--plight) and the
+     table felt (--feltimg). The CSS gradients here are only what shows for a moment before those are ready.
+   Don't put a slow, faint gradient on a big dark surface in CSS again; small or steep ones (a button, a bar, a
+   capsule) are fine, their bands are too narrow to see. Light themes keep their CSS gradients: a one-level step is
+   far too small to see on a bright surface. */
 .bj::before{content:none}
-.bjroot::after{content:"";position:fixed;inset:0;z-index:2147483000;pointer-events:none;background:url("${GRAIN}") 0 0/128px 128px}
-@media (-webkit-min-device-pixel-ratio:2),(min-resolution:2dppx){.bjroot::after{background-size:64px 64px}}
-@media (-webkit-min-device-pixel-ratio:3),(min-resolution:3dppx){.bjroot::after{background-size:calc(128px / 3) calc(128px / 3)}}
-.card::after{background:radial-gradient(360px circle at var(--mx,50%) var(--my,-30%),rgba(255,255,255,.036) 0%,rgba(255,255,255,.0346) 12.5%,rgba(255,255,255,.0307) 25%,rgba(255,255,255,.0249) 37.5%,rgba(255,255,255,.018) 50%,rgba(255,255,255,.0111) 62.5%,rgba(255,255,255,.0053) 75%,rgba(255,255,255,.0014) 87.5%,rgba(255,255,255,0) 100%)}
-:root[data-theme="light"] .card::after{background:radial-gradient(360px circle at var(--mx,50%) var(--my,-30%),rgba(var(--acc),.042) 0%,rgba(var(--acc),.0404) 12.5%,rgba(var(--acc),.0358) 25%,rgba(var(--acc),.029) 37.5%,rgba(var(--acc),.021) 50%,rgba(var(--acc),.013) 62.5%,rgba(var(--acc),.0062) 75%,rgba(var(--acc),.0016) 87.5%,rgba(var(--acc),0) 100%)}
-.card{background:radial-gradient(120% 80% at 0% 0%,rgba(255,255,255,.026) 0%,rgba(255,255,255,.025) 7.75%,rgba(255,255,255,.0222) 15.5%,rgba(255,255,255,.018) 23.25%,rgba(255,255,255,.013) 31%,rgba(255,255,255,.008) 38.75%,rgba(255,255,255,.0038) 46.5%,rgba(255,255,255,.001) 54.25%,rgba(255,255,255,0) 62%),linear-gradient(180deg,rgba(var(--fg),.056),rgba(var(--fg),.034))}
-.card .card{background:linear-gradient(180deg,rgba(var(--fg),.05),rgba(var(--fg),.03))}
+/* the glow canvas sits at z-index -1: above the page colour (painted by html) and below everything else, so nothing
+   between the two may paint a background of its own */
+body{background:none}
+:root:not([data-theme="light"]) .bjroot{background:none}
+.glowbg{position:fixed;top:0;left:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .45s var(--ez)}
+.glowbg.on{opacity:1}
+:root[data-theme="light"] .glowbg{display:none}
+:root:not([data-theme="light"]) .shell::before{content:none}
+:root:not([data-theme="light"]) .splash{background:var(--bg)}
+.card{background:rgba(var(--fg),.045)}
+.card .card{background:rgba(var(--fg),.04)}
 :root[data-theme="light"] .card{background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.84))}
 :root[data-theme="light"] .card .card{background:rgba(var(--fg),.028)}
-.bj{background:radial-gradient(520px 320px at 96% -70px,rgba(var(--acc),.1) 0%,rgba(var(--acc),.0962) 10%,rgba(var(--acc),.0854) 20%,rgba(var(--acc),.0691) 30%,rgba(var(--acc),.05) 40%,rgba(var(--acc),.0309) 50%,rgba(var(--acc),.0146) 60%,rgba(var(--acc),.0038) 70%,rgba(var(--acc),0) 80%),radial-gradient(420px 260px at -6% -40px,rgba(var(--acc),.05) 0%,rgba(var(--acc),.0481) 10%,rgba(var(--acc),.0427) 20%,rgba(var(--acc),.0346) 30%,rgba(var(--acc),.025) 40%,rgba(var(--acc),.0154) 50%,rgba(var(--acc),.0073) 60%,rgba(var(--acc),.0019) 70%,rgba(var(--acc),0) 80%),radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%)}
-@media (min-width:1024px){.bj{background:radial-gradient(980px 460px at 86% -150px,rgba(var(--acc),.06) 0%,rgba(var(--acc),.0577) 10%,rgba(var(--acc),.0512) 20%,rgba(var(--acc),.0415) 30%,rgba(var(--acc),.03) 40%,rgba(var(--acc),.0185) 50%,rgba(var(--acc),.0088) 60%,rgba(var(--acc),.0023) 70%,rgba(var(--acc),0) 80%),radial-gradient(700px 380px at 22% -120px,rgba(var(--acc),.035) 0%,rgba(var(--acc),.0337) 10%,rgba(var(--acc),.0299) 20%,rgba(var(--acc),.0242) 30%,rgba(var(--acc),.0175) 40%,rgba(var(--acc),.0108) 50%,rgba(var(--acc),.0051) 60%,rgba(var(--acc),.0013) 70%,rgba(var(--acc),0) 80%),radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%)}
-.shell::before{background:radial-gradient(closest-side,rgba(var(--acc),.07) 0%,rgba(var(--acc),.0673) 10%,rgba(var(--acc),.0597) 20%,rgba(var(--acc),.0484) 30%,rgba(var(--acc),.035) 40%,rgba(var(--acc),.0216) 50%,rgba(var(--acc),.0103) 60%,rgba(var(--acc),.0027) 70%,rgba(var(--acc),0) 80%)}}
-:root[data-theme="light"] .bj{background:radial-gradient(560px 340px at 96% -70px,rgba(var(--acc),.09) 0%,rgba(var(--acc),.0866) 10%,rgba(var(--acc),.0768) 20%,rgba(var(--acc),.0622) 30%,rgba(var(--acc),.045) 40%,rgba(var(--acc),.0278) 50%,rgba(var(--acc),.0132) 60%,rgba(var(--acc),.0034) 70%,rgba(var(--acc),0) 80%),radial-gradient(90% 60% at 50% -5%,var(--velvet-l) 0%,var(--velvet) 35%,var(--bg) 75%,var(--bg-end) 100%)}
+@supports (background:color-mix(in srgb,red 50%,blue)){:root:not([data-theme="light"]) .sheet,:root:not([data-theme="light"]) .cmdk,:root:not([data-theme="light"]) .card.rulesdlg{background:linear-gradient(rgba(var(--fg),.05),rgba(var(--fg),.05)),color-mix(in srgb,var(--sheet1) 66%,transparent)}}
+.card::after,:root[data-theme="light"] .card::after{background:var(--plight,none) no-repeat calc(var(--mx,-999px) - 300px) calc(var(--my,-999px) - 300px)/600px 600px}
+.felt{background-image:var(--feltimg,radial-gradient(120% 90% at 50% 0%,var(--felt1) 0%,var(--felt2) 60%,var(--felt3) 100%));background-size:100% 100%;background-repeat:no-repeat}
 .bottom-nav{background:linear-gradient(to top,rgba(var(--bgrgb),.86),rgba(var(--bgrgb),.78) 18%,rgba(var(--bgrgb),.6) 40%,rgba(var(--bgrgb),.36) 60%,rgba(var(--bgrgb),.15) 80%,rgba(var(--bgrgb),.04) 92%,rgba(var(--bgrgb),0))}
 .topbar::after{height:24px;background:linear-gradient(180deg,rgba(var(--bgrgb),.74),rgba(var(--bgrgb),.62) 18%,rgba(var(--bgrgb),.4) 42%,rgba(var(--bgrgb),.2) 64%,rgba(var(--bgrgb),.07) 84%,rgba(var(--bgrgb),0))}
 /* "Reduce transparency" on the device: solid surfaces again */
@@ -5068,7 +5075,7 @@ let _logWhere = ""; // casino name handed over by the Casinos page's "Log a sess
 const THEME_KEY = "bj-theme-v1";
 const THEME_LIST = [["emerald", "Emerald", "#34D399", "#0D1114", "#1A2024"], ["sapphire", "Dark blue", "#7AA2FF", "#0D1020", "#1A1F3A"], ["gold", "Classic gold", "#D9B56A", "#0C1422", "#1A2234"], ["amethyst", "Amethyst", "#B794F6", "#120D1C", "#211A33"], ["copper", "Copper", "#E8955A", "#18110C", "#281D15"], ["graphite", "Graphite", "#D6D6DB", "#121214", "#1F1F23"], ["light", "White & blue", "#1E3FA8", "#EEF2F8", "#FFFFFF"], ["kiera", "Kiera", "#EF6698", "#F7E8EF", "#FFFFFF"]];
 // Kiera is a light theme: it uses every "light" layout rule (data-theme="light") and repaints the colours on top (data-skin)
-const applyTheme = (t) => { try { const el = document.documentElement, skin = t === "kiera" ? "kiera" : null; if (skin) el.setAttribute("data-skin", skin); else el.removeAttribute("data-skin"); if (skin) t = "light"; if (t && t !== "emerald") el.setAttribute("data-theme", t); else el.removeAttribute("data-theme"); const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", skin ? "#F7E8EF" : t === "light" ? "#0E1A3A" : getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#07090A"); } catch (_) {} };
+const applyTheme = (t) => { try { const el = document.documentElement, skin = t === "kiera" ? "kiera" : null; if (skin) el.setAttribute("data-skin", skin); else el.removeAttribute("data-skin"); if (skin) t = "light"; if (t && t !== "emerald") el.setAttribute("data-theme", t); else el.removeAttribute("data-theme"); const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", skin ? "#F7E8EF" : t === "light" ? "#0E1A3A" : getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#07090A"); window.dispatchEvent(new Event("bj-theme")); } catch (_) {} };
 function ThemePicker() {
   const [t, setT] = useState(() => { try { return localStorage.getItem("bj:" + THEME_KEY) || "emerald"; } catch (_) { return "emerald"; } });
   useEffect(() => { applyTheme(t); try { window.storage.set(THEME_KEY, t, false); } catch (_) {} }, [t]);
@@ -5423,8 +5430,10 @@ export default function App() {
     let raf = 0, tx = 0, ty = 0, x = 0, y = 0, el = null, live = false;
     const run = () => {
       x += (tx - x) * 0.2; y += (ty - y) * 0.2;
+      // the light is a picture with dither in it: keep it on whole screen pixels so the dither isn't blurred away
+      const dp = window.devicePixelRatio || 1, px = Math.round(x * dp) / dp, py = Math.round(y * dp) / dp;
       let c = el;
-      while (c) { const r = c.getBoundingClientRect(); c.style.setProperty("--mx", (x - r.left).toFixed(1) + "px"); c.style.setProperty("--my", (y - r.top).toFixed(1) + "px"); c = c.parentElement ? c.parentElement.closest(".card") : null; }
+      while (c) { const r = c.getBoundingClientRect(); c.style.setProperty("--mx", (px - r.left).toFixed(2) + "px"); c.style.setProperty("--my", (py - r.top).toFixed(2) + "px"); c = c.parentElement ? c.parentElement.closest(".card") : null; }
       raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.5 ? requestAnimationFrame(run) : 0;
     };
     const mv = (e) => { tx = e.clientX; ty = e.clientY; el = e.target && e.target.closest ? e.target.closest(".card") : null; if (!el || raf) return;
@@ -5493,6 +5502,9 @@ function BetSpreadCalculator() {
   // transition just behind it, so a heavy page can never hold the highlight still under the finger.
   const [navTab, setNavTab] = useState(tab);
   useEffect(() => { _curTab = tab; }, [tab]);
+  // the page's glow, the pointer light and the felt are painted with dither (src/smooth.js), so Safari can't band them
+  const glowRef = useRef(null);
+  useEffect(() => startSmooth(glowRef.current), []);
   // get the Casinos page's data ready while the app is idle, well after the splash has gone
   useEffect(() => { const t = setTimeout(() => { const idle = window.requestIdleCallback || ((f) => setTimeout(f, 1)); idle(() => warmCasinos()); }, 3600); return () => clearTimeout(t); }, []);
   // a new page starts at its top, in the same paint it appears in (not while the old page is still showing)
@@ -5658,6 +5670,7 @@ function BetSpreadCalculator() {
 
   return (
     <RulesCtx.Provider value={rules}><div className="bj bjroot">
+      <canvas ref={glowRef} className="glowbg" aria-hidden="true" />
       <style>{css}</style>
       {setupOpen && <RulesModal rules={rules} onSave={saveRules} onClose={() => setSetupOpen(false)} first={firstRun} />}
       {cmd && <CommandPalette items={cmdItems} onClose={() => setCmd(false)} />}
