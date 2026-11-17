@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, Fragment, createContext, useContext } from "react";
+import { useState, useMemo, useEffect, useLayoutEffect, useRef, Fragment, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import CasinosPage, { openCasinoAdd } from "./casinos.jsx";
 import { PlanPage } from "./planner.jsx";
@@ -670,7 +670,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
    (inset from the screen edges on a phone), palette and toast. Cards get the rim and sheen but no blur — there is
    nothing behind them to blur, and dozens of blurred layers would make a phone scroll badly. Shapes follow: capsule
    buttons and sliding segments, rounder cards. The whole look lives in this block so it can be tuned in one place. */
-:root{--gl-hi:rgba(255,255,255,.14);--gl-rim:rgba(255,255,255,.04);--gl-sheen:rgba(255,255,255,.055);--gl-blur:blur(26px) saturate(1.9);
+:root{--gl-hi:rgba(255,255,255,.14);--gl-rim:rgba(255,255,255,.04);--gl-sheen:rgba(255,255,255,.055);
 --gl-edge:linear-gradient(135deg,rgba(255,255,255,.3),rgba(255,255,255,.07) 26%,rgba(255,255,255,.025) 62%,rgba(255,255,255,.17))}
 :root[data-theme="light"]{--gl-hi:rgba(255,255,255,.95);--gl-rim:rgba(255,255,255,.6);--gl-sheen:rgba(255,255,255,.55);
 --gl-edge:linear-gradient(135deg,#fff,rgba(255,255,255,.75) 26%,rgba(255,255,255,.35) 62%,#fff)}
@@ -678,12 +678,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 :where(.card){position:relative}
 .card{border-radius:22px;border-color:transparent;background:radial-gradient(130% 90% at 0% 0%,var(--gl-sheen),transparent 55%),linear-gradient(180deg,rgba(var(--fg),.058),rgba(var(--fg),.022));box-shadow:inset 0 -1px 0 rgba(var(--sh),.45),0 16px 36px -20px rgba(0,0,0,.9)}
 .card .card{border-radius:16px}
-.card::before,.bottom-nav>div::before,.cmdk::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--gl-edge);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none;z-index:1}
+.card::before,.bottom-nav>div::before,.cmdk::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--gl-edge);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;pointer-events:none;z-index:1}
 :root[data-theme="light"] .card{border-color:rgba(var(--fg),.07);background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.8));box-shadow:0 1px 2px rgba(var(--fg),.06),0 10px 28px -16px rgba(var(--fg),.26)}
 /* the tab bar: a floating capsule, with the page fading out beneath it */
 .bottom-nav{padding:22px 12px max(10px,calc(env(safe-area-inset-bottom) - 12px));background:linear-gradient(to top,rgba(var(--bgrgb),.86),rgba(var(--bgrgb),.5) 55%,rgba(var(--bgrgb),0));backdrop-filter:none;-webkit-backdrop-filter:none;border-top:0;box-shadow:none;pointer-events:none}
 :root[data-theme="light"] .bottom-nav{box-shadow:none}
-.bottom-nav>div{position:relative;pointer-events:auto;max-width:27rem;padding:5px;border-radius:999px;background:linear-gradient(180deg,rgba(var(--fg),.1),rgba(var(--fg),.045)),rgba(var(--bgrgb),.5);backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur);box-shadow:0 14px 34px -14px rgba(0,0,0,.75),0 2px 8px -3px rgba(0,0,0,.4)}
+.bottom-nav>div{position:relative;pointer-events:auto;max-width:27rem;padding:5px;border-radius:999px;background:linear-gradient(180deg,rgba(var(--fg),.1),rgba(var(--fg),.045)),rgba(var(--bgrgb),.5);-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9);box-shadow:0 14px 34px -14px rgba(0,0,0,.75),0 2px 8px -3px rgba(0,0,0,.4)}
 :root[data-theme="light"] .bottom-nav>div{background:rgba(255,255,255,.62);box-shadow:0 0 0 1px rgba(var(--fg),.06),0 14px 34px -16px rgba(var(--fg),.4),0 2px 8px -3px rgba(var(--fg),.16)}
 .navbtn{min-height:50px;border-radius:999px;padding:5px 0 3px;gap:2px;transition:color .18s var(--ease),transform .13s var(--ease),background .25s var(--ease)}
 @media (max-width:350px){.bottom-nav{padding-left:6px;padding-right:6px}.bottom-nav>div{padding:4px}}
@@ -692,12 +692,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .navbtn .navicon,.navbtn.on .navicon{background:none;box-shadow:none;height:26px}
 .sn-glide{background:linear-gradient(180deg,rgba(var(--acc),.2),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.14)}
 /* the top bar: blurred glass that fades away at its lower edge */
-.topbar{background:linear-gradient(180deg,rgba(var(--bgrgb),.9),rgba(var(--bgrgb),.72) 60%,rgba(var(--bgrgb),.4));backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur);border-bottom:0;box-shadow:none;padding-bottom:22px;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent)}
+.topbar{background:linear-gradient(180deg,rgba(var(--bgrgb),.9),rgba(var(--bgrgb),.72) 60%,rgba(var(--bgrgb),.4));-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9);border-bottom:0;box-shadow:none;padding-bottom:22px;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent)}
 :root[data-theme="light"] .topbar{box-shadow:none}
-.sidenav{backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur);box-shadow:inset -1px 0 0 var(--gl-rim)}
+.sidenav{-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9);box-shadow:inset -1px 0 0 var(--gl-rim)}
 /* small controls: one glass capsule */
 .rulespill,.iconbtn,.stepbtn,.btn.ghost,.sn-search,.sn-rules{background:linear-gradient(180deg,rgba(var(--fg),.09),rgba(var(--fg),.035));box-shadow:inset 0 1px 0 var(--gl-hi)}
-.pillrail .rulespill,.topbar .rulespill,.syncpill{backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur)}
+.pillrail .rulespill,.topbar .rulespill,.syncpill{-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9)}
 .syncpill{background:rgba(var(--bgrgb),.7);box-shadow:inset 0 1px 0 var(--gl-hi),0 12px 30px -12px rgba(0,0,0,.7)}
 .btn{border-radius:999px;box-shadow:0 8px 22px -10px rgba(var(--acc),.55),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.12)}
 .btn.ghost{box-shadow:inset 0 1px 0 var(--gl-hi)}
@@ -709,9 +709,9 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .sn-glide::before,.sn-item.on::before{display:none}
 .sn-rules{border-radius:18px}
 .navbtn.on{background:none;box-shadow:none}
-.navglide{--w:calc((100% - 10px) / var(--n));position:absolute;top:5px;bottom:5px;left:calc(5px + var(--i) * var(--w));right:calc(5px + (var(--n) - 1 - var(--i)) * var(--w));border-radius:999px;pointer-events:none;background:linear-gradient(180deg,rgba(var(--acc),.22),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.16)}
+.navglide{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px) / var(--n));transform:translateX(calc(var(--i) * 100%));border-radius:999px;pointer-events:none;background:linear-gradient(180deg,rgba(var(--acc),.22),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.16)}
 .navbtn{z-index:1}
-@media (max-width:350px){.navglide{--w:calc((100% - 8px) / var(--n));top:4px;bottom:4px;left:calc(4px + var(--i) * var(--w));right:calc(4px + (var(--n) - 1 - var(--i)) * var(--w))}}
+@media (max-width:350px){.navglide{top:4px;bottom:4px;left:4px;width:calc((100% - 8px) / var(--n))}}
 .gchip{background:linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.03));color:var(--ivory-d);border:1px solid rgba(var(--fg),.07);box-shadow:inset 0 1px 0 var(--gl-rim);transition:transform .35s var(--fluid),background .2s,color .2s,border-color .2s}
 .gchip.on{background:linear-gradient(180deg,rgba(var(--acc),.24),rgba(var(--acc),.11));color:var(--ivory);border-color:rgba(var(--acc),.26);box-shadow:inset 0 1px 0 var(--gl-hi)}
 :root[data-theme="light"] .gchip.on{background:linear-gradient(180deg,var(--seg-hi),var(--seg-lo));color:var(--ink);border-color:transparent}
@@ -724,22 +724,32 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
    A sheet glides up and slows to a stop. On a computer a soft light drifts after the pointer across a card.
    All of it is off under "reduce motion". */
 :root{--fluid:cubic-bezier(.22,1,.36,1)}
-.chipseg.slide .thumb{--w:calc((100% - 8px - (var(--n) - 1) * 4px) / var(--n));width:auto;transform:none;left:calc(4px + var(--i) * (var(--w) + 4px));right:calc(4px + (var(--n) - 1 - var(--i)) * (var(--w) + 4px))}
-.navglide,.chipseg.slide .thumb{transition:left .5s var(--fluid),right .5s var(--fluid)}
-.navglide[data-dir="r"],.chipseg.slide .thumb[data-dir="r"]{transition:left .6s var(--fluid),right .47s var(--fluid)}
-.navglide[data-dir="l"],.chipseg.slide .thumb[data-dir="l"]{transition:left .47s var(--fluid),right .6s var(--fluid)}
-.sn-glide{transition:transform .6s var(--fluid),opacity .25s}
+.navglide{transition:transform .58s var(--fluid)}
+.chipseg.slide .thumb{transition:transform .52s var(--fluid)}
+/* where the browser has the separate translate property the slide uses it, which leaves scale free for the stretch */
+@supports (translate:0px){
+.navglide{transform:none;translate:calc(var(--i) * 100%) 0;transition:translate .58s var(--fluid)}
+.chipseg.slide .thumb{transform:none;translate:calc(var(--i) * (100% + 4px)) 0;transition:translate .52s var(--fluid)}
+}
+.navglide,.sn-glide{will-change:transform}
+.sn-glide{transition:transform .62s var(--fluid),opacity .25s}
+.navbtn.on .navicon svg{animation:navpop .5s var(--fluid)}
+@keyframes navpop{from{transform:scale(.9)}to{transform:scale(1)}}
 .btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn{transition:transform .5s var(--fluid),filter .2s,background .3s var(--ease),color .25s var(--ease),border-color .3s var(--ease)}
 .btn:active,.iconbtn:active,.stepbtn:active,.rulespill:active,.chippress:active,.navbtn:active{transition-duration:.12s}
 .btn:active{transform:scale(.99)}.iconbtn:active,.stepbtn:active{transform:scale(.95)}.rulespill:active,.chippress:active,.navbtn:active{transform:scale(.975)}
 .chipseg.slide button{transition:color .35s var(--ease)}
-.sheet{animation-name:sheetflu;animation-duration:.5s;animation-timing-function:var(--fluid)}
-@keyframes sheetflu{from{transform:translateY(36px);opacity:0}to{transform:none;opacity:1}}
+.rise>div>section,.rise>section,.rise>div>.stagger,.dcol>section{animation-duration:.6s;animation-timing-function:var(--fluid)}
+.topbar{transition:transform .5s var(--fluid),opacity .32s var(--ease)}
+@media(hover:hover) and (min-width:1024px){.btn:not(.ghost):hover:active:not(:disabled){transform:scale(.99)}}
+.sheet{animation-name:sheetflu;animation-duration:.48s;animation-timing-function:var(--fluid)}
+@keyframes sheetflu{from{transform:translateY(26px);opacity:0}to{transform:none;opacity:1}}
 @media (hover:hover) and (min-width:1024px){
 .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .7s var(--ease);background:radial-gradient(340px circle at var(--mx,50%) var(--my,-30%),rgba(255,255,255,.038),transparent 72%)}
 :root[data-theme="light"] .card::after{background:radial-gradient(340px circle at var(--mx,50%) var(--my,-30%),rgba(var(--acc),.045),transparent 72%)}
 .card:hover::after{opacity:1}
 }
+.cmdk-wrap{backdrop-filter:none;-webkit-backdrop-filter:none}
 /* sheets, the game-rules dialog and the Jump-to palette: the page shows through, softly, where the browser can do it.
    The rules dialog is the same glass as a sheet: its panel never scrolls (an inner box does), so the rim stays put. */
 .cmdk{position:relative}
@@ -1410,14 +1420,21 @@ function FillChart({ R, devs }) {
   );
 }
 
-// A selection that flows from one option to the next like a drop of liquid: the edge facing the way it is going sets off
-// first and the other edge catches up, so it stretches a little on the way and settles to its own width. `data-dir` is
-// the way it last travelled ("r" or "l"); the CSS gives the two edges different durations from it.
+// A selection that flows from one option to the next like a drop of liquid. CSS slides it (the `translate` property,
+// one long ease-out); this adds the stretch: for a moment it is a little longer and a hair thinner, anchored at the edge
+// that leads, so the trailing edge is what catches up and nothing ever overshoots where it is going. The stretch is the
+// `scale` property through the Web Animations API, so the whole movement runs on the compositor (no layout, no
+// repaint) and stays smooth while the page behind it is busy. A longer jump stretches a little more, up to a limit.
 function Glider({ cls, at, style }) {
-  const prev = useRef(at), dir = useRef("");
-  if (at !== prev.current) dir.current = at > prev.current ? "r" : "l";
-  useEffect(() => { prev.current = at; }, [at]);
-  return <i className={cls} aria-hidden="true" data-dir={dir.current || undefined} style={style} />;
+  const el = useRef(null), prev = useRef(at);
+  useLayoutEffect(() => {
+    const d = at - prev.current, n = el.current; prev.current = at;
+    if (!d || !n || !n.animate || noMotion()) return;
+    const sx = 1 + Math.min(0.2, 0.06 + 0.035 * Math.abs(d)), sy = 1 - (sx - 1) * 0.16;
+    n.style.transformOrigin = d > 0 ? "100% 50%" : "0% 50%";
+    try { n.animate([{ scale: "1 1", easing: "cubic-bezier(.25,.6,.3,1)" }, { scale: `${sx.toFixed(3)} ${sy.toFixed(3)}`, offset: 0.3, easing: "cubic-bezier(.35,0,.2,1)" }, { scale: "1 1" }], { duration: 620 }); } catch (_) {}
+  }, [at]);
+  return <i ref={el} className={cls} aria-hidden="true" style={style} />;
 }
 function Seg({ value, options, onChange, cols, style, small }) {
   // one row → the selected pill is a separate element that slides between options; wrapped rows keep the plain style
