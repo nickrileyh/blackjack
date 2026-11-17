@@ -90,7 +90,7 @@ export function deviationCatalog(R) {
   });
 }
 
-// cal: from calFor(R, seats). cover: see the shape in aitools.js. Returns { cal, applied, skipped, approx }.
+// cal: from calFor(R, seats). cover: { skip_all_deviations, … } (the shape the removed Ask tab used). Returns { cal, applied, skipped, approx }.
 export function coverCal(cal, R, cover, shift) {
   const applied = [], skipped = [], approx = [];
   if (!cover || !Object.keys(cover).length) return { cal, applied, skipped, approx };

@@ -2,7 +2,7 @@
 
 Everything the calculator knows was measured by dealing cards. This folder holds the simulators and the scripts that
 pack their results into the app. The app itself never runs them. Two parts: the calibration tables and strategy check
-(first section), and the Ask tab's cover plays (second).
+(first section), and the cover-play costs (second; the Ask tab that showed them was removed in Nov 2026, the Deviations switch still uses them).
 
 ## Calibration tables and the strategy check
 
@@ -61,7 +61,7 @@ spreads that both sit out and play two hands, where the app combines two measure
 
 ## Cover-play simulator
 
-The Ask tab's cover-play costs (`src/coverdata.js`) are measured, not estimated. This folder holds the card
+The cover-play costs (`src/coverdata.js`) are measured, not estimated. This folder holds the card
 simulator that produced them. You only need it to add a new cover play or re-measure; the app itself never runs it.
 
 - `cover_sim.c` — the blackjack simulator (BJA basic strategy + Illustrious 18 + Fab 4, Hi-Lo, half-deck true count

@@ -7,4 +7,6 @@ window.storage = {
   async delete(key) { try { localStorage.removeItem("bj:" + key); } catch {} delete mem[key]; return { key, deleted: true, shared: false }; },
   async list(prefix) { const keys = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith("bj:") && (!prefix || k.slice(3).startsWith(prefix))) keys.push(k.slice(3)); } } catch {} return { keys, shared: false }; },
 };
+// the Ask tab is gone: clear the API key and chats it kept on this device
+try { localStorage.removeItem("bj:__ask-key"); localStorage.removeItem("bj:bj-ask-v1"); } catch {}
 createRoot(document.getElementById("root")).render(<App />);

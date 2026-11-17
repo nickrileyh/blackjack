@@ -5,7 +5,7 @@
   "games": [
    "6 decks, S17, DAS, resplit aces, C$50–C$25,000, about 8 tables, 2 decks cut off (Current Blackjack News, Apr 2022).",
    "8 decks, H17, DAS, resplit aces, C$10–C$2,500, about 12 tables, 2 decks cut off (CBJN Apr 2022).",
-   "Electronic-chip tables: 8 decks, H17, DAS, resplit aces, C$10–C$500, about 4 tables (CBJN Apr 2022); 2014 posters said these paid 3:2 like the live games.",
+   "Electronic-chip tables: 8 decks, H17, DAS, resplit aces, C$10–C$500, about 4 tables (CBJN Apr 2022).",
    "Spanish 21: 8 decks, S17, C$15–C$1,000, about 3 tables (CBJN Apr 2022)."
   ],
   "best": {
@@ -29,10 +29,6 @@
    [
     "Current Blackjack News, Feb 2021",
     "https://assets.bj21.com/newsletters/pdf_files/000/000/063/original/CBJN2102.pdf?1612152553="
-   ],
-   [
-    "Wizard of Vegas, Detroit area reviews (2014)",
-    "https://wizardofvegas.com/forum/off-topic/other-casinos/1330-detroit-area-casino-reviews/4/"
    ]
   ]
  },
@@ -41,9 +37,6 @@
   "tables": "Club Newport high-limit area alone holds 35 tables (Aug 2024 news); an older 2009 guide put the resort at 380+ table games.",
   "games": [
    "Main floor: 8-deck shoes, H17, 3:2 back on most tables at $10 minimum in Jan 2020, though some tables went back to 6:5 within weeks (2020 forum).",
-   "Rules reported 2017: double any two, DAS, late surrender incl. after splits, split to 4 hands, tens may be split, one card on split aces, no resplit aces (2017 forum).",
-   "Fox Tower $10 tables: 3:2, H17, 8 decks, automatic shufflers; Foxwoods generally uses shuffling machines rather than hand shuffles (2018 forum).",
-   "High-limit pits said to deal 6 decks with better penetration; hearsay that S17 can be requested at $50+ tables (2017 forum).",
    "Variants on the casino site: Spanish 21, Free Bet Blackjack, Double Down Madness, Blackjack Match; Great Cedar Play Arena has live blackjack with entertainer dealers (2026 site)."
   ],
   "best": {
@@ -57,19 +50,14 @@
    "min": 10
   },
   "min": 10,
-  "hl": "Club Newport (Grand Pequot): 10,000 sq ft, 35 high-limit tables with blackjack, mini-baccarat, roulette, craps and pai gow, bets from $50, plus two private big-table baccarat rooms (Aug 2024). Newport dealt 6 decks with 75%+ pen in 2010.",
+  "hl": "Club Newport (Grand Pequot): 10,000 sq ft, 35 high-limit tables with blackjack, mini-baccarat, roulette, craps and pai gow, bets from $50, plus two private big-table baccarat rooms (Aug 2024).",
   "pen": "8-deck shoes cut about 1 to 1.5 decks (2020 forum); one 2017 poster claimed ~88% was easy to find; Newport room 75%+ (2010).",
-  "heat": "2020 forum: Foxwoods reportedly spent the prior year backing off red-chip players on the 8-deck H17 games. 2010 posts: backoffs mostly heard of in high limit; one counter was flat-bet at a $15 table.",
+  "heat": "2020 forum: Foxwoods reportedly spent the prior year backing off red-chip players on the 8-deck H17 games.",
   "other": "Craps and crapless craps, roulette, mini-baccarat, Three Card Poker, Ultimate Texas Hold'em, Let It Ride, Criss Cross Poker, pai gow poker and tiles, face-up pai gow (2026 site).",
-  "note": "Minimums are not grandfathered: when a table's limit rises you must bet the new minimum or leave (2017 and 2019 forums).",
   "src": [
    [
     "Blackjackinfo forum: Foxwoods back to 3:2 (2020)",
     "https://www.blackjackinfo.com/community/threads/foxwoods-back-to-3-2.56306/"
-   ],
-   [
-    "Wizard of Vegas: Mohegan Sun or Foxwoods (2017)",
-    "https://wizardofvegas.com/forum/gambling-outside-vegas/eastern-us/28480-mohegan-sun-or-foxwoods/"
    ],
    [
     "CDC Gaming: Club Newport opens (Aug 2024)",
@@ -82,10 +70,6 @@
    [
     "Foxwoods Grand Pequot table games (2026)",
     "https://foxwoods.com/node/1182"
-   ],
-   [
-    "Wizard of Vegas: Blackjack in CT (2010-11)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/2871-blackjack-in-ct/"
    ]
   ]
  },
@@ -94,41 +78,14 @@
   "tablesN": 377,
   "tables": "377 table games incl. 116 blackjack and 16 Spanish 21 tables across Sky and Earth casinos (review page updated Aug 2026; count may be older).",
   "games": [
-   "Since mid-2018 main floor is 8 decks, H17, 3:2 from $15; the lowest-minimum pits ($10) pay 6:5 H17 8 decks, about 42 such tables reported (2018 forum).",
-   "Rules (2018): double any two, DAS, late surrender against any upcard, unlimited resplits except aces and tens, one card on split aces.",
-   "High limit kept 6 decks, S17, 3:2 after briefly trying 8 decks (2018 forum); 2017 posts also describe 6 decks S17 DAS surrender.",
-   "Shoes reported hand-shuffled (2018); stadium blackjack moved to 6:5 with no surrender (2018 forum).",
    "Spanish 21 on 16 tables (review page, 2026)."
   ],
-  "best": {
-   "where": "High limit",
-   "decks": 6,
-   "h17": false,
-   "das": true,
-   "ls": true,
-   "bj65": false
-  },
-  "min": 15,
-  "hl": "novelle lounge in Casino of the Sky: open high-limit area plus four private VIP rooms with blackjack, mini-baccarat and craps (2026 review). High-limit blackjack 6 decks, S17, 3:2 (2018 forum).",
-  "pen": "About 2 decks cut from 8-deck shoes (2018 forum); on the older 6-deck game posts put it near 66% or the low 60s (2010, 2017).",
+  "hl": "Novelle lounge in Casino of the Sky: open high-limit area plus four private VIP rooms with blackjack, mini-baccarat and craps (2026 review).",
   "other": "Roulette 22, craps 15, mini-baccarat 32, midi-baccarat 17, pai gow tiles 13, pai gow poker 10, Let It Ride 9, Three and Four Card Poker, Caribbean Stud; 30-table poker room (2026 review page).",
-  "note": "Grandfathering of minimums was reported ended in Mar 2018 (forum), but 2019 Tripadvisor replies still said seated players keep their starting minimum; sources disagree.",
   "src": [
-   [
-    "Blackjackinfo forum: Mohegan Sun eliminates grandfathering (2018)",
-    "https://www.blackjackinfo.com/community/threads/mohegan-sun-eliminates-grandfathering.55860/"
-   ],
    [
     "Casinos.com Mohegan Sun review (updated Aug 2026)",
     "https://www.casinos.com/destinations/connecticut/mohegan-sun"
-   ],
-   [
-    "Wizard of Vegas: Mohegan Sun or Foxwoods (2017)",
-    "https://wizardofvegas.com/forum/gambling-outside-vegas/eastern-us/28480-mohegan-sun-or-foxwoods/"
-   ],
-   [
-    "Tripadvisor: Mohegan blackjack minimums (2019)",
-    "https://www.tripadvisor.com/ShowTopic-g33952-i702-k12424703-Blackjack_at_Mohegan_Sun_Table_Minimums-Uncasville_Mystic_Country_Connecticut.html"
    ]
   ]
  },
@@ -189,19 +146,10 @@
  "us-il-grand-victoria-casino": {
   "asOf": "Nov 2026",
   "games": [
-   "2012 forum report: shoe games 8 decks, H17, 3:2, double any two, no surrender, no resplit aces; hand-dealt games paid 6:5 (maybe some 3:2 in high limit).",
-   "2012 forum report: shoe minimums $10–$20 off-peak, $25–$100 at peak; at least one $25 8-deck table hand-shuffled, others on shuffle machines, no CSMs.",
    "About $25 minimum (2020 forum post)."
   ],
-  "min": 10,
-  "pen": "Usually 50–60% on 8-deck shoes, weak overall (2012 forum report).",
-  "heat": "2012 forum poster had never seen a backoff; dealers call out large black-chip bets.",
-  "note": "Riverboat on the Fox River in Elgin. Still operating: $11.9M AGR in Oct 2026 (IGB). 931 gaming positions (June 2025). Only old (2012) rule reports found.",
+  "note": "Riverboat on the Fox River in Elgin. Still operating: $11.9M AGR in Oct 2026 (IGB). 931 gaming positions (June 2025).",
   "src": [
-   [
-    "Wizard of Vegas: card counting and Chicago blackjack (2012)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/5279-card-counting-and-chicago-area-blackjack/"
-   ],
    [
     "gambling.com: Illinois Oct 2026 revenue",
     "https://www.gambling.com/us/news/illinois-casino-revenue-rises-10-4-to-182-9m-in-october-14-of-17-venues-up"
@@ -258,18 +206,11 @@
  "us-il-harrahs-joliet": {
   "asOf": "Nov 2026",
   "games": [
-   "2013 forum post (from 2009–10 play and later walk-throughs): mostly 8 decks, H17, 3:2 with no 6:5 seen; some hand-shuffled tables at $15.",
    "$10 3:2 blackjack on a 2019 visit (2020 forum post)."
   ],
   "min": 10,
-  "hl": "Occasional hand-shuffled high-limit tables at $100 minimums (2013 forum post).",
-  "heat": "2013 poster expected only subtle countermeasures (e.g. a dealer moved in) rather than open backoffs; no recent reports found.",
   "note": "Barge on the Des Plaines River, 151 N Joliet St, downtown Joliet. Still operating: $9.8M AGR Oct 2026. 796 gaming positions (June 2025).",
   "src": [
-   [
-    "Wizard of Vegas: card counting and Chicago blackjack (2013)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/5279-card-counting-and-chicago-area-blackjack/"
-   ],
    [
     "Wizard of Vegas: Chicago locations (2020)",
     "https://wizardofvegas.com/forum/gambling-outside-vegas/eastern-us/34116-any-good-chicago-locations/"
@@ -356,30 +297,16 @@
   "tables": "Casino site says over 30 blackjack tables (page c.2024); directories list 67–70+ table games (2026). Illinois' top casino: $15.3M table revenue in Oct 2026.",
   "games": [
    "Casino rules page (c.2024): blackjack pays 3:2, double after split allowed (not on split aces), split up to 3 times for 4 hands; side bets 21+3, Top 3, Blazing 7s.",
-   "2013 forum report: most main-floor tables H17 with one S17 table; 6-deck shoes on 21+3 games, 8-deck on Lucky Lucky; about four tables on continuous shufflers; all 3:2.",
-   "Minimums: $15–$25 most evenings (2013 trip report); $25–$50 floor, $50–$100 busy nights (2013 forum); about $50 at prime time (2020 forum post).",
+   "About $50 at prime time (2020 forum post).",
    "Spanish 21, Pai Gow, Face-Up Pai Gow and pai gow tiles also dealt (casino site, 2024–2026)."
   ],
-  "best": {
-   "where": "High limit",
-   "h17": false,
-   "bj65": false,
-   "min": 100
-  },
   "min": 15,
-  "hl": "2013 forum report: high-limit room had four tables with $100 minimums and the dealer standing on all 17s, plus a private room at $200 when not booked. A 2011 article said the private room had one blackjack table.",
-  "pen": "About 75% on shoe games, cut card at least a deck and a half from the back (2013 forum report).",
-  "heat": "Two 2012–2013 forum posters said they had never seen a backoff or counters hassled and that the pit watched loosely. No recent reports found.",
   "other": "Craps, roulette, baccarat, Mississippi Stud, Ultimate Texas Hold'em, Three Card Poker, High Card Flush, Cajun Stud (casino site). Poker room: 22 tables (casino site, 2026).",
   "note": "Land-based, 3000 S River Rd near O'Hare. Table games 24 hours and gaming floor non-smoking (Aug 2026 review). Largest Illinois casino by revenue ($43.6M AGR, Oct 2026). 1,996 gaming positions (June 2025).",
   "src": [
    [
     "Rivers Des Plaines blackjack rules page",
     "https://www.riverscasino.com/desplaines/casino/table-games/blackjack"
-   ],
-   [
-    "Wizard of Vegas: card counting and Chicago blackjack (2011–2013)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/5279-card-counting-and-chicago-area-blackjack/"
    ],
    [
     "casinos.com Rivers review (Aug 2026)",
@@ -392,10 +319,6 @@
    [
     "Rivers poker room page",
     "https://www.riverscasino.com/desplaines/casino/poker-room"
-   ],
-   [
-    "Wizard of Vegas Rivers trip report (2013)",
-    "https://wizardofvegas.com/forum/gambling/trip-reports/13841-rivers-casino-des-plaines-trip-report/"
    ]
   ]
  },
@@ -570,17 +493,12 @@
    [
     "Current Blackjack News, Apr 2022 (Midwest survey)",
     "https://assets.bj21.com/newsletters/pdf_files/000/000/078/original/CBJN2204.pdf"
-   ],
-   [
-    "blackjackinfo.com forum thread, 2017–2018",
-    "https://www.blackjackinfo.com/community/threads/horseshoe-southern-indiana.55653/"
    ]
   ],
   "games": [
    "Double deck, S17, double on 10–11 only, no mid-shoe entry, $50–$5000; and double deck H17, d10, $25–$3000; both about 1 deck cut (Apr 2022 CBJN).",
    "6 decks, S17, DAS, no mid-shoe entry, $50–$5000, about 1.7 decks cut (Apr 2022 CBJN).",
-   "6 decks, H17, DAS, $10–$3000, about 1.7 decks cut (Apr 2022 CBJN).",
-   "A 2017 forum post described 8 decks, H17, DAS, no surrender, aces split once, $5–$10 tables, about 85% penetration (as Horseshoe Southern Indiana)."
+   "6 decks, H17, DAS, $10–$3000, about 1.7 decks cut (Apr 2022 CBJN)."
   ],
   "best": {
    "decks": 6,
@@ -591,9 +509,8 @@
    "max": 5000
   },
   "min": 10,
-  "pen": "Apr 2022 CBJN: 1 of 2 decks cut on the double decks, 1.7 of 6 on the shoes. A 2017 forum post claimed about 85% on an 8-deck shoe.",
-  "heat": "No mid-shoe entry on the S17 games (Apr 2022 CBJN).",
-  "note": "Formerly Horseshoe Southern Indiana (name in the 2017 forum thread)."
+  "pen": "Apr 2022 CBJN: 1 of 2 decks cut on the double decks, 1.7 of 6 on the shoes.",
+  "heat": "No mid-shoe entry on the S17 games (Apr 2022 CBJN)."
  },
  "us-in-french-lick-casino": {
   "asOf": "Aug 2026",
@@ -856,33 +773,11 @@
  "us-ma-encore-boston-harbor": {
   "asOf": "Sep 2026",
   "games": [
-   "Main floor at opening: 8 decks, H17; $25 tables paid 6:5, 3:2 tables started at $50 (some $100) (Jun 2019 forum).",
-   "By late 2019 some 3:2 H17 tables at $25 and even $15 were reported on the main floor (Aug and Dec 2019 forums).",
-   "High limit: 6 decks, S17, 3:2, $100–$200 minimums up to $500 tables, about 83% penetration (2019 forums).",
-   "Nearly all tables used automatic shufflers, only two hand-shuffled, no CSMs seen; staff claimed no double deck allowed (2019 forum)."
+   "By late 2019 some 3:2 H17 tables at $25 and even $15 were reported on the main floor (Aug and Dec 2019 forums)."
   ],
-  "best": {
-   "where": "High limit",
-   "decks": 6,
-   "h17": false,
-   "bj65": false,
-   "pen": 83,
-   "min": 100
-  },
   "min": 15,
-  "hl": "Upstairs high-limit blackjack: 6 decks, S17, 3:2, $100–$200 minimums with some tables to $500, deep penetration (2019 forums).",
-  "pen": "High limit about 83%, described as excellent (2019 forums). No main-floor figure found.",
-  "heat": "2019 forums: high-limit tables watched closely and the casino rumoured to be sharp on counters; no specific backoff reports found.",
   "note": "Took about 85% of Massachusetts table-game revenue in Aug 2026 ($24.4M). A 2019 class action over 6:5 payouts failed; the state high court sided with the casinos in Jun 2021.",
   "src": [
-   [
-    "Wizard of Vegas: Encore Boston (Everett) (2019)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/33225-encore-boston-everett/"
-   ],
-   [
-    "Blackjackinfo forum: Encore (Boston) (2019)",
-    "https://www.blackjackinfo.com/community/threads/encore-boston.56250/"
-   ],
    [
     "LegalBlackjack: Encore wins 85% of MA table games (Sep 2026)",
     "https://www.legalblackjack.com/news/encore-boston-harbor-wins-85-of-massachusetts-table-games-09-23-2026/"
@@ -895,30 +790,8 @@
  },
  "us-ma-mgm-springfield": {
   "asOf": "Sep 2026",
-  "tables": "About 54 blackjack tables on opening night (unofficial count, Aug 2018).",
-  "games": [
-   "At opening: 14 tables paid 3:2 with S17, split up to three times, no surrender, $25 minimum (Aug 2018 report).",
-   "Remaining tables were 6:5, H17, single- or double-deck pitch games, $15 minimum (Aug 2018 report).",
-   "Massachusetts rules require 6:5 games to be pitch games and bar surrender on them; pairs may be split up to three times (2018 rule summary)."
-  ],
-  "best": {
-   "where": "Main floor 3:2 tables",
-   "h17": false,
-   "ls": false,
-   "bj65": false,
-   "min": 25
-  },
-  "min": 25,
   "note": "Table games brought in $4.4M in Aug 2026, about 18% of the casino's win. A lawsuit over 6:5 payouts was dismissed and the dismissal upheld in Jun 2021.",
   "src": [
-   [
-    "BlackjackOnline: MGM Springfield opens (Aug 2018)",
-    "https://www.blackjackonline.com/1206/mgm-springfield-opens-with-good-and-bad-blackjack-games/"
-   ],
-   [
-    "TravelZork: MA table game rules at MGM Springfield (Aug 2018)",
-    "https://travelzork.com/massachusetts-casino-table-games-mgm-springfield/"
-   ],
    [
     "LegalBlackjack: MA table revenue Aug 2026 (Sep 2026)",
     "https://www.legalblackjack.com/news/encore-boston-harbor-wins-85-of-massachusetts-table-games-09-23-2026/"
@@ -1049,44 +922,11 @@
    ]
   ]
  },
- "us-mi-bay-mills-resort-and-casino": {
-  "asOf": "Jan 2014",
-  "games": [
-   "6 decks, dealer stands on soft 17, $5 minimum, per a phone call reported in Jan 2014; dealers do not flip the hole card when they don't need to play out."
-  ],
-  "best": {
-   "decks": 6,
-   "h17": false,
-   "pen": 66,
-   "min": 5
-  },
-  "min": 5,
-  "pen": "About 66% on the last visit (report quoted Jan 2014).",
-  "src": [
-   [
-    "Wizard of Vegas: Michigan Casinos thread (2014)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/16408-michigan-casinos/"
-   ]
-  ]
- },
  "us-mi-firekeepers-casino": {
   "asOf": "Nov 2026",
   "tablesN": 60,
   "tables": "Over 60 live table games (casino site, 2026). The 2021 expansion counted 70 tables on the floor plus 10 in the high-limit area (Aug 2021 press release).",
-  "games": [
-   "House rules sheet: blackjack pays 3:2, double after split allowed, aces may be split up to three times for four hands, one card each (casino blackjack guide, 2019).",
-   "Mix of continuous-shuffler tables and shoe tables on the main floor; $5 minimum H17 3:2 shoe game reported (2010 forum post) – check which kind you sit at.",
-   "High limit: double-deck S17 game from $25, penetration about 60% with the main dealer (Oct 2010 forum post); a 2015 post says the DD game ran 'for a while', so it may be gone."
-  ],
-  "best": {
-   "where": "High limit",
-   "decks": 2,
-   "h17": false,
-   "pen": 60,
-   "min": 25
-  },
-  "hl": "Aurora High Limit Lounge has high-limit slots and table games (casino site, 2026); it reopened enlarged with 10 table games on Aug 13, 2021 (press release). A double-deck S17 game from $25 was reported there in 2010.",
-  "pen": "Double deck in high limit about 60% with the regular dealer, varying by dealer (2010 forum post).",
+  "hl": "Aurora High Limit Lounge has high-limit slots and table games (casino site, 2026); it reopened enlarged with 10 table games on Aug 13, 2021 (press release).",
   "other": "Baccarat, craps, roulette, Mississippi Stud, Crazy 4 Poker, Ultimate Texas Hold'em, Three Card Poker, Pai Gow (casino site, 2026). 21-table poker room, 24 hours Thu–Sat, 9am–4am Sun–Wed (2026).",
   "note": "Owned by the Nottawaseppi Huron Band of the Potawatomi; hotel tower and gaming expansion opened Aug 2021. Players club card required for poker. 21+ to enter.",
   "src": [
@@ -1095,16 +935,8 @@
     "https://firekeeperscasino.com/casino/games/table-games/"
    ],
    [
-    "FireKeepers blackjack house rules guide (2019)",
-    "https://firekeeperscasino.com/wp-content/uploads/2019/08/Fire-PDF-GamingGuide-Blackjack.pdf"
-   ],
-   [
     "FireKeepers expansion grand opening release (Aug 2021)",
     "https://firekeeperscasino.com/2021/08/17/firekeepers-casino-hotel-celebrates-grand-opening-of-new-hotel-plus-gaming-and-restaurants-with-dramatic-highwire-walk-by-nik-wallenda/"
-   ],
-   [
-    "Wizard of Vegas: Michigan Blackjack thread (2010)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/1540-michigan-blackjack/"
    ],
    [
     "FireKeepers poker room page (2026)",
@@ -1190,22 +1022,10 @@
   "tables": "56 tables (casino site, 2026); over 50 table games per the Mar 2025 hotel press kit; about 50 live tables (Aug 2026 review).",
   "games": [
    "Standard Blackjack, Double Up Blackjack and Free Bet Blackjack on the floor (casino site, 2026).",
-   "Older report: 6 decks, H17, DAS, 3:2, no surrender; $5 table on continuous shufflers, $10/$15/$25 tables dealt from a shoe (2015 forum post).",
    "High limit room: blackjack and Double Up Blackjack alongside nine baccarat tables; minimums usually start around $50 (casino site 2026; review Aug 2026)."
   ],
-  "best": {
-   "where": "Main floor shoe",
-   "decks": 6,
-   "h17": true,
-   "das": true,
-   "ls": false,
-   "bj65": false,
-   "min": 10
-  },
-  "min": 5,
   "hl": "New high-limit table games room (opened with the 2025 expansion) with blackjack, Double Up Blackjack and nine baccarat tables; minimums around $50 (2025 press kit, 2026 site and review).",
-  "heat": "A 2015 report said the pit watched a player wonging but stayed friendly. No recent backoff reports found.",
-  "other": "Craps, roulette, Three Card Poker, progressive Mississippi Stud, Four Card Poker and Ultimate Texas Hold'em, Royal9 baccarat (2026). Poker room opened Sep 2018 with 14 tables.",
+  "other": "Craps, roulette, Three Card Poker, progressive Mississippi Stud, Four Card Poker and Ultimate Texas Hold'em, Royal9 baccarat (2026).",
   "note": "Owned by the Gun Lake Tribe (Match-E-Be-Nash-She-Wish Band). Hotel opened Mar 7, 2025. About 2,300 slots; designated smoking area on the floor map (2025 press kit). Open 24/7 (2026 review).",
   "src": [
    [
@@ -1219,14 +1039,6 @@
    [
     "Casinos.com Gun Lake review (Aug 2026)",
     "https://www.casinos.com/destinations/michigan/gun-lake-casino"
-   ],
-   [
-    "Wizard of Vegas: playable blackjack near Grand Rapids (2015)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/21142-any-playable-blackjack-near-grand-rapids-michigan/"
-   ],
-   [
-    "Card Player: Gun Lake adds 14-table poker room (Sep 2018)",
-    "https://cardplayer.com/poker-news/23242-michigan-tribal-casino-adds-14-table-poker-room"
    ]
   ]
  },
@@ -1235,8 +1047,7 @@
   "tables": "About 30 blackjack tables in Apr 2022: 6 S17 and 24 H17 (Current Blackjack News).",
   "games": [
    "S17 game: 6 decks, DAS, resplit aces, $50–$5,000, about 6 tables, 1 deck cut off (Current Blackjack News, Apr 2022); it was $100 minimum in Apr 2020.",
-   "H17 game: 6 decks, DAS, resplit aces, $25–$2,000, about 24 tables, 1.4 decks cut off (CBJN Apr 2022).",
-   "In 2013–14 forum posters said all regular tables had gone H17 and a Perfect Pairs table used a continuous shuffler (Wizard of Vegas)."
+   "H17 game: 6 decks, DAS, resplit aces, $25–$2,000, about 24 tables, 1.4 decks cut off (CBJN Apr 2022)."
   ],
   "best": {
    "decks": 6,
@@ -1258,20 +1069,14 @@
    [
     "Current Blackjack News, Feb 2021",
     "https://assets.bj21.com/newsletters/pdf_files/000/000/063/original/CBJN2102.pdf?1612152553="
-   ],
-   [
-    "Wizard of Vegas, Detroit area reviews (2013–14)",
-    "https://wizardofvegas.com/forum/off-topic/other-casinos/1330-detroit-area-casino-reviews/3/"
    ]
   ]
  },
  "us-mi-little-river-casino": {
   "asOf": "Nov 2026",
   "games": [
-   "Blackjack listed; table limits across the pit range $1–$5,000 (casino site, 2026).",
-   "Older report: about 70–75% penetration, doubling on split aces allowed, no surrender, $5 and $10 minimums (pre-2014 report quoted in 2014); rules said to have worsened since (2014, unverified)."
+   "Blackjack listed; table limits across the pit range $1–$5,000 (casino site, 2026)."
   ],
-  "pen": "About 70–75% (report from a few years before 2014).",
   "hl": "High limit room has 50+ high-denomination slots and high-limit table games (casino site, 2026).",
   "other": "Ultimate Texas Hold'em, craps, roulette, 3 Card Poker, Mississippi Stud, High Card Flush (2026).",
   "note": "Little River Band of Ottawa Indians. Main gaming floor and all table games are non-smoking; smoking only in designated areas (casino site, 2026).",
@@ -1287,10 +1092,6 @@
    [
     "Little River high limit page (2026)",
     "https://www.lrcr.com/high-limit"
-   ],
-   [
-    "Wizard of Vegas: Michigan Casinos thread (2014)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/16408-michigan-casinos/"
    ]
   ]
  },
@@ -1300,8 +1101,7 @@
   "games": [
    "S17 game: 6 decks, DAS, resplit aces, $25–$2,500, about 16 tables, 1.3 decks cut off (Current Blackjack News, Apr 2022).",
    "H17 game: 6 decks, DAS, resplit aces, $25–$500, about 24 tables, 1 deck cut off (CBJN Apr 2022); in Apr 2020 this game started at $10.",
-   "Spanish 21: 6 decks, H17, $10–$500, about 3 tables (CBJN Apr 2022).",
-   "No surrender and H17 on the main games, per a 2014 forum post; Free Bet Blackjack table added and a big 3:2 pit opened in 2015 (Wizard of Vegas)."
+   "Spanish 21: 6 decks, H17, $10–$500, about 3 tables (CBJN Apr 2022)."
   ],
   "best": {
    "decks": 6,
@@ -1313,7 +1113,7 @@
    "max": 2500
   },
   "min": 25,
-  "pen": "S17 game 1.3 of 6 decks cut off (about 78%), H17 game 1 deck cut (about 83%) (CBJN Apr 2022). 2014 forum posters disagreed on whether pen was good.",
+  "pen": "S17 game 1.3 of 6 decks cut off (about 78%), H17 game 1 deck cut (about 83%) (CBJN Apr 2022).",
   "heat": "A 2024 lawsuit says staff checked a player's ID after a $127K side-bet jackpot, called her trespassed over a 2015 incident and withheld the win, so old trespass flags are enforced (casinos.com, Jul 2024).",
   "src": [
    [
@@ -1327,14 +1127,6 @@
    [
     "Current Blackjack News, Feb 2021",
     "https://assets.bj21.com/newsletters/pdf_files/000/000/063/original/CBJN2102.pdf?1612152553="
-   ],
-   [
-    "Wizard of Vegas, Michigan casinos thread (2014)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/16408-michigan-casinos/"
-   ],
-   [
-    "Wizard of Vegas, Detroit area reviews (2015)",
-    "https://wizardofvegas.com/forum/off-topic/other-casinos/1330-detroit-area-casino-reviews/4/"
    ]
   ]
  },
@@ -1366,20 +1158,6 @@
    [
     "Current Blackjack News, Feb 2021",
     "https://assets.bj21.com/newsletters/pdf_files/000/000/063/original/CBJN2102.pdf?1612152553="
-   ],
-   [
-    "Wizard of Vegas, Detroit area reviews (2013–14)",
-    "https://wizardofvegas.com/forum/off-topic/other-casinos/1330-detroit-area-casino-reviews/3/"
-   ]
-  ]
- },
- "us-mi-odawa-casino": {
-  "asOf": "Jan 2014",
-  "pen": "A 2010 report called penetration bad; a 2014 poster doubted it and described the rules as decent.",
-  "src": [
-   [
-    "Wizard of Vegas: Michigan Casinos thread (2014)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/16408-michigan-casinos/"
    ]
   ]
  },
@@ -1388,13 +1166,9 @@
   "tablesN": 70,
   "tables": "Over 70 tables (casino site, 2026).",
   "games": [
-   "Standard blackjack with TriLux side bets, plus a single-deck blackjack game (casino site, 2026); single-deck payout not stated – check for 6:5.",
-   "Low-stakes shoe games, around $5–$15, with fair penetration on the non-shuffler tables; pitch games were all 6:5 (2015 forum post).",
-   "Mostly continuous shufflers with some shoe tables scattered among them (2014 forum post); a $5 H17 3:2 shoe game was reported in 2010."
+   "Standard blackjack with TriLux side bets, plus a single-deck blackjack game (casino site, 2026); single-deck payout not stated – check for 6:5."
   ],
-  "min": 5,
-  "pen": "Shoe tables (not shufflers) described as OK (2015 forum post).",
-  "heat": "Called a sweatshop where flat-betting pressure discourages wonging and a counter reported getting burned (2014 forum posts). A side-bet winner said he was asked to leave (Dec 2025 forum comment, secondhand).",
+  "heat": "A side-bet winner said he was asked to leave (Dec 2025 forum comment, secondhand).",
   "other": "Craps (10x odds), roulette (00 and 000), baccarat, Three Card, Criss Cross Poker, Jackpot Hold'em, Xtreme Hold'em, Louisiana Stud, Super 4 Poker (2026). 18-table smoke-free poker room, 10am–1:30am.",
   "note": "Saginaw Chippewa Tribe. Casino open 24/7; high-limit Slot Palace 8am–midnight (casino site, 2026).",
   "src": [
@@ -1407,26 +1181,8 @@
     "https://soaringeaglecasino.com/soaring-eagle/casino/"
    ],
    [
-    "Wizard of Vegas: playable blackjack near Grand Rapids (2015)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/21142-any-playable-blackjack-near-grand-rapids-michigan/"
-   ],
-   [
-    "Wizard of Vegas: Michigan Casinos thread (2014)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/16408-michigan-casinos/"
-   ],
-   [
     "Wizard of Vegas: BJ Player Banned thread (Dec 2025)",
     "https://wizardofvegas.com/forum/off-topic/gripes/41878-bj-player-banned/"
-   ]
-  ]
- },
- "us-mi-turtle-creek-casino": {
-  "asOf": "Jan 2014",
-  "heat": "Old forum posts disagree: once had great games that later turned sweaty and one counter got burned there, while another called it excellent (Jan 2014).",
-  "src": [
-   [
-    "Wizard of Vegas: Michigan Casinos thread (2014)",
-    "https://wizardofvegas.com/forum/gambling/blackjack/16408-michigan-casinos/"
    ]
   ]
  },
@@ -1434,7 +1190,7 @@
   "asOf": "Oct 2026",
   "tablesN": 78,
   "tables": "78 table and other games plus 0 poker tables, 78 in all, authorized in Sep 2026 (NJ DGE). Per-game counts not found.",
-  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia; 2017 column). No casino-specific reports found.",
+  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia). No casino-specific reports found.",
   "games": [
    "8 decks, H17, surrender, aces resplit twice, $25 minimum, no mid-shoe entry (2021 survey).",
    "Spanish 21 S17 from $10 (2021 survey)."
@@ -1458,10 +1214,6 @@
    [
     "Ken Uston, Wikipedia (NJ counter law)",
     "https://en.wikipedia.org/wiki/Ken_Uston"
-   ],
-   [
-    "Gambling and the Law: dealing with card counters (2017)",
-    "https://gamblingandthelaw.com/column/dealing-with-card-counters"
    ]
   ]
  },
@@ -1469,7 +1221,7 @@
   "asOf": "Oct 2026",
   "tablesN": 215,
   "tables": "153 table and other games plus 62 poker tables, 215 in all, authorized in Sep 2026 (NJ DGE). Per-game counts not found.",
-  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia; 2017 column). No casino-specific reports found.",
+  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia). No casino-specific reports found.",
   "games": [
    "Main floor: 8 decks, H17, DAS, $10 minimum, dozens of tables (2021 survey).",
    "6 decks, stands on all 17s, $25 minimum, just outside the high-limit salon (2021 survey).",
@@ -1495,10 +1247,6 @@
    [
     "Ken Uston, Wikipedia (NJ counter law)",
     "https://en.wikipedia.org/wiki/Ken_Uston"
-   ],
-   [
-    "Gambling and the Law: dealing with card counters (2017)",
-    "https://gamblingandthelaw.com/column/dealing-with-card-counters"
    ]
   ]
  },
@@ -1506,7 +1254,7 @@
   "asOf": "Oct 2026",
   "tablesN": 102,
   "tables": "102 table and other games plus 0 poker tables, 102 in all, authorized in Sep 2026 (NJ DGE). Per-game counts not found.",
-  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia; 2017 column). No casino-specific reports found.",
+  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia). No casino-specific reports found.",
   "games": [
    "8-deck blackjack from $15 (2021 survey).",
    "Spanish 21 S17 from $15 (2021 survey)."
@@ -1530,10 +1278,6 @@
    [
     "Ken Uston, Wikipedia (NJ counter law)",
     "https://en.wikipedia.org/wiki/Ken_Uston"
-   ],
-   [
-    "Gambling and the Law: dealing with card counters (2017)",
-    "https://gamblingandthelaw.com/column/dealing-with-card-counters"
    ]
   ]
  },
@@ -1541,7 +1285,7 @@
   "asOf": "Oct 2026",
   "tablesN": 56,
   "tables": "56 table and other games plus 0 poker tables, 56 in all, authorized in Sep 2026 (NJ DGE). Per-game counts not found.",
-  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia; 2017 column). No casino-specific reports found.",
+  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia). No casino-specific reports found.",
   "games": [
    "8 decks, H17, aces split once, $15 minimum; 8 decks S17 at $25 (2021 survey).",
    "Spanish 21 S17 from $15 (2021 survey)."
@@ -1565,10 +1309,6 @@
    [
     "Ken Uston, Wikipedia (NJ counter law)",
     "https://en.wikipedia.org/wiki/Ken_Uston"
-   ],
-   [
-    "Gambling and the Law: dealing with card counters (2017)",
-    "https://gamblingandthelaw.com/column/dealing-with-card-counters"
    ]
   ]
  },
@@ -1576,7 +1316,7 @@
   "asOf": "Oct 2026",
   "tablesN": 128,
   "tables": "128 table and other games plus 0 poker tables, 128 in all, authorized in Sep 2026 (NJ DGE). Per-game counts not found.",
-  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia; 2017 column). No casino-specific reports found.",
+  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia). No casino-specific reports found.",
   "games": [
    "Casino site (2026): 6-deck games pay 3:2, 8-deck games pay 6:5; DAS; split to 4 hands; aces split once.",
    "8 decks H17 with surrender at $15; 8 decks S17 with surrender at $25; resplit aces listed (2021 survey, may conflict with site).",
@@ -1606,10 +1346,6 @@
    [
     "Ken Uston, Wikipedia (NJ counter law)",
     "https://en.wikipedia.org/wiki/Ken_Uston"
-   ],
-   [
-    "Gambling and the Law: dealing with card counters (2017)",
-    "https://gamblingandthelaw.com/column/dealing-with-card-counters"
    ]
   ]
  },
@@ -1617,7 +1353,7 @@
   "asOf": "Oct 2026",
   "tablesN": 124,
   "tables": "96 table and other games plus 28 poker tables, 124 in all, authorized in Sep 2026 (NJ DGE). Per-game counts not found.",
-  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia; 2017 column). No casino-specific reports found.",
+  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia). No casino-specific reports found.",
   "games": [
    "Late surrender added at many blackjack tables (Jul 2026 news); which tables not stated.",
    "Floor: 8 decks, H17, $10–$15 depending on time (2021 survey).",
@@ -1648,10 +1384,6 @@
    [
     "Ken Uston, Wikipedia (NJ counter law)",
     "https://en.wikipedia.org/wiki/Ken_Uston"
-   ],
-   [
-    "Gambling and the Law: dealing with card counters (2017)",
-    "https://gamblingandthelaw.com/column/dealing-with-card-counters"
    ]
   ]
  },
@@ -1659,7 +1391,7 @@
   "asOf": "Oct 2026",
   "tablesN": 146,
   "tables": "146 table and other games plus 0 poker tables, 146 in all, authorized in Sep 2026 (NJ DGE). Per-game counts not found.",
-  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia; 2017 column). No casino-specific reports found.",
+  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia). No casino-specific reports found.",
   "games": [
    "Casino site (2026): 3:2, DAS, split to 3 hands, aces once; H17 or S17 posted per table; surrender offered; 6- and 8-deck shoes.",
    "$10 tables in the sportsbook area early each day, rising to $15–$25 around 1 pm (2025 Reddit).",
@@ -1694,10 +1426,6 @@
    [
     "Ken Uston, Wikipedia (NJ counter law)",
     "https://en.wikipedia.org/wiki/Ken_Uston"
-   ],
-   [
-    "Gambling and the Law: dealing with card counters (2017)",
-    "https://gamblingandthelaw.com/column/dealing-with-card-counters"
    ]
   ]
  },
@@ -1705,7 +1433,7 @@
   "asOf": "Oct 2026",
   "tablesN": 62,
   "tables": "62 table and other games plus 0 poker tables, 62 in all, authorized in Sep 2026 (NJ DGE). Per-game counts not found.",
-  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia; 2017 column). No casino-specific reports found.",
+  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia). No casino-specific reports found.",
   "games": [
    "8 decks at $15: one pit S17, another H17; aces split once (2021 survey).",
    "$10 blackjack heard of on weekdays; two $5 electronic virtual-dealer blackjack machines, one paying 6:5 (2025 Reddit).",
@@ -1718,7 +1446,6 @@
    "min": 15
   },
   "hl": "High-limit blackjack S17 from $50 (2021 survey).",
-  "note": "The casino Ken Uston sued; the 1982 ruling against it is why NJ casinos cannot bar counters (Wikipedia).",
   "src": [
    [
     "NJ DGE monthly gross revenue report, Sep 2026",
@@ -1731,10 +1458,6 @@
    [
     "Ken Uston, Wikipedia (NJ counter law)",
     "https://en.wikipedia.org/wiki/Ken_Uston"
-   ],
-   [
-    "Gambling and the Law: dealing with card counters (2017)",
-    "https://gamblingandthelaw.com/column/dealing-with-card-counters"
    ]
   ]
  },
@@ -1742,7 +1465,7 @@
   "asOf": "Oct 2026",
   "tablesN": 101,
   "tables": "87 table and other games plus 14 poker tables, 101 in all, authorized in Sep 2026 (NJ DGE). Per-game counts not found.",
-  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia; 2017 column). No casino-specific reports found.",
+  "heat": "NJ law: casinos may not bar counters (Uston v. Resorts, 1982); they counter with more decks, earlier shuffles and lower limits or rule changes (Wikipedia). No casino-specific reports found.",
   "games": [
    "8 decks, H17, $10–$15 depending on time and day (2021 survey).",
    "6 decks, stands on all 17s, $50 minimum (2021 survey).",
@@ -1767,10 +1490,6 @@
    [
     "Ken Uston, Wikipedia (NJ counter law)",
     "https://en.wikipedia.org/wiki/Ken_Uston"
-   ],
-   [
-    "Gambling and the Law: dealing with card counters (2017)",
-    "https://gamblingandthelaw.com/column/dealing-with-card-counters"
    ]
   ]
  },
@@ -1808,7 +1527,7 @@
   "min": 100,
   "hl": "High-limit games stand on soft 17 (May 2026 VA). 6D S17 $100 and DD S17 $300–$500 mins, $10,000 max (2025 WoV/VA).",
   "pen": "Six-deck S17 about 1.5 decks cut off, H17 shoe about 1; double deck about 0.5 of 2 cut off; varies by dealer (Jan 2025 WoV survey).",
-  "heat": "Survey flags ARIA as quick to back off (Jan 2025 WoV). Older forum report (2011): a $25–$150 spread at double deck got a blunt backoff after play at other MGM properties.",
+  "heat": "Survey flags ARIA as quick to back off (Jan 2025 WoV).",
   "src": [
    [
     "Vegas Advantage Strip blackjack survey (May 2026)",
@@ -1821,28 +1540,19 @@
    [
     "Vegas Advantage best blackjack (2025)",
     "https://vegasadvantage.com/best-blackjack-in-las-vegas/"
-   ],
-   [
-    "BlackjackInfo forum: Aria backoff (2011)",
-    "https://www.blackjackinfo.com/community/threads/rudest-backoff-yet.21517/"
    ]
   ]
  },
  "us-nv-arizona-charlies-decatur": {
   "asOf": "Nov 2024",
   "games": [
-   "$10 3:2 blackjack (Vegas Advantage data via easy.vegas, Nov 2024).",
-   "A reader reported one $10 single-deck table (LVA, 2019)."
+   "$10 3:2 blackjack (Vegas Advantage data via easy.vegas, Nov 2024)."
   ],
   "min": 10,
   "src": [
    [
     "easy.vegas blackjack guide (Vegas Advantage data, Oct–Nov 2024)",
     "https://easy.vegas/games/blackjack"
-   ],
-   [
-    "LVA: single deck in Vegas (2019)",
-    "https://www.lasvegasadvisor.com/question/single-deck-vegas/"
    ]
   ]
  },
@@ -1940,7 +1650,7 @@
  },
  "us-nv-caesars-palace": {
   "asOf": "Jul 2026",
-  "tables": "Survey counts 17 tables of 3:2 blackjack: 2 double deck, 8 six-deck S17, 7 six-deck H17 (Jan 2025). In 2009 it had 54 blackjack tables incl. 1 video (old review).",
+  "tables": "Survey counts 17 tables of 3:2 blackjack: 2 double deck, 8 six-deck S17, 7 six-deck H17 (Jan 2025).",
   "games": [
    "6 decks, S17, DAS, resplit aces, late surrender, 3:2, $200 min, $10,000 max, 8 tables, about 1.5 decks cut off (Jan 2025 survey).",
    "6 decks, H17, DAS, late surrender, no resplit aces, 3:2, $50 min, $5,000 max, 7 tables (Jan 2025 survey).",
@@ -1960,16 +1670,12 @@
   },
   "min": 50,
   "pen": "Six-deck games: about 1.5 of 6 decks cut off (75%); double deck about 1 deck cut (50%); varies by dealer (Jan 2025 survey).",
-  "other": "Craps, roulette, baccarat, pai gow, Three Card Poker, Let It Ride and more; poker room behind the sportsbook (2009 Wizard of Vegas review; check current).",
+  "other": "Craps, roulette, baccarat, pai gow, Three Card Poker, Let It Ride and more; poker room behind the sportsbook (check current).",
   "note": "Still operating under this name with blackjack (Caesars site, Jul 2026). Lower-limit main-floor games not in the 3:2 survey are presumably 6:5; check the felt.",
   "src": [
    [
     "Wizard of Vegas: Las Vegas 3:2 blackjack survey, Jan 2025 (CBN data)",
     "https://wizardofvegas.com/guides/blackjack-survey/"
-   ],
-   [
-    "Wizard of Vegas: Caesars Palace review (2009)",
-    "https://wizardofvegas.com/hotels/caesars-palace/"
    ],
    [
     "Caesars.com: how to play blackjack (Jul 2026)",
@@ -2059,19 +1765,13 @@
   "asOf": "Sep 2025",
   "games": [
    "Live-dealer $5 blackjack appears at times, but $10 minimums are common (Review-Journal, Sep 2025).",
-   "In 2011: single deck and 6-deck games paying 6:5 at $5, plus a $10 double deck H17 game (2011 Wizard of Vegas review; old).",
    "Not listed in the Jan 2025 3:2-only Las Vegas survey."
   ],
-  "other": "In 2011: craps, roulette, baccarat, pai gow, Three Card, UTH, Let It Ride, Big Wheel; poker room usually ran one limit hold'em game (2011 review; old).",
   "note": "Lowest resort fee on the Strip in 2021 (easy.vegas, 2023).",
   "src": [
    [
     "Review-Journal: only $5 live blackjack on the Strip (Sep 2025)",
     "https://www.reviewjournal.com/?p=3467509"
-   ],
-   [
-    "Wizard of Vegas: Circus Circus review (2011)",
-    "https://wizardofvegas.com/hotels/circus-circus/"
    ],
    [
     "Wizard of Vegas: Las Vegas 3:2 blackjack survey, Jan 2025 (CBN data)",
@@ -2171,7 +1871,7 @@
   "min": 15,
   "hl": "Small high-limit room opened Feb 2021 with two blackjack tables, $2,000 max, open Fri–Sat, tables can be reserved (CDC Gaming, 2021).",
   "pen": "Single deck (now gone) was cut after about 18–20 cards in 2022 (forum). CSMs spreading around the pit (2026 trip report).",
-  "heat": "Long reputation for barring suspected counters quickly; teams reportedly sent new players here to get barred early (LVA, Dec 2022). 2010 forum posts describe sharp bosses and close watching of winners.",
+  "heat": "Long reputation for barring suspected counters quickly; teams reportedly sent new players here to get barred early (LVA, Dec 2022).",
   "other": "Eight distinct table games (Vegas Advantage, Apr 2026).",
   "note": "Minimums $10–$50 (Apr 2026). The $15 tables were full on a summer 2026 Saturday night.",
   "src": [
@@ -2441,18 +2141,13 @@
   "asOf": "Nov 2024",
   "tables": "More than 40 table games (locals casino guide, about 2025).",
   "games": [
-   "$10 3:2 blackjack, no forced side bets (Vegas Advantage data via easy.vegas, Nov 2024).",
-   "A reader recalled a few 3:2 double-deck games (LVA, 2019)."
+   "$10 3:2 blackjack, no forced side bets (Vegas Advantage data via easy.vegas, Nov 2024)."
   ],
   "min": 10,
   "src": [
    [
     "easy.vegas blackjack guide (Vegas Advantage data, Oct–Nov 2024)",
     "https://easy.vegas/games/blackjack"
-   ],
-   [
-    "LVA: single deck in Vegas, with reader notes (2019)",
-    "https://www.lasvegasadvisor.com/question/single-deck-vegas/"
    ],
    [
     "Las Vegas Direct: top locals casinos",
@@ -2821,7 +2516,6 @@
  },
  "us-nv-oyo-hotel-and-casino": {
   "asOf": "Oct 2026",
-  "tables": "Small 15-table pit with blackjack, roulette and craps (VegasChanges, 2019 profile).",
   "games": [
    "$5 blackjack paying 3:2 (Oct 2026 Casinos.com).",
    "3:2 six-deck H17, DAS, $10 min, $500 max, 4 tables (Jan 2025 WoV survey)."
@@ -2837,7 +2531,6 @@
   },
   "min": 5,
   "pen": "About 1.2 of 6 decks cut off (Jan 2025 WoV survey).",
-  "other": "Roulette and craps (2019 profile).",
   "note": "Still operating as OYO (former Hooters) on Tropicana Ave; in 2026 it admitted running fake Palette hotel listings that sent bookings to OYO. Owned by Prism (Aug 2026).",
   "src": [
    [
@@ -2851,10 +2544,6 @@
    [
     "Bettors Insider on OYO fake listings (Aug 2026)",
     "https://bettorsinsider.com/casino/2026/08/21/oyo-las-vegas-admits-it-was-behind-fake-palette-and-collection-o-hotel-listings/"
-   ],
-   [
-    "VegasChanges OYO profile (2019)",
-    "https://vegaschanges.com/2019/09/20/oyo-hotel-casino-las-vegas"
    ]
   ]
  },
@@ -3051,7 +2740,7 @@
   },
   "min": 15,
   "other": "Eight distinct table games, some in a non-smoking streaming room; only Interblock stadium downtown (Vegas Advantage, Apr 2026).",
-  "note": "Minimums $10–$25 (Apr 2026). Tables were quiet on a summer 2026 Saturday (trip report). Uses CSMs on some games (2019 forum).",
+  "note": "Minimums $10–$25 (Apr 2026). Tables were quiet on a summer 2026 Saturday (trip report).",
   "src": [
    [
     "CasinoReports downtown trip diary (Aug 2026)",
@@ -3292,8 +2981,7 @@
   "tables": "26 table games (locals casino guide, about 2025).",
   "games": [
    "$10 3:2 blackjack (Vegas Advantage data via easy.vegas, Nov 2024).",
-   "On a recent visit all tables were $10 except the 6:5 games (casino.org, Aug 2024).",
-   "Two single-deck tables paying 3:2, doubles on 10 and 11 only (LVA, 2019)."
+   "On a recent visit all tables were $10 except the 6:5 games (casino.org, Aug 2024)."
   ],
   "min": 10,
   "src": [
@@ -3304,10 +2992,6 @@
    [
     "casino.org: cheapest blackjack in Vegas (Aug 2024)",
     "https://casino.org/blog/cheapest-blackjack-in-vegas"
-   ],
-   [
-    "LVA: single deck in Vegas (2019)",
-    "https://www.lasvegasadvisor.com/question/single-deck-vegas/"
    ],
    [
     "Las Vegas Direct: top locals casinos",
@@ -3523,16 +3207,13 @@
   "asOf": "Jun 2023",
   "games": [
    "3:2 double deck named as available at the Orleans (LVA forum, Jan 2022).",
-   "$10 3:2 game before about 7–8 (player report, LVA forum, Jun 2023).",
-   "Readers reported one single-deck table paying 6:5 (LVA reader comments, 2019).",
-   "Mostly double-deck 3:2 games, limits $5–$2,000 (Time Out, 2014)."
+   "$10 3:2 game before about 7–8 (player report, LVA forum, Jun 2023)."
   ],
   "best": {
    "decks": 2,
    "bj65": false
   },
   "min": 10,
-  "other": "Poker room with 35 tables; craps from $5 and double-zero roulette (Time Out, 2014).",
   "src": [
    [
     "LVA forum: 3:2 blackjack (2022)",
@@ -3541,14 +3222,6 @@
    [
     "LVA forum: $1 3:2 BJ (2023)",
     "https://www.lasvegasadvisor.com/forums/gambling/1-3-2-bj/"
-   ],
-   [
-    "LVA: single deck in Vegas (2019)",
-    "https://www.lasvegasadvisor.com/question/single-deck-vegas/"
-   ],
-   [
-    "Time Out: Orleans (2014)",
-    "https://www.timeout.com/las-vegas/casinos/orleans-casino"
    ]
   ]
  },
@@ -3558,8 +3231,7 @@
   "games": [
    "6 decks, S17, DAS, resplit aces, late surrender, 3:2, $100 min, $10,000 max, 9 tables, notch shuffle point (Jan 2025 survey).",
    "Double deck, H17, DAS, no surrender, no resplit aces, 3:2, $200 min, $10,000 max, 5 tables, cut card about 0.8 deck (Jan 2025 survey).",
-   "8 decks, H17, DAS, resplit aces, no surrender, 3:2, $100 min, 1 table (Jan 2025 survey).",
-   "Blackjack variants Free Bet and Blackjack Switch were offered (2015 review)."
+   "8 decks, H17, DAS, resplit aces, no surrender, 3:2, $100 min, 1 table (Jan 2025 survey)."
   ],
   "best": {
    "decks": 6,
@@ -3574,16 +3246,11 @@
   },
   "min": 100,
   "pen": "Six-deck: about 1.5 decks cut off (75%); double deck about 0.8 deck cut (60%) (Jan 2025 survey).",
-  "hl": "Palazzo has the resort's High-Limit Lounge (Venetian site, 2026). In 2015 the high-limit area had double-deck $50 games and a $100 six-deck S17 shoe called the best game in the house.",
-  "other": "In 2015: 22 baccarat, 8 craps (3-4-5x), roulette incl. one single-zero, pai gow, Caribbean Stud, UTH and more. No poker room; use the Venetian's (2015 review).",
+  "hl": "Palazzo has the resort's High-Limit Lounge (Venetian site, 2026).",
   "src": [
    [
     "Wizard of Vegas: Las Vegas 3:2 blackjack survey, Jan 2025 (CBN data)",
     "https://wizardofvegas.com/guides/blackjack-survey/"
-   ],
-   [
-    "Wizard of Vegas: Palazzo review (2015)",
-    "https://wizardofvegas.com/hotels/palazzo/"
    ],
    [
     "Venetian/Palazzo site (2026)",
@@ -3881,7 +3548,6 @@
   "tablesN": 29,
   "tables": "Averaged 29 table games a day plus 6 poker tables in Sep 2026 (NY State Gaming Commission).",
   "other": "Live poker averaging 6 tables a day (Sep 2026, state report).",
-  "note": "Racino that became a full casino with table games when its expansion opened in Dec 2016; owned by Jeffrey Gural's American Racing and Entertainment.",
   "src": [
    [
     "NY Gaming Commission monthly report: Tioga Downs",
@@ -4034,7 +3700,6 @@
    "Main floor: 8 decks, H17, DAS, $15–$2,500, about 20 tables, 1.5 decks cut off (Current Blackjack News, Apr 2022).",
    "Better game: 6 decks, S17, DAS, $100–$10,000, about 8 tables, 1.5 decks cut off (Current Blackjack News, Apr 2022).",
    "Nov 2020 listing: 4 tables of 6-deck H17 DAS $25–$3,000 with no mid-shoe entry; S17 $100 game also no mid-shoe entry; two hands allowed at table minimum (CBJN Feb 2021).",
-   "Low-limit tables: a 2019 forum visitor found many $10 tables, all paying 6:5 (Wizard of Vegas, Feb 2019).",
    "Casino's own list (2026) shows plain blackjack plus a Blazing 7s blackjack progressive side bet; no rules or limits posted."
   ],
   "best": {
@@ -4066,10 +3731,6 @@
    [
     "Current Blackjack News, Feb 2021",
     "https://assets.bj21.com/newsletters/pdf_files/000/000/063/original/CBJN2102.pdf?1612152553="
-   ],
-   [
-    "Wizard of Vegas forum, Feb 2019",
-    "https://wizardofvegas.com/forum/gambling-outside-vegas/eastern-us/32528-jack-casino-cleveland/"
    ],
    [
     "JACK Cleveland table games page",
@@ -4166,8 +3827,7 @@
   "tables": "84 tables in PGCB FY2026-27 report: 63 banked, 8 non-banked (poker), 13 fully electronic (2026). 65 table games per a 2023 guide.",
   "games": [
    "6 decks, 3:2, surrender, resplit pairs once (not aces), $10 minimum (US Casino Advantage, page updated May 2025).",
-   "PA rules apply: S17, double any two, DAS, late surrender (2021 CDC Gaming; 2010 forum posts).",
-   "Mix of ASM and CSM shuffler tables, roughly half and half (2010 forum post).",
+   "PA rules apply: S17, double any two, DAS, late surrender (2021 CDC Gaming).",
    "Electronic 3:2 blackjack from $5 (US Casino Advantage 2025)."
   ],
   "best": {
@@ -4181,9 +3841,8 @@
    "min": 10
   },
   "min": 10,
-  "heat": "One 2010 poster said Meadows pit bosses gave more heat than those at Rivers. No recent reports found.",
   "other": "Craps (10x odds), 00 roulette, baccarat, big wheel, Criss Cross, Four Card, High Card Flush, Let it Ride, Mississippi Stud, pai gow, 3 Card, UTH; 14-table poker room (US Casino Advantage 2025).",
-  "note": "Table games open 9am weekdays, 8:30am weekends; poker room closes midnight weekdays, 2am weekends (US Casino Advantage, May 2025). A 2016 report said a double-deck game was being considered.",
+  "note": "Table games open 9am weekdays, 8:30am weekends; poker room closes midnight weekdays, 2am weekends (US Casino Advantage, May 2025).",
   "src": [
    [
     "PGCB FY2026-27 table games report",
@@ -4192,18 +3851,6 @@
    [
     "US Casino Advantage: Hollywood at Meadows (2025)",
     "https://uscasinoadvantage.com/gambling/pennsylvania/hollywood-meadows/"
-   ],
-   [
-    "Blackjackinfo forum: Table games in Pittsburgh (2010)",
-    "https://www.blackjackinfo.com/community/threads/table-games-in-pittsburgh-pa.18861/"
-   ],
-   [
-    "Blackjackinfo forum: Rivers thread, Meadows heat (2010)",
-    "https://www.blackjackinfo.com/community/threads/rivers-casino-pittsburgh.19562/"
-   ],
-   [
-    "TribLive: PA keeps good blackjack rules (2016)",
-    "https://archive.triblive.com/news/pa-holding-on-to-good-blackjack-rules-top-regulator-says/"
    ]
   ]
  },
@@ -4417,9 +4064,8 @@
    "max": 1000
   },
   "min": 15,
-  "hl": "About 14 high-limit blackjack tables in 2022: 6 decks, S17, DAS, surrender, $50–$10000, no mid-shoe entry (Apr 2022 CBJN). A 14-table high-limit room was approved in 2011 (CBS, 2011).",
+  "hl": "About 14 high-limit blackjack tables in 2022: 6 decks, S17, DAS, surrender, $50–$10000, no mid-shoe entry (Apr 2022 CBJN).",
   "pen": "Cut card about 1.2 decks from the end on 6-deck games (~80%) and 1.5 decks on 8-deck games (~81%) (Apr 2022 CBJN).",
-  "heat": "A 2012 forum poster rated Parx their favourite Philly-area casino for blackjack; no recent counter backoff reports found.",
   "other": "Craps from $15, roulette, baccarat, 3 and 4 Card Poker, Ultimate Texas Hold'em, Mississippi Stud, Let It Ride, e-tables (Aug 2026 review); 48-table poker room, largest in PA (2025).",
   "note": "Open 24/7 and smoke-free by choice; smoking only on an outdoor patio (Aug 2026 review; Jan 2026 news). CBJN (2022) flagged the surrounding area as high crime.",
   "src": [
@@ -4484,8 +4130,7 @@
   "games": [
    "Main floor: 8 decks, $10–$15 minimums; S17, double any two, DAS, surrender, resplit pairs once but not aces (US Casino Advantage, 2021 visit, page 2023).",
    "6-deck game at $50 minimum (US Casino Advantage, 2021 visit).",
-   "Stadium 3:2 blackjack from $3 Sun–Thu, $5 Fri–Sat (US Casino Advantage, 2021 visit).",
-   "$50 and $100 tables posted no mid-shoe entry; split to three hands, no even money (2010 forum)."
+   "Stadium 3:2 blackjack from $3 Sun–Thu, $5 Fri–Sat (US Casino Advantage, 2021 visit)."
   ],
   "best": {
    "where": "Main floor",
@@ -4498,9 +4143,8 @@
    "min": 50
   },
   "min": 10,
-  "pen": "8-deck shoes cut at about 4 decks, i.e. 50% (2010 forum post).",
   "other": "Craps (10x odds), 00 roulette, face-up pai gow, High Card Flush, Let it Ride, Mississippi Stud, 3 Card, UTH, stadium war (2021 visit). Poker room had not reopened after 2020 (2023).",
-  "note": "Owned by Churchill Downs since Jan 2019 (PGCB hearing 2025). Casino 24 hours, tables open 11am (2023). Fined in 2017 for blackjack dealing-procedure violations.",
+  "note": "Owned by Churchill Downs since Jan 2019 (PGCB hearing 2025). Casino 24 hours, tables open 11am (2023).",
   "src": [
    [
     "PGCB FY2026-27 table games report",
@@ -4513,14 +4157,6 @@
    [
     "PGCB license renewal presentation (May 2025)",
     "https://gamingcontrolboard.pa.gov/sites/default/files/2025-07/Presque%20Isle%20Down%20License%20Renewal%20Hearing%20Presentation%20Final_1.pdf"
-   ],
-   [
-    "Wizard of Vegas: Pennsylvania casino update (2010)",
-    "https://wizardofvegas.com/forum/off-topic/other-casinos/2288-pennsylvania-casino-update/"
-   ],
-   [
-    "Wizard of Vegas: Presque Isle review (2010)",
-    "https://wizardofvegas.com/forum/off-topic/other-casinos/3901-presque-isle-downs-and-casino-erie-pa-review/"
    ]
   ]
  },
@@ -4578,37 +4214,14 @@
   "tables": "134 tables in PGCB FY2026-27 report: 89 banked, 26 non-banked (poker), 14 fully electronic, 5 hybrid (2026). Visit Pittsburgh lists 128 table games (2026).",
   "games": [
    "PA rule set required statewide: 3:2 at all limits, dealer stands on soft 17, double any two, DAS, late surrender (2021 CDC Gaming column).",
-   "Main pit: mostly 8-deck shoes, many $15 tables on CSMs, $25 tables on ASMs (2010 forum posts).",
-   "High limit: 6 decks, hand shuffled, $100 minimum, no mid-shoe entry (2010 forum posts).",
    "Rush Table Zone: Interblock hybrid stadium blackjack and roulette with live dealer, $5 minimum (City Paper, undated; World Casino Directory 2026)."
   ],
-  "best": {
-   "where": "High limit",
-   "decks": 6,
-   "h17": false,
-   "das": true,
-   "ls": true,
-   "bj65": false,
-   "min": 100
-  },
-  "min": 15,
-  "hl": "High-limit room with 6-deck, hand-shuffled blackjack from $100 and no mid-shoe entry (2010 forum posts). Current limits not found.",
-  "pen": "About 75% in the main pit, varying by dealer; one high-limit dealer near 90%; about 1.5 decks typically cut off (2010 forum posts).",
-  "heat": "2010 posters reported little heat: a 1-to-4 green spread drew only a nervous dealer, one player spread $10–$1,000 with no reaction, and dealers call out black action. No recent reports found.",
   "other": "Craps, roulette, pai gow, mini-baccarat, 3 and 4 Card Poker, Mississippi Stud, Let it Ride, Big 6, Crazy 4 Poker; 30-table poker room (World Casino Directory, Visit Pittsburgh 2026).",
   "note": "Open 24/7, 21+ (Visit Pittsburgh 2026). A dealer was charged in Nov 2024 with dealing 192 fraudulent blackjack hands, so surveillance is attentive (CBS Pittsburgh 2024).",
   "src": [
    [
     "PGCB FY2026-27 table games report",
     "https://gamingcontrolboard.pa.gov/sites/default/files/2026-08/FY%202026-2027%20Table%20Games%20Monthly%20Report.pdf"
-   ],
-   [
-    "Blackjackinfo forum: Table games in Pittsburgh (2010)",
-    "https://www.blackjackinfo.com/community/threads/table-games-in-pittsburgh-pa.18861/"
-   ],
-   [
-    "Blackjackinfo forum: Rivers Casino Pittsburgh (2010)",
-    "https://www.blackjackinfo.com/community/threads/rivers-casino-pittsburgh.19562/"
    ],
    [
     "CDC Gaming: PA 3:2 rule (2021)",
@@ -4671,8 +4284,8 @@
   "min": 15,
   "hl": "6 high-limit blackjack tables in 2022: 6 decks, S17, DAS, surrender, resplit aces, $100–$5000, no mid-shoe entry; CBJN rated it among the lowest house edges in PA (Apr 2022 CBJN).",
   "pen": "About 1.5 decks cut off on all games in 2022: ~75% on 6 decks, ~81% on 8 decks (Apr 2022 CBJN).",
-  "heat": "In 2022 unrated players were limited to one hand of at most 10x the table minimum (CBJN). Two 2012 forum posters said they were barred after winning, one after 6 visits in 10 days.",
-  "note": "Boyd Gaming property in King of Prussia. In 2022 not 24 hours: about 10am–4am Mon–Thu, nonstop Fri 10am–Mon 4am (CBJN). The paid-membership entry rule of 2012 is no longer cited.",
+  "heat": "In 2022 unrated players were limited to one hand of at most 10x the table minimum (CBJN).",
+  "note": "Boyd Gaming property in King of Prussia. In 2022 not 24 hours: about 10am–4am Mon–Thu, nonstop Fri 10am–Mon 4am (CBJN).",
   "src": [
    [
     "PA Gaming Control Board table games report FY2026/27",
@@ -4685,10 +4298,6 @@
    [
     "PGCB July 2026 revenue release",
     "https://gamingcontrolboard.pa.gov/node/718450"
-   ],
-   [
-    "Wizard of Vegas: best Philadelphia casino (2012)",
-    "https://wizardofvegas.com/forum/off-topic/other-casinos/9827-best-philadelphia-casino-and-why/"
    ]
   ]
  },
@@ -4700,7 +4309,7 @@
    "Main floor: 8 decks, S17, DAS, late surrender, resplit aces to 3 hands, $25–$1000, no mid-shoe entry or sitting out, about 1.5 decks cut; 36 tables (Apr 2022 CBJN).",
    "High limit: 6 decks, S17, DAS, LS, resplit aces to 3, $100–$3000, about 1.5 decks cut; 6 tables (Apr 2022 CBJN).",
    "Free Bet Blackjack offered; live-dealer stadium blackjack from $5 (Mar 2023 review).",
-   "A 2012 forum poster said it was then the only Philly-area casino with a double-deck game; CBJN (Apr 2022) lists no double deck."
+   "CBJN (Apr 2022) lists no double deck."
   ],
   "best": {
    "where": "High limit",
@@ -4717,7 +4326,7 @@
   "hl": "6 high-limit blackjack tables in 2022: 6 decks, S17, DAS, surrender, resplit aces, $100–$3000 (Apr 2022 CBJN). A VIP room and lounge is listed (2023 review).",
   "pen": "About 1.5 decks cut off on both the 8-deck (~81%) and 6-deck (~75%) games (Apr 2022 CBJN); a 2012 post said penetration varied.",
   "other": "Craps, roulette, mini/midi baccarat, pai gow tiles, Three Card Poker, Caribbean Stud, Let It Ride, Texas Hold'em Bonus, stadium games (2023); 30-table poker room per Wikipedia.",
-  "note": "Formerly Sands Bethlehem; bought by Wind Creek (Poarch Creek) in May 2019 and renamed July 2019. Largest table count in PA (211, Aug 2026). Smoking areas drew guest complaints (2023 review).",
+  "note": "Largest table count in PA (211, Aug 2026). Smoking areas drew guest complaints (2023 review).",
   "src": [
    [
     "PA Gaming Control Board table games report FY2026/27",
@@ -4734,10 +4343,6 @@
    [
     "Wikipedia: Wind Creek Bethlehem",
     "https://en.wikipedia.org/wiki/Wind_Creek_Bethlehem"
-   ],
-   [
-    "Wizard of Vegas: best Philadelphia casino (2012)",
-    "https://wizardofvegas.com/forum/off-topic/other-casinos/9827-best-philadelphia-casino-and-why/"
    ]
   ]
  },
@@ -4754,19 +4359,12 @@
  },
  "us-wv-wheeling-island-casino": {
   "asOf": "Apr 2024",
-  "games": [
-   "8-deck shoes; a poster judged Pennsylvania games better (2010 forum post)."
-  ],
   "other": "Craps, 3 Card Poker, Louisiana Stud; poker room with Hold'em, Omaha and Seven Card Stud (2024 sponsored guide).",
   "note": "Casino and greyhound racetrack, 1,100+ slots, about an hour from Pittsburgh (2024 sponsored guide). Current blackjack rules not found.",
   "src": [
    [
     "SteelerNation casino guide (sponsored, Apr 2024)",
     "https://www.steelernation.com/2024/04/17/steelers-fans-gamble-acrisure-stadium"
-   ],
-   [
-    "Blackjackinfo forum: Table games in Pittsburgh (2010)",
-    "https://www.blackjackinfo.com/community/threads/table-games-in-pittsburgh-pa.18861/"
    ]
   ]
  }

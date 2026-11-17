@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useRef, Fragment, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
-import { AskPage, AskKeyCard, AskDot } from "./ask.jsx";
 import CasinosPage, { openCasinoAdd } from "./casinos.jsx";
 import { PlanPage } from "./planner.jsx";
 import { sfx, soundPrefs, setSoundPrefs } from "./sound.js";
@@ -144,7 +143,7 @@ function patternOf(bets, spotsMap, cal) {
     const c1 = cm(s), c0 = cm(sm); v = v.map((x, i) => (x * c1[i]) / c0[i]);
   }
   if (cal.o === 0) v = v.map((x, i) => (s[i] > 0 ? x : 0));
-  if (cal.fmul) v = v.map((x, i) => x * cal.fmul[i]); // Ask tab: a cruder or sloppier count moves the mix of counts you see
+  if (cal.fmul) v = v.map((x, i) => x * cal.fmul[i]); // a cruder or sloppier count moves the mix of counts you see (src/cover.js)
   const tot = v.reduce((p, x) => p + x, 0);
   COUNTS.forEach((c, i) => (rf[c] = tot > 0 ? v[i] / tot : 0));
   if (cal.D) { const Ds = a2 >= 0 ? cal.D[1 + a2] : cal.D[0], Dt = b2 <= 9 ? cal.D[6 + b2 - 4] : cal.D[0]; COUNTS.forEach((_, i) => (de[i] = Ds[i] + Dt[i] - cal.D[0][i])); }
@@ -4540,7 +4539,6 @@ const NAV_ITEMS = [
   ["sessions", "Sessions", <><path d="M4 18.5 9.2 12.8l3.6 3.2 7.2-8.5" /><path d="M15.5 7.5H20V12" /></>],
   ["casinos", "Casinos", <><path d="M12 20.8s-6.6-5.9-6.6-10.9a6.6 6.6 0 0 1 13.2 0c0 5-6.6 10.9-6.6 10.9z" /><circle cx="12" cy="9.9" r="2.4" /></>],
   ["plan", "Plan", <><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8.5 3.5v3M15.5 3.5v3M8 13.5h3M8 16.5h6" /></>], // wide screens only: left out of the phone's bottom bar
-  ["ask", "Ask", <><path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4.5 19.5l1.3-4.2A7.5 7.5 0 1 1 20 11.5z" /><path d="M9.5 11.5h.01M12.5 11.5h.01M15.5 11.5h.01" /></>],
 ];
 // Jump-to palette (⌘K / Ctrl K / "/"): type a few letters, arrow to a row, Enter. Every page, drill and setting is in it.
 function CommandPalette({ items, onClose }) {
@@ -4640,7 +4638,6 @@ function SettingsPage({ rules, onRules, seats, go }) {
       </section>
       </div><div className="dcol o2">
       <SyncCard />
-      <AskKeyCard />
       <div className="mb-4"><Backup /></div>
       </div><div className="dcol cont">
       <ResetSkills />
@@ -5068,6 +5065,8 @@ function BetSpreadCalculator() {
   const sessDd = useDeferred(sessT > 0 ? JSON.stringify([bets, spotsMap, r.evHour, r.sdHour, sessT, rphEff]) : null, () => sessionDrawdown(r.rows, cal, sessT, rphEff), true);
   const sess = useMemo(() => (sessBase ? { ...sessBase, ddMed: sessDd ? sessBase.fx.d50 * sessDd.med : null, dd90: sessDd ? sessBase.fx.d90 * sessDd.p90 : null } : null), [sessBase, sessDd]);
   const mix = useMemo(() => mixOf(r.rows, cal), [r, cal]);
+  // your own spread as this page prices it, for the Plan tab's bankroll side
+  const mine = useMemo(() => { let rps = 0; try { rps = shoeRounds(r.rf, bets, spotsMap, cal, rules.pen); } catch (_) {} return { ev: r.evHour, sd: r.sdHour, ror: r.ror, mn: Math.max(0, +minBet || 0), bets, rph: rphEff, rps, loses: !(r.evHour > 0) }; }, [r, bets, spotsMap, cal, rules.pen, minBet, rphEff]);
   const rorTarget = rorPct / 100;
   const [optResult, setOptResult] = useState(null);
   const [frontier, setFrontier] = useState(null);
@@ -5140,7 +5139,6 @@ function BetSpreadCalculator() {
     ["Pages", "Live play", () => go("play"), "table simulation"],
     ["Pages", "Bet spread", () => go("calc"), "calculator optimizer risk of ruin bankroll"],
     ["Pages", "Sessions", () => go("sessions"), "casino log chart results"],
-    ["Pages", "Ask", () => go("ask"), "ai assistant chat question cover play claude"],
     ["Pages", "Casinos", () => go("casinos"), "map scouting backed off heat penetration rules countries"],
     ["Pages", "Plan", () => go("plan"), "rotation cooldown rest next casino bankroll growth move up schedule"],
     ["Pages", "Settings", () => go("settings"), "sync backup reset"],
@@ -5168,7 +5166,7 @@ function BetSpreadCalculator() {
         <header className="mb-5 flex items-end justify-between gap-3">
           <div className="shrink-0">
             {tab === "progress" && <div className="eyebrow mb-1.5">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>}
-            <h1 className="leading-none font-semibold">{({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan", ask: "Ask" })[tab]}</h1>
+            <h1 className="leading-none font-semibold">{({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan" })[tab]}</h1>
           </div>
           <div className="flex items-center gap-2 min-w-0">
             <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
@@ -5181,14 +5179,14 @@ function BetSpreadCalculator() {
         <div className="pillrail"><div className="mx-auto flex justify-end">
           <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </div></div>
-        <TopBar title={({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan", ask: "Ask" })[tab]}>
+        <TopBar title={({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan" })[tab]}>
           <button onClick={() => setSetupOpen(true)} className="rulespill shrink-0" style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </TopBar>
         <div className="sbar" aria-hidden="true" />
 
 
         {(tab === "train" || tab === "count") && <div className="tabs" role="tablist" aria-label="Train">{[["train", "Strategy"], ["count", "Drills"]].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>{l}</button>)}</div>}
-        {tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} go={go} /></div> : tab === "ask" ? <div className="rise" key="a"><AskPage /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
+        {tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} /></div> : <div className="rise" key="c">
         <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .6s" }}>
@@ -5451,7 +5449,7 @@ function BetSpreadCalculator() {
         {NAV_ITEMS.map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
           <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"sn-item" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg>
-            <span>{l}</span>{k === "ask" && <AskDot side />}
+            <span>{l}</span>
           </button>); })}
         <div className="sn-foot">
           {spreadLoaded && <button onClick={() => go("calc")} className="sn-rules" aria-label="Your spread. Open the calculator">
@@ -5472,7 +5470,7 @@ function BetSpreadCalculator() {
         <div className="flex">
           {NAV_ITEMS.filter(([k]) => k !== "plan").map(([k, l, icon]) => { const on = tab === k || (k === "train" && tab === "count"); return (
             <button key={k} onClick={() => go(k === "train" ? trainSub : k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
-              <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg>{k === "ask" && <AskDot />}</span>
+              <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.1 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
               <span>{l}</span>
             </button>); })}
         </div>
@@ -5482,5 +5480,5 @@ function BetSpreadCalculator() {
 }
 // shared with src/casinos.jsx (the Casinos page lives in its own file)
 export { Sheet, Seg, ChipRow, ConfirmLink, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav, Info, money, shortMoney, fmtTC, pct };
-// used by the Ask tab (src/ask.jsx, src/aitools.js)
+// used by the Plan tab (src/planner.jsx) and the arithmetic checks
 export { tailFix, shoeRounds, useDeferred, COUNTS, calFor, compute, autoRph, roundFreqs, spotsAt, momentAt, optimizeSpread, optimizeForProfit, correctPlay, rulesLabel, pDip, PhiN, DEFAULT_RULES, DEFAULT_BETS, SKILLS, sessEv, sessSd, loadLog, sessionDrawdown, sessionCash };

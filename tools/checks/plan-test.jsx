@@ -35,7 +35,10 @@ for (const B of [3000, 6000, 20000, 60000]) for (const cap of [2, 5, 20]) GAMES.
 });
 { const setup = { ...base, bankroll: 6000, rorPct: 5 }, ref = scoreGame(setup, GAMES[0]);
   near("your usual game scores 50", scoreFor(ref, ref), 50, 0); near("twice the money scores 67", scoreFor({ ...ref, ev: ref.ev * 2 }, ref), 67, 0);
-  near("half the money scores 33", scoreFor({ ...ref, ev: ref.ev / 2 }, ref), 33, 0); near("a losing game scores 0", scoreFor({ ...ref, loses: true }, ref), 0, 0); }
+  near("half the money scores 33", scoreFor({ ...ref, ev: ref.ev / 2 }, ref), 33, 0); near("a losing game scores 0", scoreFor({ ...ref, loses: true }, ref), 0, 0);
+  ok("risk of ruin counts in the score: same money, safer table, higher score", scoreFor({ ...ref, ror: ref.ror / 2 }, ref) > 50 && scoreFor({ ...ref, ror: Math.min(0.99, ref.ror * 1.5) }, ref) < 50, `${scoreFor({ ...ref, ror: ref.ror / 2 }, ref)} ${scoreFor({ ...ref, ror: Math.min(0.99, ref.ror * 1.5) }, ref)}`);
+  const safe = { ...ref, ror: 0.05, fit: 1 }, risky = { ...ref, ror: 0.5, fit: 1 }; near("same money at 50% risk instead of 5% scores 34 against it", scoreFor(risky, safe), Math.round((100 * 0.5) / (0.5 + 0.95)), 0);
+  ok("certain ruin scores 0", scoreFor({ ...ref, ror: 1 }, ref) === 0); }
 
 // ---- table bankrolls: scaled bets at "move up" run exactly the risk limit, at "drop at" twice it
 for (const B of [6000, 40000]) for (const risk of [0.02, 0.05, 0.1, 0.2]) {
@@ -78,6 +81,14 @@ for (const [B, ev, sd, T] of [[6000, 4, 180, 208], [6000, 10, 350, 400], [20000,
   // moving up and dropping back: a table you can never reach changes nothing; the same seed gives the same picture
   const one = growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }], hours: 400 }), two = growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }, { m: 10, need: 1e12, down: 5e11, ev: 2 * ev, sd: 2 * sd }], hours: 400 });
   near("sim: an unreachable table changes nothing", two.pts[two.pts.length - 1].mid, one.pts[one.pts.length - 1].mid, 1e-6); near("sim: same inputs, same answer", growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }], hours: 400 }).bust, one.bust, 0);
+  { const G = 9000, th = (2 * ev) / (sd * sd), far = growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }, { m: 10, need: G, down: 0, ev: 2 * ev, sd: 2 * sd }], hours: 60000 });
+    near("sim: share that ever reach the next table", far.reach[1].p, (1 - Math.exp(-th * B)) / (1 - Math.exp(-th * G)), 0.03);
+    ok("sim: half the paths reach it sooner than the average wait", far.reach[1].med != null && far.reach[1].med < (G - B) / ev, `median ${far.reach[1].med} mean ${(G - B) / ev}`); near("sim: the table you start at is already reached", far.reach[0].p, 1, 0); }
+  // your own spread, as Bet spread prices it, drives the bankroll side: any spread works, not only an optimizer's
+  { const cal = calFor(base.rules, 4), bets = { "-3": 0, "-2": 0, "-1": 0, 0: 0, 1: 25, 2: 50, 3: 50, 4: 75, 5: 75, 6: 100 }, r = compute({ bankroll: 6000, handsPerHour: 100, bets, cal, spotsMap: {} });
+    const m = growthModel({ ev: r.evHour, sd: r.sdHour, mn: 25, bets }, 6000, 0.05);
+    ok("own spread: model built", !!m); m.lv.forEach((l) => { const sb = {}; COUNTS.forEach((c) => (sb[c] = bets[c] * l.k)); near(`own spread $${l.m}: risk at "move up"`, compute({ bankroll: l.need, handsPerHour: 100, bets: sb, cal, spotsMap: {} }).ror, 0.05, 1e-7); });
+    ok("own spread: a losing spread has no plan", growthModel({ ev: -3, sd: 300, mn: 25, bets }, 6000, 0.05) === null); ok("own spread: no table minimum, no plan", growthModel({ ev: 10, sd: 300, mn: 0, bets }, 6000, 0.05) === null); }
   const up = growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }, { m: 10, need: 6000, down: 4500, ev: 2 * ev, sd: 2 * sd }], hours: 2000 });
   ok("sim: moving up widens the range", up.pts[up.pts.length - 1].hi > growthSim({ B, lv: [{ m: 5, need: 0, down: 0, ev, sd }], hours: 2000 }).pts.slice(-1)[0].hi);
   ok("sim: bankrolls never go below zero", up.pts.every((p) => p.lo >= 0 && p.lo <= p.mid && p.mid <= p.hi));
