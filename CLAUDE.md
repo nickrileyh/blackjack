@@ -192,6 +192,16 @@ Playing cards are drawn at fixed pixel sizes (`.pc`, `.pc.sm`, `.pc.big`) and sc
 
 `THEME_LIST` in `src/app.jsx` (Emerald, Dark blue, Classic gold, Amethyst, Copper, Graphite, White & blue, Kiera); each is one block of colour variables on `:root[data-theme=…]`. **Kiera** (pink with a green felt, from a palette Nick sent) is a light theme: `applyTheme` sets `data-theme="light"` so every light-theme layout rule applies, plus `data-skin="kiera"`, whose block repaints the colours. Add another light theme the same way; a rule that must beat a later light-theme rule needs both attributes in its selector.
 
+## Liquid glass
+
+Nick asked for a subtle Apple-style liquid glass look on the app's elements. It is one block at the end of the `css` string in `src/app.jsx` ("Liquid glass, kept subtle"), driven by four variables: `--gl-hi` (the bright top edge), `--gl-rim` (a faint ring), `--gl-sheen` (a soft sheen from the top-left corner) and `--gl-blur` (the material). Light themes re-point the first three.
+
+- **Real blur only on what floats over the page**: bottom tab bar, top bar, sidebar, the floating rules pill, sheets, the Jump-to palette and the sync toast. Cards get the edge and the sheen but no `backdrop-filter` — nothing sits behind them, and dozens of blurred layers make a phone scroll badly. Don't add blur to cards or list rows.
+- Sheets and the palette are see-through through `color-mix()` inside an `@supports` rule, so older browsers keep the solid sheet. `prefers-reduced-transparency` turns the chrome solid again.
+- Pills, round buttons, ghost buttons, the selected tab and the selected segment share the same capsule: a top-to-bottom tint with the `--gl-hi` edge. Give a new small control the same two declarations rather than a flat fill (`.pchip` on the Plan page does).
+- Shadows in the light rules use `rgba(var(--fg),…)` so Kiera and any later light theme tint them their own colour.
+- Keep it subtle: tune the four variables, not individual elements.
+
 ## The table felt
 
 `.felt` is the green table surface used by live play, the strategy table and the drills. `FeltPrint` draws the printing on it (payout and dealer rule, read from the app's rules through `RulesCtx`) behind the cards; it is used on live play and the strategy table only. In the light theme the felt is deep blue and `:root[data-theme="light"] .felt` re-points the text and accent variables to light-on-dark, so anything placed inside a felt should use the theme variables rather than fixed colors. Outside a felt, use `var(--recess)` for sunken boxes (not `rgba(var(--sh),…)`, which is white in the light theme) and `rgba(var(--fg),…)` for faint tracks and tints. The sidebar logo (`.sn-tile`) is the app icon's spade and chip in theme colors.

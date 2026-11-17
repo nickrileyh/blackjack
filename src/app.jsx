@@ -663,6 +663,31 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .burst i{position:absolute;left:50%;top:45%;width:5px;height:5px;border-radius:50%;background:var(--brass);opacity:0;animation:fly var(--t) ease-out forwards;animation-delay:var(--dl)}
 .burst i:nth-child(3n){background:var(--acc-hi)}.burst i:nth-child(4n){width:3px;height:3px}
 @keyframes fly{0%{opacity:1;transform:rotate(var(--a)) translateY(-6px) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(-6px - var(--d))) scale(.3)}}
+/* ---- Liquid glass, kept subtle (Nick's instruction). Surfaces read as a clear material: a brighter top edge where light
+   catches (--gl-hi), a faint ring (--gl-rim), a soft sheen from the top-left corner (--gl-sheen), and real blur
+   (--gl-blur) only on the pieces that float over the page: tab bar, top bar, sidebar, rules pill, sheets, palette,
+   toast. Cards get the edge and sheen but no blur — there is nothing behind them to blur, and dozens of blurred layers
+   would make a phone scroll badly. The whole look lives in this block so it can be tuned or switched off in one place. */
+:root{--gl-hi:rgba(255,255,255,.13);--gl-rim:rgba(255,255,255,.04);--gl-sheen:rgba(255,255,255,.05);--gl-blur:blur(24px) saturate(1.8)}
+:root[data-theme="light"]{--gl-hi:rgba(255,255,255,.95);--gl-rim:rgba(255,255,255,.6);--gl-sheen:rgba(255,255,255,.55)}
+.card{background:radial-gradient(130% 90% at 0% 0%,var(--gl-sheen),transparent 55%),linear-gradient(180deg,rgba(var(--fg),.055),rgba(var(--fg),.02));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px var(--gl-rim),inset 0 -1px 0 rgba(var(--sh),.5),0 16px 36px -20px rgba(0,0,0,.9)}
+:root[data-theme="light"] .card{background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.8));box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px var(--gl-rim),0 1px 2px rgba(var(--fg),.06),0 10px 28px -16px rgba(var(--fg),.26)}
+.bottom-nav,.topbar{background:rgba(var(--bgrgb),.68);backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur)}
+.bottom-nav{box-shadow:inset 0 1px 0 var(--gl-hi),0 -12px 30px -18px rgba(0,0,0,.9)}
+:root[data-theme="light"] .bottom-nav{box-shadow:inset 0 1px 0 var(--gl-hi),0 -1px 0 rgba(var(--fg),.06)}
+.sidenav{backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur);box-shadow:inset -1px 0 0 var(--gl-rim)}
+.navbtn.on .navicon,.sn-glide{background:linear-gradient(180deg,rgba(var(--acc),.2),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.14)}
+.rulespill,.iconbtn,.stepbtn,.btn.ghost,.sn-search,.sn-rules{background:linear-gradient(180deg,rgba(var(--fg),.085),rgba(var(--fg),.035));box-shadow:inset 0 1px 0 var(--gl-hi)}
+.pillrail .rulespill,.topbar .rulespill,.syncpill{backdrop-filter:var(--gl-blur);-webkit-backdrop-filter:var(--gl-blur)}
+.syncpill{background:rgba(var(--bgrgb),.7);box-shadow:inset 0 1px 0 var(--gl-hi),0 12px 30px -12px rgba(0,0,0,.7)}
+:root:not([data-theme="light"]) .chipseg button.on,:root:not([data-theme="light"]) .chipseg.slide .thumb{background:linear-gradient(180deg,rgba(var(--acc),.2),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.2),0 2px 8px -4px rgba(0,0,0,.6)}
+:root:not([data-theme="light"]) .chipseg.slide button.on{background:none;box-shadow:none}
+/* sheets and the Jump-to palette: the page shows through, softly, where the browser can do it */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) and (color:color-mix(in srgb,red 50%,transparent)){
+.sheet,.cmdk{background:linear-gradient(180deg,var(--gl-hi),var(--gl-hi) 1px,transparent 1px),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 80%,transparent),color-mix(in srgb,var(--sheet2) 87%,transparent) 40%);backdrop-filter:blur(30px) saturate(1.7);-webkit-backdrop-filter:blur(30px) saturate(1.7)}
+}
+/* "Reduce transparency" on the device: solid surfaces again */
+@media (prefers-reduced-transparency:reduce){.bottom-nav,.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1.25s}.splash.go .sp-tile{animation:spfade .5s ease both!important}.splash.go .sp-chip{animation:spfade .45s ease .3s both!important}.splash.go .sp-word{animation:spfade .45s ease .45s both!important}.splash.go .sp-tag{animation:spfade .45s ease .6s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 `;
 

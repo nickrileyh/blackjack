@@ -294,7 +294,7 @@ button.prow:hover{background:rgba(var(--fg),.045)}
 .pnum{font-variant-numeric:tabular-nums;font-weight:600;font-size:12.5px;text-align:right;white-space:nowrap}
 .pset{display:flex;align-items:center;gap:10px;min-width:0;white-space:nowrap}
 .pset>.eyebrow{font-size:10px}
-.pchip{display:inline-flex;align-items:baseline;gap:6px;padding:5px 11px;border-radius:99px;background:rgba(var(--fg),.055);font-size:11.5px;color:var(--muted);white-space:nowrap}
+.pchip{display:inline-flex;align-items:baseline;gap:6px;padding:5px 11px;border-radius:99px;background:linear-gradient(180deg,rgba(var(--fg),.08),rgba(var(--fg),.035));box-shadow:inset 0 1px 0 var(--gl-hi);font-size:11.5px;color:var(--muted);white-space:nowrap}
 .pchip>b{font-weight:600;font-size:13px;color:var(--ivory);font-variant-numeric:tabular-nums}
 .pbig{font-size:26px;line-height:1.1;font-weight:700;letter-spacing:-.02em}
 .pstat>div:first-child{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
