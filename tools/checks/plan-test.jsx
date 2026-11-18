@@ -4,7 +4,7 @@
 // Run:  tools/checks/run.sh
 process.env.TZ = "America/New_York"; // the date checks cross a clock change
 import { COUNTS, calFor, compute, pDip, PhiN, DEFAULT_RULES, optimizeSpread } from "./app.jsx";
-import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, nextUp, addDays, daysBetween, reportGame, scoreTone, gamesAt, ladderModel, averageGame, bankrollHistory } from "./planner.jsx";
+import { scoreGame, scoreFor, cashFor, growthModel, growthSim, goalStats, restOf, restSet, nextUp, addDays, daysBetween, reportGame, scoreTone, gamesAt, ladderModel, averageGame, bankrollHistory, autoAt, optFor, dealSim } from "./planner.jsx";
 let bad = 0, n = 0; const ok = (name, cond, info = "") => { n++; if (!cond) { bad++; console.log("FAIL", name, info); } };
 const near = (name, a, b, tol) => ok(name, Math.abs(a - b) <= tol, `got ${a} want ${b} ±${tol}`);
 const base = { rules: { ...DEFAULT_RULES, h17: true, surrender: true, decks: 6, pen: 75 }, seats: 4, spotsMap: {}, minBet: 25, maxBet: 500, hphAuto: true, handsPerHour: 100 };
@@ -236,6 +236,46 @@ for (const [nm, su] of [["6D H17 LS $25-500", base], ["2D H17 $50-1000", { ...ba
   let smooth = true; for (let n = 1; n <= 100; n++) { const d = hue(n) - hue(n - 1); if (d < 0 || d > 3) smooth = false; }
   ok("score colour: the hue only ever moves toward green, in small steps", smooth);
   ok("score colour: out-of-range scores are clamped", scoreTone(-5) === scoreTone(0) && scoreTone(140) === scoreTone(100));
+}
+
+// ---- the optimized game ("Where it's heading" by default): the best every-hand bets for the bankroll at the risk limit
+for (const [gi, su] of [[0, { ...base, minBet: 25, maxBet: 1000 }], [1, { ...base, rules: { ...DEFAULT_RULES, decks: 2, h17: true, das: true, pen: 65 }, minBet: 10, maxBet: 500 }]]) for (const risk of [0.02, 0.05]) {
+  const L = ladderModel(su, risk), { opt } = optFor(su, risk), tag0 = `optimized game ${gi} at ${risk * 100}%`, B0 = L.lv[0].need;
+  // 1. read off the curve, $/hr and swing match the optimizer run afresh at that bankroll, its bets sit at the limit (or the
+  //    table maximum holds them back and they are inside it), and the table picked earns at least what the one below would
+  for (const k of [1.05, 1.6, 2.5, 4, 7, 12, 25]) {
+    const B = B0 * k, a = autoAt(L, B), x = opt(a.m, B), tag = `${tag0}, $${Math.round(B)}`;
+    ok(`${tag}: not over the limit above the smallest table`, !a.over);
+    ok(`${tag}: plays the biggest table whose "Move up" it has reached`, L.lv[a.i].need <= B && (a.i === L.lv.length - 1 || L.lv[a.i + 1].need > B), `table ${a.m}`);
+    near(`${tag}: $/hr off the curve = the optimizer's`, a.ev, x.ev, 0.02 * x.ev + 0.05); near(`${tag}: swing off the curve = the optimizer's`, a.sd, x.sd, 0.02 * x.sd);
+    ok(`${tag}: those bets are inside the limit`, x.ror <= risk * 1.001, `ror ${x.ror}`);
+    if (a.i > 0) { const y = opt(L.lv[a.i - 1].m, B); ok(`${tag}: the table below earns no more`, !y.ok || y.ev <= a.ev * 1.03 + 0.05, `${y.ev} vs ${a.ev}`); }
+  }
+  { const a = autoAt(L, B0 * 0.6); ok(`${tag0}: under the smallest table it plays that table's own bets, flagged over the limit`, a.over && a.i === 0 && a.ev === L.lv[0].ev && a.sd === L.lv[0].sd); }
+}
+{ // 2. the 4,000 futures against a separate walk: 3-minute steps, the bets resized at the start of every 4-hour session
+  const su = { ...base, minBet: 25, maxBet: 1000 }, L = ladderModel(su, 0.05), B = 12000, T = 208, sess = 4, dt = 0.05, N = 6000, tag = "optimized futures vs a separate walk";
+  const m = growthSim({ B, lv: L.lv, hours: T, auto: L, sess }), e = m.pts[m.pts.length - 1];
+  let sd = 77; const u = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; }, z = () => Math.sqrt(-2 * Math.log(u())) * Math.cos(2 * Math.PI * u());
+  const ends = [], per = Math.round(sess / dt); let half = 0, below = 0;
+  for (let p = 0; p < N; p++) { let b = B, g = null, lo = B; for (let i = 0; i < T / dt; i++) { if (i % per === 0) g = autoAt(L, b); b += g.ev * dt + g.sd * Math.sqrt(dt) * z(); if (b < lo) lo = b; if (b <= 0) { b = 0; break; } } ends.push(b); if (lo <= B / 2) half++; if (b < B) below++; }
+  ends.sort((a, b) => a - b); const q = (f) => ends[Math.floor(f * N)];
+  near(`${tag}: typical`, e.mid, q(0.5), 0.03 * q(0.5)); near(`${tag}: 10th percentile`, e.lo, q(0.1), 0.04 * q(0.1)); near(`${tag}: 90th percentile`, e.hi, q(0.9), 0.04 * q(0.9));
+  near(`${tag}: ending behind`, m.below, below / N, 0.025); near(`${tag}: losing half`, m.half, half / N, 0.025);
+}
+{ // 3. against real cards: futures dealt hand by hand (src/sim.js), betting the optimizer's bets, resized every session.
+  // Each of the model's 10th / 50th / 90th percentiles must lie where 300 dealt futures put it, give or take what chance
+  // allows (a band of order statistics that holds 99 times in 100).
+  const su = { ...base, minBet: 25, maxBet: 1000 }, L = ladderModel(su, 0.05), B = 12000, T = 208, sess = 4, n = 300;
+  const m = growthSim({ B, lv: L.lv, hours: T, auto: L, sess }), e = m.pts[m.pts.length - 1];
+  const d = dealSim({ setup: su, risk: 0.05, game: { kind: "auto", lad: L }, B, hours: T, sess, rph: L.rph, seed: 20261117 }, n), ends = d.paths.map((p) => p.end).sort((a, b) => a - b);
+  ok("real cards: every future dealt to the end", d.paths.length === n && d.rounds >= n * Math.round(T * L.rph) * 0.999, `${d.paths.length} paths, ${d.rounds} rounds`);
+  [[0.1, e.lo], [0.5, e.mid], [0.9, e.hi]].forEach(([f, v]) => { const k = f * n, w = 2.58 * Math.sqrt(n * f * (1 - f)), lo = ends[Math.max(0, Math.floor(k - w))], hi = ends[Math.min(n - 1, Math.ceil(k + w))]; ok(`real cards: the model's ${f * 100}th percentile is where the dealt futures put it`, v >= lo && v <= hi, `model ${Math.round(v)}, dealt ${Math.round(lo)}–${Math.round(hi)}`); });
+  const fixed = dealSim({ setup: su, risk: 0.05, game: { kind: "fixed", lv: [{ m: 25, need: 0 }], bets: { "-3": 25, "-2": 25, "-1": 25, 0: 25, 1: 25, 2: 50, 3: 75, 4: 100, 5: 150, 6: 200 } }, B, hours: 40, sess: 4, rph: L.rph, seed: 5 }, 400);
+  const r = compute({ bankroll: B, handsPerHour: L.rph, bets: { "-3": 25, "-2": 25, "-1": 25, 0: 25, 1: 25, 2: 50, 3: 75, 4: 100, 5: 150, 6: 200 }, cal: calFor({ ...DEFAULT_RULES, ...su.rules }, 4), spotsMap: {} });
+  const res = fixed.paths.map((p) => (p.end - B) / 40), mean = res.reduce((a, b) => a + b, 0) / res.length, sdv = Math.sqrt(res.reduce((a, b) => a + (b - mean) ** 2, 0) / (res.length - 1));
+  near("real cards: a fixed spread earns its calculated $/hr", mean, r.evHour, 3.3 * (r.sdHour / Math.sqrt(40)) / Math.sqrt(res.length));
+  near("real cards: and swings as calculated (40 hours, as dollars an hour)", sdv, r.sdHour / Math.sqrt(40), 0.1 * r.sdHour / Math.sqrt(40));
 }
 
 console.log(bad ? `${bad} of ${n} plan checks FAILED` : `all ${n} plan checks passed`);
