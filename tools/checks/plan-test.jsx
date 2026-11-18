@@ -253,6 +253,19 @@ for (const [gi, su] of [[0, { ...base, minBet: 25, maxBet: 1000 }], [1, { ...bas
   }
   { const a = autoAt(L, B0 * 0.6); ok(`${tag0}: under the smallest table it plays that table's own bets, flagged over the limit`, a.over && a.i === 0 && a.ev === L.lv[0].ev && a.sd === L.lv[0].sd); }
 }
+{ // moving up switched off: one table whatever the bankroll does, the bets still following it along that table's curve
+  const su = { ...base, minBet: 25, maxBet: 1000 }, L = ladderModel(su, 0.05), { opt } = optFor(su, 0.05), i = 1, m = L.lv[i].m;
+  for (const B of [L.lv[i].need * 0.8, L.lv[i].need * 1.5, L.lv[L.lv.length - 1].need * 1.2]) {
+    const a = autoAt(L, B, i), x = opt(m, B), tag = `moving up off, $${Math.round(B)}`;
+    ok(`${tag}: stays at the $${m} table`, a.i === i && a.m === m); near(`${tag}: $/hr = the optimizer's at that table`, a.ev, x.ev, 0.02 * x.ev + 0.05); near(`${tag}: swing too`, a.sd, x.sd, 0.02 * x.sd);
+  }
+  { const a = autoAt(L, m * L.U[0] * 0.5, i); ok("moving up off: under the table's smallest spread inside the limit it keeps that spread, flagged over", a.over && a.i === i && Math.abs(a.ev - m * L.E[0]) < 1e-9); }
+  const B = L.lv[i].need * 1.1, on = growthSim({ B, lv: L.lv, hours: 832, auto: L, sess: 4 }), off = growthSim({ B, lv: L.lv, hours: 832, auto: L, sess: 4, fix: i });
+  ok("moving up off: every future ends at the same table", Math.abs(off.end[i] - 1) < 1e-9, JSON.stringify(off.end));
+  ok("moving up off: the futures that grow grow less than with it on", off.pts[off.pts.length - 1].hi < on.pts[on.pts.length - 1].hi);
+  const d = dealSim({ setup: su, risk: 0.05, game: { kind: "auto", lad: L, fix: i }, B, hours: 208, sess: 4, rph: L.rph, seed: 9 }, 20);
+  ok("moving up off: a dealt future never leaves the table", d.paths.every((p) => p.table === m), d.paths.map((p) => p.table).join(","));
+}
 { // 2. the 4,000 futures against a separate walk: 3-minute steps, the bets resized at the start of every 4-hour session
   const su = { ...base, minBet: 25, maxBet: 1000 }, L = ladderModel(su, 0.05), B = 12000, T = 208, sess = 4, dt = 0.05, N = 6000, tag = "optimized futures vs a separate walk";
   const m = growthSim({ B, lv: L.lv, hours: T, auto: L, sess }), e = m.pts[m.pts.length - 1];
