@@ -239,7 +239,7 @@ for (const [nm, su] of [["6D H17 LS $25-500", base], ["2D H17 $50-1000", { ...ba
 }
 
 // ---- the optimized game ("Where it's heading" by default): the best every-hand bets for the bankroll at the risk limit
-for (const [gi, su] of [[0, { ...base, minBet: 25, maxBet: 1000 }], [1, { ...base, rules: { ...DEFAULT_RULES, decks: 2, h17: true, das: true, pen: 65 }, minBet: 10, maxBet: 500 }]]) for (const risk of [0.02, 0.05]) {
+for (const [gi, su] of [[0, { ...base, minBet: 25, maxBet: 1000 }], [1, { ...base, rules: { ...DEFAULT_RULES, decks: 2, h17: true, das: true, pen: 65 }, minBet: 10, maxBet: 500 }]]) for (const risk of [0.005, 0.02, 0.05, 0.2]) {
   const L = ladderModel(su, risk), { opt } = optFor(su, risk), tag0 = `optimized game ${gi} at ${risk * 100}%`, B0 = L.lv[0].need;
   // 1. read off the curve, $/hr and swing match the optimizer run afresh at that bankroll, its bets sit at the limit (or the
   //    table maximum holds them back and they are inside it), and the table picked earns at least what the one below would

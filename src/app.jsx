@@ -15,7 +15,7 @@ const LABEL = (tc) => (tc === -3 ? "≤ −3" : tc === 6 ? "≥ +6" : tc > 0 ? `
 const DEFAULT_BETS = { "-3": 0, "-2": 0, "-1": 0, "0": 0, "1": 25, "2": 50, "3": 50, "4": 75, "5": 75, "6": 100 };
 const fmtH = (h) => `${Math.round((Number(h) || 0) * 100) / 100}h`; // hours to the hundredth, no float noise
 const sgnMoney = (v) => { const r = Math.round(v); return `${r > 0 ? "+" : r < 0 ? "−\u2060" : ""}$${Math.abs(r).toLocaleString()}`; };
-const shortMoney = (v) => { const a = Math.abs(v), sg = v < 0 ? "−\u2060" : ""; return a >= 1000 ? `${sg}$${(a / 1000).toFixed(a >= 10000 ? 0 : 1)}k` : `${sg}$${Math.round(a)}`; };
+const shortMoney = (v) => { const a = Math.abs(v), sg = v < 0 ? "−\u2060" : ""; return a >= 999500 ? `${sg}$${(a / 1e6).toFixed(a >= 9.95e6 ? 0 : 1)}M` : a >= 1000 ? `${sg}$${(a / 1000).toFixed(a >= 10000 ? 0 : 1)}k` : `${sg}$${Math.round(a)}`; };
 function niceTicks(lo, hi, n = 5) { const span = hi - lo || 1; const raw = span / n; const mag = Math.pow(10, Math.floor(Math.log10(raw))); const e = raw / mag; const step = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag; const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(+v.toFixed(10)); return out; }
 const money = (n, d = 0) =>
   (n < 0 ? "−\u2060" : "") + "$" + Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
