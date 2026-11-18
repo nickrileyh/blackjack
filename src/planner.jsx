@@ -653,10 +653,11 @@ export function* growthSteps({ B, lv, hours, N = 4000, seed = 20261116, auto = n
     if ((p & 15) === 15) yield;
   }
   const q = (a, f) => a[Math.min(N - 1, Math.floor(f * N))];
-  const pts = col.map((a, i) => { const x = Float32Array.from(a).sort(); return { h: i === 0 ? 0 : cps[i - 1] * dt, lo: q(x, 0.1), q1: q(x, 0.25), mid: q(x, 0.5), q3: q(x, 0.75), hi: q(x, 0.9) }; });
+  let ends = null;
+  const pts = col.map((a, i) => { const x = Float32Array.from(a).sort(); if (i === col.length - 1) ends = x; return { h: i === 0 ? 0 : cps[i - 1] * dt, lo: q(x, 0.1), q1: q(x, 0.25), mid: q(x, 0.5), q3: q(x, 0.75), hi: q(x, 0.9) }; });
   dds.sort();
   const reach = first.map((a) => { const x = Float32Array.from(a).sort(); let n = 0; while (n < N && x[n] !== Infinity) n++; return { p: n / N, med: n >= N / 2 ? x[Math.floor(N / 2)] : null }; });
-  return { pts, s0, N, top, reach, cpH: cps.map((i) => i * dt), ddMid: q(dds, 0.5), ddBad: q(dds, 0.9), bust: bust / N, below: below / N, half: half / N, end: end.map((n) => n / N) };
+  return { pts, s0, N, top, reach, cpH: cps.map((i) => i * dt), ddMid: q(dds, 0.5), ddBad: q(dds, 0.9), bust: bust / N, below: below / N, half: half / N, ends, end: end.map((n) => n / N) };
 }
 // ---------- dealing the future with real cards ----------
 // Nick: "simulate the future bankroll and show how the simulation played out on that graph", accurate, in under 10
@@ -691,14 +692,14 @@ export function* dealSteps({ setup, risk, game, B, hours, sess, rph, seed, step 
   for (let p = 0; !out.stop && p < (out.max || 1e9); p++) {
     const g = makeGame(R, seats, ((seed >>> 0) ^ Math.imul(p + 1, 2654435761)) >>> 0 || 1, { perShoe: true });
     const pts = new Float32Array(nSess + 1), first = lv.map((l) => (l.need <= B * 1.0005 ? 0 : Infinity));
-    let b = B, low = B, peak = B, dd = 0, dead = false, t = 0, j = 0, rj = 0; pts[0] = B; while (rj < lv.length - 1 && lv[rj + 1].need <= B * 1.0005) rj++;
+    let b = B, low = B, peak = B, dd = 0, dead = false, deadAt = null, t = 0, j = 0, rj = 0; pts[0] = B; while (rj < lv.length - 1 && lv[rj + 1].need <= B * 1.0005) rj++;
     while (t < T) {
       const x = betsAt(b); for (let k = 0; k < 10; k++) { const c = COUNTS[k], v = +x.bets[c] || 0; unit[k] = v; spots[k] = v > 0 ? (spotsMap[c] === 2 && seats < 7 ? 2 : 1) : 0; }
       const end = Math.min(T, t + S);
       for (; t < end; t++) {
         const r = g.next((k) => spots[k]); if (!r.nu) continue;
         b += unit[r.b] * (r.x0 + (r.nu === 2 ? r.x1 : 0));
-        if (b <= 0) { b = 0; dead = true; break; }
+        if (b <= 0) { b = 0; dead = true; deadAt = (t + 1) / rph; break; }
         if (b < low) low = b; if (b > peak) peak = b; else if (peak - b > dd) dd = peak - b;
         while (rj < lv.length - 1 && b >= lv[rj + 1].need) { rj++; first[rj] = (t + 1) / rph; }
         if ((t & 2047) === 2047) { out.rounds += 2048; yield; }
@@ -706,7 +707,7 @@ export function* dealSteps({ setup, risk, game, B, hours, sess, rph, seed, step 
       pts[++j] = b; if (dead) { while (j < nSess) pts[++j] = 0; break; }
     }
     out.rounds += t & 2047;
-    out.paths.push({ pts, end: b, low: dead ? 0 : low, dd: dead ? peak : dd, dead, first, table: betsAt(b).m });
+    out.paths.push({ pts, end: b, low: dead ? 0 : low, high: peak, dd: dead ? peak : dd, dead, deadAt, first, table: betsAt(b).m, hands: t });
     yield;
   }
   return out;
@@ -728,11 +729,9 @@ function GrowthChart({ sim, B, lv, flat, hours, whenOf, hist, ladder, dealt }) {
   // (the figures printed around the chart are the exact ones). The first point stays today's bankroll.
   const pts = useMemo(() => { const raw = sim.pts, n = raw.length, w = Math.max(1, Math.round(n / 40)); return raw.map((p, i) => { if (!i) return p; const a = Math.max(1, i - w), b = Math.min(n - 1, i + w), o = { h: p.h }; ["lo", "q1", "mid", "q3", "hi"].forEach((k) => { let t = 0; for (let j = a; j <= b; j++) t += raw[j][k]; o[k] = t / (b - a + 1); }); return o; }); }, [sim]);
   const end = sim.pts[sim.pts.length - 1], cid = "gc" + useId().replace(/[^a-zA-Z0-9]/g, "");
-  // dealt futures (real cards): up to 60 drawn faintly, one bright. The scale makes room for the bright one and for
-  // the middle 8 in 10 of where they ended; the rest are clipped at the chart's edge.
-  const dl = dealt && dealt.paths.length ? dealt : null, hlP = dl ? dl.paths[Math.min(dl.hl, dl.paths.length - 1)] : null;
-  const dEnds = dl ? dl.paths.map((p) => p.end).sort((a, b) => a - b) : [], dq = (f) => dEnds[Math.min(dEnds.length - 1, Math.floor(f * dEnds.length))];
-  const dRange = hlP ? [...hlP.pts, dq(0.1), dq(0.9)] : [];
+  // the one dealt future (real cards), bright over the bands; the scale makes room for all of it
+  const dl = dealt && dealt.path ? dealt : null, hlP = dl ? dl.path : null;
+  const dRange = hlP ? Array.from(hlP.pts) : [];
   const hiV = Math.max(...pts.map((p) => p.hi), B, ...(past ? past.map((p) => p.v) : []), ...dRange) * 1.05, loV = Math.max(0, Math.min(...pts.map((p) => p.lo), B, ...(past ? past.map((p) => p.v) : []), ...dRange) * 0.94);
   const x = (h) => P.l + ((h - h0) / (hours - h0)) * (W - P.l - P.r), y = (v) => H - P.b - ((v - loV) / Math.max(1, hiV - loV)) * (H - P.t - P.b);
   const fs = narrow ? 10.5 : 10, lab = (v) => (v >= 1000 ? `$${+(v / 1000).toFixed(1)}k` : `$${Math.round(v)}`);
@@ -746,7 +745,7 @@ function GrowthChart({ sim, B, lv, flat, hours, whenOf, hist, ladder, dealt }) {
   const area = (a, b) => line(a) + pts.slice().reverse().map((p) => `L${xy(p.h, p[b])}`).join("") + "Z", band = area("hi", "lo"), half = area("q3", "q1");
   const ticks = past ? [h0, 0, hours] : [0, 0.5, 1].map((f) => f * hours);
   const dLine = (p) => { let d = ""; const n = p.pts.length; for (let j = 0; j < n; j++) d += `${j ? "L" : "M"}${xy(Math.min(hours, j * dl.ph), p.pts[j])}`; return d; };
-  const dRest = dl ? dl.paths.slice(0, 60).filter((p) => p !== hlP).map(dLine) : [], dHl = hlP ? dLine(hlP) : "";
+  const dHl = hlP ? dLine(hlP) : "";
   const pastLine = past ? past.map((p, i) => `${i ? "L" : "M"}${xy(p.h, p.v)}`).join("") : "", pastArea = past ? `${pastLine}L${x(0).toFixed(1)},${H - P.b}L${x(h0).toFixed(1)},${H - P.b}Z` : "";
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full block pgchart" role="img" aria-label={`${past ? `Your bankroll so far, from ${shortMoney(past[0].v)} to ${shortMoney(B)} today, then ` : ""}the next ${Math.round(hours)} hours of play: typically ${shortMoney(end.mid)}, 8 times in 10 between ${shortMoney(end.lo)} and ${shortMoney(end.hi)}`}>
@@ -758,12 +757,11 @@ function GrowthChart({ sim, B, lv, flat, hours, whenOf, hist, ladder, dealt }) {
         <path className="fadein" d={half} fill="rgba(var(--acc),.2)" />
         {marks.map((l) => <g key={l.m} className="fadein"><line x1={x(0)} x2={W - P.r} y1={y(l.need)} y2={y(l.need)} stroke="rgba(var(--fg),.22)" strokeDasharray="2 4" /><text x={W - P.r + 6} y={y(l.need) + 3.5} fill="var(--muted)" style={{ font: `600 ${fs}px Inter` }}>${l.m} tables</text></g>)}
         {ladder && flat != null && <line className="fadein" x1={x(0)} y1={y(B)} x2={x(hours)} y2={y(B + flat * hours)} stroke="rgba(var(--fg),.42)" strokeDasharray="4 4" />}
-        {dl && <g clipPath={`url(#${cid})`}>{dRest.map((d, i) => <path key={i} d={d} fill="none" stroke="rgba(var(--fg),.17)" strokeWidth="1" strokeLinejoin="round" />)}</g>}
         {past && <path className="drawline" pathLength="1" d={pastLine} fill="none" stroke="rgba(var(--fg),.6)" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />}
         <path className="fadein late" d={line("mid")} fill="none" stroke="rgba(var(--acc),.2)" strokeWidth="7" strokeLinejoin="round" strokeLinecap="round" />
         <path className={"drawline" + (past ? " late" : "")} pathLength="1" d={line("mid")} fill="none" stroke="var(--brass)" strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
         <circle className="popin late" cx={x(hours)} cy={y(pts[pts.length - 1].mid)} r="4" fill="var(--brass)" />
-        {hlP && <g key={`hl${dl.run}|${dl.hl}`} clipPath={`url(#${cid})`}><path className="drawline" pathLength="1" d={dHl} fill="none" stroke="var(--ivory)" strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round" /><circle className="popin late" cx={x(hours)} cy={y(hlP.end)} r="3.4" fill="var(--ivory)" /></g>}
+        {hlP && <g key={`hl${dl.prun}`} clipPath={`url(#${cid})`} style={{ opacity: dl.done ? 1 : 0.35, transition: "opacity .3s var(--ez)" }}><path className="drawline" pathLength="1" d={dHl} fill="none" stroke="var(--ivory)" strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round" /><circle className="popin late" cx={x(hours)} cy={y(hlP.end)} r="3.4" fill="var(--ivory)" /></g>}
         {past && <line className="fadein" x1={x(0)} x2={x(0)} y1={P.t} y2={H - P.b} stroke="rgba(var(--fg),.2)" strokeDasharray="2 3" />}
         <circle className="popin" cx={x(0)} cy={y(B)} r="3.6" fill="var(--ivory)" stroke="rgba(var(--sh),.5)" strokeWidth="1" />
       </g>
@@ -828,10 +826,9 @@ function useGrowth(mine, bankroll, prefs, sessions, setup) {
   const far = useDeferred(ladder && farH ? ladKey + "|far|" + bankroll + "|" + sess + "|" + Math.round(farH) : null, () => growthSteps({ B: bankroll, lv: ladder.lv, hours: farH, N: 3000, auto: lad, sess }), true);
   return { risk, hpw, hours, sess, whenOf, kind, model, logged, game, gameRor, gameNeed, noEdge: !!avg && !logged, goal, goalS, hist, sim: fits(sim, model && model.lv), ladder, lad, today, todayBets, todayRor, ladBusy: !!ladKey && !lad, far: fits(far, ladder && ladder.lv), loading: (!!model && !fits(sim, model.lv)) || (kind === "auto" && !!ladKey && !lad) };
 }
-// Deals the future with real cards on the page: a few milliseconds at a time (so taps and scrolling stay live), for
-// as many whole futures as fit in DEAL_MS of wall time (the path in hand is finished, so it is done in well under ten
-// seconds even on a phone), at most DEAL_MAX. Each run uses new shoes, so "Deal again" shows how differently it goes.
-const DEAL_MS = 6000, DEAL_MAX = 200;
+// Deals ONE future with real cards on the page (Nick: "i only want one scenario dealt at a time"), a few milliseconds
+// at a time so taps and scrolling stay live: a year is about 35,000 hands, a fraction of a second on a computer and a
+// second or so on a slow phone. Each deal uses new shoes, so "Deal again" shows how differently the same plan can go.
 let _mc = null; const _mq = [];
 const later = (f) => { try { if (!_mc) { _mc = new MessageChannel(); _mc.port1.onmessage = () => { const g = _mq.shift(); if (g) g(); }; } _mq.push(f); _mc.port2.postMessage(0); } catch (_) { setTimeout(f, 0); } };
 function useDeal(gr, setup, mine, bankroll) {
@@ -844,23 +841,22 @@ function useDeal(gr, setup, mine, bankroll) {
   useEffect(() => { stop(); setSt(null); }, [key]); // eslint-disable-line
   const start = () => {
     if (!key) return; stop();
-    const run = (st && st.key === key ? st.run : 0) + 1, out = { paths: [], rounds: 0, stop: false, max: DEAL_MAX }, me = { cancel: false };
+    const run = (st && st.key === key ? st.run : 0) + 1, out = { paths: [], rounds: 0, stop: false, max: 1 }, me = { cancel: false };
     const it = dealSteps({ setup, risk: gr.risk, game, B: bankroll, hours: gr.hours, sess: gr.sess, rph, seed: (Date.now() ^ Math.imul(run, 7919)) >>> 0 }, out);
-    const t0 = performance.now(), ph = Math.round(gr.sess * rph) / rph; let shown = -1, pushed = 0;
-    const push = (done) => setSt({ key, run, paths: out.paths.slice(), rounds: out.rounds, ms: performance.now() - t0, done, hl: 0, ph, hours: gr.hours });
-    job.current = me; push(false);
+    const t0 = performance.now(), ph = Math.round(gr.sess * rph) / rph, total = Math.round(gr.hours * rph);
+    const keep = st && st.key === key && st.done ? st.path : null; // the last future stays drawn until the new one is ready
+    job.current = me; setSt({ key, run, path: keep, prun: keep ? st.prun : 0, done: false, part: 0, ph, hours: gr.hours });
+    let pushed = 0;
     const tick = () => {
       if (me.cancel) return; const s0 = performance.now(); let r;
       do r = it.next(); while (!r.done && performance.now() - s0 < 12);
-      if (performance.now() - t0 > DEAL_MS) out.stop = true;
-      if (r.done) { job.current = null; push(true); return; }
-      if (out.paths.length !== shown && performance.now() - pushed > 150) { shown = out.paths.length; pushed = performance.now(); push(false); }
+      if (r.done) { job.current = null; setSt({ key, run, path: out.paths[0] || null, prun: run, done: true, ms: performance.now() - t0, ph, hours: gr.hours }); return; }
+      if (performance.now() - pushed > 120) { pushed = performance.now(); setSt((o) => (o && o.run === run ? { ...o, part: Math.min(1, out.rounds / total) } : o)); }
       later(tick);
     };
     later(tick);
   };
-  const other = () => setSt((o) => (o && o.paths.length > 1 ? { ...o, hl: (o.hl + 1) % o.paths.length } : o));
-  return { d: st && st.key === key ? st : null, start, other, can: !!key, busy: !!(st && st.key === key && !st.done) };
+  return { d: st && st.key === key ? st : null, start, can: !!key, busy: !!(st && st.key === key && !st.done) };
 }
 // Right column, top: where the bankroll stands today
 const sessLenOf = (mine) => { const h = +(mine && mine.sessHours); return h > 0 ? Math.round(h * 4) / 4 : 4; };
@@ -893,33 +889,34 @@ function BankrollNow({ gr, mine, bankroll, prefs, go }) {
   );
 }
 const bigN = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)} million` : n >= 1000 ? `${Math.round(n / 1000)},000` : String(Math.round(n)));
-// "See it played out": deal real-card futures onto the chart, and what they came to
-function DealBox({ deal, gr, bankroll, span }) {
-  const { d, start, other, can, busy } = deal, { whenOf, kind, ladder } = gr;
-  if (!can) return <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>{kind === "logged" ? "Your logged average is a dollars-an-hour figure with no bets behind it, so it can't be dealt card by card. Pick Optimized or Spread now to see futures played out." : ""}</p>;
-  const P = d ? d.paths : [], n = P.length, ends = P.map((p) => p.end).sort((a, b) => a - b), q = (f) => ends[Math.min(n - 1, Math.floor(f * n))];
-  const broke = P.filter((p) => p.dead).length, ahead = P.filter((p) => p.end > bankroll).length, hl = n ? P[Math.min(d.hl, n - 1)] : null;
-  const firstUp = hl && ladder ? ladder.lv.map((l, i) => ({ l, t: hl.first[i] })).filter((x) => x.t > 0 && x.t !== Infinity && x.l.state !== "ok" && x.l.state !== "now") : [];
-  const sim = gr.sim, model = sim ? sim.pts[sim.pts.length - 1] : null;
+// "See it played out": one future dealt with real cards onto the chart, and what happened in it
+const pctile = (a, v) => { if (!a || !a.length) return null; let lo = 0, hi = a.length; while (lo < hi) { const m = (lo + hi) >> 1; if (a[m] < v) lo = m + 1; else hi = m; } return lo / a.length; };
+function DealBox({ deal, gr, bankroll }) {
+  const { d, start, can, busy } = deal, { whenOf, kind, ladder, sim } = gr;
+  if (!can) return <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>{kind === "logged" ? "Your logged average is a dollars-an-hour figure with no bets behind it, so it can't be dealt card by card. Pick Optimized or Spread now to see a future played out." : ""}</p>;
+  const p = d && d.path, beat = p && sim ? pctile(sim.ends, p.end) : null;
+  // the tables it moved up to, with when it first got there (only tables above the one played today)
+  const ups = p && ladder ? ladder.lv.map((l, i) => ({ l, t: p.first[i] })).filter((x) => x.t > 0 && x.t !== Infinity && x.l.state !== "ok" && x.l.state !== "now") : [];
+  const top = ups.length ? ups[ups.length - 1] : null;
   return (
     <div className="pdeal mt-3">
-      {!d ? <div className="pdrow">
-        <div className="min-w-0"><div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>See it played out</div><div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>Deals real blackjack, hand by hand, for as many whole futures as fit in a few seconds.</div></div>
-        <button type="button" className="btn" onClick={start}>Deal it out</button>
-      </div> : busy ? <div>
-        <div className="pdrow"><div className="text-sm" style={{ color: "var(--ivory)" }}>Dealing… <span className="mono">{n}</span> {n === 1 ? "future" : "futures"} · <span className="mono">{bigN(d.rounds)}</span> hands</div><span className="text-[11px] mono" style={{ color: "var(--muted)" }}>{(d.ms / 1000).toFixed(1)} s</span></div>
-        <div className="ptrack mt-2"><i style={{ width: `${Math.min(100, (100 * d.ms) / DEAL_MS)}%`, transition: "width .2s var(--ez)" }} /></div>
+      {!p ? <div className="pdrow">
+        <div className="min-w-0"><div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>See it played out</div><div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>{busy ? <>Dealing… <span className="mono">{Math.round(100 * (d.part || 0))}%</span></> : "Deals one future with real cards, hand by hand, and draws it on the chart."}</div></div>
+        <button type="button" className="btn" onClick={start} disabled={busy}>{busy ? "Dealing…" : "Deal it out"}</button>
       </div> : <div>
-        <div className="pdrow"><div className="text-[11.5px]" style={{ color: "var(--muted)" }}><span className="mono" style={{ color: "var(--ivory)" }}>{n}</span> futures dealt with real cards · <span className="mono">{bigN(d.rounds)}</span> hands · <span className="mono">{(d.ms / 1000).toFixed(1)}</span> s</div><button type="button" className="btn ghost" onClick={start}>Deal again</button></div>
-        <div className="pstats three mt-3">
-          <div className="pstat"><div>Typical</div><div>{shortMoney(q(0.5))}</div><div>the 4,000 above: {model ? shortMoney(model.mid) : "…"}</div></div>
-          <div className="pstat"><div>{n >= 10 ? "8 in 10" : "Range"}</div><div className="text-[15px]">{n >= 10 ? `${shortMoney(q(0.1))}–${shortMoney(q(0.9))}` : `${shortMoney(ends[0])}–${shortMoney(ends[n - 1])}`}</div><div>{ahead} of {n} ended ahead</div></div>
-          <div className="pstat"><div>Went broke</div><div style={{ color: broke ? "var(--neg-l)" : "var(--ivory)" }}>{broke} of {n}</div><div>within {span}</div></div>
+        <div className="pdrow">
+          <div className="min-w-0">
+            <div className="text-sm" style={{ color: "var(--ivory)" }}><i className="pdhl" />{p.dead ? <b style={{ color: "var(--neg-l)" }}>Went broke{p.deadAt != null ? ` in ${whenOf(p.deadAt)}` : ""}</b> : <>Ended at <b className="mono">{shortMoney(p.end)}</b> <span className="mono" style={{ color: p.end >= bankroll ? "var(--ivory-d)" : "var(--neg-l)" }}>{sgnShort(p.end - bankroll)}</span></>}</div>
+            <div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>{busy ? <>Dealing a new one… <span className="mono">{Math.round(100 * (d.part || 0))}%</span></> : <>{beat != null && !p.dead ? <>Better than <span className="mono">{Math.round(beat * 100)}%</span> of the 4,000 above · </> : ""}<span className="mono">{bigN(p.hands)}</span> hands dealt</>}</div>
+          </div>
+          <button type="button" className="btn ghost" onClick={start} disabled={busy}>Deal again</button>
         </div>
-        {hl && <div className="pdrow mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
-          <div className="text-[11.5px] min-w-0" style={{ color: "var(--ivory-d)" }}><i className="pdhl" /><b style={{ color: "var(--ivory)" }}>The bright line</b> {hl.dead ? "went broke" : <>ended at <span className="mono">{shortMoney(hl.end)}</span></>}, lowest <span className="mono">{shortMoney(hl.low)}</span>{firstUp.length ? <>, ${firstUp[firstUp.length - 1].l.m} tables from {whenOf(firstUp[firstUp.length - 1].t)}</> : hl.dead ? "" : <>, at ${hl.table} tables at the end</>}.</div>
-          {n > 1 && <button type="button" className="text-[11.5px] font-semibold lnk shrink-0" style={{ color: "var(--brass)" }} onClick={other}>Show another</button>}
-        </div>}
+        <div className="pstats three mt-3">
+          <div className="pstat"><div>Lowest</div><div style={{ color: p.low < bankroll / 2 ? "var(--neg-l)" : "var(--ivory)" }}>{shortMoney(p.low)}</div><div>{p.low >= bankroll ? "never below today" : sgnShort(p.low - bankroll) + " from today"}</div></div>
+          <div className="pstat"><div>Highest</div><div>{shortMoney(p.high)}</div><div>{p.high <= bankroll ? "never above today" : sgnShort(p.high - bankroll) + " from today"}</div></div>
+          <div className="pstat"><div>Worst dip</div><div>{shortMoney(p.dd)}</div><div>peak to low</div></div>
+        </div>
+        <div className="text-[11.5px] mt-3 pt-3" style={{ color: "var(--ivory-d)", borderTop: "1px solid var(--line)" }}>{top ? <>Moved up to <b style={{ color: "var(--ivory)" }}>${top.l.m} tables</b> in {whenOf(top.t)}{ups.length > 1 ? <> (by way of {ups.slice(0, -1).map((x) => `$${x.l.m}`).join(", ")})</> : ""}{p.table < top.l.m ? <>, and was back at ${p.table} tables by the end</> : ""}.</> : p.dead ? "It never got off the table it started at." : <>Stayed at ${p.table} tables the whole way.</>}</div>
       </div>}
     </div>
   );
@@ -962,7 +959,7 @@ function Growth({ gr, deal, bankroll, prefs, setPrefs, part }) {
       {auto && today && today.over && <p className="pnote mt-3">{money(bankroll)} is under the {shortMoney(lad.lv[0].need)} it takes to play ${today.m} tables inside your {pct(risk, 0)} limit. Until it gets there this plays their smallest winning spread, at {pct(todayRor, 0)} risk of ruin.</p>}
       {!auto && gameRor > risk * 1.001 && <p className="pnote mt-3">Too big for {money(bankroll)}: at this size this game goes broke {pct(gameRor, 0)} of the time sooner or later. It needs {shortMoney(gameNeed)} for your {pct(risk, 0)} limit.</p>}
       <div className="mt-3"><GrowthChart sim={sim} B={bankroll} lv={lv} flat={auto ? null : flat} hours={hours} whenOf={whenOf} hist={hist} ladder={up} dealt={deal.d} /></div>
-      <div className="plegend mt-2">{hist && <span><i className="ln" style={{ background: "rgba(var(--fg),.6)" }} />your results</span>}<span><i className="ln" style={{ background: "var(--brass)" }} />typical</span><span><i style={{ background: "rgba(var(--acc),.62)" }} />half the time</span><span><i style={{ background: "rgba(var(--acc),.3)" }} />8 in 10</span>{up && !auto && <span><i className="ln dash" />never moving up</span>}{deal.d && deal.d.paths.length > 0 && <span><i className="ln" style={{ background: "rgba(var(--fg),.3)" }} />dealt futures</span>}</div>
+      <div className="plegend mt-2">{hist && <span><i className="ln" style={{ background: "rgba(var(--fg),.6)" }} />your results</span>}<span><i className="ln" style={{ background: "var(--brass)" }} />typical</span><span><i style={{ background: "rgba(var(--acc),.62)" }} />half the time</span><span><i style={{ background: "rgba(var(--acc),.3)" }} />8 in 10</span>{up && !auto && <span><i className="ln dash" />never moving up</span>}{deal.d && deal.d.path && <span><i className="ln" style={{ background: "var(--ivory)" }} />dealt with real cards</span>}</div>
       <DealBox deal={deal} gr={gr} bankroll={bankroll} span={span} />
       <div className="pstats mt-4 pt-4" style={{ borderTop: "1px solid var(--line)" }} ref={statsRef}>
         <div className="pstat"><div>Ending ahead</div><div style={{ color: sim.below > 0.4 ? "var(--neg-l)" : "var(--ivory)" }}>{Math.round((1 - sim.below) * 100)}%</div><div>above {shortMoney(bankroll)} in {span}</div></div>
@@ -992,7 +989,7 @@ function Growth({ gr, deal, bankroll, prefs, setPrefs, part }) {
         <b>Optimized</b> doesn't use your own spread. For the rules you have selected, it finds the bets that earn the most an hour while keeping your risk of ruin at {pct(risk, 0)}, for the bankroll you have, playing every hand, with the table's maximum the same multiple of its minimum as on Bet spread. As the bankroll grows the bets grow and you move up to bigger tables at the "Move up" figures in the list below; when it shrinks they shrink, and you drop back a table below its figure. That is how the risk stays at {pct(risk, 0)} at every step, and why going broke becomes rare: a falling bankroll is met with smaller bets. The bets are resized between sessions, every {sess} hours of play (your session length on Bet spread), not hand by hand.
         <br /><br /><b>Logged</b> is the game you have actually played: each logged session's own expected dollars an hour and swing, by hours. <b>Spread now</b> is the spread on Bet spread today. Both are played at the same size from today's bankroll and never resized, so a game too big for the bankroll shows a real chance of going broke; "Include moving up" takes them up the tables in the list.
         <br /><br />The chart deals 4,000 possible futures at your pace of {prefs.hours} hours a week, an hour at a time, counting a dip that goes broke between two hours: the line is the middle one, the darker band the middle half, the lighter one 8 in 10. The pale line on the left is what your bankroll has been, counted back from today through your logged results (it can't know about money you added or took out). "Losing half" is the chance the bankroll ever falls to half of today's within the time shown. Percentages carry about a point of sampling noise.
-        <br /><br /><b>Deal it out</b> plays the future with real cards instead: full shoes dealt to a table of players, hand by hand, by the same simulator the calculator's tables were measured on, betting the game's own bets at every true count (the optimized bets are re-worked each session to the nearest 5% of bankroll below). It deals for about six seconds, as many whole futures as fit, and each line is one of them. Each run uses new shoes, so dealing again shows how differently the same plan can go. With a few dozen futures their typical result moves a few percent from run to run; checked against 300 dealt futures, the 4,000 above land where real cards put them.
+        <br /><br /><b>Deal it out</b> plays one future with real cards instead: full shoes dealt to a table of players, hand by hand, by the same simulator the calculator's tables were measured on, betting the game's own bets at every true count (the optimized bets are re-worked each session to the nearest 5% of bankroll below). It is one way the plan could really go, drawn over the 4,000, with where it ended among them. Each deal uses new shoes, so dealing again shows how differently the same plan can go. Checked against 300 dealt futures, the 4,000 land where real cards put them.
       </Info>}
     </section>}
     {part === "ladder" && <section className="card p-5 mb-4">
