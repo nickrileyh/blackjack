@@ -359,8 +359,7 @@ export const phoneCss = `
 .acts.pad>button:nth-child(-n+2){grid-column:span 3;min-height:58px;font-size:17px!important}
 .acts.pad>button:nth-child(3):last-child{grid-column:span 6}
 .acts.pad>button:nth-child(3):nth-last-child(2),.acts.pad>button:nth-child(4):last-child{grid-column:span 3}
-/* Home: Your skills is the last card */
-.homepage>.dgrid{display:flex;flex-direction:column}.homepage .ph-last{order:5}
+/* Home: Your skills is the last card (the rule is in the main css, "Organized", for every width under 1180px) */
 /* Sessions: the log comes right after the result on a phone */
 .sesspage>.dgrid{display:flex;flex-direction:column}
 .sesspage .ph-a{order:-2}.sesspage .ph-b{order:-1}

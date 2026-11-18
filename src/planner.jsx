@@ -924,7 +924,9 @@ function DealBox({ deal, gr, bankroll, span }) {
     </div>
   );
 }
-function Growth({ gr, deal, bankroll, prefs, setPrefs }) {
+// part "chart" is "Where it's heading", part "ladder" the move-up list: on a computer the list continues the left
+// column (.dgrid.twol, .dcol.contl) so the two columns end near each other; on a phone it stays under the chart
+function Growth({ gr, deal, bankroll, prefs, setPrefs, part }) {
   const [more, setMore] = useState(false), [allT, setAllT] = useState(false);
   const statsRef = useGlideH(more), ladRef = useGlideH(allT);
   const { risk, hours, whenOf, kind, model, logged, game, gameRor, gameNeed, noEdge, goal, goalS, sim, hist, loading, ladder, far, ladBusy, lad, today, todayBets, todayRor, sess } = gr;
@@ -942,7 +944,7 @@ function Growth({ gr, deal, bankroll, prefs, setPrefs }) {
   const shown = ladder ? ladder.lv.filter((l, i) => i >= at - 1 && i <= at + (allT ? 5 : 2)) : [], hidden = Math.min(lastL, at + 5) - Math.min(lastL, at + 2);
   const games = [["auto", "Optimized"], ...(logged ? [["logged", "Logged"]] : []), ["spread", "Spread now"]];
   return (<>
-    <section className="card p-5 mb-4">
+    {part === "chart" && <section className="card p-5 mb-4">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="eyebrow">Where it's heading</div>
         <Seg small value={prefs.weeks} options={HORIZONS} onChange={(v) => setPrefs({ weeks: v })} style={{ width: 240, maxWidth: "100%" }} />
@@ -979,7 +981,7 @@ function Growth({ gr, deal, bankroll, prefs, setPrefs }) {
           <div className="pgrow game"><span className="text-sm" style={{ color: "var(--ivory)" }}>Game</span><div className="pgseg" style={{ width: logged ? 268 : 196 }}><Seg small value={kind} options={games} onChange={(v) => setPrefs({ game: v })} /></div></div>
           <div className="text-[11px] mt-1.5" style={{ color: "var(--muted)" }}>{auto ? <>The best bets for your bankroll at {pct(risk, 0)} risk, playing every hand, resized every {sess}-hour session.</> : kind === "logged" ? <>{logged.n} logged session{logged.n === 1 ? "" : "s"}: <span className="mono">{money(logged.ev)}</span>/hr, swings of <span className="mono">{money(logged.sd)}</span>, never resized.</> : game.ev > 0 ? <>Bet spread today: <span className="mono">{money(game.ev)}</span>/hr, swings of <span className="mono">{money(game.sd)}</span>, never resized.</> : "Bet spread today: no edge yet."}{noEdge && !auto ? " Your logged sessions average out to no edge." : ""}</div>
         </div>
-        {!auto && model && <Toggle label="Include moving up" sub="Follows the list below" on={!!prefs.moveUp} onChange={(v) => setPrefs({ moveUp: v })} />}
+        {!auto && model && <Toggle label="Include moving up" sub="Follows the move-up list" on={!!prefs.moveUp} onChange={(v) => setPrefs({ moveUp: v })} />}
         {model && sim && <div className="pgrow target">
           <label className="flex items-center gap-3 text-sm" style={{ color: "var(--ivory)" }}>Target
             <span className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24, width: 116, height: 36 }} type="number" inputMode="numeric" min="0" placeholder={String(Math.round(bankroll * 2))} value={prefs.goal} onChange={(e) => setPrefs({ goal: e.target.value })} aria-label="Target bankroll" /></span></label>
@@ -992,8 +994,8 @@ function Growth({ gr, deal, bankroll, prefs, setPrefs }) {
         <br /><br />The chart deals 4,000 possible futures at your pace of {prefs.hours} hours a week, an hour at a time, counting a dip that goes broke between two hours: the line is the middle one, the darker band the middle half, the lighter one 8 in 10. The pale line on the left is what your bankroll has been, counted back from today through your logged results (it can't know about money you added or took out). "Losing half" is the chance the bankroll ever falls to half of today's within the time shown. Percentages carry about a point of sampling noise.
         <br /><br /><b>Deal it out</b> plays the future with real cards instead: full shoes dealt to a table of players, hand by hand, by the same simulator the calculator's tables were measured on, betting the game's own bets at every true count (the optimized bets are re-worked each session to the nearest 5% of bankroll below). It deals for about six seconds, as many whole futures as fit, and each line is one of them. Each run uses new shoes, so dealing again shows how differently the same plan can go. With a few dozen futures their typical result moves a few percent from run to run; checked against 300 dealt futures, the 4,000 above land where real cards put them.
       </Info>}
-    </section>
-    <section className="card p-5 mb-4">
+    </section>}
+    {part === "ladder" && <section className="card p-5 mb-4">
       <div className="eyebrow mb-3">Moving up and dropping back</div>
       {!ladder ? <p className="text-sm" style={{ color: "var(--muted)" }}>{ladBusy ? "Working out the tables…" : bankroll > 0 ? "No table size wins playing every hand with these rules." : "Set your bankroll on the Bet spread page first."}</p> : <>
       <div ref={ladRef}>
@@ -1022,7 +1024,7 @@ function Growth({ gr, deal, bankroll, prefs, setPrefs }) {
       {(hidden > 0 || allT) && <More open={allT} onClick={() => setAllT(!allT)} className="mt-2">{allT ? "Fewer tables" : "More tables"}</More>}
       </>}
       <Info label="How to read this">Each table starts at its "Move up" bankroll: from there it earns more inside your {pct(risk, 0)} risk limit than the table below. Move up when the bankroll reaches it, and drop back a table if it falls below it — in between, your bets grow and shrink with the bankroll so the risk stays at {pct(risk, 0)}, so there is no separate point to drop at. Every row plays every hand, as the casino scores do, with the best bets the optimizer finds for that table (its maximum taken as the same multiple of its minimum as on Bet spread); "Bets" and "$/hr" are those bets at the "Move up" bankroll, and they grow from there. "Getting there" comes from 3,000 simulated futures of the optimized game at your pace: the date by which half of them have reached that table, and the share that ever do.</Info>
-    </section>
+    </section>}
   </>);
 }
 
@@ -1136,12 +1138,14 @@ export function PlanPage({ bankroll, mine, go }) {
     <div>
       <style>{planCss}</style>
       <Settings bankroll={bankroll} prefs={prefs} setPrefs={setPrefs} go={go} />
-      <div className="dgrid"><div className="dcol">
+      <div className="dgrid twol"><div className="dcol">
         {all && <PlayNext rot={rot} onOpen={setPop} />}
         {all && <Rotation rot={rot} prefs={prefs} setPrefs={setPrefs} onOpen={setPop} />}
-      </div><div className="dcol">
+      </div><div className="dcol o2">
         <BankrollNow gr={gr} mine={mine} bankroll={bankroll} prefs={prefs} go={go} />
-        <Growth gr={gr} deal={deal} bankroll={bankroll} prefs={prefs} setPrefs={setPrefs} />
+        <Growth part="chart" gr={gr} deal={deal} bankroll={bankroll} prefs={prefs} setPrefs={setPrefs} />
+      </div><div className="dcol contl">
+        <Growth part="ladder" gr={gr} deal={deal} bankroll={bankroll} prefs={prefs} setPrefs={setPrefs} />
       </div></div>
       {pop && <CasinoPop key={pop.id} c={pop} rot={rot} sessLen={sessLenOf(mine)} onClose={() => setPop(null)} onCasinos={() => toCasinos(pop)} />}
     </div>
