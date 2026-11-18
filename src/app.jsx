@@ -674,8 +674,11 @@ input[type=range]{accent-color:var(--brass)}
 .shake{animation:shake .3s ease-out}
 @keyframes glow{0%{box-shadow:0 0 0 0 rgba(var(--acc),.7)}100%{box-shadow:0 0 0 14px rgba(var(--acc),0)}}
 .glow{animation:glow .53s var(--ez)}
-.drain{position:absolute;left:0;top:0;height:4px;border-radius:0 2px 2px 0;width:100%;transform-origin:left;animation:drain var(--t) linear forwards;opacity:.9}
-@keyframes drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.autonext{position:relative;isolation:isolate;overflow:hidden;width:100%;border-radius:999px;padding:13px 18px;font-size:16px;font-weight:600;letter-spacing:-.01em;color:var(--ivory-d);background:rgba(var(--fg),.07);touch-action:manipulation}
+.autonext>i{position:absolute;inset:0;z-index:-1;background:rgba(var(--acc),.3);transform-origin:0 50%;animation:autofill var(--d) linear both}
+.autonext.bad>i{background:rgba(var(--neg),.32)}
+@keyframes autofill{from{transform:scaleX(0)}to{transform:none}}
+
 .shimmer{position:relative;overflow:hidden}.shimmer::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:shimmer 2.4s ease-in-out infinite}
 @keyframes shimmer{0%{transform:translateX(-100%)}60%,100%{transform:translateX(100%)}}
 ::selection{background:rgba(var(--acc),.35)}
@@ -2128,7 +2131,6 @@ function Trainer({ rules, setRules, spread }) {
 
           {(() => { const res = (<>
             <div className="rounded-xl px-4 py-3 relative overflow-hidden" style={{ minHeight: 64, background: result ? (result.ok ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)") : "rgba(var(--fg),.045)", transition: "background .25s var(--ez)" }}>
-              {timer && result && <div className="drain" style={{ "--t": result.ok ? "1.4s" : "3.4s", background: result.ok ? "var(--brass)" : "var(--rose)" }} />}
               {result ? (
                 <div className="rise">
                   <div className="font-semibold flex items-baseline justify-between gap-3" style={{ color: result.ok ? "var(--brass)" : "var(--neg-l)" }}>
@@ -2144,7 +2146,8 @@ function Trainer({ rules, setRules, spread }) {
             {more && result && !wide && <Odds c={cur} picked={result.choice} R={rules} />}
             <div className="grid grid-cols-3 gap-2 mt-3">
               {!wide && <button onClick={() => { pause(); setMore((m) => !m); }} disabled={!result} className="btn ghost">{more ? "Hide odds" : "Odds"}</button>}
-              <button onClick={next} disabled={!result || leaving} className={"btn " + (wide ? "col-span-3" : "col-span-2")}>Next hand</button>
+              {timer && result ? <AutoNext key={cur.qkey} ms={result.ok ? 1400 : 3400} bad={!result.ok} onNow={next} className={wide ? "col-span-3" : "col-span-2"} />
+                : <button onClick={next} disabled={!result || leaving} className={"btn " + (wide ? "col-span-3" : "col-span-2")}>Next hand</button>}
             </div>
           </>);
             // phone: nothing until there is an answer; then it stands where the answer buttons were, so Next is under the thumb
@@ -3007,6 +3010,15 @@ function More({ open, onClick, className = "", children }) {
     </button>
   );
 }
+// Takes the place of the Next hand button while the next hand is on its way by itself: the same capsule, filling from
+// the left over the wait, and the hand comes when it is full. A tap deals it at once. `bad` tints it for a mistake.
+function AutoNext({ ms, bad, onNow, className = "" }) {
+  return (
+    <button type="button" className={"autonext" + (bad ? " bad" : "") + (className ? " " + className : "")} style={{ "--d": `${Math.max(0, ms)}ms` }} onClick={onNow} aria-label="Next hand coming. Tap to deal it now">
+      <i aria-hidden="true" /><span>Next hand</span>
+    </button>
+  );
+}
 function Info({ label, children }) {
   const [open, setOpen] = useState(false);
   return (
@@ -3295,12 +3307,15 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
   });
 
-  // hands off: when auto-continue is on the next hand deals itself, with longer to read a flagged mistake
+  // hands off: when auto-continue is on the next hand deals itself. The pause follows the dealing speed (Normal 1.5 s,
+  // Blitz 0.45 s, Very slow 4.5 s: every stop its own), with longer to read a flagged mistake (1.8 to 6 s)
+  const autoBad = !!(msg && !msg.ok), autoMs = autoBad ? Math.min(6000, Math.max(1800, ms(3200))) : Math.min(4500, Math.max(450, ms(1500)));
+  const autoOn = autoNext && phase === "result" && bank > 0;
   useEffect(() => {
-    if (!autoNext || phase !== "result" || bank <= 0) return;
-    const t = setTimeout(() => nextHand(), msg && !msg.ok ? Math.min(4200, Math.max(1800, ms(3200))) : Math.min(2800, Math.max(450, ms(1500))));
+    if (!autoOn) return;
+    const t = setTimeout(() => nextHand(), autoMs);
     return () => clearTimeout(t);
-  }, [autoNext, phase, speed, bank]); // eslint-disable-line
+  }, [autoOn, autoMs, stats.hands]); // eslint-disable-line
 
   // money ticks to its new value after each hand; the tween works in whole dollars, so settle on the exact figure (3:2 pays halves)
   const bankTw = useCountUp(bank, 450), netTw = useCountUp(stats.net, 450);
@@ -3432,7 +3447,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
             {["H", "S", "D", "P", ...(rules.surrender ? ["R"] : [])].map((a) => <button key={a} onClick={() => act(a)} disabled={!av[a]} className="opt rounded-xl py-3 text-sm font-medium" style={{ background: "rgba(var(--fg),.08)", color: "var(--ivory)", border: "1px solid rgba(var(--fg),.14)", opacity: av[a] ? 1 : .3 }}>{ACT[a]}</button>)}
           </div>
         )}
-        {phase === "result" && <button className="btn mt-2" onClick={nextHand}>Next hand</button>}
+        {phase === "result" && (autoOn ? <AutoNext key={`${stats.hands}-${autoMs}`} ms={autoMs} bad={autoBad} onNow={nextHand} className="mt-2" /> : <button className="btn mt-2" onClick={nextHand}>Next hand</button>)}
         {(phase === "play" || phase === "result") && <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>{keyName(keys.H)}</b> hit · <b>{keyName(keys.S)}</b> stand · <b>{keyName(keys.D)}</b> double · <b>{keyName(keys.P)}</b> split{rules.surrender ? <> · <b>{keyName(keys.R)}</b> surrender</> : null} · <b>Enter</b> next hand</div>}
         {phase === "dealing" && <div className="mt-2" style={{ height: 52 }} />}
         {phase === "check" && (
@@ -3500,7 +3515,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
         <div className="space-y-3">
           <Toggle label="Show hand totals" on={showTotals} onChange={setShowTotals} />
           <Toggle label="Show the running count" sub="Hidden is how you'll play in a casino" on={showCount} onChange={setShowCount} />
-          <Toggle label="Deal the next hand automatically" sub="Skips the Next hand tap — you still place the bet" on={autoNext} onChange={setAutoNext} />
+          <Toggle label="Deal the next hand automatically" sub="The wait follows the dealing speed. You still place the bet." on={autoNext} onChange={setAutoNext} />
           <SoundToggle />
         </div>
         <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
