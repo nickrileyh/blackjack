@@ -1043,6 +1043,7 @@ body{background:none}
 .hrow+.hrow{border-top:1px solid rgba(var(--fg),.06)}
 .svrow{display:grid;grid-template-columns:minmax(0,1fr) 68px 58px 60px 46px;gap:10px;align-items:center;padding:9px 0}
 .svrow+.svrow{border-top:1px solid rgba(var(--fg),.07)}
+.svc .svrow{grid-template-columns:minmax(0,1fr) 60px 46px}.svc .svrow.now{grid-template-columns:minmax(0,1fr) 0 0}
 .svrow.eyebrow{padding:4px 0 6px}
 .svrow.now>span:first-child>span:first-child{font-style:italic}
 .btn.svuse{width:auto;min-height:30px;height:30px;padding:0 12px;font-size:12px}
@@ -1132,6 +1133,7 @@ body{background:none}
    (2) Home's columns are practice (left) and the casino (right); (3) Plan's move-up list continues its left column;
    (4) Sessions' filters sit above both columns on a computer, since they filter both; (5) Settings' themes are three
    to a row on a computer; (6) the sidebar is grouped (Practice, Casino) with the pages' full names. */
+@media (max-width:350px){.chipseg.slide>button{font-size:11.5px!important;padding:0 2px!important;letter-spacing:-.015em}}
 .ttabs{gap:20px;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
 .ttabs::-webkit-scrollbar{display:none}
 .ttabs button{flex:none}
@@ -2878,7 +2880,19 @@ function TCDrill({ decks }) {
 
 // ======================= live play =======================
 const PLAY_KEY = "bj-play-v1";
-const PLAY_PREFS_DEF = { totals: true, count: false, checkEvery: 5, auto: false, speed: 1 };
+const PLAY_PREFS_DEF = { totals: true, count: false, checkEvery: 5, auto: false, speed: 1, hot: false };
+// "Hot shoes" (Live play, off unless switched on): of eight honest shuffles, the one that spends the most of its cards
+// at a true count of +2 or more before the cut. Nothing is stacked card by card: it is a real shuffle, just one of the
+// lucky ones, so the big bets and the count plays come up several times a shoe instead of once an evening.
+function hotShoe(decks, pen) {
+  let best = null, top = -1;
+  for (let t = 0; t < 8; t++) {
+    const cards = makeShoe(decks), cut = Math.round(cards.length * pen / 100); let rc = 0, hot = 0;
+    for (let i = 1; i < cut; i++) { rc += hilo(cards[i].rank); if (Math.trunc(rc / Math.max(0.5, (cards.length - i - 1) / 52)) >= 2) hot++; }
+    if (hot > top) { top = hot; best = cards; }
+  }
+  return best;
+}
 // Live play's keyboard shortcuts, changeable in Table settings on a computer. Stored as e.key in lower case.
 // Enter and Space always deal the next hand as well, whatever "next" is set to.
 const PLAY_KEYS_DEF = { H: "h", S: "s", D: "d", P: "p", R: "r", next: "n", insY: "y", insN: "n" };
@@ -3116,16 +3130,18 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const [checkEvery, setCheckEvery] = useState(_playPrefs.checkEvery); // hands between count checks; 0 = never
   const [autoNext, setAutoNext] = useState(_playPrefs.auto);
   const [speed, setSpeed] = useState(_playPrefs.speed);                // 0.55 fast … 1.5 relaxed, multiplies every deal timing
+  const [hot, setHot] = useState(!!_playPrefs.hot);                    // hot shoes: see hotShoe
+  const hotR = useRef(hot); hotR.current = hot;
   const [keys, setKeys] = useState(() => playKeysOf(_playPrefs.keys));   // keyboard shortcuts (see PLAY_KEYS_DEF)
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   useEffect(() => { (async () => {
     try { const r = await window.storage.get(PLAY_KEY, false); if (r?.value) { const d = { ...PLAY_PREFS_DEF, ...JSON.parse(r.value) };
-      setShowTotals(!!d.totals); setShowCount(!!d.count); setCheckEvery(d.checkEvery); setAutoNext(!!d.auto); setSpeed(d.speed); setKeys(playKeysOf(d.keys)); } } catch (_) {}
+      setShowTotals(!!d.totals); setShowCount(!!d.count); setCheckEvery(d.checkEvery); setAutoNext(!!d.auto); setSpeed(d.speed); setHot(!!d.hot); setKeys(playKeysOf(d.keys)); } } catch (_) {}
     setPrefsLoaded(true); })(); }, []);
   useEffect(() => {
-    _playPrefs = { totals: showTotals, count: showCount, checkEvery, auto: autoNext, speed, keys };
+    _playPrefs = { totals: showTotals, count: showCount, checkEvery, auto: autoNext, speed, hot, keys };
     if (prefsLoaded) { try { window.storage.set(PLAY_KEY, JSON.stringify(_playPrefs), false); } catch (_) {} }
-  }, [showTotals, showCount, checkEvery, autoNext, speed, keys, prefsLoaded]);
+  }, [showTotals, showCount, checkEvery, autoNext, speed, hot, keys, prefsLoaded]);
   const ms = (x) => Math.round(x * speed);
   const speedIdx = DEAL_SPEEDS.reduce((b, [v], i) => (Math.abs(v - speed) < Math.abs(DEAL_SPEEDS[b][0] - speed) ? i : b), 0);   // the nearest stop, whatever was saved
   const [shuffled, setShuffled] = useState(false);
@@ -3171,7 +3187,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const dealerTick = useRef(null);
   useEffect(() => () => clearTimeout(dealerTick.current), []);
 
-  const newShoe = () => { const cards = makeShoe(decks); return { cards, pos: 1, cut: Math.round(cards.length * pen / 100), rc: 0 }; };
+  const newShoe = () => { const cards = hotR.current ? hotShoe(decks, pen) : makeShoe(decks); return { cards, pos: 1, cut: Math.round(cards.length * pen / 100), rc: 0, hot: hotR.current }; };
   useEffect(() => { sh.current = newShoe(); setShoe({ ...sh.current }); }, [decks, pen]); // eslint-disable-line
   // One or two decks cut deep can run out of cards in the middle of a round (it used to stop the table dead). Like a
   // dealer who shuffles the discards to finish the hand: the round is completed from a fresh shuffle, the count carries
@@ -3528,7 +3544,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           </div>
           <p className="text-xs mt-1 mb-2" style={{ color: "var(--ivory-d)" }}>Over {view.hands} hand{view.hands === 1 ? "" : "s"} your spread expects {sgnCash(run.exp)}. You're at {sgnCash(view.net)}.</p>
           <LuckGauge z={run.z} pct={run.pct} />
-          <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>{view.hands < 200 ? "A stretch this short is mostly luck — the curve shows how wide normal is." : "Priced at your current spread, so older hands on a different spread are an approximation."}</p>
+          <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>{hot ? "Hot shoes are on: they win more than real shoes do, so this runs ahead of what a casino would give you." : view.hands < 200 ? "A stretch this short is mostly luck — the curve shows how wide normal is." : "Priced at your current spread, so older hands on a different spread are an approximation."}</p>
         </section>
       )}
 
@@ -3541,6 +3557,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <Toggle label="Show hand totals" on={showTotals} onChange={setShowTotals} />
           <Toggle label="Show the running count" sub="Hidden is how you'll play in a casino" on={showCount} onChange={setShowCount} />
           <Toggle label="Deal the next hand automatically" sub="The wait follows the dealing speed. You still place the bet." on={autoNext} onChange={setAutoNext} />
+          <Toggle label="Hot shoes" sub="Shoes where the count climbs, so big bets and count plays come up. From the next shuffle." on={hot} onChange={setHot} />
           <SoundToggle />
         </div>
         <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
@@ -4363,7 +4380,7 @@ function FocusCard({ log, go }) {
       <div className="eyebrow mb-1.5" style={{ color: "var(--brass)" }}>Focus for today</div>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[17px] font-semibold truncate" style={{ color: "var(--ivory)" }}>{pick.title}</div>
+          <div className="text-[17px] font-semibold leading-snug" style={{ color: "var(--ivory)", textWrap: "balance" }}>{pick.title}</div>
           <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{pick.sub}</div>
         </div>
         <button onClick={() => SKILL_GO[pick.k] && go(...SKILL_GO[pick.k])} className="btn shrink-0" style={{ width: "auto", padding: "0 18px", minHeight: 42 }}>{pick.cta}</button>
@@ -4616,6 +4633,10 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
   useEffect(() => { _logWhere = ""; _logPre = null; }, []);
   const [more, setMore] = useState(editing && (initial.low != null || initial.heat && initial.heat !== "none" || initial.seats));
   const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
+  // "Bought in / cashed out" (under More details): the two numbers you know walking away. Typing both fills in the
+  // result; they aren't saved themselves.
+  const [buy, setBuy] = useState({ in: "", out: "" });
+  const setBuyK = (k, v) => { const n = { ...buy, [k]: v }; setBuy(n); if (n.in !== "" && n.out !== "" && isFinite(+n.in) && isFinite(+n.out)) { const d = Math.round((+n.out - +n.in) * 100) / 100; setF((o) => ({ ...o, won: d >= 0, result: String(Math.abs(d)) })); } };
   const amt = Math.abs(+String(f.result).replace(/[^0-9.]/g, "")) || 0;
   const ok = (+f.hours > 0) && f.date;
   const save = () => {
@@ -4643,9 +4664,14 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
         <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24, color: amt ? (f.won ? "var(--brass)" : "var(--neg-l)") : undefined }} type="number" inputMode="decimal" placeholder="0" value={f.result} onChange={(e) => set("result", e.target.value)} /></div>
       </div>
       <input className="in mb-3" placeholder="Notes — heat, rules, mistakes you noticed" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
-      <More open={more} onClick={() => setMore(!more)} className="mb-3">{more ? "Fewer details" : "More details — lowest point, table, heat"}</More>
+      <More open={more} onClick={() => setMore(!more)} className="mb-3">{more ? "Fewer details" : "More details — buy-in, lowest point, table, heat"}</More>
       <Fold open={more}>
         <div className="rounded-xl p-3 mb-4 space-y-3" style={{ background: "rgba(var(--fg),.035)" }}>
+          <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Bought in and cashed out</span>
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              {[["in", "bought in"], ["out", "cashed out"]].map(([k, ph]) => <div key={k} className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24 }} type="number" inputMode="decimal" placeholder={ph} aria-label={ph} value={buy[k]} onChange={(e) => setBuyK(k, e.target.value)} /></div>)}
+            </div>
+            <span className="block text-[11px] mt-1" style={{ color: "var(--muted)" }}>Type both and the result fills itself in.</span></div>
           <label className="block"><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Lowest point during the session</span>
             <div className="relative mt-1"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>−$</span><input className="in mono" style={{ paddingLeft: 38 }} type="number" inputMode="decimal" placeholder="how far down you got" value={f.low} onChange={(e) => set("low", e.target.value)} /></div>
             <span className="block text-[11px] mt-1" style={{ color: "var(--muted)" }}>Checks the "bring with you" number against real dips.</span></label>
@@ -5524,7 +5550,8 @@ try { applyTheme(localStorage.getItem("bj:" + THEME_KEY)); } catch (_) {}
 // Splash logo: three stacked 512×512 layers (background, spade, chip), colored by the active theme. icon.svg is the master artwork.
 const SPLASH_LAYERS = `<svg class="sp-l" viewBox="0 0 512 512" aria-hidden="true"><defs><radialGradient id="sbg" gradientUnits="userSpaceOnUse" cx="256" cy="120" r="460"><stop offset="0" style="stop-color:var(--b1)"/><stop offset=".5" style="stop-color:var(--b2)"/><stop offset="1" style="stop-color:var(--b3)"/></radialGradient></defs><rect width="512" height="512" fill="url(#sbg)"/></svg><svg class="sp-l sp-spade" viewBox="0 0 512 512" aria-hidden="true"><path d="M240 92C206 136 108 204 108 288C108 332 140 362 178 362C204 362 224 350 234 332C232 368 216 396 190 414H290C264 396 248 368 246 332C256 350 276 362 302 362C340 362 372 332 372 288C372 204 274 136 240 92Z" style="fill:var(--ivory)"/></svg><svg class="sp-l sp-chip" viewBox="0 0 512 512" aria-hidden="true"><circle cx="338" cy="346" r="94" fill="url(#sbg)"/><circle cx="338" cy="346" r="80" style="fill:var(--brass)"/><circle cx="338" cy="346" r="67" fill="none" style="stroke:var(--ink)" stroke-opacity=".45" stroke-width="4"/><g transform="translate(295.17 375.06) scale(0.039 -0.039)" style="fill:var(--ink)"><path d="M124 0V220L652 715Q720 781 766.5 834.5Q813 888 837.5 939.5Q862 991 862 1051Q862 1118 832.0 1166.0Q802 1214 750.0 1240.0Q698 1266 631 1266Q562 1266 510.0 1238.0Q458 1210 430.0 1158.0Q402 1106 402 1033H110Q110 1178 176.5 1285.5Q243 1393 361.0 1451.5Q479 1510 633 1510Q791 1510 909.0 1453.5Q1027 1397 1092.5 1298.0Q1158 1199 1158 1070Q1158 987 1125.5 906.0Q1093 825 1009.5 724.5Q926 624 773 484L548 262V251H1178V0Z"/><path transform="translate(1235 0)" d="M749 1490V0H444V1221H434L93 979V1259L422 1490Z"/></g></svg>`;
 function Splash() {
-  const [gone, setGone] = useState(false);
+  // straight after restarting onto a new version the splash has just been seen: don't play it twice
+  const [gone, setGone] = useState(() => { try { const t = +sessionStorage.getItem("bj-upd") || 0; return Date.now() - t < 10000; } catch (_) { return false; } });
   const [go, setGo] = useState(false);
   useEffect(() => {
     // the static boot backdrop (index.html) is identical to ours — swap it out now that we're painted
@@ -5835,6 +5862,28 @@ export default function App() {
   }, []);
   const [gen, setGen] = useState(0);
   const [pending, setPending] = useState(null);
+  // A newer version is on this device (the service worker saved it and src/entry.jsx checked its build stamp). In the
+  // first seconds after opening, before anything was touched, the app simply restarts on it (once; the splash is not
+  // played a second time). Later it offers "New version ready · Update" and waits for the tap.
+  const [update, setUpdate] = useState(false);
+  useEffect(() => {
+    const restart = () => { try { sessionStorage.setItem("bj-upd", String(Date.now())); } catch (_) {} location.reload(); };
+    const on = () => {
+      let last = 0; try { last = +sessionStorage.getItem("bj-upd") || 0; } catch (_) {}
+      if (performance.now() < 8000 && !window.__bjTouched && Date.now() - last > 60000) restart(); else setUpdate(true);
+    };
+    if (window.__bjNew) on();
+    window.addEventListener("bj-update", on);
+    // an app left open for days never loads a page, so ask again whenever it comes back into view (at most every 3 minutes)
+    let asked = Date.now();
+    const look = () => {
+      if (document.hidden || Date.now() - asked < 180000 || !("serviceWorker" in navigator) || !navigator.serviceWorker.controller) return;
+      asked = Date.now();
+      try { navigator.serviceWorker.getRegistration().then((r) => r && r.update()).catch(() => {}); fetch("./index.html", { cache: "no-cache" }).catch(() => {}); } catch (_) {}
+    };
+    document.addEventListener("visibilitychange", look);
+    return () => { window.removeEventListener("bj-update", on); document.removeEventListener("visibilitychange", look); };
+  }, []);
   const [toast, setToast] = useState(null);
   useEffect(() => {
     ensureSyncHooks();
@@ -5882,7 +5931,8 @@ export default function App() {
       <Splash />
       <BetSpreadCalculator key={gen} />
       {pending && <button className="syncpill" onClick={() => { setPending(null); syncNow({ apply: true }); }}>New progress from your {pending} · <b>Load</b></button>}
-      {!pending && toast && <div className="syncpill" role="status" style={{ pointerEvents: "none" }}>{toast}</div>}
+      {!pending && update && <button className="syncpill" onClick={() => { try { sessionStorage.setItem("bj-upd", String(Date.now())); } catch (_) {} location.reload(); }}>New version ready · <b>Update</b></button>}
+      {!pending && !update && toast && <div className="syncpill" role="status" style={{ pointerEvents: "none" }}>{toast}</div>}
     </>
   );
 }
@@ -5892,8 +5942,10 @@ export default function App() {
 const SPREADS_KEY = "bj-spreads-v1";
 const spreadSame = (a, sa, b, sb) => COUNTS.every((c) => (Number(a[c]) || 0) === (Number(b[c]) || 0) && ((sa || {})[c] === 2) === ((sb || {})[c] === 2));
 const spreadRange = (bets) => { const v = COUNTS.map((c) => Number(bets[c]) || 0).filter((x) => x > 0); return v.length ? `$${Math.min(...v).toLocaleString()}–$${Math.max(...v).toLocaleString()}` : "No bets"; };
-function SavedSpreads({ bets, spotsMap, bankroll, cal, rphOf, now, onUse }) {
-  const [list, setList] = useState(null), [name, setName] = useState(""), [del, setDel] = useState(null);
+// compact (a phone, or any window under 1180px): one line that unfolds, and a row is the name with its $/hr and risk
+// under it instead of columns
+function SavedSpreads({ bets, spotsMap, bankroll, cal, rphOf, now, onUse, compact }) {
+  const [list, setList] = useState(null), [name, setName] = useState(""), [del, setDel] = useState(null), [open, setOpen] = useState(false);
   const load = async () => { try { const r = await window.storage.get(SPREADS_KEY, false); const d = r?.value ? JSON.parse(r.value) : null; setList(Array.isArray(d?.list) ? d.list.filter((x) => isObj(x) && isObj(x.bets)) : []); } catch (_) { setList([]); } };
   useEffect(() => { load(); window.addEventListener("bj-sync-applied", load); return () => window.removeEventListener("bj-sync-applied", load); }, []); // eslint-disable-line
   const save = (l) => { setList(l); try { window.storage.set(SPREADS_KEY, JSON.stringify({ list: l }), false); } catch (_) {} };
@@ -5911,26 +5963,31 @@ function SavedSpreads({ bets, spotsMap, bankroll, cal, rphOf, now, onUse }) {
     const sp = {}; COUNTS.forEach((c) => { if (spotsMap[c] === 2) sp[c] = 2; });
     save([...list, { id: Date.now(), name: name.trim().slice(0, 28) || spreadRange(b), bets: b, spots: sp }]); setName("");
   };
+  const sub = (ev, ror) => <><span style={{ color: ev >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(ev)}/hr</span> · <span style={{ color: tone(ror) }}>{risk(ror)} risk</span></>;
   return (
-    <section className="card p-5 mb-4">
-      <div className="flex items-baseline justify-between gap-3 mb-1">
+    <section className={"card p-5 mb-4" + (compact ? " svc" : "")}>
+      {compact ? <div className="flex items-center justify-between gap-3">
+        <div className="eyebrow">Saved spreads</div>
+        <More open={open} onClick={() => setOpen(!open)}>{cur ? cur.x.name : rows.length ? `${rows.length} saved` : "Save this one"}</More>
+      </div> : <div className="flex items-baseline justify-between gap-3 mb-1">
         <div className="eyebrow">Saved spreads</div>
         {rows.length > 0 && <span className="text-[11px]" style={{ color: "var(--muted)" }}>with today's bankroll and rules</span>}
-      </div>
+      </div>}
+      <Fold open={!compact || open} className={compact ? "pt-2" : ""}>
       {rows.length === 0 ? <p className="text-xs mt-2 mb-3" style={{ color: "var(--ivory-d)" }}>Name the bets above to keep them. Saved spreads line up here to compare and switch back.</p> : (
         <div className="mt-2 mb-3">
-          <div className="svrow eyebrow" style={{ fontSize: 10 }}><span>Spread</span><span className="text-right">Per hour</span><span className="text-right">Risk</span><span /><span /></div>
+          {!compact && <div className="svrow eyebrow" style={{ fontSize: 10 }}><span>Spread</span><span className="text-right">Per hour</span><span className="text-right">Risk</span><span /><span /></div>}
           {!cur && (
             <div className="svrow now">
-              <span className="min-w-0"><span className="block text-sm font-medium truncate" style={{ color: "var(--ivory)" }}>In the table now</span><span className="block text-[11px] mono" style={{ color: "var(--muted)" }}>{spreadRange(bets)} · not saved</span></span>
-              <span className="mono text-sm font-semibold text-right" style={{ color: now.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(now.evHour)}</span>
-              <span className="mono text-xs font-semibold text-right" style={{ color: tone(now.ror) }}>{risk(now.ror)}</span><span /><span />
+              <span className="min-w-0"><span className="block text-sm font-medium truncate" style={{ color: "var(--ivory)" }}>In the table now</span><span className="block text-[11px] mono" style={{ color: "var(--muted)" }}>{compact ? <>not saved · {sub(now.evHour, now.ror)}</> : <>{spreadRange(bets)} · not saved</>}</span></span>
+              {!compact && <span className="mono text-sm font-semibold text-right" style={{ color: now.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(now.evHour)}</span>}
+              {!compact && <span className="mono text-xs font-semibold text-right" style={{ color: tone(now.ror) }}>{risk(now.ror)}</span>}<span /><span />
             </div>)}
           {rows.map(({ x, sp, ev, ror }) => { const on = cur && cur.x.id === x.id; return (
             <div key={x.id} className={"svrow" + (on ? " on" : "")}>
-              <span className="min-w-0"><span className="block text-sm font-medium truncate" style={{ color: "var(--ivory)" }}>{x.name}</span><span className="block text-[11px] mono truncate" style={{ color: "var(--muted)" }}>{spreadRange(x.bets)}{COUNTS.some((c) => sp[c] === 2) ? " · two hands" : ""}</span></span>
-              <span className="mono text-sm font-semibold text-right" style={{ color: ev >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(ev)}</span>
-              <span className="mono text-xs font-semibold text-right" style={{ color: tone(ror) }}>{risk(ror)}</span>
+              <span className="min-w-0"><span className="block text-sm font-medium truncate" style={{ color: "var(--ivory)" }}>{x.name}</span><span className="block text-[11px] mono truncate" style={{ color: "var(--muted)" }}>{compact ? sub(ev, ror) : <>{spreadRange(x.bets)}{COUNTS.some((c) => sp[c] === 2) ? " · two hands" : ""}</>}</span></span>
+              {!compact && <span className="mono text-sm font-semibold text-right" style={{ color: ev >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(ev)}</span>}
+              {!compact && <span className="mono text-xs font-semibold text-right" style={{ color: tone(ror) }}>{risk(ror)}</span>}
               {on ? <span className="text-[11px] font-semibold text-center" style={{ color: "var(--brass)" }}>In use</span> : <button className="btn ghost svuse" onClick={() => { setDel(null); onUse(x.bets, sp); }}>Use</button>}
               <button className={"svdel lnk" + (del === x.id ? " sure" : "")} onClick={() => { if (del === x.id) { save(list.filter((y) => y.id !== x.id)); setDel(null); } else setDel(x.id); }} onBlur={() => setDel((d) => (d === x.id ? null : d))} aria-label={del === x.id ? `Delete ${x.name}: press again` : `Delete ${x.name}`}>{del === x.id ? "Delete?" : "×"}</button>
             </div>); })}
@@ -5941,6 +5998,7 @@ function SavedSpreads({ bets, spotsMap, bankroll, cal, rphOf, now, onUse }) {
           <input className="in" style={{ height: 42, flex: 1, minWidth: 0 }} value={name} maxLength={28} placeholder={`Name it (${spreadRange(bets)})`} aria-label="Name for this spread" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") add(); }} />
           <button className="btn" style={{ width: "auto", minHeight: 42, padding: "0 18px" }} onClick={add}>Save spread</button>
         </div>)}
+      </Fold>
     </section>
   );
 }
@@ -6383,7 +6441,7 @@ function BetSpreadCalculator() {
             : <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Heads-up there's no sitting out: a $0 count means you leave the table the first time the count drops there and start fresh on a new shoe.</p>)}
           {showFreq && <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Share of rounds dealt at each true count for this shoe, table and spread{seats === 1 && COUNTS.some((c) => !((Number(bets[c]) || 0) > 0)) ? " — counting only the rounds you're at the table for" : ""}.</p>}
         </section>
-        {wide && spreadLoaded && <SavedSpreads bets={bets} spotsMap={spotsMap} bankroll={+bankroll || 0} cal={cal} rphOf={rphOf} now={r} onUse={loadSpread} />}
+        {spreadLoaded && <SavedSpreads compact={!wide} bets={bets} spotsMap={spotsMap} bankroll={+bankroll || 0} cal={cal} rphOf={rphOf} now={r} onUse={loadSpread} />}
 
         {/* optimizer */}
         <section id="sp-opt" className="card focusrim p-5">

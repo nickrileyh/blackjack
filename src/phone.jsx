@@ -226,7 +226,7 @@ export function MoreHub({ go, bankroll }) {
   const next = usePlayNext(bankroll, true);
   const rows = [
     ["casinos", "Casinos", <><path d="M12 20.8s-6.6-5.9-6.6-10.9a6.6 6.6 0 0 1 13.2 0c0 5-6.6 10.9-6.6 10.9z" /><circle cx="12" cy="9.9" r="2.4" /></>, cas && cas.n ? `${cas.n} of yours${cas.x ? ` · ${cas.x} backed off` : ""}` : "The map, scouting reports and what is near you"],
-    ["plan", "Plan", <><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8.5 3.5v3M15.5 3.5v3M8 13.5h3M8 16.5h6" /></>, next.first ? `Next up: ${next.first.c.name}` : "Where to play next and how your bankroll grows"],
+    ["plan", "Plan", <><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8.5 3.5v3M15.5 3.5v3M8 13.5h3M8 16.5h6" /></>, next.first ? `Next up: ${next.first.c.name}` : "Where to play next"],
   ];
   return (
     <div className="rise inturn">
@@ -293,7 +293,7 @@ export function TrainHub({ go }) {
       <section className="card overflow-hidden mb-4">
         <button className="mrow" onClick={() => go("count", { drill: "tests" })}>
           <span className="ticon"><Ico s={19}><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z" /></Ico></span>
-          <span className="min-w-0 flex-1"><span className="block text-[15px] font-semibold" style={{ color: "var(--ivory)" }}>Casino-ready tests</span><span className="block text-[11.5px] truncate" style={{ color: "var(--muted)" }}>Count a deck · 100 hands · 20 conversions</span></span>
+          <span className="min-w-0 flex-1"><span className="block text-[15px] font-semibold" style={{ color: "var(--ivory)" }}>Casino-ready tests</span><span className="block text-[11.5px] truncate" style={{ color: "var(--muted)" }}>Three timed tests to pass</span></span>
           <span className="mono text-sm font-semibold" style={{ color: passed === TEST_DEFS.length ? "var(--brass)" : "var(--ivory-d)" }}>{passed}/{TEST_DEFS.length}</span><Chev />
         </button>
       </section>

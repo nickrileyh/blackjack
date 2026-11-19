@@ -8,6 +8,18 @@ window.storage = {
   async delete(key) { try { localStorage.removeItem("bj:" + key); } catch {} delete mem[key]; return { key, deleted: true, shared: false }; },
   async list(prefix) { const keys = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith("bj:") && (!prefix || k.slice(3).startsWith(prefix))) keys.push(k.slice(3)); } } catch {} return { keys, shared: false }; },
 };
+// A newer version saved by the service worker (sw.js): remember its build stamp and tell the app. The stamp is compared
+// with this page's own (the bj-build meta tag), so a message about the version already running is ignored.
+window.__bjTouched = false;
+try {
+  const mark = () => { window.__bjTouched = true; };
+  window.addEventListener("pointerdown", mark, { capture: true, passive: true }); window.addEventListener("keydown", mark, true);
+  const mine = () => { const m = document.querySelector('meta[name="bj-build"]'); return m ? m.content : null; };
+  if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", (e) => {
+    const d = e.data; if (!d || d.type !== "bj-update" || !d.build || !mine() || d.build === mine()) return;
+    window.__bjNew = d.build; window.dispatchEvent(new Event("bj-update"));
+  });
+} catch {}
 // the Ask tab is gone: clear the API key and chats it kept on this device
 try { localStorage.removeItem("bj:__ask-key"); localStorage.removeItem("bj:bj-ask-v1"); } catch {}
 // Train's "On the chart" card is gone too: clear its "Always show" setting
