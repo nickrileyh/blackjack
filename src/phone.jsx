@@ -157,8 +157,8 @@ export function TripCard({ go, bankroll }) {
         <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>{next.loading && next.n ? "Working out where to play next…" : next.none ? "Nothing to suggest right now. The Plan page says why, and when each casino is back." : "Start the clock when you sit down. When you leave, the hours and the casino are already filled in."}</p>
       )}
       <div className="grid grid-cols-2 gap-2 mt-3.5">
-        <button className="btn" style={{ minHeight: 46, padding: "0 14px", fontSize: 15 }} onClick={() => setStart(true)}>Start session</button>
-        <button className="btn ghost" style={{ minHeight: 46, padding: "0 14px", fontSize: 15 }} onClick={() => go("casinos", { near: true })}>Near me</button>
+        <button className="btn tripbtn" style={{ minHeight: 46, padding: "0 10px", fontSize: 15 }} onClick={() => setStart(true)}>Start session</button>
+        <button className="btn ghost tripbtn" style={{ minHeight: 46, padding: "0 10px", fontSize: 15 }} onClick={() => go("casinos", { near: true })}>Near me</button>
       </div>
       {start && <StartSheet onClose={() => setStart(false)} />}
     </section>
@@ -305,6 +305,8 @@ export function TrainHub({ go }) {
 // Rendered once by the shell. .ph-only / .ph-hide show or hide a piece on the phone layout (under 1024px).
 export const phoneCss = `
 .ph-only{display:none}
+.tripbtn{white-space:nowrap}
+@media (max-width:350px){.tripbtn{font-size:14px!important;padding:0 6px!important}}
 .ticon{display:flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;border-radius:12px;color:var(--brass);background:rgba(var(--acc),.12)}
 .ptile{display:block;text-align:left;padding:15px 15px 14px;width:100%;min-width:0;transition:transform .32s var(--ez)}
 .ptile:active{transform:scale(.975);transition-duration:.1s}
@@ -340,7 +342,7 @@ export const phoneCss = `
 /* large titles and a little more air between the title and the page */
 .shell>header{margin-bottom:18px}
 .shell>header h1{font-size:clamp(28px,8.4vw,34px);letter-spacing:-.03em}
-.shell>header h1.long{font-size:clamp(21px,6vw,27px);letter-spacing:-.025em;white-space:nowrap}
+.shell>header h1.long{font-size:clamp(20px,5.6vw,27px);letter-spacing:-.025em;white-space:nowrap}
 .shell>header .rulespill{min-width:0}
 /* Train: the answer stands where the answer buttons were */
 .resin{animation:resin .42s var(--ez-soft) backwards}

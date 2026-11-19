@@ -11,7 +11,7 @@ import { useNarrow, TripCard, WeekCard, TimerCard, MoreHub, TrainHub, phoneCss, 
 const COUNTS = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
 // today / a timestamp as YYYY-MM-DD in *your* time zone (toISOString would give the UTC date, a day ahead in the evening)
 const localDay = (t = Date.now()) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
-const LABEL = (tc) => (tc === -3 ? "≤ −3" : tc === 6 ? "≥ +6" : tc > 0 ? `+${tc}` : tc < 0 ? `−${-tc}` : "0");
+const LABEL = (tc) => (tc === -3 ? "≤\u00A0−3" : tc === 6 ? "≥\u00A0+6" : tc > 0 ? `+${tc}` : tc < 0 ? `−${-tc}` : "0");
 const DEFAULT_BETS = { "-3": 0, "-2": 0, "-1": 0, "0": 0, "1": 25, "2": 50, "3": 50, "4": 75, "5": 75, "6": 100 };
 const fmtH = (h) => `${Math.round((Number(h) || 0) * 100) / 100}h`; // hours to the hundredth, no float noise
 const sgnMoney = (v) => { const r = Math.round(v); return `${r > 0 ? "+" : r < 0 ? "−\u2060" : ""}$${Math.abs(r).toLocaleString()}`; };
@@ -295,6 +295,8 @@ const css = `
 :root[data-theme="sapphire"]{--bg:#06070D;--bg2:#0A0C15;--velvet:#0D1020;--velvet-l:#161B36;--fg:234,237,247;--ivory:#EAEDF7;--ivory-d:#B6BCD0;--brass:#6F9CFF;--brass-d:#4169D8;--acc:111,156,255;--acc-hi:#A3BFFF;--rose:#FF6E7A;--neg:255,110,122;--neg-l:#FFB6BD;--muted:#8E95AC;--ink:#060A1C;--sh:2,3,9;--bgrgb:6,7,13;--felt1:#1C2C72;--felt2:#121C4C;--felt3:#0A102A;--sheet1:#141831;--sheet2:#0A0C18;--back1:#8E2A3A;--back2:#641C29;--seg-hi:#F3F5FC;--seg-lo:#DDE2F2;--line:rgba(234,237,247,.11)}
 html,body{background:var(--bg)}
 :root{color-scheme:dark;--sbar:transparent;--bg-end:#020304;--scrim:rgba(2,3,6,.62)}
+/* the logo tile (splash, sidebar) is cut from the theme in use; index.html carries the same four for the moment before this loads */
+:root{--b1:var(--velvet-l);--b2:var(--velvet);--b3:var(--bg);--b4:var(--bg-end)}
 :root[data-theme="light"]{color-scheme:light;--recess:rgba(15,27,61,.065);--bg-end:#E4EAF3;--scrim:rgba(14,26,58,.38);--bg:#EEF2F8;--bg2:#FFFFFF;--velvet:#F3F6FB;--velvet-l:#FFFFFF;--fg:15,27,61;--ivory:#0E1A3A;--ivory-d:#34405E;--brass:#1E3FA8;--brass-d:#16307F;--acc:30,63,168;--acc-hi:#3459CF;--rose:#D02E2E;--neg:208,46,46;--neg-l:#B42323;--muted:#56627E;--ink:#FFFFFF;--sh:255,255,255;--bgrgb:242,245,250;--felt1:#2C4797;--felt2:#1F3478;--felt3:#17285F;--sheet1:#FFFFFF;--sheet2:#F5F7FB;--back1:#1E3FA8;--back2:#142D7A;--seg-hi:#2A4CC0;--seg-lo:#1E3FA8;--line:rgba(15,27,61,.1);--sbar:#0E1A3A}
 :root[data-theme="light"] .card{background:#FFFFFF;border:1px solid rgba(15,27,61,.08);box-shadow:0 1px 2px rgba(15,27,61,.06),0 10px 28px -16px rgba(15,27,61,.22)}
 :root[data-theme="light"] .chipseg{background:rgba(15,27,61,.06);box-shadow:inset 0 1px 2px rgba(15,27,61,.08)}
@@ -360,7 +362,7 @@ html,body{background:var(--bg)}
 .topbar{position:fixed;left:0;right:0;top:0;z-index:45;padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;background:rgba(var(--bgrgb),.78);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid rgba(var(--fg),.06);transform:translateY(-110%);opacity:0;transition:transform .27s var(--ease),opacity .16s var(--ease);pointer-events:none}
 .topbar.show{transform:none;opacity:1;pointer-events:auto}
 .rack{display:grid;grid-template-columns:repeat(var(--n),minmax(0,64px));gap:10px;justify-content:center}
-.rack .chipbtn{width:100%;height:auto;aspect-ratio:1}
+.rack .chipbtn{width:100%;height:auto;aspect-ratio:1;container-type:inline-size}.rack .chipface::before{inset:11cqw}.rack .chipface::after{inset:17cqw}
 .switch{position:relative;width:46px;height:28px;border-radius:14px;background:rgba(var(--fg),.12);transition:background .16s var(--ease);flex-shrink:0}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--ivory);box-shadow:0 2px 6px rgba(0,0,0,.5);transition:transform .29s var(--ease)}
 .switch.on{background:var(--brass)}
@@ -614,7 +616,8 @@ input[type=range]{accent-color:var(--brass)}
 .testdot{width:22px;height:22px;border-radius:99px;display:grid;place-items:center;box-shadow:inset 0 0 0 1.5px rgba(var(--fg),.2);color:var(--ink)}
 .testdot.ok{background:var(--brass);box-shadow:none}
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}
-.stats.three{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stats.three{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.statlab{white-space:nowrap}
+@media (max-width:350px){.statlab{letter-spacing:.03em!important}}
 .pnote2{font-size:11.5px;line-height:1.45;border-radius:12px;padding:8px 12px;background:rgba(var(--neg),.09)}
 .rise{animation:rise .27s var(--ease) both}
 .navbtn.on .navicon svg{animation:navpop .36s var(--ez)}
@@ -1171,6 +1174,7 @@ body{background:none}
 :root[data-theme="light"] .qai{background:linear-gradient(180deg,#fff,rgba(255,255,255,.82))}
 .today .qa:active{background:none}.today .qa:active .qai{transform:scale(.92);transition-duration:.1s}
 @media (hover:hover){.today .qa:hover{background:none;box-shadow:none}.today .qa:hover .qai{box-shadow:var(--gl-bead)}}
+@media (max-width:350px){.today .qa{font-size:10px;letter-spacing:-.015em}.tdacts{gap:2px}}
 @media (min-width:640px){.btn.tdgo{flex:none;width:auto;padding:0 24px}.tdtitle{font-size:22px}.tdring{width:72px;height:72px}.today .pbar{height:72px}.today .pdays{gap:6px}.tdacts{grid-template-columns:repeat(4,auto);justify-content:space-around}.today .qa{flex-direction:row;gap:11px;font-size:12.5px}.qai{width:44px;height:44px}}
 /* ---- The table, richer ------------------------------------------------------------------------------------------
    Nick asked for a richer table and cards. The felt has a rail round it and the nap of the cloth (a tile painted by
@@ -1595,7 +1599,7 @@ function SoundCard() {
 }
 function Table({ cards, dealer, tc, rcs, qkey, leaving }) {
   return (
-    <div className={"relative tbl felt cz-train px-4 pt-5 pb-4 " + (leaving ? "leave" : "")}>
+    <div className={"relative tbl felt busy cz-train px-4 pt-5 pb-4 " + (leaving ? "leave" : "")}>
       <FeltPrint />
       <div className="shoe go">
         {[0, 1, 2, 3].map((i) => <div key={i} className="pcback" style={{ transform: `translate(${i * 1.5}px,${-i * 1.5}px)`, opacity: 1 - i * 0.12 }} />)}
@@ -2259,7 +2263,7 @@ function Trainer({ rules, setRules, spread }) {
             </div>
             {more && result && !wide && <Odds c={cur} picked={result.choice} R={rules} />}
             <div className="grid grid-cols-3 gap-2 mt-3">
-              {!wide && <button onClick={() => { pause(); setMore((m) => !m); }} disabled={!result} className="btn ghost">{more ? "Hide odds" : "Odds"}</button>}
+              {!wide && <button onClick={() => { pause(); setMore((m) => !m); }} disabled={!result} className="btn ghost" aria-expanded={more}>{more ? "Hide" : "Odds"}</button>}
               {timer && result ? <AutoNext key={cur.qkey} ms={result.ok ? 1400 : 3400} bad={!result.ok} onNow={next} className={wide ? "col-span-3" : "col-span-2"} />
                 : <button onClick={next} disabled={!result || leaving} className={"btn " + (wide ? "col-span-3" : "col-span-2")}>Next hand</button>}
             </div>
@@ -2644,7 +2648,35 @@ function StartHint({ onGo }) {
 }
 // the less common table rules, as a short list (empty = the standard game)
 const advancedNotes = (r) => [dasOn(r) ? null : "no DAS", dblRule(r) === "any" ? null : `double ${dblRule(r).replace("-", "–")} only`, maxHandsOf(r) === 4 ? null : `split to ${maxHandsOf(r)}`, r.rsa ? "resplit aces" : null, devsOn(r) ? null : "no deviations"].filter(Boolean);
+// A dialog keeps the keyboard while it is open: focus moves into it (onto the panel itself, never a text box, so a phone's
+// keyboard doesn't jump up), Tab and Shift+Tab stay inside it, and focus goes back to what opened it when it closes.
+// Only the dialog on top answers, so a sheet opened over a sheet doesn't fight the one under it.
+const _modals = [];
+function useModalFocus(ref) {
+  const was = useRef(undefined); // what had focus before the dialog drew (read while rendering: a box inside may take focus as it mounts)
+  if (was.current === undefined) was.current = typeof document !== "undefined" ? document.activeElement : null;
+  useEffect(() => {
+    const el = ref.current; if (!el || typeof document === "undefined") return;
+    const prev = was.current; _modals.push(el);
+    if (!el.contains(document.activeElement)) { try { el.focus({ preventScroll: true }); } catch (_) {} }
+    const k = (e) => {
+      if (e.key !== "Tab" || _modals[_modals.length - 1] !== el) return;
+      const f = [...el.querySelectorAll('button,a[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter((x) => !x.disabled && x.getClientRects().length);
+      if (!f.length) { e.preventDefault(); return; }
+      const a = document.activeElement, first = f[0], last = f[f.length - 1];
+      if (!el.contains(a) || a === el) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+      else if (e.shiftKey && a === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", k);
+    return () => {
+      document.removeEventListener("keydown", k); const i = _modals.indexOf(el); if (i >= 0) _modals.splice(i, 1);
+      if (prev && prev !== document.body && prev.focus && document.contains(prev) && !/^(INPUT|TEXTAREA|SELECT)$/.test(prev.tagName)) { try { prev.focus({ preventScroll: true }); } catch (_) {} }
+    };
+  }, []); // eslint-disable-line
+}
 function RulesModal({ rules, onSave, onClose, first }) {
+  const dlg = useRef(null); useModalFocus(dlg);
   const [draft, setDraft] = useState(rules);
   const [adv, setAdv] = useState(() => advancedNotes(rules).length > 0);
   const close = first ? null : onClose;
@@ -2659,8 +2691,8 @@ function RulesModal({ rules, onSave, onClose, first }) {
     </div>
   );
   return (
-    <div className="rulesscrim fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "var(--scrim)", paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }} {...backdrop(close)} role="dialog" aria-label="Game rules">
-      <div className="card rulesdlg w-full max-w-md relative" style={{ maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
+    <div className="rulesscrim fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "var(--scrim)", paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }} {...backdrop(close)} role="dialog" aria-modal="true" aria-label="Game rules">
+      <div ref={dlg} tabIndex={-1} className="card rulesdlg w-full max-w-md relative" style={{ maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden", outline: "none" }} onClick={(e) => e.stopPropagation()}>
         {/* the glass panel itself never scrolls (its rim and blur stay put); this inner box does */}
         <div className="p-5 relative" style={{ overflowY: "auto", minHeight: 0 }}>
         {close && <button onClick={close} aria-label="Close without saving" className="xbtn absolute rounded-full flex items-center justify-center" style={{ zIndex: 2, top: 14, right: 14, width: 32, height: 32, fontSize: 18 }}>×</button>}
@@ -3158,7 +3190,7 @@ function Chip({ v, onClick, disabled }) {
   return (
     <button onClick={onClick} disabled={disabled} className="chipbtn" aria-label={`Bet $${v}`} style={{ "--c": c, "--cl": cl, opacity: disabled ? .4 : 1 }}>
       <span className="chipface" />
-      <span className="chiplabel mono" style={{ color: ink, fontSize: v >= 1000 ? 13 : v >= 100 ? 15 : 16 }}>{v >= 1000 ? `${v / 1000}k` : v}</span>
+      <span className="chiplabel mono" style={{ color: ink, fontSize: `min(${v >= 1000 ? 13 : v >= 100 ? 15 : 16}px, ${v >= 100 ? 28 : 36}cqw)` }}>{v >= 1000 ? `${v / 1000}k` : v}</span>
     </button>
   );
 }
@@ -3681,7 +3713,7 @@ function Tests({ rules, onRun }) {
   useEffect(() => { (async () => { try { const r = await window.storage.get(TESTS_KEY, false); if (r?.value) setBest(testsOf(r.value)); } catch (_) {} })(); }, []);
   return (
     <section className="card p-5 mb-4">
-      <div className="eyebrow mb-1">Ready-to-play tests</div>
+      <div className="eyebrow mb-1">Casino-ready tests</div>
       <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>The standards serious counters hold themselves to before sitting down. Pass all three and you're ready.</p>
       {TEST_DEFS.every((t) => best[t.id]?.pass) && (
         <div className="rounded-xl px-4 py-3 mb-3" style={{ background: "rgba(var(--acc),.1)" }}>
@@ -3694,7 +3726,7 @@ function Tests({ rules, onRun }) {
           <button key={t.id} onClick={() => onRun(t.id)} className="testrow rowh">
             <span className={"testdot" + (b?.pass ? " ok" : "")} aria-hidden="true">{b?.pass && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>}</span>
             <div className="min-w-0"><div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{t.name}</div><div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>{t.std}</div>
-              {b && <div className="mono text-[11px] mt-1" style={{ color: b.pass ? "var(--brass)" : "var(--neg-l)" }}>{b.pass ? "Passed" : "Best"}: {b.summary}</div>}</div>
+              {b && <div className="mono text-[11px] mt-1" style={{ color: b.pass ? "var(--brass)" : "var(--neg-l)" }}>{b.pass ? "Passed" : "Best"}{b.summary ? `: ${b.summary}` : ""}</div>}</div>
             <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "var(--brass)" }}>{b?.pass ? "Again ›" : "Start ›"}</span>
           </button>); })}
       </div>
@@ -4709,6 +4741,7 @@ function Sheet({ title, onClose: shut, children }) {
   }, []); // eslint-disable-line
   // on a phone the sheet's top (the grab bar and title) drags down to close it
   const box = useRef(null), drag = useRef(null);
+  useModalFocus(box);
   const settle = (dy, ms) => { const el = box.current; if (!el) return; el.style.transition = ms ? `transform ${ms}ms cubic-bezier(.2,.8,.2,1)` : "none"; el.style.transform = dy ? `translateY(${dy}px)` : ""; };
   const dStart = (e) => { if (e.pointerType === "mouse" || e.target.closest("button,input,a") || window.innerWidth >= 1024) return; drag.current = { id: e.pointerId, y: e.clientY, t: e.timeStamp, dy: 0 }; };
   const dMove = (e) => { const d = drag.current; if (!d || d.id !== e.pointerId) return; d.dy = Math.max(0, e.clientY - d.y); if (d.dy > 4) { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} settle(d.dy, 0); } };
@@ -4718,17 +4751,17 @@ function Sheet({ title, onClose: shut, children }) {
     if (e.type !== "pointercancel" && (d.dy > 110 || fast)) { const el = box.current; settle(el ? el.offsetHeight : 600, 190); if (!gone.current) { gone.current = true; setOut(true); setTimeout(leave, 220); } } else if (d.dy) settle(0, 240);
   };
   const ui = (
-    <div className={"bj sheetwrap fixed inset-0 flex flex-col justify-end" + (out ? " out" : "")} style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} {...backdrop(onClose)} role="dialog" aria-label={title}>
-      <div ref={box} className="sheet mx-auto w-full" style={{ maxWidth: "42rem", maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
+    <div className={"bj sheetwrap fixed inset-0 flex flex-col justify-end" + (out ? " out" : "")} style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} {...backdrop(onClose)} role="dialog" aria-modal="true" aria-label={title}>
+      <div ref={box} tabIndex={-1} className="sheet mx-auto w-full" style={{ maxWidth: "42rem", maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden", outline: "none" }} onClick={(e) => e.stopPropagation()}>
         <div className="sheetgrab" onPointerDown={dStart} onPointerMove={dMove} onPointerUp={dEnd} onPointerCancel={dEnd}>
         <div className="flex justify-center pt-2 pb-1"><span style={{ width: 38, height: 4, borderRadius: 4, background: "rgba(var(--fg),.18)" }} /></div>
-        <div className="flex items-center justify-between px-5 pt-1 pb-3">
+        <div className="flex items-center justify-between px-5 pt-1 pb-1">
           <div className="text-lg font-semibold" style={{ letterSpacing: "-.01em" }}>{title}</div>
           <button onClick={onClose} aria-label="Close" className="xbtn rounded-full flex items-center justify-center" style={{ width: 32, height: 32, fontSize: 18 }}>×</button>
         </div>
         </div>
         {/* the glass panel itself never scrolls (its rim, blur and title stay put); this box does */}
-        <div className="sheetbody px-5" style={{ overflowY: "auto", minHeight: 0, overscrollBehavior: "contain", paddingBottom: "calc(env(safe-area-inset-bottom) + 20px)" }}>{children}</div>
+        <div className="sheetbody px-5" style={{ overflowY: "auto", minHeight: 0, overscrollBehavior: "contain", paddingTop: 8, paddingBottom: "calc(env(safe-area-inset-bottom) + 20px)" }}>{children}</div>
       </div>
     </div>
   );
@@ -5050,7 +5083,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
           <div className="stats three mt-3 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
             {[["Per hour", sgnMoney(st.perHour), `exp ${sgnMoney(st.expHour)}`], ["Won", `${Math.round(st.winRate * 100)}%`, `${st.wins} of ${st.n}`], ["Avg session", sgnMoney(st.avg), fmtH(st.avgH)]].map(([k, v, s]) => (
               <div key={k} className="min-w-0">
-                <div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)", letterSpacing: ".09em" }}>{k}</div>
+                <div className="text-[10px] font-semibold uppercase statlab" style={{ color: "var(--muted)", letterSpacing: ".09em" }}>{k}</div>
                 <div className="mono text-[17px] font-semibold mt-0.5">{v}</div>
                 <div className="text-[11px] mt-px" style={{ color: "var(--muted)" }}>{s}</div>
               </div>))}
@@ -5106,7 +5139,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
         </section>
         {st.n >= 8 && sdRatio > 1.35 && <p className="pnote2 mb-4" style={{ color: "var(--neg-l)" }}>Your results swing {Math.round((sdRatio - 1) * 100)}% more than your spread predicts. Common causes: betting above the ramp, extra hands, or wrong game settings (penetration, players).</p>}
         {lowCheck && (
-          <section className="card p-4 mb-4">
+          <section className="card p-5 mb-4">
             <div className="flex items-baseline justify-between"><div className="eyebrow">In-session dips</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{lowCheck.n} logged</div></div>
             <div className="text-sm mt-1" style={{ color: "var(--ivory-d)" }}>{lowCheck.inside} of {lowCheck.n} stayed inside the 95% "bring with you" amount for that session length{lowCheck.n >= 10 ? ` (expected ≈ ${Math.round(lowCheck.n * 0.95)})` : ""}. Deepest: <span className="mono" style={{ color: "var(--neg-l)" }}>−{money(Math.abs(lowCheck.deepest))}</span></div>
           </section>
@@ -5123,7 +5156,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
               {byCasino.map((c) => (
                 <button key={c.k} onClick={() => setCasino(casino === c.k ? "all" : c.k)} className="rowh w-full text-left grid items-center gap-2" style={{ gridTemplateColumns: "1fr auto" }}>
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold truncate flex items-center gap-1.5">{c.name}{c.heat && <span className="text-[10px] font-semibold rounded-full px-1.5 py-px" style={{ background: c.heat.k === "backed" ? "rgba(var(--neg),.18)" : "rgba(var(--acc),.15)", color: c.heat.k === "backed" ? "var(--neg-l)" : "var(--brass)" }}>{c.heat.k === "backed" ? `backed off ${dateShort(c.heat.d)}` : "heat"}</span>}</div>
+                    <div className="text-sm font-semibold flex items-center gap-1.5 min-w-0"><span className="truncate">{c.name}</span>{c.heat && <span className="text-[10px] font-semibold rounded-full px-1.5 py-px shrink-0 whitespace-nowrap" style={{ background: c.heat.k === "backed" ? "rgba(var(--neg),.18)" : "rgba(var(--acc),.15)", color: c.heat.k === "backed" ? "var(--neg-l)" : "var(--brass)" }}>{c.heat.k === "backed" ? <>backed off<span className="ph-hide"> {dateShort(c.heat.d)}</span></> : "heat"}</span>}</div>
                     <div className="text-[11px]" style={{ color: "var(--muted)" }}>{c.n} session{c.n === 1 ? "" : "s"} · {fmtH(c.h)} · {c.h > 0 ? `${sgnMoney(c.net / c.h)}/hr` : ""} · last {dateShort(c.last)}</div>
                   </div>
                   <div className="text-right">
@@ -5158,7 +5191,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
                   <button key={s.id || i} onClick={() => setSheet(s)} className="histrow rowh">
                     <div className="text-center leading-tight"><div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)" }}>{new Date(s.date + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}</div><div className="mono text-base">{+s.date.slice(8)}</div></div>
                     <div className="min-w-0">
-                      <div className="text-sm truncate flex items-center gap-1.5" style={{ color: "var(--ivory)" }}>{s.where || "—"}{s.heat === "backed" && <span title="backed off" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--rose)", display: "inline-block" }} />}{s.heat === "watched" && <span title="heat" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--brass)", display: "inline-block" }} />}</div>
+                      <div className="text-sm flex items-center gap-1.5 min-w-0" style={{ color: "var(--ivory)" }}><span className="truncate">{s.where || "—"}</span>{s.heat === "backed" && <span title="backed off" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--rose)", flex: "none" }} />}{s.heat === "watched" && <span title="heat" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--brass)", flex: "none" }} />}</div>
                       <div className="text-[11px] truncate" style={{ color: "var(--muted)" }}>{fmtH(s.hours)}{s.notes ? ` · ${s.notes}` : ""}</div>
                     </div>
                     <div className="text-right">
@@ -5555,6 +5588,7 @@ const MORE_ICON = <><circle cx="5.5" cy="12" r="1.5" fill="currentColor" /><circ
 // Jump-to palette (⌘K / Ctrl K / "/"): type a few letters, arrow to a row, Enter. Every page, drill and setting is in it.
 function CommandPalette({ items, onClose }) {
   const [q, setQ] = useState(""); const [at, setAt] = useState(0); const list = useRef(null);
+  const pal = useRef(null); useModalFocus(pal);
   // a match in the name beats a match in the hidden keywords, so "log" finds "Log a session" before "Sessions"
   const shown = useMemo(() => {
     const w = q.trim().toLowerCase().split(/\s+/).filter(Boolean); if (!w.length) return items;
@@ -5567,15 +5601,15 @@ function CommandPalette({ items, onClose }) {
   const onKey = (e) => {
     if (e.key === "ArrowDown") { e.preventDefault(); setAt((x) => Math.min(shown.length - 1, x + 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setAt((x) => Math.max(0, x - 1)); }
-    else if (e.key === "Enter") { e.preventDefault(); if (shown[at]) run(shown[at]); }
+    else if (e.key === "Enter") { if (e.target.tagName === "BUTTON") return; e.preventDefault(); if (shown[at]) run(shown[at]); }   // Enter on a row that has focus runs that row
     else if (e.key === "Escape") { e.preventDefault(); onClose(); }
   };
   return (
-    <div className="cmdk-wrap" {...backdrop(onClose)} role="dialog" aria-label="Jump to">
-      <div className="cmdk" onClick={(e) => e.stopPropagation()}>
+    <div className="cmdk-wrap" {...backdrop(onClose)} role="dialog" aria-modal="true" aria-label="Jump to">
+      <div ref={pal} className="cmdk" onClick={(e) => e.stopPropagation()} onKeyDown={onKey}>
         <div className="cmdk-in">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
-          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKey} placeholder="Jump to a page, drill or setting" aria-label="Jump to" autoComplete="off" spellCheck={false} />
+          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Jump to a page, drill or setting" aria-label="Jump to" autoComplete="off" spellCheck={false} />
           <kbd>esc</kbd>
         </div>
         <div className="cmdk-list" ref={list}>
