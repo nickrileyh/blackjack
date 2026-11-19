@@ -151,7 +151,7 @@ export function TripCard({ go, bankroll }) {
       {next.first ? (
         <button className="cardbtn w-full text-left flex items-center justify-between gap-3 mt-2" onClick={() => go("plan")}>
           <span className="min-w-0"><span className="block text-[11.5px]" style={{ color: "var(--muted)" }}>Next up · {next.when}{next.last ? ` · last visit ${next.last}` : ""}</span><span className="block text-[19px] font-semibold truncate mt-0.5" style={{ color: "var(--ivory)", letterSpacing: "-.01em" }}>{next.first.c.name}</span>{next.back && <span className="block text-[11px]" style={{ color: "var(--neg-l)" }}>first visit since the back-off, keep it short</span>}</span>
-          {next.score != null && <span className="text-right leading-none shrink-0"><span className="block mono text-[22px] font-semibold" style={{ color: scoreTone(next.score) }}>{next.score}</span><span className="block text-[9px] font-semibold uppercase mt-1" style={{ color: "var(--muted)", letterSpacing: ".1em" }}>score</span></span>}
+          {next.score != null && <span className="text-right leading-none shrink-0"><span className="block mono text-[22px] font-semibold" style={{ color: scoreTone(next.score) }}>{next.score}</span><span className="block lab mt-1" style={{ fontSize: 10.5 }}>score</span></span>}
         </button>
       ) : (
         <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>{next.loading && next.n ? "Working out where to play next…" : next.none ? "Nothing to suggest right now. The Plan page says why, and when each casino is back." : "Start the clock when you sit down. When you leave, the hours and the casino are already filled in."}</p>

@@ -993,7 +993,7 @@ function DealBox({ deal, gr, bankroll, span }) {
         </div>
         {p && <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
           <div className="pdrow bl">
-            <div className="text-[11px] font-semibold uppercase whitespace-nowrap" style={{ color: "var(--muted)", letterSpacing: ".09em" }}><i className="pdhl" />The bright line</div>
+            <div className="lab whitespace-nowrap"><i className="pdhl" />The bright line</div>
             <div className="pdpick">{[["low", "Worst"], ["mid", "Typical"], ["high", "Best"]].map(([k, t]) => <button key={k} type="button" className={"gchip" + (which === k ? " on" : "")} onClick={() => pick(k)}>{t}</button>)}{n > 2 && <button type="button" className={"gchip" + (which === "pick" ? " on" : "")} onClick={() => { let r = Math.floor(Math.random() * (n - 1)); if (r >= hi) r++; pick(r); }} aria-label="Another dealt future">Another</button>}</div>
           </div>
           <div className="text-sm mt-2" style={{ color: "var(--ivory)" }}>{p.dead ? <b style={{ color: "var(--neg-l)" }}>Went broke{p.deadAt != null ? ` in ${whenOf(p.deadAt)}` : ""}</b> : <>Ended at <b className="mono">{shortMoney(p.end)}</b> <span className="mono" style={{ color: p.end >= bankroll ? "var(--ivory-d)" : "var(--neg-l)" }}>{sgnShort(p.end - bankroll)}</span>{beat != null && <span className="text-[11.5px]" style={{ color: "var(--muted)" }}> · better than <span className="mono">{Math.round(beat * 100)}%</span> of the 4,000</span>}</>}</div>

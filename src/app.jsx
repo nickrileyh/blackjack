@@ -1177,6 +1177,30 @@ body{background:none}
 @media (max-width:370px){.chipseg.slide button{font-size:12px;padding-left:3px;padding-right:3px}}
 @media (max-width:430px){.btrow.eyebrow{letter-spacing:.07em}}
 @media (prefers-reduced-motion:reduce){.tink,.pnltip,.pnlhov,.pnlhov circle{transition:none!important}.pnltip{animation:none!important}}
+/* ---- Restyle: type, glass, colour, room (19 Nov) ---- */
+:root{--lab:var(--muted)}
+@supports (color:color-mix(in srgb,red 5%,blue)){:root{--lab:color-mix(in srgb,var(--muted) 86%,rgb(var(--acc)))}}
+:root[data-theme="light"],.felt{--lab:var(--muted)}
+.bj .eyebrow,.bj .lab,.bj .sn-label,.bj .cmdk-g,.bj .phead,.bj .pstat>div:first-child,.bj .pplan .k{font-size:12px;letter-spacing:0;text-transform:none;font-weight:500;line-height:1.3;color:var(--lab)}
+.bj .eyebrow[style*="font-size"]{font-size:11px!important}
+.bj .card>.eyebrow:first-child,.bj .card>.flex:first-child>.eyebrow:first-child,.bj .card>div:first-child>.flex:first-child>.eyebrow:first-child,.bj .card>.cardbtn:first-child>.flex:first-child>.eyebrow:first-child{font-size:15px;font-weight:600;letter-spacing:-.012em;color:var(--ivory)}
+.bj h1,.bj .disp,.bj .disp.mono,.bj .pgbig,.bj .pbig,.bj .sn-name,.bj .sp-word{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.02em;font-feature-settings:normal}
+.bj .sn-name{font-size:19px}.bj .sn-label{opacity:1;padding-bottom:6px}
+.bj .mcal .wd{text-transform:none;letter-spacing:0;font-weight:500;font-size:11px}
+@media (max-width:1023px){.topbar .disp{font-size:15.5px}}
+@media (max-width:370px){.shell>header.tight h1.long{font-size:18.5px}}
+@supports (background:color-mix(in srgb,red 5%,blue)){.card{background:color-mix(in srgb,rgb(var(--acc)) 1.6%,rgba(var(--fg),.042))}.card .card{background:rgba(var(--fg),.04)}
+.qa{background:color-mix(in srgb,rgb(var(--acc)) 5%,rgba(var(--fg),.06));background-clip:padding-box}.qa:hover{background:color-mix(in srgb,rgb(var(--acc)) 9%,rgba(var(--fg),.08));background-clip:padding-box}
+.bj .cm-reg{fill:color-mix(in srgb,rgb(var(--acc)) 10%,rgba(var(--fg),.09))}.bj .cm-land{fill:color-mix(in srgb,rgb(var(--acc)) 5%,rgba(var(--fg),.04))}}
+:root:not([data-theme="light"]) .btn.ghost{background:linear-gradient(180deg,rgba(var(--fg),.13),rgba(var(--fg),.06));background-clip:padding-box}
+:root:not([data-theme="light"]) .btn.ghost:hover:not(:disabled){background:linear-gradient(180deg,rgba(var(--fg),.18),rgba(var(--fg),.09));background-clip:padding-box}
+@media (min-width:1300px){.dgrid{column-gap:24px}.dcol>.mb-4,.dcol>*>.card.mb-4{margin-bottom:24px}.dcol>.card.p-5,.dcol>*>.card.p-5{padding:24px}}
+@media (max-width:1023px){.dcol>.card.mb-4,.dcol>*>.card.mb-4{margin-bottom:18px}}
+@media (max-width:350px){.tdots{display:none}}
+.tdot{width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(var(--fg),.3)}.tdot.on{background:var(--brass);box-shadow:none}
+:root{--gl-edge-soft:linear-gradient(155deg,rgba(255,255,255,.42),rgba(255,255,255,.19) 16%,rgba(255,255,255,.105) 46%,rgba(255,255,255,.095) 72%,rgba(255,255,255,.23))}
+.card{box-shadow:inset 0 calc(-1 * var(--hair)) 0 rgba(var(--sh),.4),0 22px 44px -22px rgba(0,0,0,.95)}
+/* ---- end of the restyle ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -3612,7 +3636,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
             <div className="eyebrow">How you're running</div>
             <div className="mono text-xs" style={{ color: "var(--muted)" }}>{run.z >= 0 ? "+" : "−"}{Math.abs(run.z).toFixed(2)} SD</div>
           </div>
-          <div className="text-xl font-semibold mt-1" style={{ letterSpacing: "-.01em" }}>
+          <div className="disp text-xl font-semibold mt-1">
             <span style={{ color: run.pct < 0.1 ? "var(--rose)" : run.pct > 0.9 ? "var(--brass)" : "var(--ivory)" }}>{pctTxt(run.pct)} percentile</span>
           </div>
           <p className="text-xs mt-1 mb-2" style={{ color: "var(--ivory-d)" }}>Over {view.hands} hand{view.hands === 1 ? "" : "s"} your spread expects {sgnCash(run.exp)}. You're at {sgnCash(view.net)}.</p>
@@ -3996,16 +4020,13 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
       {testBest && (
         <section className="card p-5 mb-4 hd-last">
           <button onClick={() => go && go("count", { drill: "tests" })} className="cardbtn w-full text-left">
-            <div className="flex items-baseline justify-between mb-3">
+            {/* one line: which test and how it went is on the Tests page, one tap away (the card is the link) */}
+            <div className="flex items-center justify-between gap-3">
               <div className="eyebrow">Casino-ready tests</div>
-              <span className="mono text-xs" style={{ color: "var(--brass)" }}>{TEST_DEFS.filter((t) => testBest[t.id]?.pass).length}/{TEST_DEFS.length} passed ›</span>
-            </div>
-            <div className="space-y-1.5">
-              {TEST_DEFS.map((t) => { const b = testBest[t.id]; return (
-                <div key={t.id} className="flex items-center justify-between text-sm">
-                  <span style={{ color: "var(--ivory-d)" }}>{t.name}</span>
-                  <span className="mono text-xs" style={{ color: b?.pass ? "var(--brass)" : "var(--muted)" }}>{b?.pass ? b.summary || "passed" : b ? "not yet" : "not taken"}</span>
-                </div>); })}
+              <span className="flex items-center gap-2 shrink-0">
+                <span className="tdots flex items-center gap-1" aria-hidden="true">{TEST_DEFS.map((t) => <i key={t.id} title={t.name} className={"tdot" + (testBest[t.id]?.pass ? " on" : "")} />)}</span>
+                <span className="mono text-xs" style={{ color: "var(--brass)" }}>{TEST_DEFS.filter((t) => testBest[t.id]?.pass).length}/{TEST_DEFS.length} passed ›</span>
+              </span>
             </div>
           </button>
         </section>
@@ -4494,7 +4515,7 @@ function SkillsCard({ log, go }) {
       const acc = Math.round(((recent ? r.wOk / r.w : r.allOk / r.all)) * 100);
       const delta = recent && r.w >= 10 && r.p >= 10 ? acc - Math.round((r.pOk / r.p) * 100) : null;
       const days = Math.floor((now - r.last) / 864e5);
-      return { k, name, acc, delta, sub: recent ? `${r.w} rep${r.w === 1 ? "" : "s"} this week` : `last practiced ${days === 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`}` };
+      return { k, name, acc, delta, stale: !recent, sub: recent ? `${r.w} rep${r.w === 1 ? "" : "s"} this week` : `last practiced ${days === 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`}` };
     });
   }, [log]);
   if (!log || !rows.length) return null; // nothing practised yet: no card (the Train menu is where to start)
@@ -4509,7 +4530,7 @@ function SkillsCard({ log, go }) {
       ) : (
         <div className="-mx-1">
           {rows.map((r, i) => (
-            <button key={r.k} onClick={() => go && SKILL_GO[r.k] && go(...SKILL_GO[r.k])} className="skillrow w-full text-left" style={{ borderTop: i ? "1px solid var(--line)" : "none" }}>
+            <button key={r.k} onClick={() => go && SKILL_GO[r.k] && go(...SKILL_GO[r.k])} className="skillrow w-full text-left" title={r.sub} style={{ borderTop: i ? "1px solid var(--line)" : "none" }}>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-sm font-medium truncate" style={{ color: "var(--ivory)" }}>{r.name}</span>
@@ -4520,14 +4541,14 @@ function SkillsCard({ log, go }) {
                 </div>
                 <div className="flex items-center gap-3 mt-1.5">
                   <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(var(--fg),.07)" }}><div className="h-full rounded-full bar barx" style={{ width: `${Math.max(3, r.acc)}%`, background: skillTone(r.acc) }} /></div>
-                  <span className="text-[11px] shrink-0" style={{ color: "var(--muted)", minWidth: 118, textAlign: "right" }}>{r.sub}</span>
+                  {r.stale && <span className="text-[11px] shrink-0" style={{ color: "var(--muted)" }}>{r.sub}</span>}
                 </div>
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)", flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
             </button>))}
         </div>
       )}
-      {rows.length > 0 && <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}><span style={{ color: "var(--brass)" }}>●</span> 95%+ is casino-ready · <span style={{ color: "var(--rose)" }}>●</span> under 85% needs work. Tap a skill to practice it.</p>}
+      {rows.length > 0 && <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}><span style={{ color: "var(--brass)" }}>●</span> 95%+ is casino-ready · <span style={{ color: "var(--rose)" }}>●</span> under 85% needs work</p>}
     </section>
   );
 }
@@ -4605,7 +4626,7 @@ function SpreadSheet({ cfg0, current, legacy, session, others = 0, onUse, onUseA
             <div className="flex gap-1.5 mt-1"><input className="in mono" type="number" inputMode="decimal" value={cfg.auto ? Math.round(snap.hph) : cfg.rph} onChange={(e) => setCfg((o) => ({ ...o, auto: false, rph: e.target.value === "" ? "" : Number(e.target.value) }))} aria-label="Rounds per hour for this session" />
               <button type="button" className="text-xs font-semibold rounded-lg px-3" style={{ flexShrink: 0, background: cfg.auto ? "var(--brass)" : "rgba(var(--fg),.07)", color: cfg.auto ? "var(--ink)" : "var(--muted)" }} onClick={() => setCfg((o) => ({ ...o, auto: true }))}>Auto</button></div></div>
           <div>
-            <div className="grid text-[10px] font-semibold uppercase px-1 mb-1" style={{ gridTemplateColumns: "48px 1fr 52px", color: "var(--muted)", letterSpacing: ".06em" }}><span>TC</span><span>Bet ($0 = sit out)</span><span className="text-right">Hands</span></div>
+            <div className="grid lab px-1 mb-1" style={{ gridTemplateColumns: "48px 1fr 52px" }}><span>TC</span><span>Bet ($0 = sit out)</span><span className="text-right">Hands</span></div>
             <div className="space-y-1">{COUNTS.map((c) => (
               <div key={c} className="grid items-center gap-2" style={{ gridTemplateColumns: "48px 1fr 52px" }}>
                 <span className="mono text-sm" style={{ color: "var(--ivory-d)" }}>{LABEL(c)}</span>
@@ -4685,7 +4706,7 @@ function Sheet({ title, onClose: shut, children }) {
         <div className="sheetgrab" onPointerDown={dStart} onPointerMove={dMove} onPointerUp={dEnd} onPointerCancel={dEnd}>
         <div className="flex justify-center pt-2 pb-1"><span style={{ width: 38, height: 4, borderRadius: 4, background: "rgba(var(--fg),.18)" }} /></div>
         <div className="flex items-center justify-between px-5 pt-1 pb-1">
-          <div className="text-lg font-semibold" style={{ letterSpacing: "-.01em" }}>{title}</div>
+          <div className="disp text-xl font-semibold">{title}</div>
           <button onClick={onClose} aria-label="Close" className="xbtn rounded-full flex items-center justify-center" style={{ width: 32, height: 32, fontSize: 18 }}>×</button>
         </div>
         </div>
@@ -4708,7 +4729,7 @@ function SessionLuck({ s, evHour, sdHour }) {
         <div className="eyebrow">How this session ran</div>
         <div className="mono text-xs" style={{ color: "var(--muted)" }}>{z >= 0 ? "+" : "−"}{Math.abs(z).toFixed(2)} SD</div>
       </div>
-      <div className="text-lg font-semibold mt-0.5" style={{ color: tone }}>{pctTxt(p)} percentile</div>
+      <div className="disp text-xl font-semibold mt-0.5" style={{ color: tone }}>{pctTxt(p)} percentile</div>
       <p className="text-xs mt-0.5 mb-1.5" style={{ color: "var(--ivory-d)" }}>Over {fmtH(h)} the spread you played expects {sgnMoney(exp)} ± {shortMoney(sd)}. You finished {sgnMoney(s.result)}.</p>
       <LuckGauge z={z} pct={p} />
     </div>
@@ -4868,7 +4889,7 @@ function MonthBars({ months, sel, onPick }) {
 function StatTile({ k, v, sub, tone, enter }) {
   return (
     <div className={"min-w-0" + (enter ? " rise" : "")}>
-      <div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)", letterSpacing: ".09em" }}>{k}</div>
+      <div className="lab">{k}</div>
       <div className="mono text-[17px] font-semibold mt-0.5" style={{ color: tone || "var(--ivory)" }}>{v}</div>
       {sub && <div className="text-[11px] leading-snug mt-px" style={{ color: "var(--muted)" }}>{sub}</div>}
     </div>
@@ -5013,7 +5034,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
           <div className="stats three mt-3 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
             {[["Per hour", sgnMoney(st.perHour), `exp ${sgnMoney(st.expHour)}`], ["Won", `${Math.round(st.winRate * 100)}%`, `${st.wins} of ${st.n}`], ["Avg session", sgnMoney(st.avg), fmtH(st.avgH)]].map(([k, v, s]) => (
               <div key={k} className="min-w-0">
-                <div className="text-[10px] font-semibold uppercase statlab" style={{ color: "var(--muted)", letterSpacing: ".09em" }}>{k}</div>
+                <div className="lab statlab">{k}</div>
                 <div className="mono text-[17px] font-semibold mt-0.5">{v}</div>
                 <div className="text-[11px] mt-px" style={{ color: "var(--muted)" }}>{s}</div>
               </div>))}
@@ -5038,7 +5059,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
         {/* luck */}
         <section className="card p-5 mb-4">
           <div className="flex items-baseline justify-between"><div className="eyebrow">Luck check</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{st.z >= 0 ? "+" : "−"}{Math.abs(st.z).toFixed(2)} SD</div></div>
-          <div className="text-xl font-semibold mt-1" style={{ letterSpacing: "-.01em" }}>Running at the <span style={{ color: st.pct < 0.1 ? "var(--rose)" : st.pct > 0.9 ? "var(--brass)" : "var(--ivory)" }}>{pctTxt(st.pct)} percentile</span></div>
+          <div className="disp text-xl font-semibold mt-1">Running at the <span style={{ color: st.pct < 0.1 ? "var(--rose)" : st.pct > 0.9 ? "var(--brass)" : "var(--ivory)" }}>{pctTxt(st.pct)} percentile</span></div>
           <p className="text-xs mt-1 mb-2" style={{ color: "var(--ivory-d)" }}>{st.pct < 0.5 ? `${Math.round((1 - st.pct) * 100)}% of players with your spreads and hours would be ahead of you.` : `You're ahead of ${Math.round(st.pct * 100)}% of players with your spreads and hours.`} {st.pct < 0.05 ? "That's unusual — double-check bet sizing, deviations and the game conditions you entered." : st.pct > 0.95 ? "Enjoy it, and don't let it change the bet sizing." : "That's normal variance."}</p>
           <LuckGauge z={st.z} pct={st.pct} />
           {n0Hours > 0 && (
@@ -5123,7 +5144,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
               <div>
                 {g.items.map((s, i) => (
                   <button key={s.id || i} onClick={() => setSheet(s)} className="histrow rowh">
-                    <div className="text-center leading-tight"><div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)" }}>{new Date(s.date + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}</div><div className="mono text-base">{+s.date.slice(8)}</div></div>
+                    <div className="text-center leading-tight"><div className="lab" style={{ fontSize: 11 }}>{new Date(s.date + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}</div><div className="mono text-base">{+s.date.slice(8)}</div></div>
                     <div className="min-w-0">
                       <div className="text-sm flex items-center gap-1.5 min-w-0" style={{ color: "var(--ivory)" }}><span className="truncate">{s.where || "—"}</span>{s.heat === "backed" && <span title="backed off" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--rose)", flex: "none" }} />}{s.heat === "watched" && <span title="heat" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--brass)", flex: "none" }} />}</div>
                       <div className="text-[11px] truncate" style={{ color: "var(--muted)" }}>{fmtH(s.hours)}{s.notes ? ` · ${s.notes}` : ""}</div>
@@ -5569,7 +5590,7 @@ function TopBar({ title, children, onBack }) {
     <div ref={bar} className={"topbar" + (show ? " show" : "")} aria-hidden={!show}>
       <div className="mx-auto flex items-center justify-between gap-3" style={{ maxWidth: "42rem" }}>
         <span className="flex items-center min-w-0">{onBack && <button className="tbback ph-only" onClick={onBack} aria-label="Back"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg></button>}
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[15px] font-semibold truncate" style={{ letterSpacing: "-.01em" }}>{title}</button></span>
+        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="disp text-[17px] font-semibold truncate">{title}</button></span>
         {children}
       </div>
     </div>
@@ -6680,11 +6701,11 @@ function BetSpreadCalculator() {
           </button></Fragment>); })}
         <div className="sn-foot">
           {spreadLoaded && <button onClick={() => go("calc")} className="sn-rules" aria-label="Your spread. Open the calculator">
-            <span className="block text-[10px] font-semibold uppercase" style={{ letterSpacing: ".16em", color: "var(--muted)" }}>Your spread</span>
+            <span className="block lab">Your spread</span>
             <span className="flex items-baseline justify-between gap-2 mt-1"><span className="mono text-[13px] font-semibold" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span><span className="mono text-[11px] font-semibold" style={{ color: rorTone }}>{pct(r.ror, 1)} risk</span></span>
           </button>}
           <button onClick={() => setSetupOpen(true)} className="sn-rules" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
-            <span className="block text-[10px] font-semibold uppercase" style={{ letterSpacing: ".16em", color: "var(--muted)" }}>Game rules</span>
+            <span className="block lab">Game rules</span>
             <span className="flex items-center justify-between gap-2 mt-1"><span className="mono text-[13px] font-semibold" style={{ color: "var(--ivory)" }}>{rulesShort(rules)}</span><span className="text-[11px] font-semibold" style={{ color: "var(--brass)" }}>Change</span></span>
           </button>
           <button onClick={() => go(navTab === "settings" ? "progress" : "settings")} className={"sn-item" + (navTab === "settings" ? " on" : "")} aria-current={navTab === "settings" ? "page" : undefined}>

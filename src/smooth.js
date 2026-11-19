@@ -48,8 +48,8 @@ function glowPlan() {
   const d = vl.map((v, i) => v - bg[i]); let k = Infinity; d.forEach((x, i) => { if (x > 0) k = Math.min(k, (255 - bg[i]) / x); });
   const lift = k === Infinity ? null : { c: bg.map((b, i) => Math.max(0, Math.min(255, b + k * d[i]))), a: 1 / k, x: W / 2, y: -0.05 * H, rx: (wide ? 0.72 : 1.05) * W, ry: 1.05 * H, p: 1.35 };
   const layers = wide
-    ? [lift, { c: acc, a: 0.085, x: W - 170, y: 40, rx: 720, ry: 440, p: 1 }, { c: acc, a: 0.035, x: 0.22 * vw - left, y: -120, rx: 620, ry: 360, p: 1 }]
-    : [lift, { c: acc, a: 0.1, x: 0.96 * W, y: -70, rx: 440, ry: 280, p: 1 }, { c: acc, a: 0.05, x: -0.06 * W, y: -40, rx: 350, ry: 220, p: 1 }];
+    ? [lift, { c: acc, a: 0.15, x: W - 170, y: 30, rx: 860, ry: 520, p: 1 }, { c: acc, a: 0.075, x: 0.2 * vw - left, y: -110, rx: 700, ry: 420, p: 1 }]
+    : [lift, { c: acc, a: 0.17, x: 0.96 * W, y: -60, rx: 500, ry: 340, p: 1 }, { c: acc, a: 0.085, x: -0.06 * W, y: -40, rx: 400, ry: 270, p: 1 }];
   const dpr = window.devicePixelRatio || 1, s = Math.min(dpr, 3, Math.sqrt(4.2e6 / (W * H)));       // one canvas pixel per screen pixel, within a budget
   return { left, W, H, w: Math.max(1, Math.round(W * s)), h: Math.max(1, Math.round(H * s)), s, bg, layers: layers.filter(Boolean) };
 }
