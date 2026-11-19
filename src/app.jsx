@@ -1153,6 +1153,12 @@ body{background:none}
 .sn-label.grp{padding-top:14px}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
+/* ---- New page layouts: the answer across the top, then what you change, then the setup ---------------------------
+   Bet spread: results and ramp side by side over both columns (.sphero), the bet table first under them.
+   Sessions: the result and its chart over both columns (.sesshero, .sesscard with its three stats down the side),
+   History in the left column, what it adds up to in the right. */
+@media (min-width:1180px){.sesscard{margin-bottom:20px;display:grid;grid-template-columns:minmax(0,1fr) 210px;column-gap:30px;grid-template-rows:auto 1fr}.sesscard>:first-child{grid-column:1}.sesscard>.mt-4{grid-column:1;grid-row:2}.sesscard>.stats{grid-column:2;grid-row:1 / span 2;display:flex;flex-direction:column;justify-content:center;gap:22px;margin-top:0;padding:0 0 0 30px;border-top:0!important;border-left:1px solid var(--line)}.sesscard>.stats .mono{font-size:20px}}
+@media (min-width:1180px){.dcol.sphero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px;align-items:stretch}}
 /* ---- Home: one big card for today -------------------------------------------------------------------------------
    TodayCard: a ring and one button, the last two weeks of practice, the four shortcuts as round glass buttons. */
 .tdfocus{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px}
@@ -5065,11 +5071,12 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
   return (
     <div className="sesspage">
       {sessions.length > 0 && wide && <div className="sessfilt"><div className="segw">{periodSeg}</div>{casinoChips && <div className="chiprowx">{casinoChips}</div>}{showing && <div style={{ flexBasis: "100%" }}>{showing}</div>}</div>}
-      <div className={"dgrid" + (list.length ? "" : " solo")}><div className="dcol">
+      {/* the result across the top; under it the history on the left and what it adds up to on the right */}
+      <div className="dcol sesshero">
       <div className="ph-a"><TimerCard go={go} /></div>
       {/* hero */}
       {sessions.length > 0 && (
-      <section className="card p-5 mb-3 overflow-hidden ph-a">
+      <section className="card p-5 mb-3 overflow-hidden ph-a sesscard">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow">{filtered ? [period === "30" ? "Last 30 days" : period === "90" ? "Last 90 days" : period === "ytd" ? "This year" : "All time", casino !== "all" ? byCasino[0]?.name || "" : ""].filter(Boolean).join(" · ") : "All-time result"}</div>
@@ -5093,6 +5100,8 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
       )}
       {pnlFull && <PnlFull sessions={list} evHour={evHour} sdHour={sdHour} mix={mix} hph={hph} onClose={() => setPnlFull(false)} />}
 
+      </div>
+      <div className={"dgrid" + (list.length ? "" : " solo")}><div className="dcol">
       {/* filters: on a computer they sit above both columns, since they filter both */}
       {sessions.length > 0 && !wide && <div className="mb-4 space-y-2 ph-a">{filterBar}</div>}
 
@@ -5104,6 +5113,35 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
         </section>
       )}
 
+      {list.length > 0 && <>
+        {/* history */}
+        <section className="card p-5 mb-4 ph-b">
+          <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">History</div><button onClick={exportCsv} className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }}>Export CSV</button></div>
+          {exportMsg && <div className="text-xs mb-2" style={{ color: "var(--brass)" }}>{exportMsg}</div>}
+          <div ref={histRef}>
+          {groups.map((g) => { const mt = monthTot(g.k); return (
+            <div key={g.k} className="mb-3">
+              <div className="histmonth"><span>{monthName(g.k)}</span><span className="mono">{sgnMoney(mt.net)} · {fmtH(mt.h)}</span></div>
+              <div>
+                {g.items.map((s, i) => (
+                  <button key={s.id || i} onClick={() => setSheet(s)} className="histrow rowh">
+                    <div className="text-center leading-tight"><div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)" }}>{new Date(s.date + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}</div><div className="mono text-base">{+s.date.slice(8)}</div></div>
+                    <div className="min-w-0">
+                      <div className="text-sm flex items-center gap-1.5 min-w-0" style={{ color: "var(--ivory)" }}><span className="truncate">{s.where || "—"}</span>{s.heat === "backed" && <span title="backed off" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--rose)", flex: "none" }} />}{s.heat === "watched" && <span title="heat" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--brass)", flex: "none" }} />}</div>
+                      <div className="text-[11px] truncate" style={{ color: "var(--muted)" }}>{fmtH(s.hours)}{s.notes ? ` · ${s.notes}` : ""}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="mono text-sm font-semibold" style={{ color: s.result > 0 ? "var(--brass)" : s.result < 0 ? "var(--neg-l)" : "var(--ivory-d)" }}>{sgnMoney(s.result)}</div>
+                      <div className="text-[10px]" style={{ color: "var(--muted)" }}>exp {sgnMoney(sessEv(s, evHour) * (+s.hours || 0))}</div>
+                    </div>
+                  </button>))}
+              </div>
+            </div>); })}
+          </div>
+          {list.length > histN && <button onClick={() => setShowAll(!showAll)} className="w-full text-xs font-semibold py-2 lnk" style={{ color: "var(--brass)" }}>{showAll ? "Show fewer" : `Show all ${list.length}`}</button>}
+        </section>
+      </>}
+      </div><div className="dcol o2">
       {list.length > 0 && <>
         {/* luck */}
         <section className="card p-5 mb-4">
@@ -5145,9 +5183,6 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
           </section>
         )}
 
-      </>}
-      </div><div className="dcol o2">
-      {list.length > 0 && <>
         {/* by casino */}
         {byCasino.length > 0 && (
           <section className="card p-5 mb-4">
@@ -5178,32 +5213,6 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
           </section>
         )}
 
-        {/* history */}
-        <section className="card p-5 mb-4 ph-b">
-          <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">History</div><button onClick={exportCsv} className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }}>Export CSV</button></div>
-          {exportMsg && <div className="text-xs mb-2" style={{ color: "var(--brass)" }}>{exportMsg}</div>}
-          <div ref={histRef}>
-          {groups.map((g) => { const mt = monthTot(g.k); return (
-            <div key={g.k} className="mb-3">
-              <div className="histmonth"><span>{monthName(g.k)}</span><span className="mono">{sgnMoney(mt.net)} · {fmtH(mt.h)}</span></div>
-              <div>
-                {g.items.map((s, i) => (
-                  <button key={s.id || i} onClick={() => setSheet(s)} className="histrow rowh">
-                    <div className="text-center leading-tight"><div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)" }}>{new Date(s.date + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}</div><div className="mono text-base">{+s.date.slice(8)}</div></div>
-                    <div className="min-w-0">
-                      <div className="text-sm flex items-center gap-1.5 min-w-0" style={{ color: "var(--ivory)" }}><span className="truncate">{s.where || "—"}</span>{s.heat === "backed" && <span title="backed off" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--rose)", flex: "none" }} />}{s.heat === "watched" && <span title="heat" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--brass)", flex: "none" }} />}</div>
-                      <div className="text-[11px] truncate" style={{ color: "var(--muted)" }}>{fmtH(s.hours)}{s.notes ? ` · ${s.notes}` : ""}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="mono text-sm font-semibold" style={{ color: s.result > 0 ? "var(--brass)" : s.result < 0 ? "var(--neg-l)" : "var(--ivory-d)" }}>{sgnMoney(s.result)}</div>
-                      <div className="text-[10px]" style={{ color: "var(--muted)" }}>exp {sgnMoney(sessEv(s, evHour) * (+s.hours || 0))}</div>
-                    </div>
-                  </button>))}
-              </div>
-            </div>); })}
-          </div>
-          {list.length > histN && <button onClick={() => setShowAll(!showAll)} className="w-full text-xs font-semibold py-2 lnk" style={{ color: "var(--brass)" }}>{showAll ? "Show fewer" : `Show all ${list.length}`}</button>}
-        </section>
       </>}
       </div></div>
 
@@ -6482,7 +6491,8 @@ function BetSpreadCalculator() {
 
         {(tab === "train" || tab === "count") && !narrow && <TrainTabs tab={tab} go={go} />}
         {tab === "more" ? <MoreHub key="mo" go={go} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} onKeys={() => setKeysOpen(true)} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} spread={trainSpread} /></div> : <div className="rise" key="c">
-        <div className="dgrid"><div className="dcol">
+        {/* the answer first: what the spread earns and risks, with the ramp beside it; then the bets, then the setup */}
+        <div className="dcol sphero">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .5s var(--ez)" }}>
           <div className="grid grid-cols-2 gap-5">
@@ -6510,34 +6520,6 @@ function BetSpreadCalculator() {
             N₀ is how many rounds until expected profit equals one standard deviation of luck — how long before skill beats variance. {isFinite(r.n0) ? (r.n0 < 30000 ? "Under 30,000 is strong." : r.n0 < 80000 ? "Under 80,000 is playable." : `At ${Math.round(r.n0 / rphEff).toLocaleString()} hours, the spread is too flat — bet less at negative counts and more at high ones.`) : ""}
           </Info>
         </section>
-        <section className="card p-5 mb-4">
-          <div>
-            {/* the title and the session's length share one row */}
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="eyebrow">Your session</div>
-              <div className="relative" style={{ width: 92 }}>
-                <input className="in mono" type="number" inputMode="decimal" step="0.25" min="0" max="48" value={sessHours} aria-label="Session hours"
-                  onChange={(e) => setSessHours(e.target.value === "" ? "" : Math.min(48, Math.max(0, Number(e.target.value))))} style={{ paddingRight: 30, textAlign: "right", height: 38 }} />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "var(--muted)" }}>h</span>
-              </div>
-            </div>
-            {sess ? (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>lasts 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>chance you end down</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.dd90 == null ? "peak to low" : <>1 in 10: <span className="whitespace-nowrap">{`−\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</span></>}</div></div>
-              </div>
-            ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
-            <Info label="About these numbers">"Bring with you" covers the deepest you're likely to dip during the session, not just where you finish — including the extra swing from hot and cold shoes clustering, checked against full simulations. Drawdown is the biggest drop from a high point to a low within the session.</Info>
-          </div>
-          {r.evHand <= 0 && (
-            <p className="mt-4 text-sm rounded-lg px-3 py-2" style={{ background: "rgba(var(--neg),.15)", color: "var(--neg-l)" }}>
-              This spread has no edge. Raise bets at positive counts, sit out negative counts, or find a better game.
-            </p>
-          )}
-        </section>
-
         {/* ramp chart — signature */}
         <section id="sp-ramp" className="card p-5 mb-4">
           <div className="flex items-baseline justify-between mb-4">
@@ -6561,28 +6543,8 @@ function BetSpreadCalculator() {
           <Info label="How to read this">Bar height is bet size; brightness is how often that count shows up. Red means you're betting into the house's edge. A $0 bet means you sit out at that count.</Info>
         </section>
 
-        {/* inputs */}
-        <section id="sp-numbers" className="card p-5 mb-4">
-          <div className="eyebrow mb-4">Your numbers</div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Bankroll" prefix="$" value={bankroll} onChange={setBankroll} step={100} />
-            <label className="block">
-              <span className="eyebrow block mb-1.5">Rounds / hour</span>
-              <div className="flex items-center gap-1.5">
-                <input className="in mono" style={{ paddingLeft: 12, minWidth: 0 }} type="number" inputMode="decimal" step={5} value={hphAuto ? Math.round(rphAuto) : handsPerHour} aria-label="Rounds per hour"
-                  onChange={(e) => { setHphAuto(false); setHph(e.target.value === "" ? "" : Number(e.target.value)); }} />
-                <button type="button" className="text-xs font-semibold rounded-lg px-2.5" style={{ height: 40, flexShrink: 0, background: hphAuto ? "var(--brass)" : "rgba(var(--fg),.07)", color: hphAuto ? "var(--ink)" : "var(--muted)" }} onClick={() => setHphAuto(true)} aria-pressed={hphAuto}>Auto</button>
-              </div>
-              <span className="block mt-1 text-xs" style={{ color: "var(--muted)" }}>{hphAuto ? `Set by ${seats === 1 ? "heads-up play" : `${seats} players`}${COUNTS.some((c) => spotsMap[c] === 2 && (Number(bets[c]) || 0) > 0) && seats < 7 ? " + your 2nd hand" : ""}` : `Yours · auto is ~${Math.round(rphAuto)}`}</span>
-            </label>
-            <div className="col-span-2"><SeatPicker seats={seats} onChange={setSeats} twoHands={COUNTS.some((c) => spotsMap[c] === 2 && (Number(bets[c]) || 0) > 0)} /></div>
-            <Field label="Table minimum" prefix="$" value={minBet} onChange={setMinBet} step={5} />
-            <Field label="Table maximum" prefix="$" value={maxBet} onChange={setMaxBet} step={50} hint={maxBet !== "" && +maxBet < (+minBet || 0) ? "Below the minimum — the optimizer will use the minimum" : maxBet === "" ? "No max — the optimizer won't cap your bets" : undefined} />
-          </div>
-          <Info label="Where these numbers come from">Edges and swings come from {CAL_ROUNDS(rules.decks, seats)} million simulated rounds of {rules.decks}-deck {rules.h17 ? "H17" : "S17"}{rules.surrender ? " with surrender" : ""} with {seats === 1 ? "you alone at the table" : rules.decks >= 6 ? "other players at the table" : `${seats} players at the table`}, and count frequencies from separate runs for your table size, at {rules.pen}% penetration, played with BJA strategy, the Illustrious 18{rules.surrender ? " and Fab 4" : ""}. Assumes accurate counting and play.{devsOn(rules) ? "" : " Deviations are off in the game rules, so these numbers are for basic strategy on every hand: no count plays and no insurance."} Risk of ruin uses e^(−2·EV·bankroll / variance) with your spread's simulated EV and variance (checked against simulated bankroll paths) and assumes you never resize your bets. Real results depend on playing accuracy and the game you actually get. Counting is legal, but casinos can ask you to leave.</Info>
-        </section>
-
-        </div><div className="dcol o3">
+        </div>
+        <div className="dgrid"><div className="dcol">
         {/* spread table */}
         <section id="sp-bets" className="card p-5 mb-4">
           <div className="flex items-center justify-between mb-3">
@@ -6615,6 +6577,56 @@ function BetSpreadCalculator() {
           {showFreq && <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Share of rounds dealt at each true count for this shoe, table and spread{seats === 1 && COUNTS.some((c) => !((Number(bets[c]) || 0) > 0)) ? " — counting only the rounds you're at the table for" : ""}.</p>}
         </section>
         {spreadLoaded && <SavedSpreads compact={!wide} bets={bets} spotsMap={spotsMap} bankroll={+bankroll || 0} cal={cal} rphOf={rphOf} now={r} onUse={loadSpread} />}
+
+        <section className="card p-5 mb-4">
+          <div>
+            {/* the title and the session's length share one row */}
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="eyebrow">Your session</div>
+              <div className="relative" style={{ width: 92 }}>
+                <input className="in mono" type="number" inputMode="decimal" step="0.25" min="0" max="48" value={sessHours} aria-label="Session hours"
+                  onChange={(e) => setSessHours(e.target.value === "" ? "" : Math.min(48, Math.max(0, Number(e.target.value))))} style={{ paddingRight: 30, textAlign: "right", height: 38 }} />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "var(--muted)" }}>h</span>
+              </div>
+            </div>
+            {sess ? (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>lasts 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>chance you end down</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.dd90 == null ? "peak to low" : <>1 in 10: <span className="whitespace-nowrap">{`−\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</span></>}</div></div>
+              </div>
+            ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
+            <Info label="About these numbers">"Bring with you" covers the deepest you're likely to dip during the session, not just where you finish — including the extra swing from hot and cold shoes clustering, checked against full simulations. Drawdown is the biggest drop from a high point to a low within the session.</Info>
+          </div>
+          {r.evHand <= 0 && (
+            <p className="mt-4 text-sm rounded-lg px-3 py-2" style={{ background: "rgba(var(--neg),.15)", color: "var(--neg-l)" }}>
+              This spread has no edge. Raise bets at positive counts, sit out negative counts, or find a better game.
+            </p>
+          )}
+        </section>
+
+        </div><div className="dcol o3">
+        {/* inputs */}
+        <section id="sp-numbers" className="card p-5 mb-4">
+          <div className="eyebrow mb-4">Your numbers</div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Bankroll" prefix="$" value={bankroll} onChange={setBankroll} step={100} />
+            <label className="block">
+              <span className="eyebrow block mb-1.5">Rounds / hour</span>
+              <div className="flex items-center gap-1.5">
+                <input className="in mono" style={{ paddingLeft: 12, minWidth: 0 }} type="number" inputMode="decimal" step={5} value={hphAuto ? Math.round(rphAuto) : handsPerHour} aria-label="Rounds per hour"
+                  onChange={(e) => { setHphAuto(false); setHph(e.target.value === "" ? "" : Number(e.target.value)); }} />
+                <button type="button" className="text-xs font-semibold rounded-lg px-2.5" style={{ height: 40, flexShrink: 0, background: hphAuto ? "var(--brass)" : "rgba(var(--fg),.07)", color: hphAuto ? "var(--ink)" : "var(--muted)" }} onClick={() => setHphAuto(true)} aria-pressed={hphAuto}>Auto</button>
+              </div>
+              <span className="block mt-1 text-xs" style={{ color: "var(--muted)" }}>{hphAuto ? `Set by ${seats === 1 ? "heads-up play" : `${seats} players`}${COUNTS.some((c) => spotsMap[c] === 2 && (Number(bets[c]) || 0) > 0) && seats < 7 ? " + your 2nd hand" : ""}` : `Yours · auto is ~${Math.round(rphAuto)}`}</span>
+            </label>
+            <div className="col-span-2"><SeatPicker seats={seats} onChange={setSeats} twoHands={COUNTS.some((c) => spotsMap[c] === 2 && (Number(bets[c]) || 0) > 0)} /></div>
+            <Field label="Table minimum" prefix="$" value={minBet} onChange={setMinBet} step={5} />
+            <Field label="Table maximum" prefix="$" value={maxBet} onChange={setMaxBet} step={50} hint={maxBet !== "" && +maxBet < (+minBet || 0) ? "Below the minimum — the optimizer will use the minimum" : maxBet === "" ? "No max — the optimizer won't cap your bets" : undefined} />
+          </div>
+          <Info label="Where these numbers come from">Edges and swings come from {CAL_ROUNDS(rules.decks, seats)} million simulated rounds of {rules.decks}-deck {rules.h17 ? "H17" : "S17"}{rules.surrender ? " with surrender" : ""} with {seats === 1 ? "you alone at the table" : rules.decks >= 6 ? "other players at the table" : `${seats} players at the table`}, and count frequencies from separate runs for your table size, at {rules.pen}% penetration, played with BJA strategy, the Illustrious 18{rules.surrender ? " and Fab 4" : ""}. Assumes accurate counting and play.{devsOn(rules) ? "" : " Deviations are off in the game rules, so these numbers are for basic strategy on every hand: no count plays and no insurance."} Risk of ruin uses e^(−2·EV·bankroll / variance) with your spread's simulated EV and variance (checked against simulated bankroll paths) and assumes you never resize your bets. Real results depend on playing accuracy and the game you actually get. Counting is legal, but casinos can ask you to leave.</Info>
+        </section>
 
         {/* optimizer */}
         <section id="sp-opt" className="card focusrim p-5">
