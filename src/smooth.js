@@ -123,6 +123,16 @@ function paintFelt() {
   }, () => { cv.getContext("2d").putImageData(img, 0, 0); setPicture("--feltimg", cv); });
 }
 
+// ---- 4. the nap of the felt ------------------------------------------------------------------------------------
+// A small tile of fine light and dark specks, laid over every felt and repeated: the cloth's nap. It is the same in
+// every theme (only its strength is set in the css), so it is painted once.
+function paintGrain() {
+  const n = 160, cv = document.createElement("canvas"); cv.width = n; cv.height = n;
+  const img = new ImageData(n, n), px = img.data, r = rand(11);
+  for (let o = 0; o < n * n * 4; o += 4) { const v = r() + r() - 1, c = v > 0 ? 255 : 0; px[o] = c; px[o + 1] = c; px[o + 2] = c; px[o + 3] = Math.round(Math.abs(v) * 26); }
+  cv.getContext("2d").putImageData(img, 0, 0); setPicture("--feltgrain", cv);
+}
+
 // ---- keeping them up to date ----------------------------------------------------------------------------------
 // Call once with the glow canvas. Repaints when the theme changes (the "bj-theme" event) and when the window's width
 // changes; a phone's toolbars sliding in and out change only the height, and are ignored.
@@ -140,6 +150,7 @@ export function startSmooth(canvas) {
   let rz = 0;
   const onResize = () => { clearTimeout(rz); rz = setTimeout(() => { const k = size(); if (k.w !== seen.w || k.d !== seen.d || Math.abs(k.h - seen.h) > 200) { seen = k; glow(); } }, 220); };
   seen = size(); glow(); pictures(500);
+  setTimeout(() => { try { paintGrain(); } catch (_) {} }, 900);
   window.addEventListener("bj-theme", onTheme); window.addEventListener("resize", onResize);
   return () => { clearTimeout(timer); clearTimeout(t2); clearTimeout(rz); if (stop) stop(); if (stopF) stopF(); if (stopL) stopL(); window.removeEventListener("bj-theme", onTheme); window.removeEventListener("resize", onResize); };
 }

@@ -1150,6 +1150,51 @@ body{background:none}
 .sn-label.grp{padding-top:14px}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
+/* ---- Home: one big card for today -------------------------------------------------------------------------------
+   TodayCard: a ring and one button, the last two weeks of practice, the four shortcuts as round glass buttons. */
+.tdfocus{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px}
+.tdring{position:relative;width:64px;height:64px;flex:none}
+.tdring svg{display:block;width:100%;height:100%}
+.tdring circle{fill:none;stroke-width:5}
+.tdring .tr{stroke:rgba(var(--fg),.1)}
+.tdring .tv{stroke-linecap:round;transition:stroke-dasharray .6s var(--ez)}
+.tdring>span{position:absolute;inset:0;display:grid;place-items:center;font-size:15px;font-weight:600;color:var(--ivory)}
+.tdtitle{font-size:20px;font-weight:600;line-height:1.2;letter-spacing:-.015em;color:var(--ivory)}
+.tdsub{font-size:12px;line-height:1.45;color:var(--muted);margin-top:3px}
+.btn.tdgo{flex:1 0 100%;min-height:46px}
+.tdprac,.tdacts{margin-top:18px;padding-top:15px;border-top:1px solid var(--line)}
+.today .pdays{gap:5px;margin-top:10px}
+.today .pbar{height:46px}
+.tdacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.today .qa,:root[data-theme="light"] .today .qa{min-height:0;padding:0;gap:7px;border:0;border-radius:14px;background:none;box-shadow:none;font-size:11px;white-space:nowrap}
+.qai{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:linear-gradient(180deg,rgba(var(--fg),.09),rgba(var(--fg),.035));box-shadow:var(--gl-lens);transition:transform .37s var(--ez),box-shadow .16s var(--ez)}
+:root[data-theme="light"] .qai{background:linear-gradient(180deg,#fff,rgba(255,255,255,.82))}
+.today .qa:active{background:none}.today .qa:active .qai{transform:scale(.92);transition-duration:.1s}
+@media (hover:hover){.today .qa:hover{background:none;box-shadow:none}.today .qa:hover .qai{box-shadow:var(--gl-bead)}}
+@media (min-width:640px){.btn.tdgo{flex:none;width:auto;padding:0 24px}.tdtitle{font-size:22px}.tdring{width:72px;height:72px}.today .pbar{height:72px}.today .pdays{gap:6px}.tdacts{grid-template-columns:repeat(4,auto);justify-content:space-around}.today .qa{flex-direction:row;gap:11px;font-size:12.5px}.qai{width:44px;height:44px}}
+/* ---- The table, richer ------------------------------------------------------------------------------------------
+   Nick asked for a richer table and cards. The felt has a rail round it and the nap of the cloth (a tile painted by
+   src/smooth.js), cards carry the suit under the rank in both corners, court cards are drawn (Court), the backs are a
+   lattice with a medallion, totals sit on pills and a bet is a stack of chips. */
+.felt{--rail:#17110D;background-image:var(--feltgrain,none),var(--feltimg,radial-gradient(120% 90% at 50% 0%,var(--felt1) 0%,var(--felt2) 60%,var(--felt3) 100%));background-size:160px 160px,100% 100%;background-repeat:repeat,no-repeat}
+@supports (color:color-mix(in srgb,red,blue)){.felt{--rail:color-mix(in srgb,var(--felt3) 38%,#120C08)}}
+.felt,:root:not([data-theme="light"]) .felt{box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),inset 0 0 0 5px var(--rail),inset 0 0 0 6px rgba(0,0,0,.5),inset 0 0 0 7px rgba(255,255,255,.07),inset 0 26px 44px -22px rgba(0,0,0,.55),inset 0 -30px 50px -30px rgba(0,0,0,.34)}
+:root[data-theme="onyx"] .felt{box-shadow:inset 0 0 0 1px rgba(212,175,55,.34),inset 0 0 0 5px var(--rail),inset 0 0 0 6px rgba(212,175,55,.22),inset 0 26px 44px -22px rgba(0,0,0,.55),inset 0 -30px 50px -30px rgba(0,0,0,.34)}
+.feltprint{opacity:.2}.felt.busy .feltprint{opacity:.07}
+.feltprint .fp-i{font-size:6.6px;letter-spacing:.34em}
+.pc{box-shadow:0 0 0 1px rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.95) inset,0 -1px 0 rgba(120,100,60,.18) inset,0 2px 3px -1px rgba(0,0,0,.4),0 16px 26px -12px rgba(0,0,0,.75)}
+.pc .cn svg.suit{width:9px;height:9px;margin-top:2px}
+.pc.sm .cn svg.suit{width:7px;height:7px;margin-top:1.5px}
+.pc.big .cn svg.suit{width:13px;height:13px;margin-top:3px}
+.pc .court{position:absolute;left:22%;right:22%;top:17.5%;bottom:17.5%;width:56%;height:65%;overflow:visible;font-family:Fraunces,Georgia,serif}
+.pcback{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23F6EFE2' d='M50 4C50 4 9 34 9 59c0 13 10 22 21 22 7.5 0 13-3.5 16.5-9C45.5 83 41 91 34 97h32c-7-6-11.5-14-12.5-25 3.5 5.5 9 9 16.5 9 11 0 21-9 21-22C91 34 50 4 50 4z'/%3E%3C/svg%3E") center/17% auto no-repeat,radial-gradient(circle closest-side at 50% 50%,var(--back1) 0 40%,#F6EFE2 41.5% 45%,transparent 46.5%),repeating-linear-gradient(45deg,transparent 0 5px,rgba(246,239,226,.2) 5px 5.8px),repeating-linear-gradient(-45deg,var(--back1) 0 5px,var(--back2) 5px 5.8px);box-shadow:inset 0 0 0 4px #F6EFE2,inset 0 0 0 4.8px rgba(0,0,0,.3),inset 0 0 0 7px var(--back1),inset 0 0 0 7.7px rgba(246,239,226,.5),0 0 0 1px rgba(0,0,0,.45),0 8px 18px -8px rgba(0,0,0,.85)}
+.totpill{font-size:11px;font-weight:600;line-height:1;padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.36);color:var(--ivory);box-shadow:inset 0 0 0 var(--hair) rgba(255,255,255,.16);white-space:nowrap}
+.totpill.win{background:rgba(var(--acc),.24);color:var(--acc-hi,var(--brass))}
+.totpill.loss{background:rgba(var(--neg),.2);color:var(--neg-l)}
+.betline{display:flex;align-items:flex-end;gap:6px;margin-top:5px;font-size:11px;font-weight:600;color:var(--ivory-d)}
+.betline>span:last-child{line-height:15px}
+.cstack{position:relative;display:inline-block;width:15px;flex:none}
+.cstack i{position:absolute;left:0;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle,var(--c) 0 50%,transparent 53%),repeating-conic-gradient(var(--c) 0 25deg,#F3ECDC 25deg 45deg);box-shadow:0 1.5px 0 rgba(0,0,0,.6),0 3px 4px -1px rgba(0,0,0,.5),0 0 0 .5px rgba(255,255,255,.3)}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}
 .mcal button.d{transition:none}.mcal button.d:hover{transform:none}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1s}.splash.go .sp-tile{animation:spfade .36s ease both!important}.splash.go .sp-chip{animation:spfade .32s ease .2s both!important}.splash.go .sp-word{animation:spfade .32s ease .32s both!important}.splash.go .sp-tag{animation:spfade .32s ease .42s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 /* ---- Third pass: finish ----
@@ -1440,6 +1485,26 @@ const SUIT_PATHS = {
   "♣": <><circle cx="50" cy="27" r="20.5" /><circle cx="26.5" cy="58" r="20.5" /><circle cx="73.5" cy="58" r="20.5" /><circle cx="50" cy="52" r="11" /><path d="M46 56c0 18-5 31-13 41h34c-8-10-13-23-13-41z" /></>,
 };
 function Suit({ s }) { return <svg className="suit" viewBox="0 0 100 100" aria-hidden="true">{SUIT_PATHS[s]}</svg>; }
+// A court card: a framed panel that reads the same both ways up — a crown, the letter, the crown again upside down, and
+// the suit in two corners. Each rank has its own crown (a jack's band and jewel, a queen's pearls, a king's cross).
+// Drawn in the card's own colour with gold, on a 61 x 100 box the css stretches over the middle of the card.
+const GOLD = "#BF9A45";
+const CROWNS = {
+  J: <><path d="M5 17V10H35V17Z" fill={GOLD} /><path d="M20 0l5.5 6-5.5 6-5.5-6z" fill={GOLD} /><path d="M5 13.5H35" fill="none" /></>,
+  Q: <><path d="M4 17L1 6l11 5 8-8 8 8 11-5-3 11z" fill={GOLD} /><circle cx="1" cy="5" r="2" fill="currentColor" stroke="none" /><circle cx="20" cy="2" r="2" fill="currentColor" stroke="none" /><circle cx="39" cy="5" r="2" fill="currentColor" stroke="none" /></>,
+  K: <><path d="M2 17V5l9 6 9-9 9 9 9-6v12z" fill={GOLD} /><path d="M2 13.5H38M20-4.5V1M17.3-2H22.7" fill="none" /></>,
+};
+function Court({ label, suit }) {
+  const half = <><g transform="translate(18.1 17) scale(.62)" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round">{CROWNS[label]}</g><svg x="7.5" y="7.5" width="9" height="9" viewBox="0 0 100 100">{SUIT_PATHS[suit]}</svg></>;
+  return (
+    <svg className="court" viewBox="0 0 61 100" preserveAspectRatio="none" aria-hidden="true" fill="currentColor">
+      <rect x=".8" y=".8" width="59.4" height="98.4" rx="3.5" fillOpacity=".05" stroke="currentColor" strokeWidth="1.2" strokeOpacity=".8" />
+      <rect x="4" y="4" width="53" height="92" rx="2" fill="none" stroke={GOLD} strokeWidth=".8" />
+      {half}<g transform="rotate(180 30.5 50)">{half}</g>
+      <text x="30.5" y="51" textAnchor="middle" dominantBaseline="central" fontSize="33" fontWeight="600">{label}</text>
+    </svg>
+  );
+}
 const DEAL_FLY = 0.34;   // seconds a dealt card takes to arrive unless told otherwise (the .dealt rule in the css says the same)
 function PlayingCard({ rank, suit, face, delay = 0, from = "shoe", style, big, small, fly }) {
   const red = suit === "♥" || suit === "♦";
@@ -1449,10 +1514,10 @@ function PlayingCard({ rank, suit, face, delay = 0, from = "shoe", style, big, s
   useEffect(() => { sfx("card", delay, { fly: fly || DEAL_FLY }); }, []); // eslint-disable-line
   return (
     <div className={"pc dealt " + (red ? "red " : "") + (big ? "big" : small ? "sm" : "")} style={{ "--dx": from === "shoe" ? "140px" : "0px", "--dy": "-150px", "--r0": "14deg", "--r1": style?.rot || "0deg", "--d": `${delay}ms`, ...(fly ? { animationDuration: `${fly}s` } : null), ...style }}>
-      <div className="cn tl"><b className={label === "10" ? "ten" : ""}>{label}</b></div>
-      <div className="cn br"><b className={label === "10" ? "ten" : ""}>{label}</b></div>
+      <div className="cn tl"><b className={label === "10" ? "ten" : ""}>{label}</b><Suit s={suit} /></div>
+      <div className="cn br"><b className={label === "10" ? "ten" : ""}>{label}</b><Suit s={suit} /></div>
       {rank === 11 ? <div className="face ace"><Suit s={suit} /></div>
-        : isFace ? <div className="face">{label}<small><Suit s={suit} /></small></div>
+        : isFace ? <Court label={label} suit={suit} />
         : PIPS[pipRank].map(([x, y], i) => <span key={i} className={"pip " + (y > 50 ? "flip" : "")} style={{ left: `${x}%`, top: `${y}%` }}><Suit s={suit} /></span>)}
     </div>
   );
@@ -1492,6 +1557,9 @@ function FeltPrint() {
         <path id="fp-b" d="M 62 12 Q 200 100 338 12" />
       </defs>
       <path className="fp-l" d="M 8 30 Q 200 162 392 30" />
+      <path className="fp-l" d="M -6 50 Q 200 196 406 50" />
+      <path id="fp-c" d="M 2 43 Q 200 181 398 43" fill="none" />
+      <text className="fp-s fp-i"><textPath href="#fp-c" startOffset="50%" textAnchor="middle">INSURANCE PAYS 2 TO 1</textPath></text>
       <text className="fp-t"><textPath href="#fp-a" startOffset="50%" textAnchor="middle">BLACKJACK PAYS {rules.bj65 ? "6 TO 5" : "3 TO 2"}</textPath></text>
       <text className="fp-s"><textPath href="#fp-b" startOffset="50%" textAnchor="middle">{rules.h17 ? "DEALER MUST HIT SOFT 17" : "DEALER MUST STAND ON ALL 17S"}</textPath></text>
     </svg>
@@ -3094,19 +3162,25 @@ function Chip({ v, onClick, disabled }) {
     </button>
   );
 }
+// The bet as it sits on the felt: a small stack of chips, biggest at the bottom, five at most
+function ChipStack({ v }) {
+  const out = []; let left = v;
+  for (const d of [1000, 500, 100, 25, 5, 1]) while (left >= d && out.length < 5) { out.push(d); left -= d; }
+  return <span className="cstack" style={{ height: 15 + (out.length - 1) * 3 }} aria-hidden="true">{out.map((d, i) => <i key={i} style={{ "--c": CHIP_COLORS(d)[0], bottom: i * 3 }} />)}</span>;
+}
 function HandView({ cards, label, bet, active, total, hidden, small, result, stagger = 0, base = 0, dur = DEAL_FLY }) {
   return (
     <div className="rounded-xl px-2 pt-2 pb-1" style={{ background: active ? "rgba(var(--acc),.1)" : "transparent", boxShadow: active ? "0 0 0 1px rgba(var(--acc),.5)" : "none", minWidth: 120, maxWidth: "100%" }}>
       <div className="flex items-center justify-between mb-1">
         <span className="eyebrow" style={{ fontSize: 9 }}>{label}</span>
-        {total !== undefined && <span className="mono text-[11px]" style={{ color: result ? (result > 0 ? "var(--brass)" : result < 0 ? "var(--neg-l)" : "var(--ivory-d)") : "var(--ivory-d)" }}>{result !== undefined ? (result > 0 ? `+$${result}` : result < 0 ? `−$${-result}` : "push") : total}</span>}
+        {total !== undefined && <span className={"totpill mono" + (result > 0 ? " win" : result < 0 ? " loss" : "")}>{result !== undefined ? (result > 0 ? `+$${result}` : result < 0 ? `−$${-result}` : "push") : total}</span>}
       </div>
       <div className="hand" style={{ minHeight: "calc(88px * var(--cz, 1))" }}>
         {cards.map((c, i) => { const d = base + i * stagger; return <div className="slot" key={hidden && i === 1 ? "hole" : c.id}>{hidden && i === 1
           ? <><div className="pcback pcz dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": `${d}ms`, animationDuration: `${dur}s` }} /><Flick d={d} fly={dur} /></>
           : <PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={d} fly={dur} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg" }} />}</div>; })}
       </div>
-      {bet !== undefined && <div className="mono text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>bet ${bet}</div>}
+      {bet !== undefined && <div className="betline mono">{bet > 0 && <ChipStack v={bet} />}<span>{bet > 0 ? `$${bet}` : "sitting out"}</span></div>}
     </div>
   );
 }
@@ -3441,9 +3515,9 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
         <div className={"relative tbl felt cz-play px-4 pt-4 pb-4" + (phase === "bet" ? "" : " busy")} style={{ minHeight: 300 }}>
           <FeltPrint />
           {shuffled && <div className="absolute inset-0 flex items-center justify-center rounded-2xl z-10 rise" style={{ background: "rgba(0,0,0,.6)" }}><div className="disp text-2xl font-semibold" style={{ color: "var(--brass)" }}>Shuffling…</div></div>}
-          <HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small {...dealAnim(1)} />
-          {phantom && <div className="mt-3"><HandView cards={phantom} label="Other player" total={showTotals ? handValue(phantom).total : undefined} small /></div>}
-          <div className="flex gap-2 mt-3 justify-end flex-wrap">
+          <div className="flex justify-center"><HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small {...dealAnim(1)} /></div>
+          {phantom && <div className="mt-3 flex justify-center"><HandView cards={phantom} label="Other player" total={showTotals ? handValue(phantom).total : undefined} small /></div>}
+          <div className="flex gap-2 mt-3 justify-center flex-wrap">
             {hands.map((hd, i) => { const v = handValue(hd.cards); return <HandView key={i} cards={hd.cards} label={hands.length > 1 ? `Hand ${i + 1}` : "You"} {...dealAnim(0)} bet={hd.bet} active={phase === "play" && i === active} total={showTotals ? (hd.surrendered ? "surr." : v.bust ? "bust" : (v.soft ? "soft " : "") + v.total) : undefined} result={hd.result} small />; })}
           </div>
         </div>
@@ -4331,17 +4405,7 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
   const thin = wide && !(log && log.length); // wide screen, nothing practised: the left column needs a card
   return (
     <div className="homepage"><div className="dgrid wl"><div className="dcol">
-      <FocusCard log={log} go={go} />
-      {go && (
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          {[["Strategy", () => go("train", { trainView: "drill" }), <><path d="M4 6.5h16M4 12h16M4 17.5h10" /></>],
-            ["Count drill", () => go("count", { drill: "count" }), <><rect x="6" y="3.5" width="12" height="17" rx="2" /><path d="M9.5 9h5M12 6.5v5M9.5 16h5" /></>],
-            ["Live play", () => go("play"), <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3.6" /></>],
-            ["Log session", () => go("sessions", { log: true }), <><path d="M12 5v14M5 12h14" /></>]].map(([l, fn, ic]) => (
-            <button key={l} className="qa" onClick={fn}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ic}</svg>{l}</button>))}
-        </div>
-      )}
-      {wide && <PracticeCard log={log} go={go} />}
+      <TodayCard log={log} go={go} />
       {thin && go && <WeekCard sessions={sessions} go={go} />}
       <SkillsCard log={log} go={go} />
       </div><div className="dcol o2 hright">
@@ -4351,9 +4415,9 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
     </div></div></div>
   );
 }
-// Home on a wide screen: the last two weeks of practice, a bar a day (taller = more reps, dimmer = more mistakes)
-function PracticeCard({ log, go }) {
-  const d = useMemo(() => {
+// the last two weeks of practice, a day at a time
+function usePracticeDays(log) {
+  return useMemo(() => {
     const days = [], t0 = new Date(); t0.setHours(12, 0, 0, 0);
     for (let i = 13; i >= 0; i--) { const x = new Date(t0); x.setDate(x.getDate() - i); days.push({ k: localDay(x.getTime()), d: x, n: 0, ok: 0 }); }
     const at = {}; days.forEach((x, i) => { at[x.k] = i; });
@@ -4362,23 +4426,58 @@ function PracticeCard({ log, go }) {
     let st = 0; for (let i = 13; i >= 0; i--) { if (days[i].n) st++; else if (i < 13) break; } // today may still be empty
     return { days, n, acc: n ? Math.round((ok / n) * 100) : null, st, on: days.filter((x) => x.n).length, max: Math.max(1, ...days.map((x) => x.n)) };
   }, [log]);
-  if (!log || !d.n) return null; // nothing practised in two weeks: Focus for today already says where to start
+}
+// Home's one big card, "Today": what to practise (a ring that fills towards casino-ready and one button), the last
+// two weeks of practice as a bar a day (taller = more reps, dimmer = more mistakes, today in the accent colour), and
+// the four shortcuts. It took the place of three cards: Focus for today, the shortcut tiles and Practice · last 14 days.
+const TODAY_GO = [
+  ["Strategy", ["train", { trainView: "drill" }], <path d="M4 6.5h16M4 12h16M4 17.5h10" />],
+  ["Count drill", ["count", { drill: "count" }], <><rect x="6" y="3.5" width="12" height="17" rx="2" /><path d="M9.5 9h5M12 6.5v5M9.5 16h5" /></>],
+  ["Live play", ["play"], <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3.6" /></>],
+  ["Log session", ["sessions", { log: true }], <path d="M12 5v14M5 12h14" />],
+];
+function TodayCard({ log, go }) {
+  const pick = useFocus(log), d = usePracticeDays(log);
+  if (!go) return null;
+  const acc = pick && pick.acc != null ? pick.acc : null, done = pick && pick.k === "play", C = 2 * Math.PI * 27;
+  const day = (x) => x.d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   return (
-    <section className="card p-5 mb-4">
+    <section className="card p-5 mb-4 focuscard today">
       <div className="flex items-baseline justify-between gap-3">
-        <div className="eyebrow">Practice · last 14 days</div>
-        <span className="mono text-xs" style={{ color: "var(--muted)" }}>{d.st >= 2 ? <><span style={{ color: "var(--brass)" }}>{d.st}-day streak</span> · </> : null}{d.on} of 14 days</span>
+        <div className="eyebrow" style={{ color: "var(--brass)" }}>Today</div>
+        {d.st >= 2 && <span className="mono text-xs" style={{ color: "var(--brass)" }}>{d.st}-day streak</span>}
       </div>
-      <div className="flex items-baseline gap-2 mt-2">
-        <span className="disp mono text-3xl" style={{ color: "var(--ivory)" }}><Glide v={d.n} enter round f={(x) => x.toLocaleString()} /></span>
-        <span className="text-xs" style={{ color: "var(--muted)" }}>reps · <span className="mono font-semibold" style={{ color: skillTone(d.acc) }}>{d.acc}%</span> right</span>
-      </div>
-      <div className="pdays" role="img" aria-label={`Reps a day over the last 14 days, ${d.n} in all`}>
-        {d.days.map((x, i) => { const acc = x.n ? x.ok / x.n : 0, today = i === 13; return (
-          <div key={x.k} className="pday" title={x.n ? `${x.d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}: ${x.n} rep${x.n === 1 ? "" : "s"}, ${Math.round(acc * 100)}% right` : `${x.d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}: no practice`}>
-            <div className="pbar"><div className="bary" style={{ "--i": i, height: x.n ? `${Math.max(7, (x.n / d.max) * 100)}%` : 3, background: !x.n ? "rgba(var(--fg),.1)" : today ? "var(--brass)" : `rgba(var(--acc),${(0.28 + 0.5 * Math.max(0, (acc - 0.6) / 0.4)).toFixed(2)})` }} /></div>
-            <span style={{ color: today ? "var(--ivory)" : "var(--muted)", fontWeight: today ? 600 : 400 }}>{x.d.toLocaleDateString(undefined, { weekday: "narrow" })}</span>
-          </div>); })}
+      {pick && (
+        <div className="tdfocus">
+          <div className="tdring" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" className="tr" /><circle cx="32" cy="32" r="27" className="tv" pathLength="1" strokeDasharray={`${done ? 1 : acc != null ? acc / 100 : 0} 1`} style={{ stroke: done ? "var(--brass)" : skillTone(acc) }} transform="rotate(-90 32 32)" /></svg>
+            <span className="mono">{acc != null ? `${acc}%` : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">{done ? <path d="M5 12.5l4.5 4.5L19 7.5" /> : <path d="M9 6.5v11l9-5.5z" fill="currentColor" stroke="none" />}</svg>}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="tdtitle">{pick.head || pick.title}</div>
+            <div className="tdsub">{pick.sub}</div>
+          </div>
+          <button onClick={() => SKILL_GO[pick.k] && go(...SKILL_GO[pick.k])} className="btn tdgo">{pick.cta}</button>
+        </div>
+      )}
+      {d.n > 0 && (
+        <div className="tdprac">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-xs" style={{ color: "var(--muted)" }}><span className="mono font-semibold text-[15px]" style={{ color: "var(--ivory)" }}><Glide v={d.n} enter round f={(x) => x.toLocaleString()} /></span> reps · <span className="mono font-semibold" style={{ color: skillTone(d.acc) }}>{d.acc}%</span> right</span>
+            <span className="text-[11px]" style={{ color: "var(--muted)" }}>{d.on} of 14 days</span>
+          </div>
+          <div className="pdays" role="img" aria-label={`Reps a day over the last 14 days, ${d.n} in all`}>
+            {d.days.map((x, i) => { const a = x.n ? x.ok / x.n : 0, today = i === 13; return (
+              <div key={x.k} className="pday" title={x.n ? `${day(x)}: ${x.n} rep${x.n === 1 ? "" : "s"}, ${Math.round(a * 100)}% right` : `${day(x)}: no practice`}>
+                <div className="pbar"><div className="bary" style={{ "--i": i, height: x.n ? `${Math.max(7, (x.n / d.max) * 100)}%` : 3, background: !x.n ? "rgba(var(--fg),.1)" : today ? "var(--brass)" : `rgba(var(--acc),${(0.28 + 0.5 * Math.max(0, (a - 0.6) / 0.4)).toFixed(2)})` }} /></div>
+                <span style={{ color: today ? "var(--ivory)" : "var(--muted)", fontWeight: today ? 600 : 400 }}>{x.d.toLocaleDateString(undefined, { weekday: "narrow" })}</span>
+              </div>); })}
+          </div>
+        </div>
+      )}
+      <div className="tdacts">
+        {TODAY_GO.map(([l, to, ic]) => (
+          <button key={l} className="qa" onClick={() => go(...to)}><span className="qai"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ic}</svg></span>{l}</button>))}
       </div>
     </section>
   );
@@ -4386,8 +4485,8 @@ function PracticeCard({ log, go }) {
 const SKILL_GO = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], pairs: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }], totals: ["count", { drill: "totals" }], play: ["play", {}] };
 // the one thing most worth practising today: a core skill you haven't tried, then your weakest under 95%,
 // then anything you haven't touched this week — or, if it's all casino-ready, a shoe of live play
-function FocusCard({ log, go }) {
-  const pick = useMemo(() => {
+function useFocus(log) {
+  return useMemo(() => {
     if (!log) return null;
     const now = Date.now(), wk = 7 * 864e5, m = {};
     log.forEach((e) => { const r = m[e.s] || (m[e.s] = { w: 0, ok: 0, last: 0 }); r.last = Math.max(r.last, e.t); if (e.t >= now - wk) { r.w++; r.ok += e.ok; } });
@@ -4397,11 +4496,14 @@ function FocusCard({ log, go }) {
     if (!log.length) return { k: "strategy", title: "Start with basic strategy", sub: "It's the base everything else builds on. A few minutes a day locks it in.", cta: "Start" };
     if (fresh) return { k: fresh, title: `Try ${name(fresh).toLowerCase()}`, sub: "You haven't practiced this one yet.", cta: "Start" };
     const weak = Object.entries(m).filter(([, r]) => r.w >= 5).map(([k, r]) => [k, Math.round((r.ok / r.w) * 100)]).filter(([, a]) => a < 95).sort((a, b) => a[1] - b[1])[0];
-    if (weak) return { k: weak[0], title: `${name(weak[0])} · ${weak[1]}%`, sub: `Your weakest skill this week. Get it to 95% to be casino-ready.`, cta: "Practice", acc: weak[1] };
+    if (weak) return { k: weak[0], title: `${name(weak[0])} · ${weak[1]}%`, head: name(weak[0]), sub: `Your weakest skill this week. Get it to 95% to be casino-ready.`, cta: "Practice", acc: weak[1] };
     const stale = core.find((k) => m[k] && m[k].w === 0);
     if (stale) return { k: stale, title: `${name(stale)} — keep it sharp`, sub: `You haven't practiced it this week.`, cta: "Practice" };
     return { k: "play", title: "Everything's casino-ready", sub: "Play a shoe at the live table to keep it all sharp together.", cta: "Play a shoe" };
   }, [log]);
+}
+function FocusCard({ log, go }) {
+  const pick = useFocus(log);
   if (!pick || !go) return null;
   return (
     <section className="card p-5 mb-4 focuscard">
