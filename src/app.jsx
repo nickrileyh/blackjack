@@ -1153,52 +1153,6 @@ body{background:none}
 .sn-label.grp{padding-top:14px}
 /* "Reduce transparency" on the device: solid surfaces again */
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
-/* ---- New page layouts: the answer across the top, then what you change, then the setup ---------------------------
-   Bet spread: results and ramp side by side over both columns (.sphero), the bet table first under them.
-   Sessions: the result and its chart over both columns (.sesshero, .sesscard with its three stats down the side),
-   History in the left column, what it adds up to in the right. */
-@media (min-width:1180px){.sesscard{margin-bottom:20px;display:grid;grid-template-columns:minmax(0,1fr) 210px;column-gap:30px;grid-template-rows:auto 1fr}.sesscard>:first-child{grid-column:1}.sesscard>.mt-4{grid-column:1;grid-row:2}.sesscard>.stats{grid-column:2;grid-row:1 / span 2;display:flex;flex-direction:column;justify-content:center;gap:22px;margin-top:0;padding:0 0 0 30px;border-top:0!important;border-left:1px solid var(--line)}.sesscard>.stats .mono{font-size:20px}}
-@media (min-width:1180px){.dcol.sphero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px;align-items:stretch}}
-/* ---- Home: one big card for today -------------------------------------------------------------------------------
-   TodayCard: a ring and one button, the last two weeks of practice, the four shortcuts as round glass buttons. */
-.tdfocus{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px}
-.tdring{position:relative;width:64px;height:64px;flex:none}
-.tdring svg{display:block;width:100%;height:100%}
-.tdring circle{fill:none;stroke-width:5}
-.tdring .tr{stroke:rgba(var(--fg),.1)}
-.tdring .tv{stroke-linecap:round;transition:stroke-dasharray .6s var(--ez)}
-.tdring>span{position:absolute;inset:0;display:grid;place-items:center;font-size:15px;font-weight:600;color:var(--ivory)}
-.tdtitle{font-size:20px;font-weight:600;line-height:1.2;letter-spacing:-.015em;color:var(--ivory)}
-.tdsub{font-size:12px;line-height:1.45;color:var(--muted);margin-top:3px}
-.btn.tdgo{flex:1 0 100%;min-height:46px}
-.tdprac,.tdacts{margin-top:18px;padding-top:15px;border-top:1px solid var(--line)}
-.today .pdays{gap:5px;margin-top:10px}
-.today .pbar{height:46px}
-.tdacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
-.today .qa,:root[data-theme="light"] .today .qa{min-height:0;padding:0;gap:7px;border:0;border-radius:14px;background:none;box-shadow:none;font-size:11px;white-space:nowrap}
-.qai{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:linear-gradient(180deg,rgba(var(--fg),.09),rgba(var(--fg),.035));box-shadow:var(--gl-lens);transition:transform .37s var(--ez),box-shadow .16s var(--ez)}
-:root[data-theme="light"] .qai{background:linear-gradient(180deg,#fff,rgba(255,255,255,.82))}
-.today .qa:active{background:none}.today .qa:active .qai{transform:scale(.92);transition-duration:.1s}
-@media (hover:hover){.today .qa:hover{background:none;box-shadow:none}.today .qa:hover .qai{box-shadow:var(--gl-bead)}}
-@media (max-width:350px){.today .qa{font-size:10px;letter-spacing:-.015em}.tdacts{gap:2px}}
-@media (min-width:640px){.btn.tdgo{flex:none;width:auto;padding:0 24px}.tdtitle{font-size:22px}.tdring{width:72px;height:72px}.today .pbar{height:72px}.today .pdays{gap:6px}.tdacts{grid-template-columns:repeat(4,auto);justify-content:space-around}.today .qa{flex-direction:row;gap:11px;font-size:12.5px}.qai{width:44px;height:44px}}
-/* ---- The table, richer ------------------------------------------------------------------------------------------
-   Nick asked for a richer table and cards. The felt has a rail round it and the nap of the cloth (a tile painted by
-   src/smooth.js), totals sit on pills and a bet is a stack of chips. The cards themselves are as they were: new
-   faces and backs were tried and Nick preferred the old ones. */
-.felt{--rail:#17110D;background-image:var(--feltgrain,none),var(--feltimg,radial-gradient(120% 90% at 50% 0%,var(--felt1) 0%,var(--felt2) 60%,var(--felt3) 100%));background-size:160px 160px,100% 100%;background-repeat:repeat,no-repeat}
-@supports (color:color-mix(in srgb,red,blue)){.felt{--rail:color-mix(in srgb,var(--felt3) 38%,#120C08)}}
-.felt,:root:not([data-theme="light"]) .felt{box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),inset 0 0 0 5px var(--rail),inset 0 0 0 6px rgba(0,0,0,.5),inset 0 0 0 7px rgba(255,255,255,.07),inset 0 26px 44px -22px rgba(0,0,0,.55),inset 0 -30px 50px -30px rgba(0,0,0,.34)}
-:root[data-theme="onyx"] .felt{box-shadow:inset 0 0 0 1px rgba(212,175,55,.34),inset 0 0 0 5px var(--rail),inset 0 0 0 6px rgba(212,175,55,.22),inset 0 26px 44px -22px rgba(0,0,0,.55),inset 0 -30px 50px -30px rgba(0,0,0,.34)}
-.feltprint{opacity:.2}.felt.busy .feltprint{opacity:.07}
-.feltprint .fp-i{font-size:6.6px;letter-spacing:.34em}
-.totpill{font-size:11px;font-weight:600;line-height:1;padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.36);color:var(--ivory);box-shadow:inset 0 0 0 var(--hair) rgba(255,255,255,.16);white-space:nowrap}
-.totpill.win{background:rgba(var(--acc),.24);color:var(--acc-hi,var(--brass))}
-.totpill.loss{background:rgba(var(--neg),.2);color:var(--neg-l)}
-.betline{display:flex;align-items:flex-end;gap:6px;margin-top:5px;font-size:11px;font-weight:600;color:var(--ivory-d)}
-.betline>span:last-child{line-height:15px}
-.cstack{position:relative;display:inline-block;width:15px;flex:none}
-.cstack i{position:absolute;left:0;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle,var(--c) 0 50%,transparent 53%),repeating-conic-gradient(var(--c) 0 25deg,#F3ECDC 25deg 45deg);box-shadow:0 1.5px 0 rgba(0,0,0,.6),0 3px 4px -1px rgba(0,0,0,.5),0 0 0 .5px rgba(255,255,255,.3)}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}
 .mcal button.d{transition:none}.mcal button.d:hover{transform:none}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1s}.splash.go .sp-tile{animation:spfade .36s ease both!important}.splash.go .sp-chip{animation:spfade .32s ease .2s both!important}.splash.go .sp-word{animation:spfade .32s ease .32s both!important}.splash.go .sp-tag{animation:spfade .32s ease .42s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
 /* ---- Third pass: finish ----
@@ -1541,9 +1495,6 @@ function FeltPrint() {
         <path id="fp-b" d="M 62 12 Q 200 100 338 12" />
       </defs>
       <path className="fp-l" d="M 8 30 Q 200 162 392 30" />
-      <path className="fp-l" d="M -6 50 Q 200 196 406 50" />
-      <path id="fp-c" d="M 2 43 Q 200 181 398 43" fill="none" />
-      <text className="fp-s fp-i"><textPath href="#fp-c" startOffset="50%" textAnchor="middle">INSURANCE PAYS 2 TO 1</textPath></text>
       <text className="fp-t"><textPath href="#fp-a" startOffset="50%" textAnchor="middle">BLACKJACK PAYS {rules.bj65 ? "6 TO 5" : "3 TO 2"}</textPath></text>
       <text className="fp-s"><textPath href="#fp-b" startOffset="50%" textAnchor="middle">{rules.h17 ? "DEALER MUST HIT SOFT 17" : "DEALER MUST STAND ON ALL 17S"}</textPath></text>
     </svg>
@@ -3174,25 +3125,19 @@ function Chip({ v, onClick, disabled }) {
     </button>
   );
 }
-// The bet as it sits on the felt: a small stack of chips, biggest at the bottom, five at most
-function ChipStack({ v }) {
-  const out = []; let left = v;
-  for (const d of [1000, 500, 100, 25, 5, 1]) while (left >= d && out.length < 5) { out.push(d); left -= d; }
-  return <span className="cstack" style={{ height: 15 + (out.length - 1) * 3 }} aria-hidden="true">{out.map((d, i) => <i key={i} style={{ "--c": CHIP_COLORS(d)[0], bottom: i * 3 }} />)}</span>;
-}
 function HandView({ cards, label, bet, active, total, hidden, small, result, stagger = 0, base = 0, dur = DEAL_FLY }) {
   return (
     <div className="rounded-xl px-2 pt-2 pb-1" style={{ background: active ? "rgba(var(--acc),.1)" : "transparent", boxShadow: active ? "0 0 0 1px rgba(var(--acc),.5)" : "none", minWidth: 120, maxWidth: "100%" }}>
       <div className="flex items-center justify-between mb-1">
         <span className="eyebrow" style={{ fontSize: 9 }}>{label}</span>
-        {total !== undefined && <span className={"totpill mono" + (result > 0 ? " win" : result < 0 ? " loss" : "")}>{result !== undefined ? (result > 0 ? `+$${result}` : result < 0 ? `−$${-result}` : "push") : total}</span>}
+        {total !== undefined && <span className="mono text-[11px]" style={{ color: result ? (result > 0 ? "var(--brass)" : result < 0 ? "var(--neg-l)" : "var(--ivory-d)") : "var(--ivory-d)" }}>{result !== undefined ? (result > 0 ? `+$${result}` : result < 0 ? `−$${-result}` : "push") : total}</span>}
       </div>
       <div className="hand" style={{ minHeight: "calc(88px * var(--cz, 1))" }}>
         {cards.map((c, i) => { const d = base + i * stagger; return <div className="slot" key={hidden && i === 1 ? "hole" : c.id}>{hidden && i === 1
           ? <><div className="pcback pcz dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": `${d}ms`, animationDuration: `${dur}s` }} /><Flick d={d} fly={dur} /></>
           : <PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={d} fly={dur} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg" }} />}</div>; })}
       </div>
-      {bet !== undefined && <div className="betline mono">{bet > 0 && <ChipStack v={bet} />}<span>{bet > 0 ? `$${bet}` : "sitting out"}</span></div>}
+      {bet !== undefined && <div className="mono text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>bet ${bet}</div>}
     </div>
   );
 }
@@ -3527,9 +3472,9 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
         <div className={"relative tbl felt cz-play px-4 pt-4 pb-4" + (phase === "bet" ? "" : " busy")} style={{ minHeight: 300 }}>
           <FeltPrint />
           {shuffled && <div className="absolute inset-0 flex items-center justify-center rounded-2xl z-10 rise" style={{ background: "rgba(0,0,0,.6)" }}><div className="disp text-2xl font-semibold" style={{ color: "var(--brass)" }}>Shuffling…</div></div>}
-          <div className="flex justify-center"><HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small {...dealAnim(1)} /></div>
-          {phantom && <div className="mt-3 flex justify-center"><HandView cards={phantom} label="Other player" total={showTotals ? handValue(phantom).total : undefined} small /></div>}
-          <div className="flex gap-2 mt-3 justify-center flex-wrap">
+          <HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small {...dealAnim(1)} />
+          {phantom && <div className="mt-3"><HandView cards={phantom} label="Other player" total={showTotals ? handValue(phantom).total : undefined} small /></div>}
+          <div className="flex gap-2 mt-3 justify-end flex-wrap">
             {hands.map((hd, i) => { const v = handValue(hd.cards); return <HandView key={i} cards={hd.cards} label={hands.length > 1 ? `Hand ${i + 1}` : "You"} {...dealAnim(0)} bet={hd.bet} active={phase === "play" && i === active} total={showTotals ? (hd.surrendered ? "surr." : v.bust ? "bust" : (v.soft ? "soft " : "") + v.total) : undefined} result={hd.result} small />; })}
           </div>
         </div>
@@ -4417,7 +4362,17 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
   const thin = wide && !(log && log.length); // wide screen, nothing practised: the left column needs a card
   return (
     <div className="homepage"><div className="dgrid wl"><div className="dcol">
-      <TodayCard log={log} go={go} />
+      <FocusCard log={log} go={go} />
+      {go && (
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          {[["Strategy", () => go("train", { trainView: "drill" }), <><path d="M4 6.5h16M4 12h16M4 17.5h10" /></>],
+            ["Count drill", () => go("count", { drill: "count" }), <><rect x="6" y="3.5" width="12" height="17" rx="2" /><path d="M9.5 9h5M12 6.5v5M9.5 16h5" /></>],
+            ["Live play", () => go("play"), <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3.6" /></>],
+            ["Log session", () => go("sessions", { log: true }), <><path d="M12 5v14M5 12h14" /></>]].map(([l, fn, ic]) => (
+            <button key={l} className="qa" onClick={fn}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ic}</svg>{l}</button>))}
+        </div>
+      )}
+      {wide && <PracticeCard log={log} go={go} />}
       {thin && go && <WeekCard sessions={sessions} go={go} />}
       <SkillsCard log={log} go={go} />
       </div><div className="dcol o2 hright">
@@ -4427,9 +4382,9 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
     </div></div></div>
   );
 }
-// the last two weeks of practice, a day at a time
-function usePracticeDays(log) {
-  return useMemo(() => {
+// Home on a wide screen: the last two weeks of practice, a bar a day (taller = more reps, dimmer = more mistakes)
+function PracticeCard({ log, go }) {
+  const d = useMemo(() => {
     const days = [], t0 = new Date(); t0.setHours(12, 0, 0, 0);
     for (let i = 13; i >= 0; i--) { const x = new Date(t0); x.setDate(x.getDate() - i); days.push({ k: localDay(x.getTime()), d: x, n: 0, ok: 0 }); }
     const at = {}; days.forEach((x, i) => { at[x.k] = i; });
@@ -4438,58 +4393,23 @@ function usePracticeDays(log) {
     let st = 0; for (let i = 13; i >= 0; i--) { if (days[i].n) st++; else if (i < 13) break; } // today may still be empty
     return { days, n, acc: n ? Math.round((ok / n) * 100) : null, st, on: days.filter((x) => x.n).length, max: Math.max(1, ...days.map((x) => x.n)) };
   }, [log]);
-}
-// Home's one big card, "Today": what to practise (a ring that fills towards casino-ready and one button), the last
-// two weeks of practice as a bar a day (taller = more reps, dimmer = more mistakes, today in the accent colour), and
-// the four shortcuts. It took the place of three cards: Focus for today, the shortcut tiles and Practice · last 14 days.
-const TODAY_GO = [
-  ["Strategy", ["train", { trainView: "drill" }], <path d="M4 6.5h16M4 12h16M4 17.5h10" />],
-  ["Count drill", ["count", { drill: "count" }], <><rect x="6" y="3.5" width="12" height="17" rx="2" /><path d="M9.5 9h5M12 6.5v5M9.5 16h5" /></>],
-  ["Live play", ["play"], <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3.6" /></>],
-  ["Log session", ["sessions", { log: true }], <path d="M12 5v14M5 12h14" />],
-];
-function TodayCard({ log, go }) {
-  const pick = useFocus(log), d = usePracticeDays(log);
-  if (!go) return null;
-  const acc = pick && pick.acc != null ? pick.acc : null, done = pick && pick.k === "play", C = 2 * Math.PI * 27;
-  const day = (x) => x.d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  if (!log || !d.n) return null; // nothing practised in two weeks: Focus for today already says where to start
   return (
-    <section className="card p-5 mb-4 focuscard today">
+    <section className="card p-5 mb-4">
       <div className="flex items-baseline justify-between gap-3">
-        <div className="eyebrow" style={{ color: "var(--brass)" }}>Today</div>
-        {d.st >= 2 && <span className="mono text-xs" style={{ color: "var(--brass)" }}>{d.st}-day streak</span>}
+        <div className="eyebrow">Practice · last 14 days</div>
+        <span className="mono text-xs" style={{ color: "var(--muted)" }}>{d.st >= 2 ? <><span style={{ color: "var(--brass)" }}>{d.st}-day streak</span> · </> : null}{d.on} of 14 days</span>
       </div>
-      {pick && (
-        <div className="tdfocus">
-          <div className="tdring" aria-hidden="true">
-            <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" className="tr" /><circle cx="32" cy="32" r="27" className="tv" pathLength="1" strokeDasharray={`${done ? 1 : acc != null ? acc / 100 : 0} 1`} style={{ stroke: done ? "var(--brass)" : skillTone(acc) }} transform="rotate(-90 32 32)" /></svg>
-            <span className="mono">{acc != null ? `${acc}%` : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">{done ? <path d="M5 12.5l4.5 4.5L19 7.5" /> : <path d="M9 6.5v11l9-5.5z" fill="currentColor" stroke="none" />}</svg>}</span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="tdtitle">{pick.head || pick.title}</div>
-            <div className="tdsub">{pick.sub}</div>
-          </div>
-          <button onClick={() => SKILL_GO[pick.k] && go(...SKILL_GO[pick.k])} className="btn tdgo">{pick.cta}</button>
-        </div>
-      )}
-      {d.n > 0 && (
-        <div className="tdprac">
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-xs" style={{ color: "var(--muted)" }}><span className="mono font-semibold text-[15px]" style={{ color: "var(--ivory)" }}><Glide v={d.n} enter round f={(x) => x.toLocaleString()} /></span> reps · <span className="mono font-semibold" style={{ color: skillTone(d.acc) }}>{d.acc}%</span> right</span>
-            <span className="text-[11px]" style={{ color: "var(--muted)" }}>{d.on} of 14 days</span>
-          </div>
-          <div className="pdays" role="img" aria-label={`Reps a day over the last 14 days, ${d.n} in all`}>
-            {d.days.map((x, i) => { const a = x.n ? x.ok / x.n : 0, today = i === 13; return (
-              <div key={x.k} className="pday" title={x.n ? `${day(x)}: ${x.n} rep${x.n === 1 ? "" : "s"}, ${Math.round(a * 100)}% right` : `${day(x)}: no practice`}>
-                <div className="pbar"><div className="bary" style={{ "--i": i, height: x.n ? `${Math.max(7, (x.n / d.max) * 100)}%` : 3, background: !x.n ? "rgba(var(--fg),.1)" : today ? "var(--brass)" : `rgba(var(--acc),${(0.28 + 0.5 * Math.max(0, (a - 0.6) / 0.4)).toFixed(2)})` }} /></div>
-                <span style={{ color: today ? "var(--ivory)" : "var(--muted)", fontWeight: today ? 600 : 400 }}>{x.d.toLocaleDateString(undefined, { weekday: "narrow" })}</span>
-              </div>); })}
-          </div>
-        </div>
-      )}
-      <div className="tdacts">
-        {TODAY_GO.map(([l, to, ic]) => (
-          <button key={l} className="qa" onClick={() => go(...to)}><span className="qai"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ic}</svg></span>{l}</button>))}
+      <div className="flex items-baseline gap-2 mt-2">
+        <span className="disp mono text-3xl" style={{ color: "var(--ivory)" }}><Glide v={d.n} enter round f={(x) => x.toLocaleString()} /></span>
+        <span className="text-xs" style={{ color: "var(--muted)" }}>reps · <span className="mono font-semibold" style={{ color: skillTone(d.acc) }}>{d.acc}%</span> right</span>
+      </div>
+      <div className="pdays" role="img" aria-label={`Reps a day over the last 14 days, ${d.n} in all`}>
+        {d.days.map((x, i) => { const acc = x.n ? x.ok / x.n : 0, today = i === 13; return (
+          <div key={x.k} className="pday" title={x.n ? `${x.d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}: ${x.n} rep${x.n === 1 ? "" : "s"}, ${Math.round(acc * 100)}% right` : `${x.d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}: no practice`}>
+            <div className="pbar"><div className="bary" style={{ "--i": i, height: x.n ? `${Math.max(7, (x.n / d.max) * 100)}%` : 3, background: !x.n ? "rgba(var(--fg),.1)" : today ? "var(--brass)" : `rgba(var(--acc),${(0.28 + 0.5 * Math.max(0, (acc - 0.6) / 0.4)).toFixed(2)})` }} /></div>
+            <span style={{ color: today ? "var(--ivory)" : "var(--muted)", fontWeight: today ? 600 : 400 }}>{x.d.toLocaleDateString(undefined, { weekday: "narrow" })}</span>
+          </div>); })}
       </div>
     </section>
   );
@@ -4497,8 +4417,8 @@ function TodayCard({ log, go }) {
 const SKILL_GO = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], pairs: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }], totals: ["count", { drill: "totals" }], play: ["play", {}] };
 // the one thing most worth practising today: a core skill you haven't tried, then your weakest under 95%,
 // then anything you haven't touched this week — or, if it's all casino-ready, a shoe of live play
-function useFocus(log) {
-  return useMemo(() => {
+function FocusCard({ log, go }) {
+  const pick = useMemo(() => {
     if (!log) return null;
     const now = Date.now(), wk = 7 * 864e5, m = {};
     log.forEach((e) => { const r = m[e.s] || (m[e.s] = { w: 0, ok: 0, last: 0 }); r.last = Math.max(r.last, e.t); if (e.t >= now - wk) { r.w++; r.ok += e.ok; } });
@@ -4508,14 +4428,11 @@ function useFocus(log) {
     if (!log.length) return { k: "strategy", title: "Start with basic strategy", sub: "It's the base everything else builds on. A few minutes a day locks it in.", cta: "Start" };
     if (fresh) return { k: fresh, title: `Try ${name(fresh).toLowerCase()}`, sub: "You haven't practiced this one yet.", cta: "Start" };
     const weak = Object.entries(m).filter(([, r]) => r.w >= 5).map(([k, r]) => [k, Math.round((r.ok / r.w) * 100)]).filter(([, a]) => a < 95).sort((a, b) => a[1] - b[1])[0];
-    if (weak) return { k: weak[0], title: `${name(weak[0])} · ${weak[1]}%`, head: name(weak[0]), sub: `Your weakest skill this week. Get it to 95% to be casino-ready.`, cta: "Practice", acc: weak[1] };
+    if (weak) return { k: weak[0], title: `${name(weak[0])} · ${weak[1]}%`, sub: `Your weakest skill this week. Get it to 95% to be casino-ready.`, cta: "Practice", acc: weak[1] };
     const stale = core.find((k) => m[k] && m[k].w === 0);
     if (stale) return { k: stale, title: `${name(stale)} — keep it sharp`, sub: `You haven't practiced it this week.`, cta: "Practice" };
     return { k: "play", title: "Everything's casino-ready", sub: "Play a shoe at the live table to keep it all sharp together.", cta: "Play a shoe" };
   }, [log]);
-}
-function FocusCard({ log, go }) {
-  const pick = useFocus(log);
   if (!pick || !go) return null;
   return (
     <section className="card p-5 mb-4 focuscard">
@@ -5045,12 +4962,11 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
   return (
     <div className="sesspage">
       {sessions.length > 0 && wide && <div className="sessfilt"><div className="segw">{periodSeg}</div>{casinoChips && <div className="chiprowx">{casinoChips}</div>}{showing && <div style={{ flexBasis: "100%" }}>{showing}</div>}</div>}
-      {/* the result across the top; under it the history on the left and what it adds up to on the right */}
-      <div className="dcol sesshero">
+      <div className={"dgrid" + (list.length ? "" : " solo")}><div className="dcol">
       <div className="ph-a"><TimerCard go={go} /></div>
       {/* hero */}
       {sessions.length > 0 && (
-      <section className="card p-5 mb-3 overflow-hidden ph-a sesscard">
+      <section className="card p-5 mb-3 overflow-hidden ph-a">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow">{filtered ? [period === "30" ? "Last 30 days" : period === "90" ? "Last 90 days" : period === "ytd" ? "This year" : "All time", casino !== "all" ? byCasino[0]?.name || "" : ""].filter(Boolean).join(" · ") : "All-time result"}</div>
@@ -5074,8 +4990,6 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
       )}
       {pnlFull && <PnlFull sessions={list} evHour={evHour} sdHour={sdHour} mix={mix} hph={hph} onClose={() => setPnlFull(false)} />}
 
-      </div>
-      <div className={"dgrid" + (list.length ? "" : " solo")}><div className="dcol">
       {/* filters: on a computer they sit above both columns, since they filter both */}
       {sessions.length > 0 && !wide && <div className="mb-4 space-y-2 ph-a">{filterBar}</div>}
 
@@ -5087,35 +5001,6 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
         </section>
       )}
 
-      {list.length > 0 && <>
-        {/* history */}
-        <section className="card p-5 mb-4 ph-b">
-          <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">History</div><button onClick={exportCsv} className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }}>Export CSV</button></div>
-          {exportMsg && <div className="text-xs mb-2" style={{ color: "var(--brass)" }}>{exportMsg}</div>}
-          <div ref={histRef}>
-          {groups.map((g) => { const mt = monthTot(g.k); return (
-            <div key={g.k} className="mb-3">
-              <div className="histmonth"><span>{monthName(g.k)}</span><span className="mono">{sgnMoney(mt.net)} · {fmtH(mt.h)}</span></div>
-              <div>
-                {g.items.map((s, i) => (
-                  <button key={s.id || i} onClick={() => setSheet(s)} className="histrow rowh">
-                    <div className="text-center leading-tight"><div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)" }}>{new Date(s.date + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}</div><div className="mono text-base">{+s.date.slice(8)}</div></div>
-                    <div className="min-w-0">
-                      <div className="text-sm flex items-center gap-1.5 min-w-0" style={{ color: "var(--ivory)" }}><span className="truncate">{s.where || "—"}</span>{s.heat === "backed" && <span title="backed off" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--rose)", flex: "none" }} />}{s.heat === "watched" && <span title="heat" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--brass)", flex: "none" }} />}</div>
-                      <div className="text-[11px] truncate" style={{ color: "var(--muted)" }}>{fmtH(s.hours)}{s.notes ? ` · ${s.notes}` : ""}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="mono text-sm font-semibold" style={{ color: s.result > 0 ? "var(--brass)" : s.result < 0 ? "var(--neg-l)" : "var(--ivory-d)" }}>{sgnMoney(s.result)}</div>
-                      <div className="text-[10px]" style={{ color: "var(--muted)" }}>exp {sgnMoney(sessEv(s, evHour) * (+s.hours || 0))}</div>
-                    </div>
-                  </button>))}
-              </div>
-            </div>); })}
-          </div>
-          {list.length > histN && <button onClick={() => setShowAll(!showAll)} className="w-full text-xs font-semibold py-2 lnk" style={{ color: "var(--brass)" }}>{showAll ? "Show fewer" : `Show all ${list.length}`}</button>}
-        </section>
-      </>}
-      </div><div className="dcol o2">
       {list.length > 0 && <>
         {/* luck */}
         <section className="card p-5 mb-4">
@@ -5157,6 +5042,9 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
           </section>
         )}
 
+      </>}
+      </div><div className="dcol o2">
+      {list.length > 0 && <>
         {/* by casino */}
         {byCasino.length > 0 && (
           <section className="card p-5 mb-4">
@@ -5187,6 +5075,32 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
           </section>
         )}
 
+        {/* history */}
+        <section className="card p-5 mb-4 ph-b">
+          <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">History</div><button onClick={exportCsv} className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }}>Export CSV</button></div>
+          {exportMsg && <div className="text-xs mb-2" style={{ color: "var(--brass)" }}>{exportMsg}</div>}
+          <div ref={histRef}>
+          {groups.map((g) => { const mt = monthTot(g.k); return (
+            <div key={g.k} className="mb-3">
+              <div className="histmonth"><span>{monthName(g.k)}</span><span className="mono">{sgnMoney(mt.net)} · {fmtH(mt.h)}</span></div>
+              <div>
+                {g.items.map((s, i) => (
+                  <button key={s.id || i} onClick={() => setSheet(s)} className="histrow rowh">
+                    <div className="text-center leading-tight"><div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)" }}>{new Date(s.date + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}</div><div className="mono text-base">{+s.date.slice(8)}</div></div>
+                    <div className="min-w-0">
+                      <div className="text-sm flex items-center gap-1.5 min-w-0" style={{ color: "var(--ivory)" }}><span className="truncate">{s.where || "—"}</span>{s.heat === "backed" && <span title="backed off" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--rose)", flex: "none" }} />}{s.heat === "watched" && <span title="heat" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--brass)", flex: "none" }} />}</div>
+                      <div className="text-[11px] truncate" style={{ color: "var(--muted)" }}>{fmtH(s.hours)}{s.notes ? ` · ${s.notes}` : ""}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="mono text-sm font-semibold" style={{ color: s.result > 0 ? "var(--brass)" : s.result < 0 ? "var(--neg-l)" : "var(--ivory-d)" }}>{sgnMoney(s.result)}</div>
+                      <div className="text-[10px]" style={{ color: "var(--muted)" }}>exp {sgnMoney(sessEv(s, evHour) * (+s.hours || 0))}</div>
+                    </div>
+                  </button>))}
+              </div>
+            </div>); })}
+          </div>
+          {list.length > histN && <button onClick={() => setShowAll(!showAll)} className="w-full text-xs font-semibold py-2 lnk" style={{ color: "var(--brass)" }}>{showAll ? "Show fewer" : `Show all ${list.length}`}</button>}
+        </section>
       </>}
       </div></div>
 
@@ -6465,8 +6379,7 @@ function BetSpreadCalculator() {
 
         {(tab === "train" || tab === "count") && !narrow && <TrainTabs tab={tab} go={go} />}
         {tab === "more" ? <MoreHub key="mo" go={go} bankroll={+bankroll || 0} /> : tab === "trainhub" ? <TrainHub key="th" go={go} /> : tab === "casinos" ? <div className="rise" key="m"><CasinosPage rules={rules} onUseRules={saveRules} go={go} /></div> : tab === "plan" ? <div className="rise" key="pl"><PlanPage bankroll={+bankroll || 0} mine={mine} go={go} /></div> : tab === "settings" ? <div className="rise" key="set"><SettingsPage rules={rules} onRules={() => setSetupOpen(true)} seats={seats} go={go} onKeys={() => setKeysOpen(true)} /></div> : tab === "sessions" ? <div className="rise" key="s"><SessionsPage go={go} evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} n0={r.n0} seats={seats} cfgNow={{ rules: { decks: rules.decks, h17: !!rules.h17, surrender: !!rules.surrender, insurance: rules.insurance !== false, pen: rules.pen, bj65: !!rules.bj65, das: dasOn(rules), dbl: dblRule(rules), maxHands: maxHandsOf(rules), rsa: !!rules.rsa }, bets: { ...bets }, spotsMap: { ...spotsMap }, seats, auto: hphAuto, rph: Math.round(rphEff) }} /></div> : tab === "count" ? <div className="rise" key="k"><DrillHub rules={rules} bets={bets} minBet={+minBet || 0} /></div> : tab === "play" ? <div className="rise" key="p"><Play rules={rules} bets={bets} minBet={+minBet || 0} bankroll0={+bankroll || 1000} evHour={r.evHour} sdHour={r.sdHour} rph={rphEff} /></div> : tab === "progress" ? <div className="rise" key="g"><Progress evHour={r.evHour} sdHour={r.sdHour} mix={mix} hph={rphEff} ready={spreadLoaded} rules={rules} bets={bets} go={go} bankroll={+bankroll || 0} /></div> : tab === "train" ? <div className="rise" key="t"><Trainer rules={rules} setRules={setRules} spread={trainSpread} /></div> : <div className="rise" key="c">
-        {/* the answer first: what the spread earns and risks, with the ramp beside it; then the bets, then the setup */}
-        <div className="dcol sphero">
+        <div className="dgrid"><div className="dcol">
         {/* results */}
         <section id="sp-results" className="card p-5 mb-4" style={{ boxShadow: flash ? "0 0 0 2px var(--brass)" : "none", transition: "box-shadow .5s var(--ez)" }}>
           <div className="grid grid-cols-2 gap-5">
@@ -6494,6 +6407,34 @@ function BetSpreadCalculator() {
             N₀ is how many rounds until expected profit equals one standard deviation of luck — how long before skill beats variance. {isFinite(r.n0) ? (r.n0 < 30000 ? "Under 30,000 is strong." : r.n0 < 80000 ? "Under 80,000 is playable." : `At ${Math.round(r.n0 / rphEff).toLocaleString()} hours, the spread is too flat — bet less at negative counts and more at high ones.`) : ""}
           </Info>
         </section>
+        <section className="card p-5 mb-4">
+          <div>
+            {/* the title and the session's length share one row */}
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="eyebrow">Your session</div>
+              <div className="relative" style={{ width: 92 }}>
+                <input className="in mono" type="number" inputMode="decimal" step="0.25" min="0" max="48" value={sessHours} aria-label="Session hours"
+                  onChange={(e) => setSessHours(e.target.value === "" ? "" : Math.min(48, Math.max(0, Number(e.target.value))))} style={{ paddingRight: 30, textAlign: "right", height: 38 }} />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "var(--muted)" }}>h</span>
+              </div>
+            </div>
+            {sess ? (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>lasts 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>chance you end down</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.dd90 == null ? "peak to low" : <>1 in 10: <span className="whitespace-nowrap">{`−\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</span></>}</div></div>
+              </div>
+            ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
+            <Info label="About these numbers">"Bring with you" covers the deepest you're likely to dip during the session, not just where you finish — including the extra swing from hot and cold shoes clustering, checked against full simulations. Drawdown is the biggest drop from a high point to a low within the session.</Info>
+          </div>
+          {r.evHand <= 0 && (
+            <p className="mt-4 text-sm rounded-lg px-3 py-2" style={{ background: "rgba(var(--neg),.15)", color: "var(--neg-l)" }}>
+              This spread has no edge. Raise bets at positive counts, sit out negative counts, or find a better game.
+            </p>
+          )}
+        </section>
+
         {/* ramp chart — signature */}
         <section id="sp-ramp" className="card p-5 mb-4">
           <div className="flex items-baseline justify-between mb-4">
@@ -6517,8 +6458,28 @@ function BetSpreadCalculator() {
           <Info label="How to read this">Bar height is bet size; brightness is how often that count shows up. Red means you're betting into the house's edge. A $0 bet means you sit out at that count.</Info>
         </section>
 
-        </div>
-        <div className="dgrid"><div className="dcol">
+        {/* inputs */}
+        <section id="sp-numbers" className="card p-5 mb-4">
+          <div className="eyebrow mb-4">Your numbers</div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Bankroll" prefix="$" value={bankroll} onChange={setBankroll} step={100} />
+            <label className="block">
+              <span className="eyebrow block mb-1.5">Rounds / hour</span>
+              <div className="flex items-center gap-1.5">
+                <input className="in mono" style={{ paddingLeft: 12, minWidth: 0 }} type="number" inputMode="decimal" step={5} value={hphAuto ? Math.round(rphAuto) : handsPerHour} aria-label="Rounds per hour"
+                  onChange={(e) => { setHphAuto(false); setHph(e.target.value === "" ? "" : Number(e.target.value)); }} />
+                <button type="button" className="text-xs font-semibold rounded-lg px-2.5" style={{ height: 40, flexShrink: 0, background: hphAuto ? "var(--brass)" : "rgba(var(--fg),.07)", color: hphAuto ? "var(--ink)" : "var(--muted)" }} onClick={() => setHphAuto(true)} aria-pressed={hphAuto}>Auto</button>
+              </div>
+              <span className="block mt-1 text-xs" style={{ color: "var(--muted)" }}>{hphAuto ? `Set by ${seats === 1 ? "heads-up play" : `${seats} players`}${COUNTS.some((c) => spotsMap[c] === 2 && (Number(bets[c]) || 0) > 0) && seats < 7 ? " + your 2nd hand" : ""}` : `Yours · auto is ~${Math.round(rphAuto)}`}</span>
+            </label>
+            <div className="col-span-2"><SeatPicker seats={seats} onChange={setSeats} twoHands={COUNTS.some((c) => spotsMap[c] === 2 && (Number(bets[c]) || 0) > 0)} /></div>
+            <Field label="Table minimum" prefix="$" value={minBet} onChange={setMinBet} step={5} />
+            <Field label="Table maximum" prefix="$" value={maxBet} onChange={setMaxBet} step={50} hint={maxBet !== "" && +maxBet < (+minBet || 0) ? "Below the minimum — the optimizer will use the minimum" : maxBet === "" ? "No max — the optimizer won't cap your bets" : undefined} />
+          </div>
+          <Info label="Where these numbers come from">Edges and swings come from {CAL_ROUNDS(rules.decks, seats)} million simulated rounds of {rules.decks}-deck {rules.h17 ? "H17" : "S17"}{rules.surrender ? " with surrender" : ""} with {seats === 1 ? "you alone at the table" : rules.decks >= 6 ? "other players at the table" : `${seats} players at the table`}, and count frequencies from separate runs for your table size, at {rules.pen}% penetration, played with BJA strategy, the Illustrious 18{rules.surrender ? " and Fab 4" : ""}. Assumes accurate counting and play.{devsOn(rules) ? "" : " Deviations are off in the game rules, so these numbers are for basic strategy on every hand: no count plays and no insurance."} Risk of ruin uses e^(−2·EV·bankroll / variance) with your spread's simulated EV and variance (checked against simulated bankroll paths) and assumes you never resize your bets. Real results depend on playing accuracy and the game you actually get. Counting is legal, but casinos can ask you to leave.</Info>
+        </section>
+
+        </div><div className="dcol o3">
         {/* spread table */}
         <section id="sp-bets" className="card p-5 mb-4">
           <div className="flex items-center justify-between mb-3">
@@ -6551,56 +6512,6 @@ function BetSpreadCalculator() {
           {showFreq && <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>Share of rounds dealt at each true count for this shoe, table and spread{seats === 1 && COUNTS.some((c) => !((Number(bets[c]) || 0) > 0)) ? " — counting only the rounds you're at the table for" : ""}.</p>}
         </section>
         {spreadLoaded && <SavedSpreads compact={!wide} bets={bets} spotsMap={spotsMap} bankroll={+bankroll || 0} cal={cal} rphOf={rphOf} now={r} onUse={loadSpread} />}
-
-        <section className="card p-5 mb-4">
-          <div>
-            {/* the title and the session's length share one row */}
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="eyebrow">Your session</div>
-              <div className="relative" style={{ width: 92 }}>
-                <input className="in mono" type="number" inputMode="decimal" step="0.25" min="0" max="48" value={sessHours} aria-label="Session hours"
-                  onChange={(e) => setSessHours(e.target.value === "" ? "" : Math.min(48, Math.max(0, Number(e.target.value))))} style={{ paddingRight: 30, textAlign: "right", height: 38 }} />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "var(--muted)" }}>h</span>
-              </div>
-            </div>
-            {sess ? (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>lasts 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>chance you end down</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.dd90 == null ? "peak to low" : <>1 in 10: <span className="whitespace-nowrap">{`−\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</span></>}</div></div>
-              </div>
-            ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
-            <Info label="About these numbers">"Bring with you" covers the deepest you're likely to dip during the session, not just where you finish — including the extra swing from hot and cold shoes clustering, checked against full simulations. Drawdown is the biggest drop from a high point to a low within the session.</Info>
-          </div>
-          {r.evHand <= 0 && (
-            <p className="mt-4 text-sm rounded-lg px-3 py-2" style={{ background: "rgba(var(--neg),.15)", color: "var(--neg-l)" }}>
-              This spread has no edge. Raise bets at positive counts, sit out negative counts, or find a better game.
-            </p>
-          )}
-        </section>
-
-        </div><div className="dcol o3">
-        {/* inputs */}
-        <section id="sp-numbers" className="card p-5 mb-4">
-          <div className="eyebrow mb-4">Your numbers</div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Bankroll" prefix="$" value={bankroll} onChange={setBankroll} step={100} />
-            <label className="block">
-              <span className="eyebrow block mb-1.5">Rounds / hour</span>
-              <div className="flex items-center gap-1.5">
-                <input className="in mono" style={{ paddingLeft: 12, minWidth: 0 }} type="number" inputMode="decimal" step={5} value={hphAuto ? Math.round(rphAuto) : handsPerHour} aria-label="Rounds per hour"
-                  onChange={(e) => { setHphAuto(false); setHph(e.target.value === "" ? "" : Number(e.target.value)); }} />
-                <button type="button" className="text-xs font-semibold rounded-lg px-2.5" style={{ height: 40, flexShrink: 0, background: hphAuto ? "var(--brass)" : "rgba(var(--fg),.07)", color: hphAuto ? "var(--ink)" : "var(--muted)" }} onClick={() => setHphAuto(true)} aria-pressed={hphAuto}>Auto</button>
-              </div>
-              <span className="block mt-1 text-xs" style={{ color: "var(--muted)" }}>{hphAuto ? `Set by ${seats === 1 ? "heads-up play" : `${seats} players`}${COUNTS.some((c) => spotsMap[c] === 2 && (Number(bets[c]) || 0) > 0) && seats < 7 ? " + your 2nd hand" : ""}` : `Yours · auto is ~${Math.round(rphAuto)}`}</span>
-            </label>
-            <div className="col-span-2"><SeatPicker seats={seats} onChange={setSeats} twoHands={COUNTS.some((c) => spotsMap[c] === 2 && (Number(bets[c]) || 0) > 0)} /></div>
-            <Field label="Table minimum" prefix="$" value={minBet} onChange={setMinBet} step={5} />
-            <Field label="Table maximum" prefix="$" value={maxBet} onChange={setMaxBet} step={50} hint={maxBet !== "" && +maxBet < (+minBet || 0) ? "Below the minimum — the optimizer will use the minimum" : maxBet === "" ? "No max — the optimizer won't cap your bets" : undefined} />
-          </div>
-          <Info label="Where these numbers come from">Edges and swings come from {CAL_ROUNDS(rules.decks, seats)} million simulated rounds of {rules.decks}-deck {rules.h17 ? "H17" : "S17"}{rules.surrender ? " with surrender" : ""} with {seats === 1 ? "you alone at the table" : rules.decks >= 6 ? "other players at the table" : `${seats} players at the table`}, and count frequencies from separate runs for your table size, at {rules.pen}% penetration, played with BJA strategy, the Illustrious 18{rules.surrender ? " and Fab 4" : ""}. Assumes accurate counting and play.{devsOn(rules) ? "" : " Deviations are off in the game rules, so these numbers are for basic strategy on every hand: no count plays and no insurance."} Risk of ruin uses e^(−2·EV·bankroll / variance) with your spread's simulated EV and variance (checked against simulated bankroll paths) and assumes you never resize your bets. Real results depend on playing accuracy and the game you actually get. Counting is legal, but casinos can ask you to leave.</Info>
-        </section>
 
         {/* optimizer */}
         <section id="sp-opt" className="card focusrim p-5">

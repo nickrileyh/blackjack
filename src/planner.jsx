@@ -1206,12 +1206,7 @@ export function usePlayNext(bankroll, on = true) {
     when: first ? (first.ready ? "Ready now" : fmtWeekday(first.t)) : "", last: row && row.last ? ago(daysBetween(row.last, rot.today)) : "", back: !!(first && first.back),
     none: !!all && !rot.pending && rot.rows.length > 0 && !first };
 }
-// On a phone the page is two views, Casinos (where to play) and Bankroll (where it is heading), on one switch under the
-// plan line: the whole page in one column ran to four screens. A computer shows both, side by side, as before.
-let _planView = "casinos";
 export function PlanPage({ bankroll, mine, go }) {
-  const narrow = useNarrow(), [view, setView] = useState(_planView);
-  const showC = !narrow || view === "casinos", showB = !narrow || view === "bank";
   const [prefs, setP] = useState(() => _plan || PLAN_DEF), [all, setAll] = useState(null), [pop, setPop] = useState(null), [sessions, setSessions] = useState(null), [setup, setSetup] = useState(null);
   useEffect(() => { (async () => {
     if (!_plan) setP((_plan = await loadPlan()));
@@ -1227,15 +1222,14 @@ export function PlanPage({ bankroll, mine, go }) {
     <div>
       <style>{planCss}</style>
       <Settings bankroll={bankroll} prefs={prefs} setPrefs={setPrefs} go={go} />
-      {narrow && <div className="mb-4"><Seg value={view} onChange={(v) => { _planView = v; setView(v); }} options={[["casinos", "Casinos"], ["bank", "Bankroll"]]} /></div>}
       <div className="dgrid twol"><div className="dcol">
-        {showC && all && <PlayNext rot={rot} onOpen={setPop} />}
-        {showC && all && <Rotation rot={rot} prefs={prefs} setPrefs={setPrefs} onOpen={setPop} />}
+        {all && <PlayNext rot={rot} onOpen={setPop} />}
+        {all && <Rotation rot={rot} prefs={prefs} setPrefs={setPrefs} onOpen={setPop} />}
       </div><div className="dcol o2">
-        {showB && <BankrollNow gr={gr} mine={mine} bankroll={bankroll} prefs={prefs} go={go} />}
-        {showB && <Growth part="chart" gr={gr} deal={deal} bankroll={bankroll} prefs={prefs} setPrefs={setPrefs} />}
+        <BankrollNow gr={gr} mine={mine} bankroll={bankroll} prefs={prefs} go={go} />
+        <Growth part="chart" gr={gr} deal={deal} bankroll={bankroll} prefs={prefs} setPrefs={setPrefs} />
       </div><div className="dcol contl">
-        {showB && <Growth part="ladder" gr={gr} deal={deal} bankroll={bankroll} prefs={prefs} setPrefs={setPrefs} />}
+        <Growth part="ladder" gr={gr} deal={deal} bankroll={bankroll} prefs={prefs} setPrefs={setPrefs} />
       </div></div>
       {pop && <CasinoPop key={pop.id} c={pop} rot={rot} sessLen={sessLenOf(mine)} onClose={() => setPop(null)} onCasinos={() => toCasinos(pop)} />}
     </div>
