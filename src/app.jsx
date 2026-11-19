@@ -676,7 +676,7 @@ input[type=range]{accent-color:var(--brass)}
 .opt{transition:transform .13s var(--ease),filter .13s var(--ez),background .17s var(--ez),color .17s var(--ez),opacity .17s var(--ez)}
 .opt:active{transform:scale(.97)}
 @keyframes leave{from{opacity:1}to{opacity:0}}
-.leave .dealt{animation:leave .18s ease-in-out forwards !important;animation-delay:0ms !important}
+.leave .dealt{animation:leave .18s var(--ez-soft) forwards !important;animation-delay:0ms !important}
 .btn:disabled{opacity:.35;filter:none;cursor:default;transform:none}
 @media(hover:hover){.opt:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.15)}}
 .opt:active:not(:disabled){transform:scale(.97)}
@@ -1097,6 +1097,10 @@ body{background:none}
 .sheetwrap.out{animation:scrimout .22s var(--ez-soft) forwards}
 .sheetwrap.out .sheet{animation:paneldown .22s var(--ez-soft) forwards}
 .sheetwrap.out .sheet>*{animation:none}
+.dcol>.fold>.foldin{animation:none}
+.rulesscrim.out,.cmdk-wrap.out{animation:scrimout .2s var(--ez-soft) forwards;pointer-events:none}
+.rulesscrim.out .card.rulesdlg,.cmdk-wrap.out .cmdk{animation:paneldown .2s var(--ez-soft) forwards}
+.rulesscrim.out .card.rulesdlg>*,.cmdk-wrap.out .cmdk>*{animation:none}
 .card.rulesdlg{animation:panelpop .56s var(--ez) backwards,panelfade .36s var(--ez-soft) backwards}
 .cmdk{animation:cmdkmove .46s var(--ez) backwards,panelfade .3s var(--ez-soft) backwards}
 @keyframes cmdkmove{from{transform:translate3d(0,-12px,0) scale(.975)}}
@@ -1939,7 +1943,7 @@ function Trainer({ rules, setRules, spread }) {
   const narrow = useNarrow(); // on a phone the answer takes the place of the answer buttons, with Next where the thumb already is
   const [view, setView] = useState(_trainView); // drill | fill | charts
   useEffect(() => { _trainView = view; }, [view]);
-  useNav((o) => { if (o.trainView) setView(o.trainView); if (o.trainMode && o.trainMode !== mode) { setMode(o.trainMode); setCur(null); setResult(null); } });
+  useNav((o) => { if (o.trainView) setView(o.trainView); if (o.trainMode && o.trainMode !== mode) { setMode(o.trainMode); setCur(stale); setResult(null); } });
   const [prog, setProg] = useState({}); // id → {box, seen, wrong}
   const [qn, setQn] = useState(0);
   const [cur, setCur] = useState(null);
@@ -1949,7 +1953,12 @@ function Trainer({ rules, setRules, spread }) {
   const [session, setSession] = useState({ asked: 0, right: 0 });
   const [more, setMore] = useState(false);
   const wide = useWide();
+  const stale = (c) => c && { ...c, _pv: -1 };   // "deal another": the hand stays on screen until its replacement is ready (never a frame with no table)
   const [lastMath, setLastMath] = useState(null);   // { c, picked }: the hand last answered, for the side column's math on a wide screen
+  const ansBox = useGlideH((cur ? cur.qkey : "") + "|" + (result ? 1 : 0) + "|" + (more ? 1 : 0));
+  const mathBox = useGlideH(lastMath ? lastMath.c.qkey : "");   // the side column's math, a different length for each hand
+  const mathKeep = useRef(null); if (lastMath) mathKeep.current = lastMath;
+  const weakKeep = useRef([]);   // the last list shown, so the card still has its rows while it folds away
   // phone: once the answer is up (or its odds are opened), make sure all of it, Next included, is clear of the tab bar
   const resRef = useRef(null);
   useEffect(() => {
@@ -2026,7 +2035,8 @@ function Trainer({ rules, setRules, spread }) {
     return { ...c, tc, rcs: e ? e.rcs : undefined, cards: handToCards(c), dealer: { rank: up, suit: rs() }, qkey: Math.random().toString(36).slice(2) };
   };
   const poolVer = useMemo(() => Math.random(), [pool]);
-  useEffect(() => {
+  // a layout effect: the new hand is in place before the screen is drawn, so a change of mode swaps one hand for the next
+  useLayoutEffect(() => {
     if (!loaded || !pool.length) return;
     if (!cur || cur._pv !== poolVer) setCur({ ...dress(pick(prog, qn)), _pv: poolVer });
   }, [cur, pool, loaded, poolVer]); // eslint-disable-line
@@ -2074,6 +2084,8 @@ function Trainer({ rules, setRules, spread }) {
   const mastered = pool.filter((c) => (prog[c.id]?.box || 0) >= 3).length;
   const seen = pool.filter((c) => prog[c.id]).length;
   const weakest = pool.filter((c) => prog[c.id]?.wrong > 0).sort((a, b) => prog[b.id].wrong - prog[a.id].wrong).slice(0, 5);
+  if (weakest.length) weakKeep.current = weakest;
+  const weakBox = useGlideH(weakest.length);
 
   const reset = async () => { pause(); setProg({}); setQn(0); setStreak(0); setCur(null); setResult(null); setSession({ asked: 0, right: 0 }); try { await window.storage.delete(STORE_KEY, false); } catch (_) {} };
 
@@ -2138,7 +2150,7 @@ function Trainer({ rules, setRules, spread }) {
     <div>
       {/* which practice: over the table, so both columns under it start level */}
       <div className="trainbar">
-      {view === "drill" && <div className="segw"><Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(null); setResult(null); setLastMath(null); }} style={{ marginBottom: 12 }} /></div>}
+      {view === "drill" && <div className="segw"><Seg value={mode} options={[["basic", "Basic strategy"], ["dev", "Deviations"], ["mixed", "Mixed"]]} onChange={(m) => { setMode(m); setCur(stale); setResult(null); setLastMath(null); }} style={{ marginBottom: 12 }} /></div>}
       </div>
 
       {view === "charts" ? <Charts R={rules} devs={DEVS} spread={spread} /> : view === "fill" ? <FillChart R={rules} devs={DEVS} /> : null}
@@ -2159,7 +2171,9 @@ function Trainer({ rules, setRules, spread }) {
             <span>{cur.kind === "dev" ? cur.dev.hand : cur.hand}</span>
           </div>
 
-          {/* on a phone the buttons give way to the answer: nothing is left half hidden behind it */}
+          {/* on a phone the buttons give way to the answer: nothing is left half hidden behind it. The two share one box
+              whose height glides, so the card under them is carried to its new place instead of jumping */}
+          <div ref={ansBox} style={{ display: "flow-root" }}>
           {!(narrow && result) && <div className={"acts grid gap-2 mt-5" + (cur.opts ? " pad" : "")} style={{ gridTemplateColumns: cur.opts ? `repeat(${Math.min(cur.opts.length, 5)}, 1fr)` : "1fr 1fr" }}>
             {(cur.opts || [cur.dev.below, cur.dev.above]).map((o, i) => {
               const isAns = result && o === cur.answer;
@@ -2202,6 +2216,7 @@ function Trainer({ rules, setRules, spread }) {
             // phone: nothing until there is an answer; then it stands where the answer buttons were, so Next is under the thumb
             // that just answered. (It used to float over the tab bar and cut across whatever row of buttons it landed on.)
             return narrow ? (result ? <div ref={resRef} className="resin mt-5" key={cur.qkey}>{res}</div> : null) : <div className="mt-4">{res}</div>; })()}
+          </div>
           <div className={narrow ? "mt-3" : ""}>
             <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>H</b> hit · <b>S</b> stand · <b>D</b> double · <b>P</b> split{rules.surrender ? <> · <b>R</b> surrender</> : null}{wide ? null : <> · <b>O</b> odds</>} · <b>Enter</b> next</div>
             <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}><Toggle label="Deal the next hand automatically" on={auto} onChange={(v) => { setAuto(v); if (!v) pause(); }} /></div>
@@ -2214,20 +2229,24 @@ function Trainer({ rules, setRules, spread }) {
 
       {/* wide screens: the math for every hand as it is answered, right or wrong; it stays up while the next hand is dealt,
           so dealing on automatically doesn't take it away before it has been read */}
-      {wide && lastMath && <Odds key={lastMath.c.qkey} side c={lastMath.c} picked={lastMath.picked} R={rules} stale={!result || !cur || cur.qkey !== lastMath.c.qkey} />}
+      <Fold open={wide && !!lastMath}><div ref={mathBox} style={{ display: "flow-root" }}>
+        {mathKeep.current && <div key={mathKeep.current.c.qkey} className="rise"><Odds side c={mathKeep.current.c} picked={mathKeep.current.picked} R={rules} stale={!result || !cur || cur.qkey !== mathKeep.current.c.qkey} /></div>}
+      </div></Fold>
 
       {/* weak spots */}
-      {weakest.length > 0 && (
+      {/* it turns up after the first miss and grows a row at a time: folded in and glided, so the card under it is
+          carried down instead of jumping */}
+      <Fold open={weakest.length > 0}><div ref={weakBox} style={{ display: "flow-root" }}>
         <section className="card p-5 mb-4">
           <div className="eyebrow mb-3">Your weak spots</div>
-          {weakest.map((c) => (
+          {weakKeep.current.map((c) => (
             <div key={c.id} className="flex justify-between text-sm py-1.5" style={{ borderBottom: "1px solid rgba(var(--fg),.08)" }}>
               <span>{c.kind === "dev" ? `${c.dev.name} ${devLow(c.dev) ? (c.side === "hi" ? "above" : "at/below") : c.side === "hi" ? "at/above" : "below"} ${idxLabel(c.dev)}` : `${c.hand} vs ${upLabel(c.up)}`}</span>
-              <span className="mono" style={{ color: "var(--muted)" }}>{c.opts ? label(c.answer) : c.answer} · {prog[c.id].wrong}✕</span>
+              <span className="mono" style={{ color: "var(--muted)" }}>{c.opts ? label(c.answer) : c.answer} · {(prog[c.id] || { wrong: 0 }).wrong}✕</span>
             </div>
           ))}
         </section>
-      )}
+      </div></Fold>
 
       {masteryCard}
       </>}
@@ -2606,11 +2625,19 @@ function useModalFocus(ref) {
     };
   }, []); // eslint-disable-line
 }
+// A pop-up that isn't a Sheet (the rules dialog, the palette) leaves the way a sheet does: [out, leave] = useExit();
+// put "out" on its scrim and call leave(then) instead of then(). The owner unmounts it when "then" runs.
+function useExit(ms = 200) {
+  const [out, setOut] = useState(false), busy = useRef(false);
+  const leave = (then) => { if (busy.current) return; if (noMotion()) { then(); return; } busy.current = true; setOut(true); setTimeout(then, ms); };
+  return [out, leave];
+}
 function RulesModal({ rules, onSave, onClose, first }) {
   const dlg = useRef(null); useModalFocus(dlg);
   const [draft, setDraft] = useState(rules);
   const [adv, setAdv] = useState(() => advancedNotes(rules).length > 0);
-  const close = first ? null : onClose;
+  const [out, leave] = useExit(200);
+  const close = first ? null : () => leave(onClose);
   useEffect(() => {
     const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
     const k = (e) => { if (e.key === "Escape" && close) close(); }; window.addEventListener("keydown", k);
@@ -2622,7 +2649,7 @@ function RulesModal({ rules, onSave, onClose, first }) {
     </div>
   );
   return (
-    <div className="rulesscrim fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "var(--scrim)", paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }} {...backdrop(close)} role="dialog" aria-modal="true" aria-label="Game rules">
+    <div className={"rulesscrim fixed inset-0 z-50 flex items-center justify-center p-3" + (out ? " out" : "")} style={{ background: "var(--scrim)", paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }} {...backdrop(close)} role="dialog" aria-modal="true" aria-label="Game rules">
       <div ref={dlg} tabIndex={-1} className="card rulesdlg w-full max-w-md relative" style={{ maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden", outline: "none" }} onClick={(e) => e.stopPropagation()}>
         {/* the glass panel itself never scrolls (its rim and blur stay put); this inner box does */}
         <div className="p-5 relative" style={{ overflowY: "auto", minHeight: 0 }}>
@@ -2655,7 +2682,7 @@ function RulesModal({ rules, onSave, onClose, first }) {
           <button className="text-[11px] underline underline-offset-2 lnk" style={{ color: "var(--muted)" }} onClick={() => setDraft({ ...draft, das: true, dbl: "any", maxHands: 4, rsa: false })}>Reset to standard</button>
         </div>}
         <p className="text-[11px] mt-4" style={{ color: "var(--muted)" }}>Strategy follows the Blackjack Apprenticeship {draft.h17 ? "H17" : "S17"} chart{dasOn(draft) ? "" : " for no double after split"}{dblRule(draft) === "any" ? "" : `, with doubles only on ${dblRule(draft).replace("-", "–")}`}. Split aces get one card each. The dealer peeks for blackjack.{draft.bj65 ? " 6 to 5 blackjack costs about 1.4% — avoid it if you can." : ""}</p>
-        <button className="btn mt-5" onClick={() => onSave(draft)}>{first ? "Start" : "Save"}</button>
+        <button className="btn mt-5" onClick={() => leave(() => onSave(draft))}>{first ? "Start" : "Save"}</button>
         </div>
       </div>
     </div>
@@ -2752,6 +2779,11 @@ const noMotion = () => typeof matchMedia !== "undefined" && matchMedia("(prefers
 const FOLD_EASE = "cubic-bezier(.22,.68,.1,1)";
 // <Fold open>: a block that is there only while open. Opening grows it from nothing while its contents come into
 // focus (.foldin); closing shrinks and fades it, and only then takes it away.
+// How long a height takes to glide. FOLD_EASE covers about 15% of the way in its first frame at 480 ms, which is right
+// for a line or two and a lurch for 300px ("More details" in the log sheet moved its sheet 73px in one frame). So the
+// time grows with the distance, never under the old time and never over 0.82 s: the edge sets off at the same pace
+// whatever the size, and the long finish is kept.
+const foldMs = (px, open) => Math.round(open ? Math.min(860, Math.max(480, px * 2.4)) : Math.min(560, Math.max(340, px * 1.35)));
 function Fold({ open, children, className = "", style }) {
   const [on, setOn] = useState(!!open);
   if (open && !on) setOn(true);
@@ -2762,10 +2794,10 @@ function Fold({ open, children, className = "", style }) {
     const was = anim.current, cur = n.offsetHeight;
     if (was) { anim.current = null; was.cancel(); }
     if (noMotion() || !n.animate) { n.style.overflow = ""; if (!open) setOn(false); return; }
-    const full = n.offsetHeight, from = was ? cur : open ? 0 : full;
+    const full = open ? n.offsetHeight : 0, from = was ? cur : open ? 0 : n.offsetHeight;
     n.style.overflow = "hidden";
     const a = n.animate(open ? [{ height: from + "px" }, { height: full + "px" }] : [{ height: from + "px", opacity: 1 }, { height: "0px", opacity: 0 }],
-      { duration: open ? 480 : 340, easing: FOLD_EASE, fill: open ? "none" : "forwards" });
+      { duration: foldMs(Math.abs(full - from), open), easing: FOLD_EASE, fill: open ? "none" : "forwards" });
     anim.current = a;
     a.onfinish = () => { if (anim.current !== a) return; anim.current = null; if (open) n.style.overflow = ""; else setOn(false); };
   }, [open]); // eslint-disable-line
@@ -2784,7 +2816,7 @@ function useGlideH(dep) {
     const from = was ? cur : last.current, to = n.offsetHeight;
     if (noMotion() || !n.animate || !from || Math.abs(to - from) < 2) { n.style.overflow = ""; last.current = to; return; }
     n.style.overflow = "hidden";
-    const a = n.animate([{ height: from + "px" }, { height: to + "px" }], { duration: to > from ? 480 : 360, easing: FOLD_EASE });
+    const a = n.animate([{ height: from + "px" }, { height: to + "px" }], { duration: foldMs(Math.abs(to - from), to > from), easing: FOLD_EASE });
     anim.current = a;
     const done = () => { if (anim.current !== a) return; anim.current = null; n.style.overflow = ""; last.current = n.offsetHeight; };
     a.onfinish = done; a.oncancel = done;
@@ -3469,7 +3501,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
             </button>
           </div>
         </div>
-        <div className={"relative tbl felt cz-play px-4 pt-4 pb-4" + (phase === "bet" ? "" : " busy")} style={{ minHeight: 300 }}>
+        <div className={"relative tbl felt cz-play px-4 pt-4 pb-4" + (phase === "bet" ? "" : " busy")} style={{ minHeight: "calc(130px + 175px * var(--cz, 1))" }}>{/* as tall empty as with a hand on it (measured at each card size), so the page under the table doesn't jump at every deal */}
           <FeltPrint />
           {shuffled && <div className="absolute inset-0 flex items-center justify-center rounded-2xl z-10 rise" style={{ background: "rgba(0,0,0,.6)" }}><div className="disp text-2xl font-semibold" style={{ color: "var(--brass)" }}>Shuffling…</div></div>}
           <HandView cards={dealer} label="Dealer" hidden={holeHidden} total={showTotals && dealer.length ? (holeHidden ? (dealer[0].rank === 11 ? "A" : dealer[0].rank) : dv.total) : undefined} small {...dealAnim(1)} />
@@ -4896,6 +4928,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
   }, [sessions, period, casino]);
   const st = useMemo(() => sessionStats(list, evHour, sdHour), [list, evHour, sdHour]);
   const [moreStats, setMoreStats] = useState(false);
+  const sideRef = useGlideH(period + "|" + casino);
   const statsRef = useGlideH(moreStats);   // streak, average win/loss, upswing and swings sit behind "More stats"
   const ddE = useDeferred(list.length > 1 && mix && mix.length ? ddKey(list, mix, hph) : null, () => drawdownSteps(expectedParts(list, mix, hph))) || null;
   const byCasino = useMemo(() => {
@@ -5045,6 +5078,9 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
       </>}
       </div><div className="dcol o2">
       {list.length > 0 && <>
+        {/* By casino and By month change length, or go, with the filters: one box whose height glides, so History
+            under them is carried to its new place instead of jumping (it jumped 217px on a computer) */}
+        <div ref={sideRef} style={{ display: "flow-root" }}>
         {/* by casino */}
         {byCasino.length > 0 && (
           <section className="card p-5 mb-4">
@@ -5074,6 +5110,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
             <Fold open={!!calMonth}>{calShown.current && <MonthCal key={calShown.current} k={calShown.current} list={list} onOpen={setSheet} />}</Fold>
           </section>
         )}
+        </div>
 
         {/* history */}
         <section className="card p-5 mb-4 ph-b">
@@ -5486,6 +5523,7 @@ const MORE_ICON = <><circle cx="5.5" cy="12" r="1.5" fill="currentColor" /><circ
 function CommandPalette({ items, onClose }) {
   const [q, setQ] = useState(""); const [at, setAt] = useState(0); const list = useRef(null);
   const pal = useRef(null); useModalFocus(pal);
+  const [out, leave] = useExit(180); const shut = () => leave(onClose);   // Escape or a tap outside; choosing a row goes at once (the page change is the motion)
   // a match in the name beats a match in the hidden keywords, so "log" finds "Log a session" before "Sessions"
   const shown = useMemo(() => {
     const w = q.trim().toLowerCase().split(/\s+/).filter(Boolean); if (!w.length) return items;
@@ -5499,10 +5537,10 @@ function CommandPalette({ items, onClose }) {
     if (e.key === "ArrowDown") { e.preventDefault(); setAt((x) => Math.min(shown.length - 1, x + 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setAt((x) => Math.max(0, x - 1)); }
     else if (e.key === "Enter") { if (e.target.tagName === "BUTTON") return; e.preventDefault(); if (shown[at]) run(shown[at]); }   // Enter on a row that has focus runs that row
-    else if (e.key === "Escape") { e.preventDefault(); onClose(); }
+    else if (e.key === "Escape") { e.preventDefault(); shut(); }
   };
   return (
-    <div className="cmdk-wrap" {...backdrop(onClose)} role="dialog" aria-modal="true" aria-label="Jump to">
+    <div className={"cmdk-wrap" + (out ? " out" : "")} {...backdrop(shut)} role="dialog" aria-modal="true" aria-label="Jump to">
       <div ref={pal} className="cmdk" onClick={(e) => e.stopPropagation()} onKeyDown={onKey}>
         <div className="cmdk-in">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
