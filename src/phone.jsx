@@ -234,7 +234,7 @@ export function MoreHub({ go, bankroll }) {
         {rows.map(([k, name, icon, sub]) => (
           <button key={k} className="mrow big" onClick={() => go(k)}>
             <span className="ticon"><Ico s={20}>{icon}</Ico></span>
-            <span className="min-w-0 flex-1"><span className="block text-[16px] font-semibold" style={{ color: "var(--ivory)" }}>{name}</span><span className="block text-[12px] truncate" style={{ color: "var(--muted)" }}>{sub}</span></span>
+            <span className="min-w-0 flex-1"><span className="block text-[16px] font-semibold" style={{ color: "var(--ivory)" }}>{name}</span><span className="block text-[12px] leading-snug" style={{ color: "var(--muted)" }}>{sub}</span></span>
             <Chev />
           </button>))}
       </section>

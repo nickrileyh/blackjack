@@ -73,6 +73,8 @@ const mapsUrl = (c) => "https://www.google.com/maps/search/?api=1&query=" + enco
 const reduceMotion = () => { try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; } };
 
 const casCss = `
+/* a casino's name takes a second line when the row is narrow, rather than being cut short */
+.cname{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.25}
 .cmap{position:relative;aspect-ratio:4/3;background:var(--recess);overflow:hidden;user-select:none;-webkit-user-select:none;cursor:grab;outline:none;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .cmap.drag{cursor:grabbing}.cmap.placing{cursor:crosshair}
 .cmap:focus-visible{box-shadow:inset 0 0 0 2px var(--brass)}
@@ -321,7 +323,7 @@ function CasinoRow({ c, place, onOpen, score, dist }) {
   return (
     <button className="crow" onClick={() => onOpen(c)}>
       <span className={"cdot" + (st === "backed" ? " x" : st === "been" ? " b" : "")} aria-hidden="true" />
-      <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{sub}</span></span>
+      <span className="min-w-0"><span className="text-sm font-semibold cname" style={{ color: "var(--ivory)" }}>{c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{sub}</span></span>
       <span className="flex items-center gap-2">{dist && <span className="mono text-xs whitespace-nowrap" style={{ color: "var(--ivory-d)" }}>{dist}</span>}{score && <span className="text-right leading-none" title={`Table score ${score.score}: the best game here against your usual game (50)`}><span className="block mono text-[13px] font-semibold" style={{ color: scoreTone(score.score) }}>{score.score}</span><span className="block text-[8.5px] font-semibold uppercase mt-0.5" style={{ color: "var(--muted)", letterSpacing: ".08em" }}>score</span></span>}{dist ? null : st === "backed" ? <span className="ctag x">backed off</span> : st === "been" ? <span className="ctag b">been</span> : c.intel ? <span className={"ctag n" + (score ? " ph-hide" : "")}>report</span> : null}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)" }}><path d="M9 6l6 6-6 6" /></svg></span>
     </button>
   );

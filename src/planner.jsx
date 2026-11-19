@@ -284,6 +284,8 @@ export const milesBetween = (a, b) => { const r = Math.PI / 180, x = (b.lon - a.
 const planCss = `
 .prow{display:grid;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 6px;border-radius:12px;transition:background .15s var(--ez)}
 .prow+.prow{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
+/* a computer: a casino's name wraps onto a second line in a narrow window instead of being cut short ("JACK Clevelan…") */
+@media (min-width:1024px){.prow .pname{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;text-wrap:balance}}
 button.prow:hover{background:rgba(var(--fg),.045)}
 .phead{display:grid;gap:10px;padding:0 6px 7px;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 .ptrack{position:relative;height:6px;border-radius:99px;background:rgba(var(--fg),.08);overflow:hidden}
@@ -470,7 +472,7 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
       <div ref={mineRef}>
       {seen.map((r) => { const rd = isReady(r), sk = low(r.c), frac = rd ? 1 : r.until && r.from ? Math.max(0.04, Math.min(0.96, (now - r.from) / Math.max(DAY, r.until - r.from))) : 0.04; return (
         <button key={r.c.id} className="prow pcas" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS} 92px` }} onClick={() => onOpen(r.c)}>
-          <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{r.c.name}</span><span className="block text-[11px] truncate ph-hide" style={{ color: "var(--muted)" }}>{r.last ? ago(daysBetween(r.last, today)) : "no sessions"}{r.why ? ` · ${r.why}` : ""}</span></span>
+          <span className="min-w-0"><span className="block text-sm font-semibold truncate pname" style={{ color: "var(--ivory)" }}>{r.c.name}</span><span className="block text-[11px] truncate ph-hide" style={{ color: "var(--muted)" }}>{r.last ? ago(daysBetween(r.last, today)) : "no sessions"}{r.why ? ` · ${r.why}` : ""}</span></span>
           <Nums x={sc.get(r.c)} cap={cap} />
           <span className="min-w-0"><span className="block text-[11px] font-semibold text-right mb-1.5" style={{ color: sk ? "var(--muted)" : rd ? "var(--brass)" : r.kind === "backed" ? "var(--rose)" : "var(--ivory-d)" }} title={sk ? `Scores under ${minScore}, so it is never suggested` : undefined}>{sk ? "Skipped" : rd ? "Ready" : r.until ? `Back ${fmtDay(r.until)}` : "Backed off"}</span>
             <span className="ptrack block" aria-hidden="true"><i className={"barx " + (sk ? "" : rd ? "ok" : r.kind === "backed" ? "x" : "")} style={{ width: `${frac * 100}%` }} /></span></span>
@@ -495,7 +497,7 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
       <div ref={scoutRef}>
       {scouts.map((x) => (
         <button key={x.c.id} className="prow pcas norest" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS}` }} onClick={() => onOpen(x.c)}>
-          <span className="min-w-0"><span className="block text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{x.c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{[x.c.city, x.c.st].filter(Boolean).join(", ")} · {Math.round(x.mi / 5) * 5} mi · ${x.s.mn} tables{x.c.intel && x.c.intel.asOf ? ` · ${x.c.intel.asOf}` : ""}</span></span>
+          <span className="min-w-0"><span className="block text-sm font-semibold truncate pname" style={{ color: "var(--ivory)" }}>{x.c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{[x.c.city, x.c.st].filter(Boolean).join(", ")} · {Math.round(x.mi / 5) * 5} mi · ${x.s.mn} tables{x.c.intel && x.c.intel.asOf ? ` · ${x.c.intel.asOf}` : ""}</span></span>
           <Nums x={x.s} cap={cap} />
         </button>))}
       </div>

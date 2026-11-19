@@ -399,7 +399,7 @@ html,body{background:var(--bg)}
 .stepbtn{width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;line-height:1;color:var(--ivory-d);background:rgba(var(--fg),.06);border:1px solid rgba(var(--fg),.1);transition:transform .12s var(--ez),background .15s var(--ez)}
 .stepbtn:active{transform:scale(.9)}
 .stepbtn:disabled{opacity:.35}
-.pnlwrap{position:relative}.pnltip{position:absolute;top:0;transform:translateX(-50%);pointer-events:none;white-space:nowrap;padding:7px 11px;border-radius:12px;font-size:11px;line-height:1.35;color:var(--ivory-d);background:color-mix(in srgb,var(--bg2) 86%,transparent);box-shadow:var(--gl-lens),0 10px 26px -12px rgba(var(--sh),.9);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);z-index:2}.pnltip b{color:var(--ivory);font-weight:600}
+.pnlwrap{position:relative}.pnltip{position:absolute;top:-6px;left:0;transition:transform .2s var(--ez);animation:tipin .2s var(--ez-soft) backwards;pointer-events:none;white-space:nowrap;padding:7px 11px;border-radius:12px;font-size:11px;line-height:1.35;color:var(--ivory-d);background:color-mix(in srgb,var(--bg2) 86%,transparent);box-shadow:var(--gl-lens),0 10px 26px -12px rgba(var(--sh),.9);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);z-index:2}.pnltip b{color:var(--ivory);font-weight:600}
 .tcrow{display:grid;grid-template-columns:64px 1fr 64px 64px 84px;align-items:center;gap:10px;font-size:12.5px;padding:7px 10px;border-radius:10px}.tcrow>span:nth-child(n+3){text-align:right}.tcrow.h{font-size:10px;color:var(--muted);padding-top:0;padding-bottom:4px}
 .wrow{display:grid;grid-template-columns:104px 1fr 62px;align-items:center;gap:12px;padding:6px 0;font-size:13px}
 .skillrow{display:flex;align-items:center;gap:10px;padding:11px 4px;border-radius:10px;transition:background .15s var(--ez)}
@@ -637,7 +637,7 @@ input[type=range]{accent-color:var(--brass)}
 .mcal .d{position:relative;height:50px;border-radius:9px;background:rgba(var(--fg),.03);display:flex;align-items:flex-end;justify-content:center;padding:0 2px 9px;min-width:0}
 .mcal .d.off{background:none}
 .mcal .d>i{position:absolute;top:5px;left:7px;font:500 9.5px Inter;font-style:normal;color:var(--muted)}
-.mcal .d>b{font:600 11.5px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:-.02em;white-space:nowrap}
+.mcal .d>b{font:600 11.5px Inter,-apple-system,system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
 .mcal .d>u{position:absolute;top:5px;right:6px;font:600 8.5px Inter;text-decoration:none;color:var(--muted)}
 .mcal .d.up{background:rgba(var(--win),var(--a))}.mcal .d.up>b{color:var(--win-l)}.mcal .d.up>i{color:rgba(var(--win),.85)}
 .mcal .d.dn{background:rgba(var(--neg),var(--a))}.mcal .d.dn>b{color:var(--neg-l)}.mcal .d.dn>i{color:rgba(var(--neg),.9)}
@@ -645,7 +645,7 @@ input[type=range]{accent-color:var(--brass)}
 .mcal button.d{cursor:pointer;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
 .mcal button.d:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(var(--fg),.16)}
 .mcal .d.now{box-shadow:inset 0 0 0 1px rgba(var(--fg),.22)}
-.mbar{cursor:pointer;outline:none}.mbar:focus-visible rect:first-child{stroke:var(--brass);stroke-width:1.5}
+.mbar{cursor:pointer;outline:none}.mbar>rect:first-child{transition:fill .16s var(--ez)}@media (hover:hover){.mbar:hover>rect:first-child{fill:rgba(var(--fg),.04)}}.mbar:focus-visible rect:first-child{stroke:var(--brass);stroke-width:1.5}
 @keyframes fadein{from{opacity:0}}
 .popin{transform-box:fill-box;transform-origin:center;animation:popin .32s var(--eo) backwards}
 @keyframes popin{from{opacity:0;transform:scale(.3)}}
@@ -1039,8 +1039,9 @@ body{background:none}
 .pbar{height:76px;display:flex;align-items:flex-end}
 .pbar>div{width:100%;border-radius:5px 5px 2px 2px}
 .hrecent{margin-top:14px;border-top:1px solid var(--line);padding-top:6px}
-.hrow{display:grid;grid-template-columns:58px minmax(0,1fr) 46px 70px;gap:10px;align-items:baseline;font-size:12.5px;padding:6px 0}
+.hrow{display:grid;grid-template-columns:50px minmax(0,1fr) 30px 66px;gap:10px;align-items:baseline;font-size:12.5px;padding:6px 0}
 .hrow+.hrow{border-top:1px solid rgba(var(--fg),.06)}
+@media (max-width:1299px){.hrow{grid-template-columns:50px minmax(0,1fr) 66px}.hrow>:nth-child(3){display:none}}
 .svrow{display:grid;grid-template-columns:minmax(0,1fr) 68px 58px 60px 46px;gap:10px;align-items:center;padding:9px 0}
 .svrow+.svrow{border-top:1px solid rgba(var(--fg),.07)}
 .svc .svrow{grid-template-columns:minmax(0,1fr) 60px 46px}.svc .svrow.now{grid-template-columns:minmax(0,1fr) 0 0}
@@ -1151,6 +1152,24 @@ body{background:none}
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb))}.topbar,.syncpill{background:rgba(var(--bgrgb),.97)}.sheet,.cmdk,.card.rulesdlg{background:linear-gradient(180deg,var(--sheet1),var(--sheet2) 40%);backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media (prefers-reduced-motion:reduce){.pillrail,.pillrail .rulespill,.sn-glide{transition:none!important}.navglide,.chipseg.slide .thumb,.btn,.iconbtn,.stepbtn,.rulespill,.chippress,.navbtn,.gchip,.xbtn,.acts>button,.qa,.chipbtn,.opt,.switch,.switch::after,.pillrail,.pillrail .rulespill,.bar,.shoe-t i{transition:none!important}.tabs button.on::after,.cmdk,.cmdk-wrap,.syncpill,.rise,.shoe.go,.pop,.glow{animation:none!important}.sheet,.rulesdlg,.rulesscrim{animation:none!important}.card::after{display:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}.sheetwrap,.sheetwrap.out,.sheetwrap.out .sheet{animation:none}.drawline,.wipex,.fadein,.popin,.bary,.barx,.barlab{animation:none!important}
 .mcal button.d{transition:none}.mcal button.d:hover{transform:none}.cmdk,.cmdk-wrap{animation:none}.feltprint{transition:none}.chipseg.slide .thumb{transition:none}.dcol>section,.sheetwrap .sheet,.splash *,.rise>div>section,.rise>section,.growy,.drawline,.navbtn.on .navicon svg{animation:none!important;stroke-dashoffset:0}.splash.go{animation-delay:1s}.splash.go .sp-tile{animation:spfade .36s ease both!important}.splash.go .sp-chip{animation:spfade .32s ease .2s both!important}.splash.go .sp-word{animation:spfade .32s ease .32s both!important}.splash.go .sp-tag{animation:spfade .32s ease .42s both!important}.bar,.btn,.dealt,.rise,.opt,.shake,.shoe.go,.shoe-t i,.shimmer::after,.chipbtn,.pop,.burst i{transition:none;animation:none;transform:none}}
+/* ---- Third pass: finish ----
+   Nick: "make the whole appearance better desktop and mobile sleek clean smooth motion everything very polished".
+   (1) Charts are drawn at their real width (useBoxW), so a label or a line is one size on every screen;
+   (2) the Train tab row has one underline that slides; (3) the count on the trainer's felt can't run under the cards
+   on a phone; (4) the chart readout glides from session to session. */
+.tcrc .s{display:none}
+@media (max-width:1023px){.tcpill{max-width:calc(100% - 40px - 180px * var(--cz,1));white-space:nowrap}.tcpill .tcrc{display:block;font-size:12px;line-height:1.3}.tcrc .l{display:none}.tcrc .s{display:inline}}
+.ttabs{position:relative}.ttabs button.on::after{display:none}
+.tink{position:absolute;left:0;bottom:0;width:100px;height:2px;border-radius:2px;background:var(--brass);transform-origin:0 50%;opacity:0;transition:transform .46s var(--ez-slide),opacity .2s var(--ez);pointer-events:none;will-change:transform}
+.pnlhov,.pnlhov circle{transition:transform .2s var(--ez)}
+@keyframes tipin{from{opacity:0}to{opacity:1}}
+:root[data-theme="light"] input.in[type=date]{color-scheme:light}
+@media (min-width:1180px){.sesspage .trow.mb-3{margin-bottom:20px}}
+/* a phone: beside the two longest titles the rules pill gives up its arrow so the rules still fit; on the smallest phones a three-way switch steps its labels down instead of cutting them short */
+@media (max-width:1023px){.shell>header.tight{gap:8px}.shell>header.tight .rulespill{gap:0;padding-right:11px}.shell>header.tight .rulespill svg{display:none}}
+@media (max-width:370px){.chipseg.slide button{font-size:12px;padding-left:3px;padding-right:3px}}
+@media (max-width:430px){.btrow.eyebrow{letter-spacing:.07em}}
+@media (prefers-reduced-motion:reduce){.tink,.pnltip,.pnlhov,.pnlhov circle{transition:none!important}.pnltip{animation:none!important}}
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -1530,8 +1549,8 @@ function Table({ cards, dealer, tc, rcs, qkey, leaving }) {
         </div>
       </div>
       {tc !== undefined && (
-        <div className="absolute left-4 bottom-4 rounded-lg px-3 py-1.5 mono text-sm" style={{ background: "rgba(0,0,0,.55)", border: "1px solid rgba(var(--acc),.4)" }}>
-          TC <span style={{ color: "var(--brass)" }}>{rcs != null && tc === 0 ? "0" : fmtTC(tc)}</span>{rcs != null && <span style={{ color: "var(--ivory-d)" }}> · running count <span style={{ color: "var(--brass)" }}>{rcsWord(rcs)}</span></span>}
+        <div className="tcpill absolute left-4 bottom-4 rounded-lg px-3 py-1.5 mono text-sm" style={{ background: "rgba(0,0,0,.55)", border: "1px solid rgba(var(--acc),.4)" }}>
+          TC <span style={{ color: "var(--brass)" }}>{rcs != null && tc === 0 ? "0" : fmtTC(tc)}</span>{rcs != null && <span className="tcrc" style={{ color: "var(--ivory-d)" }}><span className="l"> · running count </span><span className="s">RC </span><span style={{ color: "var(--brass)" }}>{rcsWord(rcs)}</span></span>}
         </div>
       )}
     </div>
@@ -2103,7 +2122,7 @@ function Trainer({ rules, setRules, spread }) {
 
   const masteryCard = (
       <section className="card p-5 mb-4">
-        <div className="flex items-baseline justify-between">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <div className="eyebrow">Mastery</div>
           <div className="text-xs mono" style={{ color: "var(--muted)" }}>{mastered}/{pool.length} locked in ({pool.length ? Math.round((mastered / pool.length) * 100) : 0}%) · {seen} seen · {pool.filter((c) => prog[c.id]?.due <= qn).length} due</div>
         </div>
@@ -3108,6 +3127,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const [insured, setInsured] = useState(false);
   const [phantom, setPhantom] = useState(null);
   const [msg, setMsg] = useState(null); // {ok, title, body}
+  const ctlBox = useGlideH(phase + "|" + (msg ? msg.title + (msg.body || "") : "")); // the controls' height glides between phases
   const [mistakes, setMistakes] = useState([]);
   const [byTc, setByTc] = useState({}); const [tcSnap, setTcSnap] = useState({}); const tcR = useRef({}); const betTc = useRef(0); // see tally()
   const wide = useWide();
@@ -3440,6 +3460,9 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
             <div className="mono font-semibold" style={{ fontSize: 17, color: stats.net > 0 ? "var(--brass)" : stats.net < 0 ? "var(--neg-l)" : "var(--ivory)" }}>{sgnCash(netAnim)}</div>
           </div>
         </div>
+        {/* the message and the controls change height with every phase of a hand: the card glides to its new size
+            instead of jumping, so what sits under the table isn't thrown up and down all through a hand */}
+        <div ref={ctlBox} style={{ display: "flow-root" }}>
         {/* message */}
         <div className={msg ? "mt-3" : ""}>
           {msg && <div className="rounded-xl px-4 py-3 rise" style={{ background: msg.ok ? "rgba(var(--acc),.08)" : "rgba(var(--neg),.12)" }}>
@@ -3484,6 +3507,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
             <button className="btn mt-3" onClick={checkCount}>Check</button>
           </div>
         )}
+        </div>
       </section>
       {wide && tcRows.length > 0 && (
         <section className="card p-5 mb-4">
@@ -4055,10 +4079,28 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
 }
 
 // ======================= progress =======================
+// A chart drawn at its real width: one SVG unit is one screen pixel, so its lines and labels are the same size on a
+// phone and on a computer. (A 320-unit chart stretched across a 505px card drew its 9px labels at 14px and its line
+// half as thick again as everywhere else.) Put the ref on a full-width block around the <svg>; a callback ref, so a
+// chart that only appears later (two sessions logged) is still measured.
+function useBoxW(def = 320) {
+  const [w, setW] = useState(def), ro = useRef(null);
+  const ref = useCallback((n) => {
+    if (ro.current) { ro.current.disconnect(); ro.current = null; }
+    if (!n) return;
+    // a change under 14px is let go (the <svg> scales that last couple of per cent): a scroll bar coming or going
+    // must not resize the chart, since a chart that changes height can bring the scroll bar back
+    const set = () => { const v = Math.round(n.clientWidth); if (v > 0) setW((o) => (Math.abs(o - v) < 14 ? o : v)); };
+    set();
+    if (typeof ResizeObserver !== "undefined") { ro.current = new ResizeObserver(set); ro.current.observe(n); }
+  }, []);
+  return [ref, w];
+}
 function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
   const [hov, setHov] = useState(null); // the session under the mouse (a mouse only: a finger scrolls the page)
+  const [box, bw] = useBoxW(320);
   if (sessions.length < 2) return null;
-  const W = 320, H = 150, P = { l: 6, r: 6, t: 14, b: 18 };
+  const W = Math.max(240, bw), H = W >= 460 ? 196 : 150, P = { l: 6, r: 6, t: 18, b: 20 };
   let ch = 0, cr = 0, ce = 0, cv = 0;
   const pts = sessions.map((x) => { const h = +x.hours || 0; ch += h; cr += x.result; ce += sessEv(x, evHour) * h; cv += Math.pow(sessSd(x, sdHour), 2) * h; return { h: ch, act: cr, exp: ce, sd: Math.sqrt(cv) }; });
   pts.unshift({ h: 0, act: 0, exp: 0, sd: 0 });
@@ -4075,21 +4117,22 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
   const hi_ = hov != null && hov >= 1 && hov < pts.length ? hov : null, hs = hi_ ? sessions[hi_ - 1] : null;
   const onMove = (e) => { if (e.pointerType !== "mouse") return; const b = e.currentTarget.getBoundingClientRect(); const f = ((e.clientX - b.left) / b.width * W - P.l) / (W - P.l - P.r); setHov(Math.max(1, Math.min(pts.length - 1, Math.round(f * (pts.length - 1))))); };
   return (
-    <div className="mb-4 pnlwrap">
-      {hs && <div className="pnltip" style={{ left: `${Math.max(20, Math.min(80, (x(hi_) / W) * 100))}%` }}><b>{dateShort(hs.date)}</b>{hs.where ? ` · ${hs.where}` : ""}<br /><span className="mono" style={{ color: hs.result >= 0 ? "var(--brass)" : "var(--neg-l)" }}>{sgnMoney(hs.result)}</span> in {fmtH(+hs.hours || 0)} · total <b className="mono">{sgnMoney(pts[hi_].act)}</b></div>}
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ display: "block", cursor: onExpand ? "zoom-in" : undefined }} role="img" aria-label="Cumulative results vs expectation" onClick={onExpand} onPointerMove={onMove} onPointerLeave={() => setHov(null)}>
+    <div className="mb-4 pnlwrap" ref={box}>
+      {/* the readout and the guide ride a transform, so they glide from one session to the next */}
+      {hs && <div className="pnltip" style={{ transform: `translateX(calc(${Math.round(Math.max(104, Math.min(W - 104, x(hi_))))}px - 50%))` }}><b>{dateShort(hs.date)}</b>{hs.where ? ` · ${hs.where}` : ""}<br /><span className="mono" style={{ color: hs.result >= 0 ? "var(--brass)" : "var(--neg-l)" }}>{sgnMoney(hs.result)}</span> in {fmtH(+hs.hours || 0)} · total <b className="mono">{sgnMoney(pts[hi_].act)}</b></div>}
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} style={{ display: "block", cursor: onExpand ? "zoom-in" : undefined }} role="img" aria-label="Cumulative results vs expectation" onClick={onExpand} onPointerMove={onMove} onPointerLeave={() => setHov(null)}>
         <line x1={P.l} x2={W - P.r} y1={y(0)} y2={y(0)} stroke="rgba(var(--fg),.14)" strokeWidth="1" />
         {/* keyed by what is drawn, so a new filter or a new session plays the trace again */}
         <g key={`${pts.length}|${last.act}|${last.exp}`}>
         <path className="fadein" d={band} fill="rgba(var(--acc),.07)" style={{ animationDuration: ".4s" }} />
         <path className="fadein" d={line("exp")} fill="none" stroke="rgba(var(--fg),.4)" strokeWidth="1.5" strokeDasharray="3 4" style={{ animationDelay: ".1s" }} />
-        <path className="drawline" pathLength="1" d={line("act")} fill="none" stroke={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
+        <path className="drawline" pathLength="1" d={line("act")} fill="none" stroke={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         <circle className="popin late" cx={x(pts.length - 1)} cy={y(last.act)} r="3.5" fill={last.act >= last.exp - last.sd ? "var(--brass)" : "var(--rose)"} />
         <text className="fadein late" style={{ font: "600 11px Inter", animationDuration: ".3s", opacity: hi_ ? 0 : undefined }} x={x(pts.length - 1) - 4} y={y(last.act) - 8} textAnchor="end" fill="var(--ivory)">{last.act >= 0 ? "+" : "−"}${Math.abs(last.act).toLocaleString()}</text>
         </g>
-        {hi_ && <g pointerEvents="none"><line x1={x(hi_)} x2={x(hi_)} y1={P.t - 4} y2={H - P.b} stroke="rgba(var(--fg),.28)" strokeWidth="1" /><circle cx={x(hi_)} cy={y(pts[hi_].act)} r="4" fill="var(--bg2)" stroke="var(--ivory)" strokeWidth="1.75" /></g>}
-        <text x={P.l} y={H - 4} fill="var(--muted)" style={{ font: "500 9px Inter" }}>0h</text>
-        <text x={W - P.r} y={H - 4} textAnchor="end" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{fmtH(last.h)}</text>
+        {hi_ && <g className="pnlhov" pointerEvents="none" style={{ transform: `translateX(${x(hi_).toFixed(1)}px)` }}><line x1="0" x2="0" y1={P.t - 6} y2={H - P.b} stroke="rgba(var(--fg),.28)" strokeWidth="1" /><circle cx="0" cy="0" r="4" fill="var(--bg2)" stroke="var(--ivory)" strokeWidth="1.75" style={{ transform: `translateY(${y(pts[hi_].act).toFixed(1)}px)` }} /></g>}
+        <text x={P.l} y={H - 4} fill="var(--muted)" style={{ font: "500 10px Inter" }}>0h</text>
+        <text x={W - P.r} y={H - 4} textAnchor="end" fill="var(--muted)" style={{ font: "500 10px Inter" }}>{fmtH(last.h)}</text>
       </svg>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] mt-1" style={{ color: "var(--muted)" }}>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 2, background: "var(--brass)", display: "inline-block", borderRadius: 1 }} /> actual</span>
@@ -4644,7 +4687,7 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
         </div>
         <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24, color: amt ? (f.won ? "var(--brass)" : "var(--neg-l)") : undefined }} type="number" inputMode="decimal" placeholder="0" value={f.result} onChange={(e) => set("result", e.target.value)} /></div>
       </div>
-      <input className="in mb-3" placeholder="Notes — heat, rules, mistakes you noticed" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
+      <input className="in mb-3" placeholder="Notes: heat, rules, mistakes" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
       <More open={more} onClick={() => setMore(!more)} className="mb-3">{more ? "Fewer details" : "More details — lowest point, table, heat"}</More>
       <Fold open={more}>
         <div className="rounded-xl p-3 mb-4 space-y-3" style={{ background: "rgba(var(--fg),.035)" }}>
@@ -4673,22 +4716,24 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
 
 function LuckGauge({ z, pct }) {
   // the marker starts at "expected" and rides the curve out to where you are; in Live play it glides hand to hand
-  const W = 300, H = 74, base = 60, zz = useTween(Math.max(-3.2, Math.min(3.2, isFinite(z) ? z : 0)), 620, 0);
+  const [box, bw] = useBoxW(300); // drawn at its real width (see useBoxW)
+  const W = Math.max(220, bw), H = W >= 460 ? 98 : 74, base = H - 14, zz = useTween(Math.max(-3.2, Math.min(3.2, isFinite(z) ? z : 0)), 620, 0);
   const xOf = (v) => 10 + ((v + 3.5) / 7) * (W - 20);
-  const yOf = (v) => base - Math.exp(-(v * v) / 2) * 48;
+  const yOf = (v) => base - Math.exp(-(v * v) / 2) * (base - 12);
+  const lf = W >= 360 ? 10 : 9;
   let curve = "", fillL = `M${xOf(-3.5)},${base}`;
   for (let v = -3.5; v <= 3.5001; v += 0.1) { curve += `${curve ? "L" : "M"}${xOf(v).toFixed(1)},${yOf(v).toFixed(1)}`; if (v <= zz) fillL += `L${xOf(v).toFixed(1)},${yOf(v).toFixed(1)}`; }
   fillL += `L${xOf(zz).toFixed(1)},${yOf(zz).toFixed(1)}L${xOf(zz).toFixed(1)},${base}Z`;
   const col = pct < 0.1 ? "var(--rose)" : pct > 0.9 ? "var(--brass)" : "var(--ivory)";
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" role="img" aria-label={`Luck percentile ${Math.round(pct * 100)}`}>
+    <div ref={box}><svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className="block" role="img" aria-label={`Luck percentile ${Math.round(pct * 100)}`}>
       <path d={fillL} fill="rgba(var(--acc),.16)" />
       <path className="drawline" pathLength="1" d={curve} fill="none" stroke="rgba(var(--fg),.35)" strokeWidth="1.5" style={{ animationDuration: ".52s", animationDelay: "0s" }} />
       <line x1={xOf(-3.5)} x2={xOf(3.5)} y1={base} y2={base} stroke="rgba(var(--fg),.15)" />
-      {[-2, -1, 0, 1, 2].map((v) => <text key={v} x={xOf(v)} y={H - 2} textAnchor="middle" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{v === 0 ? "expected" : `${v > 0 ? "+" : "−"}${Math.abs(v)} SD`}</text>)}
+      {[-2, -1, 0, 1, 2].map((v) => <text key={v} x={xOf(v)} y={H - 2} textAnchor="middle" fill="var(--muted)" style={{ font: `500 ${lf}px Inter` }}>{v === 0 ? "expected" : `${v > 0 ? "+" : "−"}${Math.abs(v)} SD`}</text>)}
       <line x1={xOf(zz)} x2={xOf(zz)} y1={yOf(zz) - 10} y2={base} stroke={col} strokeWidth="2" />
       <circle cx={xOf(zz)} cy={yOf(zz) - 12} r="4" fill={col} />
-    </svg>
+    </svg></div>
   );
 }
 
@@ -4735,22 +4780,24 @@ function MonthCal({ k, list, onOpen }) {
 }
 
 function MonthBars({ months, sel, onPick }) {
+  const [box, boxW] = useBoxW(320); // drawn at its real width (see useBoxW)
   if (months.length < 2) return null;
   const up = Math.max(0, ...months.map((m) => m.net)), dn = Math.max(0, ...months.map((m) => -m.net));
-  const H = dn && up ? 132 : 104, W = 320, P = { t: 14, b: 18 }, lab = 13; // room for the value label on each side that has bars
+  const W = Math.max(240, boxW), big = W >= 460, lf = W >= 360 ? 10 : 9;
+  const H = (dn && up ? 132 : 104) + (big ? 26 : 0), P = { t: 14, b: 20 }, lab = 14; // room for the value label on each side that has bars
   const span = H - P.t - P.b - (up ? lab : 0) - (dn ? lab : 0), sc = span / Math.max(1, up + dn);
-  const bw = (W / months.length) * 0.62, y0 = P.t + (up ? lab : 0) + up * sc;
+  const bw = Math.min((W / months.length) * 0.62, 72), y0 = P.t + (up ? lab : 0) + up * sc; // a bar is never wider than 72px: three months on a wide card were three slabs
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" role="img" aria-label="Results by month">
+    <div ref={box}><svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className="block" role="img" aria-label="Results by month">
       <line x1="0" x2={W} y1={y0} y2={y0} stroke="rgba(var(--fg),.15)" />
       {months.map((m, i) => { const cw = W / months.length, cx = (i + 0.5) * cw, h = Math.max(1.5, Math.abs(m.net) * sc); const pick = onPick ? { className: "mbar", role: "button", tabIndex: 0, "aria-pressed": sel === m.k, "aria-label": `${monthName(m.k)}: show the days`, onClick: () => onPick(m.k), onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPick(m.k); } } } : {}; return (
         <g key={m.k} {...pick} style={{ opacity: sel && sel !== m.k ? 0.38 : 1, transition: "opacity .2s var(--ez)" }}>
           {onPick && <rect x={cx - cw / 2 + 1} width={cw - 2} y="1" height={H - 2} rx="6" fill={sel === m.k ? "rgba(var(--fg),.05)" : "transparent"} />}
-          <rect className="growy" style={{ transformOrigin: m.net >= 0 ? "50% 100%" : "50% 0%", animationDelay: `${i * 0.04}s` }} x={cx - bw / 2} width={bw} y={m.net >= 0 ? y0 - h : y0} height={h} rx="3" fill={m.net >= 0 ? "var(--brass)" : "var(--rose)"} opacity=".9" />
-          {months.length <= 8 && <text x={cx} y={m.net >= 0 ? y0 - h - 4 : y0 + h + 10} textAnchor="middle" fill="var(--ivory-d)" style={{ font: "600 9px Inter" }}>{shortMoney(m.net)}</text>}
-          <text x={cx} y={H - 3} textAnchor="middle" fill="var(--muted)" style={{ font: "500 9px Inter" }}>{monthName(m.k, true)}</text>
+          <rect className="growy" style={{ transformOrigin: m.net >= 0 ? "50% 100%" : "50% 0%", animationDelay: `${i * 0.04}s` }} x={cx - bw / 2} width={bw} y={m.net >= 0 ? y0 - h : y0} height={h} rx={big ? 5 : 3} fill={m.net >= 0 ? "var(--brass)" : "var(--rose)"} opacity=".9" />
+          {(months.length <= 8 || W / months.length >= 44) && <text x={cx} y={m.net >= 0 ? y0 - h - 5 : y0 + h + 11} textAnchor="middle" fill="var(--ivory-d)" style={{ font: `600 ${lf}px Inter` }}>{shortMoney(m.net)}</text>}
+          <text x={cx} y={H - 4} textAnchor="middle" fill="var(--muted)" style={{ font: `500 ${lf}px Inter` }}>{monthName(m.k, true)}</text>
         </g>); })}
-    </svg>
+    </svg></div>
   );
 }
 
@@ -4771,12 +4818,13 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
   const [sheet, setSheet] = useState(null); // null | "new" | session
   const wide = useWide();
   const [calPick, setCalPick] = useState(null);   // the month whose days are open under "By month" (wide screens only)
+  const calShown = useRef(null);                   // the month last open, kept while its calendar folds shut
   const [spreadFor, setSpreadFor] = useState(null); // { id, cfg, current } — the spread/rules prompt after logging
   const [period, setPeriod] = useState("all");
   const [casino, setCasino] = useState("all");
   const [pnlFull, setPnlFull] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  const histRef = useGlideH(showAll);
+  const histRef = useGlideH(showAll + "|" + period + "|" + casino); // "Show all" and a change of filter: the list glides to its new length
   const [exportMsg, setExportMsg] = useState(null);
   useEffect(() => { if (_openLog) { _openLog = false; setSheet("new"); } }, []);
   useNav((o) => { if (o.log) setSheet("new"); });
@@ -4828,6 +4876,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
     return [...m.values()].sort((a, b) => a.k.localeCompare(b.k)).slice(-12);
   }, [list]);
   const calMonth = wide && calPick && months.some((m) => m.k === calPick) ? calPick : null;
+  if (calMonth) calShown.current = calMonth;
   const lows = list.filter((s) => s.low != null && +s.hours > 0);
   const lowCheck = useMemo(() => {
     if (!lows.length) return null;
@@ -4990,7 +5039,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
           <section className="card p-5 mb-4">
             <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">By month</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{`${months.length} months`}</div></div>
             <MonthBars months={months} sel={calMonth} onPick={wide ? (k) => setCalPick(calPick === k ? null : k) : undefined} />
-            {calMonth && <MonthCal key={calMonth} k={calMonth} list={list} onOpen={setSheet} />}
+            <Fold open={!!calMonth}>{calShown.current && <MonthCal key={calShown.current} k={calShown.current} list={list} onOpen={setSheet} />}</Fold>
           </section>
         )}
 
@@ -5988,8 +6037,20 @@ function TrainTabs({ tab, go }) {
   const [, bump] = useState(0);
   useNav(() => bump((n) => n + 1)); // the palette or a shortcut moved within Train
   const cur = tab === "train" ? _trainView : _lastDrill;
+  // one underline for the whole row: it slides to the tab that was picked (a selection that travels, so --ez-slide)
+  const row = useRef(null), ink = useRef(null), placed = useRef(false);
+  const place = useCallback(() => {
+    const n = row.current, k = ink.current; if (!n || !k) return;
+    const b = n.querySelector("button.on"); if (!b) { k.style.opacity = "0"; return; }
+    const to = `translateX(${b.offsetLeft}px) scaleX(${(b.offsetWidth / 100).toFixed(4)})`;
+    if (!placed.current) { k.style.transition = "none"; k.style.transform = to; k.style.opacity = "1"; void k.offsetWidth; k.style.transition = ""; placed.current = true; }
+    else { k.style.transform = to; k.style.opacity = "1"; }
+  }, []);
+  useLayoutEffect(place);
+  useEffect(() => { let on = true; const again = () => { if (on) { placed.current = false; place(); } }; if (document.fonts && document.fonts.ready) document.fonts.ready.then(again); window.addEventListener("resize", again); return () => { on = false; window.removeEventListener("resize", again); }; }, [place]);
   return (
-    <div className="tabs ttabs" role="tablist" aria-label="Train">
+    <div ref={row} className="tabs ttabs" role="tablist" aria-label="Train">
+      <span ref={ink} className="tink" aria-hidden="true" />
       {TRAIN_TABS.map((t, i) => { if (!t) return <span key={i} className="tsep" aria-hidden="true" />; const on = tab === t[0] && cur === t[1]; return (
         <button key={t[1]} role="tab" aria-selected={on} className={on ? "on" : ""} onClick={() => { go(t[0], t[0] === "train" ? { trainView: t[1] } : { drill: t[1] }); bump((n) => n + 1); }}>{t[2]}</button>); })}
     </div>
@@ -6259,7 +6320,7 @@ function BetSpreadCalculator() {
       {keysOpen && <ShortcutsSheet onClose={() => setKeysOpen(false)} mac={isMac} />}
       <div ref={shellRef} className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s var(--ez)", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
-        <header className="mb-5 flex items-end justify-between gap-3">
+        <header className={"mb-5 flex items-end justify-between gap-3" + (pageTitle.length > 12 ? " tight" : "")}>
           <div className="shrink-0">
             {tab === "progress" && <div className="eyebrow mb-1.5">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>}
             {backBtn}
