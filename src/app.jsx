@@ -1184,20 +1184,14 @@ body{background:none}
 @media (min-width:640px){.btn.tdgo{flex:none;width:auto;padding:0 24px}.tdtitle{font-size:22px}.tdring{width:72px;height:72px}.today .pbar{height:72px}.today .pdays{gap:6px}.tdacts{grid-template-columns:repeat(4,auto);justify-content:space-around}.today .qa{flex-direction:row;gap:11px;font-size:12.5px}.qai{width:44px;height:44px}}
 /* ---- The table, richer ------------------------------------------------------------------------------------------
    Nick asked for a richer table and cards. The felt has a rail round it and the nap of the cloth (a tile painted by
-   src/smooth.js), cards carry the suit under the rank in both corners, court cards are drawn (Court), the backs are a
-   lattice with a medallion, totals sit on pills and a bet is a stack of chips. */
+   src/smooth.js), totals sit on pills and a bet is a stack of chips. The cards themselves are as they were: new
+   faces and backs were tried and Nick preferred the old ones. */
 .felt{--rail:#17110D;background-image:var(--feltgrain,none),var(--feltimg,radial-gradient(120% 90% at 50% 0%,var(--felt1) 0%,var(--felt2) 60%,var(--felt3) 100%));background-size:160px 160px,100% 100%;background-repeat:repeat,no-repeat}
 @supports (color:color-mix(in srgb,red,blue)){.felt{--rail:color-mix(in srgb,var(--felt3) 38%,#120C08)}}
 .felt,:root:not([data-theme="light"]) .felt{box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),inset 0 0 0 5px var(--rail),inset 0 0 0 6px rgba(0,0,0,.5),inset 0 0 0 7px rgba(255,255,255,.07),inset 0 26px 44px -22px rgba(0,0,0,.55),inset 0 -30px 50px -30px rgba(0,0,0,.34)}
 :root[data-theme="onyx"] .felt{box-shadow:inset 0 0 0 1px rgba(212,175,55,.34),inset 0 0 0 5px var(--rail),inset 0 0 0 6px rgba(212,175,55,.22),inset 0 26px 44px -22px rgba(0,0,0,.55),inset 0 -30px 50px -30px rgba(0,0,0,.34)}
 .feltprint{opacity:.2}.felt.busy .feltprint{opacity:.07}
 .feltprint .fp-i{font-size:6.6px;letter-spacing:.34em}
-.pc{box-shadow:0 0 0 1px rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.95) inset,0 -1px 0 rgba(120,100,60,.18) inset,0 2px 3px -1px rgba(0,0,0,.4),0 16px 26px -12px rgba(0,0,0,.75)}
-.pc .cn svg.suit{width:9px;height:9px;margin-top:2px}
-.pc.sm .cn svg.suit{width:7px;height:7px;margin-top:1.5px}
-.pc.big .cn svg.suit{width:13px;height:13px;margin-top:3px}
-.pc .court{position:absolute;left:22%;right:22%;top:17.5%;bottom:17.5%;width:56%;height:65%;overflow:visible;font-family:Fraunces,Georgia,serif}
-.pcback{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23F6EFE2' d='M50 4C50 4 9 34 9 59c0 13 10 22 21 22 7.5 0 13-3.5 16.5-9C45.5 83 41 91 34 97h32c-7-6-11.5-14-12.5-25 3.5 5.5 9 9 16.5 9 11 0 21-9 21-22C91 34 50 4 50 4z'/%3E%3C/svg%3E") center/17% auto no-repeat,radial-gradient(circle closest-side at 50% 50%,var(--back1) 0 40%,#F6EFE2 41.5% 45%,transparent 46.5%),repeating-linear-gradient(45deg,transparent 0 5px,rgba(246,239,226,.2) 5px 5.8px),repeating-linear-gradient(-45deg,var(--back1) 0 5px,var(--back2) 5px 5.8px);box-shadow:inset 0 0 0 4px #F6EFE2,inset 0 0 0 4.8px rgba(0,0,0,.3),inset 0 0 0 7px var(--back1),inset 0 0 0 7.7px rgba(246,239,226,.5),0 0 0 1px rgba(0,0,0,.45),0 8px 18px -8px rgba(0,0,0,.85)}
 .totpill{font-size:11px;font-weight:600;line-height:1;padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.36);color:var(--ivory);box-shadow:inset 0 0 0 var(--hair) rgba(255,255,255,.16);white-space:nowrap}
 .totpill.win{background:rgba(var(--acc),.24);color:var(--acc-hi,var(--brass))}
 .totpill.loss{background:rgba(var(--neg),.2);color:var(--neg-l)}
@@ -1495,26 +1489,6 @@ const SUIT_PATHS = {
   "♣": <><circle cx="50" cy="27" r="20.5" /><circle cx="26.5" cy="58" r="20.5" /><circle cx="73.5" cy="58" r="20.5" /><circle cx="50" cy="52" r="11" /><path d="M46 56c0 18-5 31-13 41h34c-8-10-13-23-13-41z" /></>,
 };
 function Suit({ s }) { return <svg className="suit" viewBox="0 0 100 100" aria-hidden="true">{SUIT_PATHS[s]}</svg>; }
-// A court card: a framed panel that reads the same both ways up — a crown, the letter, the crown again upside down, and
-// the suit in two corners. Each rank has its own crown (a jack's band and jewel, a queen's pearls, a king's cross).
-// Drawn in the card's own colour with gold, on a 61 x 100 box the css stretches over the middle of the card.
-const GOLD = "#BF9A45";
-const CROWNS = {
-  J: <><path d="M5 17V10H35V17Z" fill={GOLD} /><path d="M20 0l5.5 6-5.5 6-5.5-6z" fill={GOLD} /><path d="M5 13.5H35" fill="none" /></>,
-  Q: <><path d="M4 17L1 6l11 5 8-8 8 8 11-5-3 11z" fill={GOLD} /><circle cx="1" cy="5" r="2" fill="currentColor" stroke="none" /><circle cx="20" cy="2" r="2" fill="currentColor" stroke="none" /><circle cx="39" cy="5" r="2" fill="currentColor" stroke="none" /></>,
-  K: <><path d="M2 17V5l9 6 9-9 9 9 9-6v12z" fill={GOLD} /><path d="M2 13.5H38M20-4.5V1M17.3-2H22.7" fill="none" /></>,
-};
-function Court({ label, suit }) {
-  const half = <><g transform="translate(18.1 17) scale(.62)" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round">{CROWNS[label]}</g><svg x="7.5" y="7.5" width="9" height="9" viewBox="0 0 100 100">{SUIT_PATHS[suit]}</svg></>;
-  return (
-    <svg className="court" viewBox="0 0 61 100" preserveAspectRatio="none" aria-hidden="true" fill="currentColor">
-      <rect x=".8" y=".8" width="59.4" height="98.4" rx="3.5" fillOpacity=".05" stroke="currentColor" strokeWidth="1.2" strokeOpacity=".8" />
-      <rect x="4" y="4" width="53" height="92" rx="2" fill="none" stroke={GOLD} strokeWidth=".8" />
-      {half}<g transform="rotate(180 30.5 50)">{half}</g>
-      <text x="30.5" y="51" textAnchor="middle" dominantBaseline="central" fontSize="33" fontWeight="600">{label}</text>
-    </svg>
-  );
-}
 const DEAL_FLY = 0.34;   // seconds a dealt card takes to arrive unless told otherwise (the .dealt rule in the css says the same)
 function PlayingCard({ rank, suit, face, delay = 0, from = "shoe", style, big, small, fly }) {
   const red = suit === "♥" || suit === "♦";
@@ -1524,10 +1498,10 @@ function PlayingCard({ rank, suit, face, delay = 0, from = "shoe", style, big, s
   useEffect(() => { sfx("card", delay, { fly: fly || DEAL_FLY }); }, []); // eslint-disable-line
   return (
     <div className={"pc dealt " + (red ? "red " : "") + (big ? "big" : small ? "sm" : "")} style={{ "--dx": from === "shoe" ? "140px" : "0px", "--dy": "-150px", "--r0": "14deg", "--r1": style?.rot || "0deg", "--d": `${delay}ms`, ...(fly ? { animationDuration: `${fly}s` } : null), ...style }}>
-      <div className="cn tl"><b className={label === "10" ? "ten" : ""}>{label}</b><Suit s={suit} /></div>
-      <div className="cn br"><b className={label === "10" ? "ten" : ""}>{label}</b><Suit s={suit} /></div>
+      <div className="cn tl"><b className={label === "10" ? "ten" : ""}>{label}</b></div>
+      <div className="cn br"><b className={label === "10" ? "ten" : ""}>{label}</b></div>
       {rank === 11 ? <div className="face ace"><Suit s={suit} /></div>
-        : isFace ? <Court label={label} suit={suit} />
+        : isFace ? <div className="face">{label}<small><Suit s={suit} /></small></div>
         : PIPS[pipRank].map(([x, y], i) => <span key={i} className={"pip " + (y > 50 ? "flip" : "")} style={{ left: `${x}%`, top: `${y}%` }}><Suit s={suit} /></span>)}
     </div>
   );
