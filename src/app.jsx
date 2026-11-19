@@ -2880,19 +2880,7 @@ function TCDrill({ decks }) {
 
 // ======================= live play =======================
 const PLAY_KEY = "bj-play-v1";
-const PLAY_PREFS_DEF = { totals: true, count: false, checkEvery: 5, auto: false, speed: 1, hot: false };
-// "Hot shoes" (Live play, off unless switched on): of eight honest shuffles, the one that spends the most of its cards
-// at a true count of +2 or more before the cut. Nothing is stacked card by card: it is a real shuffle, just one of the
-// lucky ones, so the big bets and the count plays come up several times a shoe instead of once an evening.
-function hotShoe(decks, pen) {
-  let best = null, top = -1;
-  for (let t = 0; t < 8; t++) {
-    const cards = makeShoe(decks), cut = Math.round(cards.length * pen / 100); let rc = 0, hot = 0;
-    for (let i = 1; i < cut; i++) { rc += hilo(cards[i].rank); if (Math.trunc(rc / Math.max(0.5, (cards.length - i - 1) / 52)) >= 2) hot++; }
-    if (hot > top) { top = hot; best = cards; }
-  }
-  return best;
-}
+const PLAY_PREFS_DEF = { totals: true, count: false, checkEvery: 5, auto: false, speed: 1 };
 // Live play's keyboard shortcuts, changeable in Table settings on a computer. Stored as e.key in lower case.
 // Enter and Space always deal the next hand as well, whatever "next" is set to.
 const PLAY_KEYS_DEF = { H: "h", S: "s", D: "d", P: "p", R: "r", next: "n", insY: "y", insN: "n" };
@@ -3130,18 +3118,16 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const [checkEvery, setCheckEvery] = useState(_playPrefs.checkEvery); // hands between count checks; 0 = never
   const [autoNext, setAutoNext] = useState(_playPrefs.auto);
   const [speed, setSpeed] = useState(_playPrefs.speed);                // 0.55 fast … 1.5 relaxed, multiplies every deal timing
-  const [hot, setHot] = useState(!!_playPrefs.hot);                    // hot shoes: see hotShoe
-  const hotR = useRef(hot); hotR.current = hot;
   const [keys, setKeys] = useState(() => playKeysOf(_playPrefs.keys));   // keyboard shortcuts (see PLAY_KEYS_DEF)
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   useEffect(() => { (async () => {
     try { const r = await window.storage.get(PLAY_KEY, false); if (r?.value) { const d = { ...PLAY_PREFS_DEF, ...JSON.parse(r.value) };
-      setShowTotals(!!d.totals); setShowCount(!!d.count); setCheckEvery(d.checkEvery); setAutoNext(!!d.auto); setSpeed(d.speed); setHot(!!d.hot); setKeys(playKeysOf(d.keys)); } } catch (_) {}
+      setShowTotals(!!d.totals); setShowCount(!!d.count); setCheckEvery(d.checkEvery); setAutoNext(!!d.auto); setSpeed(d.speed); setKeys(playKeysOf(d.keys)); } } catch (_) {}
     setPrefsLoaded(true); })(); }, []);
   useEffect(() => {
-    _playPrefs = { totals: showTotals, count: showCount, checkEvery, auto: autoNext, speed, hot, keys };
+    _playPrefs = { totals: showTotals, count: showCount, checkEvery, auto: autoNext, speed, keys };
     if (prefsLoaded) { try { window.storage.set(PLAY_KEY, JSON.stringify(_playPrefs), false); } catch (_) {} }
-  }, [showTotals, showCount, checkEvery, autoNext, speed, hot, keys, prefsLoaded]);
+  }, [showTotals, showCount, checkEvery, autoNext, speed, keys, prefsLoaded]);
   const ms = (x) => Math.round(x * speed);
   const speedIdx = DEAL_SPEEDS.reduce((b, [v], i) => (Math.abs(v - speed) < Math.abs(DEAL_SPEEDS[b][0] - speed) ? i : b), 0);   // the nearest stop, whatever was saved
   const [shuffled, setShuffled] = useState(false);
@@ -3187,7 +3173,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
   const dealerTick = useRef(null);
   useEffect(() => () => clearTimeout(dealerTick.current), []);
 
-  const newShoe = () => { const cards = hotR.current ? hotShoe(decks, pen) : makeShoe(decks); return { cards, pos: 1, cut: Math.round(cards.length * pen / 100), rc: 0, hot: hotR.current }; };
+  const newShoe = () => { const cards = makeShoe(decks); return { cards, pos: 1, cut: Math.round(cards.length * pen / 100), rc: 0 }; };
   useEffect(() => { sh.current = newShoe(); setShoe({ ...sh.current }); }, [decks, pen]); // eslint-disable-line
   // One or two decks cut deep can run out of cards in the middle of a round (it used to stop the table dead). Like a
   // dealer who shuffles the discards to finish the hand: the round is completed from a fresh shuffle, the count carries
@@ -3544,7 +3530,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           </div>
           <p className="text-xs mt-1 mb-2" style={{ color: "var(--ivory-d)" }}>Over {view.hands} hand{view.hands === 1 ? "" : "s"} your spread expects {sgnCash(run.exp)}. You're at {sgnCash(view.net)}.</p>
           <LuckGauge z={run.z} pct={run.pct} />
-          <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>{hot ? "Hot shoes are on: they win more than real shoes do, so this runs ahead of what a casino would give you." : view.hands < 200 ? "A stretch this short is mostly luck — the curve shows how wide normal is." : "Priced at your current spread, so older hands on a different spread are an approximation."}</p>
+          <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>{view.hands < 200 ? "A stretch this short is mostly luck — the curve shows how wide normal is." : "Priced at your current spread, so older hands on a different spread are an approximation."}</p>
         </section>
       )}
 
@@ -3557,7 +3543,6 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <Toggle label="Show hand totals" on={showTotals} onChange={setShowTotals} />
           <Toggle label="Show the running count" sub="Hidden is how you'll play in a casino" on={showCount} onChange={setShowCount} />
           <Toggle label="Deal the next hand automatically" sub="The wait follows the dealing speed. You still place the bet." on={autoNext} onChange={setAutoNext} />
-          <Toggle label="Hot shoes" sub="Shoes where the count climbs, so big bets and count plays come up. From the next shuffle." on={hot} onChange={setHot} />
           <SoundToggle />
         </div>
         <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
@@ -4633,10 +4618,6 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
   useEffect(() => { _logWhere = ""; _logPre = null; }, []);
   const [more, setMore] = useState(editing && (initial.low != null || initial.heat && initial.heat !== "none" || initial.seats));
   const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
-  // "Bought in / cashed out" (under More details): the two numbers you know walking away. Typing both fills in the
-  // result; they aren't saved themselves.
-  const [buy, setBuy] = useState({ in: "", out: "" });
-  const setBuyK = (k, v) => { const n = { ...buy, [k]: v }; setBuy(n); if (n.in !== "" && n.out !== "" && isFinite(+n.in) && isFinite(+n.out)) { const d = Math.round((+n.out - +n.in) * 100) / 100; setF((o) => ({ ...o, won: d >= 0, result: String(Math.abs(d)) })); } };
   const amt = Math.abs(+String(f.result).replace(/[^0-9.]/g, "")) || 0;
   const ok = (+f.hours > 0) && f.date;
   const save = () => {
@@ -4664,14 +4645,9 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
         <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24, color: amt ? (f.won ? "var(--brass)" : "var(--neg-l)") : undefined }} type="number" inputMode="decimal" placeholder="0" value={f.result} onChange={(e) => set("result", e.target.value)} /></div>
       </div>
       <input className="in mb-3" placeholder="Notes — heat, rules, mistakes you noticed" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
-      <More open={more} onClick={() => setMore(!more)} className="mb-3">{more ? "Fewer details" : "More details — buy-in, lowest point, table, heat"}</More>
+      <More open={more} onClick={() => setMore(!more)} className="mb-3">{more ? "Fewer details" : "More details — lowest point, table, heat"}</More>
       <Fold open={more}>
         <div className="rounded-xl p-3 mb-4 space-y-3" style={{ background: "rgba(var(--fg),.035)" }}>
-          <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Bought in and cashed out</span>
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              {[["in", "bought in"], ["out", "cashed out"]].map(([k, ph]) => <div key={k} className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24 }} type="number" inputMode="decimal" placeholder={ph} aria-label={ph} value={buy[k]} onChange={(e) => setBuyK(k, e.target.value)} /></div>)}
-            </div>
-            <span className="block text-[11px] mt-1" style={{ color: "var(--muted)" }}>Type both and the result fills itself in.</span></div>
           <label className="block"><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Lowest point during the session</span>
             <div className="relative mt-1"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>−$</span><input className="in mono" style={{ paddingLeft: 38 }} type="number" inputMode="decimal" placeholder="how far down you got" value={f.low} onChange={(e) => set("low", e.target.value)} /></div>
             <span className="block text-[11px] mt-1" style={{ color: "var(--muted)" }}>Checks the "bring with you" number against real dips.</span></label>
