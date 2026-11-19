@@ -605,6 +605,14 @@ input[type=range]{accent-color:var(--brass)}
 @keyframes shoe{0%,100%{transform:translateX(0)}30%{transform:translateX(-6px)}}
 .shoe.go{animation:shoe .41s var(--ez)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.histmonth{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0 6px;font-size:11px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line)}
+.histrow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 0}
+.histrow+.histrow{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
+.testlist{border-top:1px solid var(--line)}
+.testrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0}
+.testrow+.testrow{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
+.testdot{width:22px;height:22px;border-radius:99px;display:grid;place-items:center;box-shadow:inset 0 0 0 1.5px rgba(var(--fg),.2);color:var(--ink)}
+.testdot.ok{background:var(--brass);box-shadow:none}
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}
 .stats.three{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .pnote2{font-size:11.5px;line-height:1.45;border-radius:12px;padding:8px 12px;background:rgba(var(--neg),.09)}
@@ -3576,15 +3584,16 @@ function Tests({ rules, onRun }) {
       <div className="eyebrow mb-1">Ready-to-play tests</div>
       <p className="text-xs mb-4" style={{ color: "var(--ivory-d)" }}>The standards serious counters hold themselves to before sitting down. Pass all three and you're ready.</p>
       {TEST_DEFS.every((t) => best[t.id]?.pass) && (
-        <div className="rounded-xl px-4 py-3 mb-3" style={{ background: "rgba(var(--acc),.12)", border: "1px solid rgba(var(--acc),.5)" }}>
+        <div className="rounded-xl px-4 py-3 mb-3" style={{ background: "rgba(var(--acc),.1)" }}>
           <div className="font-semibold" style={{ color: "var(--brass)" }}>All three passed.</div>
           <div className="text-xs mt-0.5" style={{ color: "var(--ivory-d)" }}>Your fundamentals are casino-ready. Keep them sharp with a quick retest every week or two.</div>
         </div>
       )}
-      <div className="space-y-2">
+      <div className="testlist">
         {TEST_DEFS.map((t) => { const b = best[t.id]; return (
-          <button key={t.id} onClick={() => onRun(t.id)} className="w-full text-left rounded-xl px-4 py-3 grid items-center gap-3" style={{ gridTemplateColumns: "1fr auto", background: b?.pass ? "rgba(var(--acc),.08)" : "rgba(var(--fg),.04)", border: `1px solid ${b?.pass ? "rgba(var(--acc),.4)" : "var(--line)"}` }}>
-            <div><div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{t.name}</div><div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>{t.std}</div>
+          <button key={t.id} onClick={() => onRun(t.id)} className="testrow rowh">
+            <span className={"testdot" + (b?.pass ? " ok" : "")} aria-hidden="true">{b?.pass && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>}</span>
+            <div className="min-w-0"><div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{t.name}</div><div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>{t.std}</div>
               {b && <div className="mono text-[11px] mt-1" style={{ color: b.pass ? "var(--brass)" : "var(--neg-l)" }}>{b.pass ? "Passed" : "Best"}: {b.summary}</div>}</div>
             <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "var(--brass)" }}>{b?.pass ? "Again ›" : "Start ›"}</span>
           </button>); })}
@@ -4274,6 +4283,7 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
   // A computer shows two columns: practice on the left (focus, shortcuts, the last two weeks, skills) and the casino on
   // the right (the trip, this week's hours, sessions, the tests). Under 1180px it is one column in the phone's order,
   // set by `order` (.ph-first, .ph-last): trip, this week, tests, sessions, and Your skills last.
+  const thin = wide && !(log && log.length); // wide screen, nothing practised: the left column needs a card
   return (
     <div className="homepage"><div className="dgrid wl"><div className="dcol">
       <FocusCard log={log} go={go} />
@@ -4287,10 +4297,11 @@ function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }
         </div>
       )}
       {wide && <PracticeCard log={log} go={go} />}
+      {thin && go && <WeekCard sessions={sessions} go={go} />}
       <SkillsCard log={log} go={go} />
       </div><div className="dcol o2 hright">
       {go && <div className={timing ? "ph-first" : ""}><TripCard go={go} bankroll={bankroll} /></div>}
-      {go && <WeekCard sessions={sessions} go={go} />}
+      {go && !thin && <WeekCard sessions={sessions} go={go} />}
       <LevelPanel rules={rules} bets={bets} log={log} refreshLog={refreshLog} go={go} evHour={evHour} openSessions={() => go && go("sessions")} />
     </div></div></div>
   );
@@ -4988,10 +4999,10 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
           <div ref={histRef}>
           {groups.map((g) => { const mt = monthTot(g.k); return (
             <div key={g.k} className="mb-3">
-              <div className="flex justify-between text-[11px] font-semibold px-1 py-1.5" style={{ color: "var(--muted)" }}><span>{monthName(g.k)}</span><span className="mono">{sgnMoney(mt.net)} · {fmtH(mt.h)}</span></div>
-              <div className="rounded-xl overflow-hidden" style={{ background: "rgba(var(--fg),.03)" }}>
+              <div className="histmonth"><span>{monthName(g.k)}</span><span className="mono">{sgnMoney(mt.net)} · {fmtH(mt.h)}</span></div>
+              <div>
                 {g.items.map((s, i) => (
-                  <button key={s.id || i} onClick={() => setSheet(s)} className="w-full text-left grid items-center gap-2 px-3 py-2.5 chippress" style={{ gridTemplateColumns: "44px 1fr auto", borderTop: i ? "1px solid rgba(var(--fg),.05)" : "none" }}>
+                  <button key={s.id || i} onClick={() => setSheet(s)} className="histrow rowh">
                     <div className="text-center leading-tight"><div className="text-[10px] font-semibold uppercase" style={{ color: "var(--muted)" }}>{new Date(s.date + "T12:00").toLocaleDateString(undefined, { weekday: "short" })}</div><div className="mono text-base">{+s.date.slice(8)}</div></div>
                     <div className="min-w-0">
                       <div className="text-sm truncate flex items-center gap-1.5" style={{ color: "var(--ivory)" }}>{s.where || "—"}{s.heat === "backed" && <span title="backed off" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--rose)", display: "inline-block" }} />}{s.heat === "watched" && <span title="heat" style={{ width: 6, height: 6, borderRadius: 6, background: "var(--brass)", display: "inline-block" }} />}</div>
@@ -6281,10 +6292,10 @@ function BetSpreadCalculator() {
             </div>
             {sess ? (
               <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>covers 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>lasts 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
                 <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Chance of a losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>finish below where you started</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>peak to low{sess.dd90 == null ? "" : ` · 1 in 10: −\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>chance you end down</div></div>
+                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.dd90 == null ? "peak to low" : <>1 in 10: <span className="whitespace-nowrap">{`−\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</span></>}</div></div>
               </div>
             ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
             <Info label="About these numbers">"Bring with you" covers the deepest you're likely to dip during the session, not just where you finish — including the extra swing from hot and cold shoes clustering, checked against full simulations. Drawdown is the biggest drop from a high point to a low within the session.</Info>
