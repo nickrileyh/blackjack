@@ -1184,11 +1184,8 @@ body{background:none}
 .bj .eyebrow,.bj .lab,.bj .sn-label,.bj .cmdk-g,.bj .phead,.bj .pstat>div:first-child,.bj .pplan .k{font-size:12px;letter-spacing:0;text-transform:none;font-weight:500;line-height:1.3;color:var(--lab)}
 .bj .eyebrow[style*="font-size"]{font-size:11px!important}
 .bj .card>.eyebrow:first-child,.bj .card>.flex:first-child>.eyebrow:first-child,.bj .card>div:first-child>.flex:first-child>.eyebrow:first-child,.bj .card>.cardbtn:first-child>.flex:first-child>.eyebrow:first-child{font-size:15px;font-weight:600;letter-spacing:-.012em;color:var(--ivory)}
-.bj h1,.bj .disp,.bj .disp.mono,.bj .pgbig,.bj .pbig,.bj .sn-name,.bj .sp-word{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.02em;font-feature-settings:normal}
-.bj .sn-name{font-size:19px}.bj .sn-label{opacity:1;padding-bottom:6px}
+.bj .sn-label{opacity:1;padding-bottom:6px}
 .bj .mcal .wd{text-transform:none;letter-spacing:0;font-weight:500;font-size:11px}
-@media (max-width:1023px){.topbar .disp{font-size:15.5px}}
-@media (max-width:370px){.shell>header.tight h1.long{font-size:18.5px}}
 @supports (background:color-mix(in srgb,red 5%,blue)){.card{background:color-mix(in srgb,rgb(var(--acc)) 1.6%,rgba(var(--fg),.042))}.card .card{background:rgba(var(--fg),.04)}
 .qa{background:color-mix(in srgb,rgb(var(--acc)) 5%,rgba(var(--fg),.06));background-clip:padding-box}.qa:hover{background:color-mix(in srgb,rgb(var(--acc)) 9%,rgba(var(--fg),.08));background-clip:padding-box}
 .bj .cm-reg{fill:color-mix(in srgb,rgb(var(--acc)) 10%,rgba(var(--fg),.09))}.bj .cm-land{fill:color-mix(in srgb,rgb(var(--acc)) 5%,rgba(var(--fg),.04))}}
@@ -1200,6 +1197,7 @@ body{background:none}
 .tdot{width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(var(--fg),.3)}.tdot.on{background:var(--brass);box-shadow:none}
 :root{--gl-edge-soft:linear-gradient(155deg,rgba(255,255,255,.42),rgba(255,255,255,.19) 16%,rgba(255,255,255,.105) 46%,rgba(255,255,255,.095) 72%,rgba(255,255,255,.23))}
 .card{box-shadow:inset 0 calc(-1 * var(--hair)) 0 rgba(var(--sh),.4),0 22px 44px -22px rgba(0,0,0,.95)}
+@media (max-width:350px){.shell>header h1.long{font-size:18px}}
 /* ---- end of the restyle ---- */
 `;
 
@@ -3636,7 +3634,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
             <div className="eyebrow">How you're running</div>
             <div className="mono text-xs" style={{ color: "var(--muted)" }}>{run.z >= 0 ? "+" : "−"}{Math.abs(run.z).toFixed(2)} SD</div>
           </div>
-          <div className="disp text-xl font-semibold mt-1">
+          <div className="text-xl font-semibold mt-1" style={{ letterSpacing: "-.01em" }}>
             <span style={{ color: run.pct < 0.1 ? "var(--rose)" : run.pct > 0.9 ? "var(--brass)" : "var(--ivory)" }}>{pctTxt(run.pct)} percentile</span>
           </div>
           <p className="text-xs mt-1 mb-2" style={{ color: "var(--ivory-d)" }}>Over {view.hands} hand{view.hands === 1 ? "" : "s"} your spread expects {sgnCash(run.exp)}. You're at {sgnCash(view.net)}.</p>
@@ -4706,7 +4704,7 @@ function Sheet({ title, onClose: shut, children }) {
         <div className="sheetgrab" onPointerDown={dStart} onPointerMove={dMove} onPointerUp={dEnd} onPointerCancel={dEnd}>
         <div className="flex justify-center pt-2 pb-1"><span style={{ width: 38, height: 4, borderRadius: 4, background: "rgba(var(--fg),.18)" }} /></div>
         <div className="flex items-center justify-between px-5 pt-1 pb-1">
-          <div className="disp text-xl font-semibold">{title}</div>
+          <div className="text-lg font-semibold" style={{ letterSpacing: "-.01em" }}>{title}</div>
           <button onClick={onClose} aria-label="Close" className="xbtn rounded-full flex items-center justify-center" style={{ width: 32, height: 32, fontSize: 18 }}>×</button>
         </div>
         </div>
@@ -4729,7 +4727,7 @@ function SessionLuck({ s, evHour, sdHour }) {
         <div className="eyebrow">How this session ran</div>
         <div className="mono text-xs" style={{ color: "var(--muted)" }}>{z >= 0 ? "+" : "−"}{Math.abs(z).toFixed(2)} SD</div>
       </div>
-      <div className="disp text-xl font-semibold mt-0.5" style={{ color: tone }}>{pctTxt(p)} percentile</div>
+      <div className="text-lg font-semibold mt-0.5" style={{ color: tone }}>{pctTxt(p)} percentile</div>
       <p className="text-xs mt-0.5 mb-1.5" style={{ color: "var(--ivory-d)" }}>Over {fmtH(h)} the spread you played expects {sgnMoney(exp)} ± {shortMoney(sd)}. You finished {sgnMoney(s.result)}.</p>
       <LuckGauge z={z} pct={p} />
     </div>
@@ -5059,7 +5057,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
         {/* luck */}
         <section className="card p-5 mb-4">
           <div className="flex items-baseline justify-between"><div className="eyebrow">Luck check</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{st.z >= 0 ? "+" : "−"}{Math.abs(st.z).toFixed(2)} SD</div></div>
-          <div className="disp text-xl font-semibold mt-1">Running at the <span style={{ color: st.pct < 0.1 ? "var(--rose)" : st.pct > 0.9 ? "var(--brass)" : "var(--ivory)" }}>{pctTxt(st.pct)} percentile</span></div>
+          <div className="text-xl font-semibold mt-1" style={{ letterSpacing: "-.01em" }}>Running at the <span style={{ color: st.pct < 0.1 ? "var(--rose)" : st.pct > 0.9 ? "var(--brass)" : "var(--ivory)" }}>{pctTxt(st.pct)} percentile</span></div>
           <p className="text-xs mt-1 mb-2" style={{ color: "var(--ivory-d)" }}>{st.pct < 0.5 ? `${Math.round((1 - st.pct) * 100)}% of players with your spreads and hours would be ahead of you.` : `You're ahead of ${Math.round(st.pct * 100)}% of players with your spreads and hours.`} {st.pct < 0.05 ? "That's unusual — double-check bet sizing, deviations and the game conditions you entered." : st.pct > 0.95 ? "Enjoy it, and don't let it change the bet sizing." : "That's normal variance."}</p>
           <LuckGauge z={st.z} pct={st.pct} />
           {n0Hours > 0 && (
@@ -5590,7 +5588,7 @@ function TopBar({ title, children, onBack }) {
     <div ref={bar} className={"topbar" + (show ? " show" : "")} aria-hidden={!show}>
       <div className="mx-auto flex items-center justify-between gap-3" style={{ maxWidth: "42rem" }}>
         <span className="flex items-center min-w-0">{onBack && <button className="tbback ph-only" onClick={onBack} aria-label="Back"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg></button>}
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="disp text-[17px] font-semibold truncate">{title}</button></span>
+        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[15px] font-semibold truncate" style={{ letterSpacing: "-.01em" }}>{title}</button></span>
         {children}
       </div>
     </div>
