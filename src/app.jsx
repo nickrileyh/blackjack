@@ -1171,7 +1171,7 @@ body{background:none}
 .pnlhov,.pnlhov circle{transition:transform .2s var(--ez)}
 @keyframes tipin{from{opacity:0}to{opacity:1}}
 :root[data-theme="light"] input.in[type=date]{color-scheme:light}
-@media (min-width:1180px){.sesspage .trow.mb-3{margin-bottom:20px}}
+@media (min-width:1180px){.sesspage .trow.mb-3{margin-bottom:var(--gut)}}
 /* a phone: beside the two longest titles the rules pill gives up its arrow so the rules still fit; on the smallest phones a three-way switch steps its labels down instead of cutting them short */
 @media (max-width:1023px){.shell>header.tight{gap:8px}.shell>header.tight .rulespill{gap:0;padding-right:11px}.shell>header.tight .rulespill svg{display:none}}
 @media (max-width:370px){.chipseg.slide button{font-size:12px;padding-left:3px;padding-right:3px}}
@@ -1199,6 +1199,25 @@ body{background:none}
 .card{box-shadow:inset 0 calc(-1 * var(--hair)) 0 rgba(var(--sh),.4),0 22px 44px -22px rgba(0,0,0,.95)}
 @media (max-width:350px){.shell>header h1.long{font-size:18px}}
 /* ---- end of the restyle ---- */
+/* ---- One scale: room, buttons, headline numbers (20 Nov). After the restyle on purpose: it settles sizes the blocks above left uneven. ---- */
+:root{--gut:18px;--cpad:20px}
+@media (min-width:1024px){:root{--gut:20px}}
+@media (min-width:1300px){:root{--gut:24px;--cpad:24px}}
+.shell .card.p-5:not(.card .card),.shell .card.p-4:not(.card .card){padding:var(--cpad)}
+.shell .card.px-5:not(.card .card){padding-left:var(--cpad);padding-right:var(--cpad)}
+.shell .card.pt-5:not(.card .card){padding-top:var(--cpad)}
+.shell .card.mb-4:not(.card .card),.shell .card.mb-3:not(.card .card),.shell .dcol>.mb-4{margin-bottom:var(--gut)}
+.shell .card.mt-4{margin-top:var(--gut)}
+.btn,.autonext{min-height:52px;padding-top:0;padding-bottom:0}
+.btn.md{min-height:44px;font-size:15px;padding-left:18px;padding-right:18px}
+.btn.sm{min-height:38px;font-size:14px;padding-left:14px;padding-right:14px}
+.btn.fit{width:auto;flex:none}
+.hl{font-size:36px;line-height:1.05;font-weight:600;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+@media (min-width:1024px){.hl{font-size:40px}}
+.statn{font-size:17px;line-height:1.25;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.in::placeholder{font-weight:400;letter-spacing:0}
+.bj .eyebrow[style*="font-size"]{font-size:12px!important}
+/* ---- end of the one scale ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -4493,7 +4512,7 @@ function FocusCard({ log, go }) {
           <div className="text-[17px] font-semibold leading-snug" style={{ color: "var(--ivory)", textWrap: "balance" }}>{pick.title}</div>
           <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{pick.sub}</div>
         </div>
-        <button onClick={() => SKILL_GO[pick.k] && go(...SKILL_GO[pick.k])} className="btn shrink-0" style={{ width: "auto", padding: "0 18px", minHeight: 42 }}>{pick.cta}</button>
+        <button onClick={() => SKILL_GO[pick.k] && go(...SKILL_GO[pick.k])} className="btn md fit shrink-0">{pick.cta}</button>
       </div>
     </section>
   );
@@ -5022,10 +5041,10 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow">{filtered ? [period === "30" ? "Last 30 days" : period === "90" ? "Last 90 days" : period === "ytd" ? "This year" : "All time", casino !== "all" ? byCasino[0]?.name || "" : ""].filter(Boolean).join(" · ") : "All-time result"}</div>
-            <div className="disp mono mt-1" style={{ fontSize: 40, lineHeight: 1.05, color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)", letterSpacing: "-.02em" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={520} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
+            <div className="disp mono hl mt-1" style={{ color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={520} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
             <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{list.length ? `${st.n} session${st.n === 1 ? "" : "s"} · ${fmtH(st.H)} · expected ${sgnMoney(st.E)}` : "No sessions yet"}</div>
           </div>
-          <button onClick={() => setSheet("new")} className="btn shrink-0" style={{ width: "auto", padding: "10px 14px", fontSize: 14 }} aria-label="Log a session">+ Log</button>
+          <button onClick={() => setSheet("new")} className="btn md fit shrink-0" aria-label="Log a session">+ Log</button>
         </div>
         {list.length >= 2 && <div className="mt-4"><PnlChart sessions={list} evHour={evHour} sdHour={sdHour} ddMed={null} onExpand={() => setPnlFull(true)} /></div>}
         {list.length > 0 && (
@@ -5221,8 +5240,8 @@ function Backup() {
       <div className="eyebrow mb-1">Backup</div>
       <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Everything is saved on this device. Export a copy before you switch devices or clear your browser's data.</p>
       <div className="grid grid-cols-2 gap-2 mb-2">
-        <button className="btn ghost" onClick={exportAll}>Export</button>
-        <button className="btn ghost" onClick={importAll} disabled={!text.trim()}>Restore</button>
+        <button className="btn ghost md" onClick={exportAll}>Export</button>
+        <button className="btn ghost md" onClick={importAll} disabled={!text.trim()}>Restore</button>
       </div>
       <textarea className="in mono text-[11px]" rows={3} placeholder="Paste a backup here to restore" value={text} onChange={(e) => setText(e.target.value)} />
       {status && <div className="text-xs mt-2" style={{ color: "var(--brass)" }}>{status}</div>}
@@ -5920,7 +5939,7 @@ function SyncCard() {
         <p className="text-xs mb-3" style={{ color: "var(--ivory-d)" }}>Keeps your phone and computer in step, through a private Gist on your own GitHub account and nowhere else.</p>
         <div className="flex gap-2">
           <input className="in mono text-[12px] flex-1 min-w-0" placeholder="ghp_…" value={key} onChange={(e) => setKey(e.target.value)} autoCapitalize="off" autoCorrect="off" spellCheck={false} />
-          <button className="btn shrink-0" style={{ width: "auto", padding: "0 16px" }} onClick={connect} disabled={busy || key.trim().length < 20}>{busy ? "Connecting…" : "Connect"}</button>
+          <button className="btn md fit shrink-0" onClick={connect} disabled={busy || key.trim().length < 20}>{busy ? "Connecting…" : "Connect"}</button>
         </div>
         <a href={SYNC_TOKEN_URL} target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-xs underline underline-offset-2 font-semibold lnk" style={{ color: "var(--brass)" }}>Get a sync key on GitHub ↗</a>
         <Info label="How to set it up">
@@ -5934,8 +5953,8 @@ function SyncCard() {
         </div>
         <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>{st.cfg.login ? `GitHub @${st.cfg.login}` : "GitHub"}{st.lastFrom ? ` · last change came from your ${st.lastFrom}` : ""}. Changes go up within a second of making them, and this device checks for new ones every second while the app is on screen.{st.lag != null ? ` Last update from your ${st.lagFrom} arrived ${st.lag < 1500 ? "in about a second" : `${Math.round(st.lag / 1000)} s after you made it`}.` : ""}</p>
         <div className="grid grid-cols-2 gap-2 mb-2">
-          <button className="btn ghost" onClick={() => syncNow({ apply: true, force: true, manual: true })} disabled={st.busy}>Sync now</button>
-          <button className="btn ghost" onClick={copyKey}>Copy key</button>
+          <button className="btn ghost md" onClick={() => syncNow({ apply: true, force: true, manual: true })} disabled={st.busy}>Sync now</button>
+          <button className="btn ghost md" onClick={copyKey}>Copy key</button>
         </div>
         {shown && <input className="in mono text-[11px] mb-2" readOnly value={st.cfg.token} onFocus={(e) => e.target.select()} />}
         <div className="flex justify-end"><ConfirmLink label="Disconnect this device" confirm="Tap again to disconnect" onConfirm={() => { syncDisconnect(); setMsg("Disconnected. Your progress stays on this device."); }} style={{ color: "var(--muted)" }} /></div>
@@ -6110,8 +6129,8 @@ function SavedSpreads({ bets, spotsMap, bankroll, cal, rphOf, now, onUse, compac
       {cur ? <p className="text-[11px]" style={{ color: "var(--muted)" }}>The bets in the table are saved as <span style={{ color: "var(--ivory-d)" }}>{cur.x.name}</span>. Change a bet to save another.</p>
         : list.length >= 12 ? <p className="text-[11px]" style={{ color: "var(--muted)" }}>Twelve saved. Delete one to save another.</p> : (
         <div className="flex gap-2">
-          <input className="in" style={{ height: 42, flex: 1, minWidth: 0 }} value={name} maxLength={28} placeholder={`Name it (${spreadRange(bets)})`} aria-label="Name for this spread" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") add(); }} />
-          <button className="btn" style={{ width: "auto", minHeight: 42, padding: "0 18px" }} onClick={add}>Save spread</button>
+          <input className="in" style={{ height: 44, flex: 1, minWidth: 0 }} value={name} maxLength={28} placeholder={`Name it (${spreadRange(bets)})`} aria-label="Name for this spread" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") add(); }} />
+          <button className="btn md fit" onClick={add}>Save spread</button>
         </div>)}
       </Fold>
     </section>
@@ -6442,12 +6461,12 @@ function BetSpreadCalculator() {
           <div className="grid grid-cols-2 gap-5">
             <div>
               <div className="eyebrow">Profit / hour</div>
-              <div className="disp text-4xl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={400} f={(x) => money(x)} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
+              <div className="disp hl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={400} f={(x) => money(x)} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
               <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>expected, ± {money(r.sdHour)} (1 SD)</div>
             </div>
             <div>
               <div className="eyebrow">Risk of ruin</div>
-              <div className="disp text-4xl mt-1 mono" style={{ color: rorTone }}><Glide v={r.ror} enter dur={400} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
+              <div className="disp hl mt-1 mono" style={{ color: rorTone }}><Glide v={r.ror} enter dur={400} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
               <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>chance of losing {money(+bankroll || 0)}</div>
             </div>
           </div>
@@ -6477,10 +6496,10 @@ function BetSpreadCalculator() {
             </div>
             {sess ? (
               <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Bring with you</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>lasts 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Expected profit</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Losing session</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>chance you end down</div></div>
-                <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-xl font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.dd90 == null ? "peak to low" : <>1 in 10: <span className="whitespace-nowrap">{`−\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</span></>}</div></div>
+                <div><div className="lab">Bring with you</div><div className="mono statn" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>lasts 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
+                <div><div className="lab">Expected profit</div><div className="mono statn" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
+                <div><div className="lab">Losing session</div><div className="mono statn" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>chance you end down</div></div>
+                <div><div className="lab">Median drawdown</div><div className="mono statn" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.dd90 == null ? "peak to low" : <>1 in 10: <span className="whitespace-nowrap">{`−\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</span></>}</div></div>
               </div>
             ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
             <Info label="About these numbers">"Bring with you" covers the deepest you're likely to dip during the session, not just where you finish — including the extra swing from hot and cold shoes clustering, checked against full simulations. Drawdown is the biggest drop from a high point to a low within the session.</Info>

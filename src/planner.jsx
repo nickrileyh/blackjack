@@ -302,7 +302,7 @@ button.prow:hover{background:rgba(var(--fg),.045)}
 .pslv{font-size:13px;font-weight:600;color:var(--ivory);white-space:nowrap;text-align:right}
 .pslide.risk .pslv{min-width:38px}
 .pslide.horizon .pslv{min-width:72px}
-.pset>.eyebrow{font-size:10px}
+.pset>.eyebrow{font-size:12px}
 .pchip{display:inline-flex;align-items:baseline;gap:6px;padding:5px 11px;border-radius:99px;background:linear-gradient(180deg,rgba(var(--fg),.08),rgba(var(--fg),.035));box-shadow:inset 0 1px 0 var(--gl-hi);font-size:11.5px;color:var(--muted);white-space:nowrap}
 .pchip>b{font-weight:600;font-size:13px;color:var(--ivory);font-variant-numeric:tabular-nums}
 .pbig{font-size:26px;line-height:1.1;font-weight:700;letter-spacing:-.02em}
@@ -317,7 +317,7 @@ button.prow:hover{background:rgba(var(--fg),.045)}
 .plegend i.ln{width:14px;height:2.5px;border-radius:2px}
 .plegend i.dash{background:repeating-linear-gradient(90deg,rgba(var(--fg),.5) 0 4px,transparent 4px 7px)}
 .pghead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}
-.pgbig{font-size:38px;line-height:1;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pgbig{font-size:40px;line-height:1.05;font-weight:600;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
 .pgsub{font-size:11.5px;color:var(--muted);margin-top:5px}
 .pgrange{text-align:right;font-size:15px;font-weight:600;color:var(--ivory);padding-bottom:1px}
 .pgset{border-top:1px solid var(--line)}
@@ -338,7 +338,7 @@ button.prow:hover{background:rgba(var(--fg),.045)}
 .pgupd{position:absolute;top:-1px;left:0;font-size:11px;font-weight:600;color:var(--brass);letter-spacing:.02em}
 .pdeal{padding:12px 14px;border-radius:14px;background:rgba(var(--fg),.04)}
 .pdrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.pdeal .btn{width:auto;flex:none;font-size:13.5px;padding:9px 16px}
+.pdeal .btn{width:auto;flex:none;min-height:38px;font-size:14px;padding:0 16px}
 .pdeal .pstats.three{gap:12px}
 @media (max-width:380px){.pdpick{gap:5px}.pdpick .gchip{padding:4px 8px;font-size:11px}.pdrow{flex-wrap:wrap}.pdeal .btn{width:100%}.pgrange{font-size:13.5px}.pplan{gap:8px;padding:11px 12px}}
 .pdpick{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
@@ -356,7 +356,7 @@ button.prow:hover{background:rgba(var(--fg),.045)}
 .pgrow.target>.pgoal{flex:1 1 100%;text-align:left}
 .pcas>:nth-child(1){grid-area:n}.pcas>:nth-child(2){grid-area:a}.pcas>:nth-child(3){grid-area:b}.pcas>:nth-child(4){grid-area:c}.pcas>:nth-child(5){grid-area:w;justify-self:end;width:92px}
 .pcas .pnum{text-align:left;font-size:12px}
-.pcas .pnum::before{content:attr(data-l) " ";font-weight:500;font-size:10.5px;color:var(--muted)}
+.pcas .pnum::before{content:attr(data-l) " ";font-weight:500;font-size:11px;color:var(--muted)}
 .pstats{grid-template-columns:1fr;gap:0}
 .pgbig{font-size:36px}
 .pstats>.pstat{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k v" "s v";align-items:center;column-gap:14px;padding:10px 0}

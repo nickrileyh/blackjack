@@ -400,7 +400,7 @@ function IntelBlock({ intel, onCopy, copied }) {
           <div key={k}><div className="text-[11px] font-semibold" style={{ color: "var(--muted)" }}>{k}</div>
             {Array.isArray(v) ? <ul className="text-[13px] leading-snug" style={{ color: "var(--ivory-d)" }}>{v.map((x, i) => <li key={i} className="flex gap-2 mt-1"><span aria-hidden="true" style={{ color: "var(--brass)" }}>·</span><span>{x}</span></li>)}</ul> : <div className="text-[13px] leading-snug mt-0.5" style={{ color: "var(--ivory-d)" }}>{v}</div>}
           </div>))}
-        {intel.best && intel.best.decks && onCopy && <button type="button" className="btn ghost" style={{ fontSize: 14, padding: "10px 12px" }} onClick={onCopy} disabled={copied}>{copied ? "Added to your games ✓" : "Add the reported game to mine"}</button>}
+        {intel.best && intel.best.decks && onCopy && <button type="button" className="btn ghost sm" onClick={onCopy} disabled={copied}>{copied ? "Added to your games ✓" : "Add the reported game to mine"}</button>}
         {intel.src && intel.src.length > 0 && <div className="text-[11px] pt-2.5" style={{ borderTop: "1px solid var(--line)", color: "var(--muted)" }}>Sources: {intel.src.map(([l, u], i) => <span key={u + i}>{i ? " · " : ""}<a className="clink" href={u} target="_blank" rel="noopener noreferrer">{l}</a></span>)}</div>}
         <p className="text-[11px]" style={{ color: "var(--muted)" }}>Gathered from public reports. Casinos change rules, limits and table counts often — trust what you see on the floor.</p>
       </Fold>
@@ -497,8 +497,8 @@ function AddSheet({ draft, set, map, cname, onPlaceOnMap, onSave, onClose }) {
       <span className="eyebrow block mb-1.5">Where it is</span>
       {placed && <div className="cbox mb-2 text-sm rise" style={{ color: "var(--ivory)", borderColor: "rgba(var(--acc),.3)" }}><span style={{ color: "var(--brass)" }}>✓</span> Pinned{draft.st && map.names[draft.st] ? ` in ${map.names[draft.st]}` : ` in ${cname}`}</div>}
       <div className="grid grid-cols-2 gap-2 mb-2">
-        <button type="button" className="btn ghost" style={{ fontSize: 14, padding: "11px 10px" }} onClick={onPlaceOnMap}>{placed ? "Tap the map again" : "Tap the map"}</button>
-        <button type="button" className="btn ghost" style={{ fontSize: 14, padding: "11px 10px" }} onClick={here} disabled={busy}>{busy ? "Finding you…" : "I'm here now"}</button>
+        <button type="button" className="btn ghost md" style={{ padding: "0 10px", fontSize: 14 }} onClick={onPlaceOnMap}>{placed ? "Tap the map again" : "Tap the map"}</button>
+        <button type="button" className="btn ghost md" style={{ padding: "0 10px", fontSize: 14 }} onClick={here} disabled={busy}>{busy ? "Finding you…" : "I'm here now"}</button>
       </div>
       {msg && <p className="text-xs mb-2" style={{ color: "var(--neg-l)" }}>{msg}</p>}
       <button className="btn mt-3" disabled={!ok} onClick={onSave}>Add to my map</button>

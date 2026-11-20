@@ -157,8 +157,8 @@ export function TripCard({ go, bankroll }) {
         <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>{next.loading && next.n ? "Working out where to play next…" : next.none ? "Nothing to suggest right now. The Plan page says why, and when each casino is back." : "Start the clock when you sit down. When you leave, the hours and the casino are already filled in."}</p>
       )}
       <div className="grid grid-cols-2 gap-2 mt-3.5">
-        <button className="btn tripbtn" style={{ minHeight: 46, padding: "0 10px", fontSize: 15 }} onClick={() => setStart(true)}>Start session</button>
-        <button className="btn ghost tripbtn" style={{ minHeight: 46, padding: "0 10px", fontSize: 15 }} onClick={() => go("casinos", { near: true })}>Near me</button>
+        <button className="btn md tripbtn" style={{ padding: "0 10px" }} onClick={() => setStart(true)}>Start session</button>
+        <button className="btn ghost md tripbtn" style={{ padding: "0 10px" }} onClick={() => go("casinos", { near: true })}>Near me</button>
       </div>
       {start && <StartSheet onClose={() => setStart(false)} />}
     </section>
