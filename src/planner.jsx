@@ -282,7 +282,7 @@ export function nextUp(rows, today, scoreOfC, n = 3) {
 export const milesBetween = (a, b) => { const r = Math.PI / 180, x = (b.lon - a.lon) * r * Math.cos(((a.lat + b.lat) / 2) * r), y = (b.lat - a.lat) * r; return Math.sqrt(x * x + y * y) * 3959; };
 
 const planCss = `
-.prow{display:grid;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 6px;border-radius:12px;transition:background .15s var(--ez)}
+.prow{display:grid;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 6px;border-radius:12px;transition:background .15s var(--ez)}
 .prow+.prow{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
 /* a computer: a casino's name wraps onto a second line in a narrow window instead of being cut short ("JACK Clevelan…") */
 @media (min-width:1024px){.prow .pname{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;text-wrap:balance}}
@@ -307,18 +307,18 @@ button.prow:hover{background:rgba(var(--fg),.045)}
 .pchip>b{font-weight:600;font-size:13px;color:var(--ivory);font-variant-numeric:tabular-nums}
 .pbig{font-size:26px;line-height:1.1;font-weight:700;letter-spacing:-.02em}
 .pstat>div:first-child{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
-.pstat>div:nth-child(2){font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
-.pstat>div:nth-child(3){font-size:11px;line-height:1.35;color:var(--muted);margin-top:1px}
+.pstat>div:nth-child(2){font-size:22px;line-height:1.15;font-weight:700;letter-spacing:-.025em;font-variant-numeric:tabular-nums;margin-top:4px}
+.pstat>div:nth-child(3){font-size:11px;line-height:1.35;color:var(--muted);margin-top:2px}
 .pnote{font-size:11.5px;line-height:1.45;border-radius:12px;padding:8px 12px;background:rgba(var(--neg),.09);color:var(--neg-l)}
-.pstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.pstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 .plegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--muted)}
 .plegend>span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .plegend i{width:9px;height:9px;border-radius:3px;flex:none}
 .plegend i.ln{width:14px;height:2.5px;border-radius:2px}
 .plegend i.dash{background:repeating-linear-gradient(90deg,rgba(var(--fg),.5) 0 4px,transparent 4px 7px)}
 .pghead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}
-.pgbig{font-size:40px;line-height:1.05;font-weight:600;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
-.pgsub{font-size:11.5px;color:var(--muted);margin-top:5px}
+.pgbig{font-size:48px;line-height:1;font-weight:700;letter-spacing:-.038em;font-variant-numeric:tabular-nums}
+.pgsub{font-size:11.5px;color:var(--muted);margin-top:8px}
 .pgrange{text-align:right;font-size:15px;font-weight:600;color:var(--ivory);padding-bottom:1px}
 .pgset{border-top:1px solid var(--line)}
 .pgset>*{padding:11px 0}
@@ -350,19 +350,19 @@ button.prow:hover{background:rgba(var(--fg),.045)}
    row (what it is on the left, the number on the right), and the move-up table is a short list */
 @media (max-width:1023px){
 .phead{display:none}
-.pcas{grid-template-columns:auto auto minmax(0,1fr) 92px!important;grid-template-areas:"n n n w" "a b c c";align-items:center;row-gap:5px;column-gap:14px;padding:11px 4px}
+.pcas{grid-template-columns:auto auto minmax(0,1fr) 92px!important;grid-template-areas:"n n n w" "a b c c";align-items:center;row-gap:6px;column-gap:14px;padding:13px 4px}
 .pcas.norest{grid-template-areas:"n n n n" "a b c c"}
 .pgrow.target{flex-wrap:wrap}
 .pgrow.target>.pgoal{flex:1 1 100%;text-align:left}
 .pcas>:nth-child(1){grid-area:n}.pcas>:nth-child(2){grid-area:a}.pcas>:nth-child(3){grid-area:b}.pcas>:nth-child(4){grid-area:c}.pcas>:nth-child(5){grid-area:w;justify-self:end;width:92px}
 .pcas .pnum{text-align:left;font-size:12px}
 .pcas .pnum::before{content:attr(data-l) " ";font-weight:500;font-size:11px;color:var(--muted)}
-.pstats{grid-template-columns:1fr;gap:0}
-.pgbig{font-size:36px}
-.pstats>.pstat{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k v" "s v";align-items:center;column-gap:14px;padding:10px 0}
+.pstats{grid-template-columns:1fr;gap:0}.bj .pstats.pt-4{padding-top:2px}
+.pgbig{font-size:clamp(34px,11.3vw,46px)}
+.pstats>.pstat{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k v" "s v";align-items:center;column-gap:14px;padding:12px 0}
 .pstats>.pstat+.pstat{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
 .pstats>.pstat>div:first-child{grid-area:k;font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ivory)}
-.pstats>.pstat>div:nth-child(2){grid-area:v;font-size:17px;margin-top:0;text-align:right}
+.pstats>.pstat>div:nth-child(2){grid-area:v;font-size:20px;margin-top:0;text-align:right}
 .pstats>.pstat>div:nth-child(3){grid-area:s;margin-top:1px}
 .pset{justify-content:space-between;width:100%}
 .pbig{font-size:24px}
@@ -446,7 +446,7 @@ function PlayNext({ rot, onOpen }) {
         {!x.loses && <span className="pchip">Risk of ruin <b style={x.ror > cap * 1.001 ? { color: "var(--rose)" } : undefined}>{tinyPct(x.ror)}</b></span>}
         {x.ev > 0 && <span className="pchip">Earns <b>{money(x.ev)}/hr</b></span>}
       </div> : first && <div className="text-xs mt-3" style={{ color: "var(--muted)" }}>{gamesAt(first.c).length ? "Working out the score…" : "No game saved or reported here, so no score yet."}</div>}
-      {plan.length > 1 && <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+      {plan.length > 1 && <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
         <div className="eyebrow mb-1" style={{ fontSize: 10 }}>Or</div>
         {plan.slice(1).map((v) => { const y = sc.get(v.c); return (
           <button key={v.c.id} className="prow" style={{ gridTemplateColumns: "minmax(0,1fr) auto 30px", padding: "8px 6px" }} onClick={() => onOpen(v.c)}>
@@ -950,11 +950,11 @@ function BankrollNow({ gr, mine, bankroll, prefs, go }) {
           <div className="ptrack big"><i className="barx ok" style={{ width: `${Math.max(3, Math.min(100, 100 * way))}%` }} /></div>
           <div className="flex items-baseline justify-between gap-3 text-xs mt-2"><span style={{ color: "var(--ivory-d)" }}><b style={{ color: "var(--ivory)" }}>${next.m} tables</b> at {shortMoney(next.need)} · {shortMoney(Math.max(0, next.need - bankroll))} to go</span><span style={{ color: "var(--muted)" }}>{next.state !== "later" ? "" : reach && reach.med != null ? `typically ${whenOf(reach.med)}` : reach ? "a long way off" : "…"}</span></div>
         </div>}
-        {wins ? <div className="pstats mt-4 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
+        {wins ? <div className="pstats mt-4 pt-4" style={{ borderTop: "1px solid var(--sep)" }}>
           <div className="pstat"><div>A normal month</div><div style={{ color: mEv >= 0 ? "var(--ivory)" : "var(--neg-l)" }}>{sgnMoney(mEv)}</div><div>8 in 10: {sgnShort(mEv - 1.2816 * mSd)} to {sgnShort(mEv + 1.2816 * mSd)}</div></div>
           <div className="pstat"><div>Bring per session</div><div>{cash ? money(cash) : "—"}</div><div>for {sessLen} hours, 19 times in 20</div></div>
           <div className="pstat"><div>Risk of ruin now</div><div style={{ color: over ? "var(--rose)" : "var(--ivory)" }}>{tinyPct(mine.ror)}</div><div>your spread, as it is</div></div>
-        </div> : <p className="text-xs mt-4 pt-4" style={{ color: "var(--ivory-d)", borderTop: "1px solid var(--line)" }}>Your spread on Bet spread doesn't win yet, so there is no month or session to plan around.</p>}
+        </div> : <p className="text-xs mt-4 pt-4" style={{ color: "var(--ivory-d)", borderTop: "1px solid var(--sep)" }}>Your spread on Bet spread doesn't win yet, so there is no month or session to plan around.</p>}
       </>}
     </section>
   );
@@ -1046,7 +1046,7 @@ function Growth({ gr, deal, bankroll, prefs, setPrefs, part }) {
       <div className="mt-3"><GrowthChart sim={sim} B={sim.B} lv={lv} flat={auto ? null : flat} hours={hours} whenOf={whenOf} hist={hist} ladder={up} dealt={deal.d} /></div>
       <div className="plegend mt-2">{hist && <span><i className="ln" style={{ background: "rgba(var(--fg),.6)" }} />your results</span>}<span><i className="ln" style={{ background: "var(--brass)" }} />typical</span><span><i style={{ background: "rgba(var(--acc),.62)" }} />half the time</span><span><i style={{ background: "rgba(var(--acc),.3)" }} />8 in 10</span>{up && !auto && <span><i className="ln dash" />never moving up</span>}{deal.d && deal.d.paths && deal.d.paths.length > 0 && <span><i className="ln" style={{ background: "rgba(var(--fg),.32)" }} />dealt with real cards</span>}</div>
       <DealBox deal={deal} gr={gr} bankroll={bankroll} span={span} />
-      <div className="pstats mt-4 pt-4" style={{ borderTop: "1px solid var(--line)" }} ref={statsRef}>
+      <div className="pstats mt-4 pt-4" style={{ borderTop: "1px solid var(--sep)" }} ref={statsRef}>
         <div className="pstat"><div>Ending ahead</div><div style={{ color: sim.below > 0.4 ? "var(--neg-l)" : "var(--ivory)" }}>{Math.round((1 - sim.below) * 100)}%</div><div>above {shortMoney(bankroll)} in {span}</div></div>
         <div className="pstat"><div>Losing half</div><div style={{ color: sim.half > 0.1 ? "var(--neg-l)" : "var(--ivory)" }}>{sim.half < 0.005 ? "<1%" : `${Math.round(sim.half * 100)}%`}</div><div>ever down to {shortMoney(bankroll / 2)}</div></div>
         <div className="pstat"><div>Worst dip</div><div>{shortMoney(sim.ddMid)}</div><div>typical; 1 in 10 passes {shortMoney(sim.ddBad)}</div></div>

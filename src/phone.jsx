@@ -197,7 +197,7 @@ export function WeekCard({ sessions, go }) {
       </div>
       <button className="cardbtn w-full text-left mt-2" onClick={() => go("sessions")}>
         <div className="flex items-end justify-between gap-3">
-          <div className="min-w-0"><span className="disp mono text-[30px] leading-none" style={{ color: done >= g ? "var(--brass)" : "var(--ivory)" }}>{hrs(done)}</span><span className="text-sm ml-1.5" style={{ color: "var(--muted)" }}>of {hrs(g)}</span></div>
+          <div className="min-w-0"><span className="hl md" style={{ color: done >= g ? "var(--brass)" : "var(--ivory)" }}>{hrs(done).replace(" h", "")}</span><span className="text-sm ml-2" style={{ color: "var(--muted)" }}>of {hrs(g)}</span></div>
           <span className="text-xs text-right pb-0.5" style={{ color: done >= g ? "var(--brass)" : "var(--muted)" }}>{done >= g ? (done - g >= 0.05 ? `${hrs(done - g)} over` : "Goal reached") : `${hrs(g - done)} to go`}</span>
         </div>
         <div className="wkbar mt-3"><i className="barx" style={{ width: `${Math.max(done > 0 ? 2 : 0, frac * 100)}%` }} /></div>
@@ -310,8 +310,9 @@ export const phoneCss = `
 .ticon{display:flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;border-radius:12px;color:var(--brass);background:rgba(var(--acc),.12)}
 .ptile{display:block;text-align:left;padding:15px 15px 14px;width:100%;min-width:0;transition:transform .32s var(--ez)}
 .ptile:active{transform:scale(.975);transition-duration:.1s}
-.mrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 16px;min-height:60px}
-.mrow+.mrow{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
+.mrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 16px;min-height:60px;position:relative}
+.mrow+.mrow::before{content:"";position:absolute;left:64px;right:0;top:0;height:var(--hair);background:rgba(var(--fg),.11)}
+.mrow.big+.mrow.big::before{left:72px}
 .mrow:active{background:rgba(var(--fg),.05)}
 .mrow.big{min-height:72px;padding:15px 16px;gap:14px}.mrow.big .ticon{width:42px;height:42px;border-radius:14px}
 .trow{display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;border-radius:18px;background:rgba(var(--fg),.035);box-shadow:var(--gl-lens)}
@@ -370,5 +371,5 @@ export const phoneCss = `
 .themerow::-webkit-scrollbar{display:none}
 .themerow>*{flex:0 0 112px;scroll-snap-align:start}
 }
-@media (max-width:350px){.tclock{font-size:40px}.ptile{padding:13px 12px 12px}.mrow{padding-left:13px;padding-right:13px;gap:10px}}
+@media (max-width:350px){.tclock{font-size:40px}.ptile{padding:13px 12px 12px}.mrow{padding-left:13px;padding-right:13px;gap:10px}.mrow+.mrow::before{left:59px}.mrow.big+.mrow.big::before{left:65px}}
 `;

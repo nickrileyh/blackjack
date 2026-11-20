@@ -14,6 +14,8 @@ const localDay = (t = Date.now()) => { const d = new Date(t); return `${d.getFul
 const LABEL = (tc) => (tc === -3 ? "≤\u00A0−3" : tc === 6 ? "≥\u00A0+6" : tc > 0 ? `+${tc}` : tc < 0 ? `−${-tc}` : "0");
 const DEFAULT_BETS = { "-3": 0, "-2": 0, "-1": 0, "0": 0, "1": 25, "2": 50, "3": 50, "4": 75, "5": 75, "6": 100 };
 const fmtH = (h) => `${Math.round((Number(h) || 0) * 100) / 100}h`; // hours to the hundredth, no float noise
+// a headline number too long for its size steps down one (see ".hl.long" in the css)
+const hlLong = (s, n) => String(s).replace(/\u2060/g, "").length > n;
 const sgnMoney = (v) => { const r = Math.round(v); return `${r > 0 ? "+" : r < 0 ? "−\u2060" : ""}$${Math.abs(r).toLocaleString()}`; };
 const shortMoney = (v) => { const a = Math.abs(v), sg = v < 0 ? "−\u2060" : ""; return a >= 999500 ? `${sg}$${(a / 1e6).toFixed(a >= 9.95e6 ? 0 : 1)}M` : a >= 1000 ? `${sg}$${(a / 1000).toFixed(a >= 10000 ? 0 : 1)}k` : `${sg}$${Math.round(a)}`; };
 function niceTicks(lo, hi, n = 5) { const span = hi - lo || 1; const raw = span / n; const mag = Math.pow(10, Math.floor(Math.log10(raw))); const e = raw / mag; const step = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag; const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(+v.toFixed(10)); return out; }
@@ -997,7 +999,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14);background:
 .shell>header h1{letter-spacing:-.028em}
 .bj{font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 /* desktop: the bet table's number boxes stop stretching across the card; the spare width goes to the figures */
-@media (min-width:1180px){.btrow{grid-template-columns:52px minmax(0,190px) 48px minmax(0,1fr) minmax(0,1fr)}}
+@media (min-width:1180px){.btrow{grid-template-columns:52px minmax(84px,190px) 48px minmax(56px,1fr) minmax(62px,1fr)}}
 /* a tap is a tap: no waiting to see whether it is the first half of a double-tap zoom */
 .bj button,.bj a,.bj label,.bj input,.bj select{touch-action:manipulation}
 /* the rules pill inside the top bar sits on glass that is already blurred: a second blur there costs a phone a layer
@@ -1218,6 +1220,32 @@ body{background:none}
 .in::placeholder{font-weight:400;letter-spacing:0}
 .bj .eyebrow[style*="font-size"]{font-size:12px!important}
 /* ---- end of the one scale ---- */
+/* ---- Apple-clean: bigger numbers, more room, fewer lines (20 Nov) ---- */
+:root{--sep:transparent}
+@media (max-width:1023px){:root{--gut:20px}}
+@media (min-width:1300px){.trainbar{column-gap:24px}}
+@media (min-width:1400px){:root{--gut:28px;--cpad:28px}.dgrid,.trainbar{column-gap:28px}}
+.bj .hl{font-size:clamp(34px,11.3vw,46px);line-height:1;font-weight:700;letter-spacing:-.038em;font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;white-space:nowrap}
+.bj .hl.md{font-size:clamp(32px,10.3vw,40px)}
+.bj .hl.long{font-size:clamp(30px,9.2vw,36px)}
+.bj .hl.md.long{font-size:30px}
+.bj .hl.xlong{font-size:clamp(21px,6.6vw,30px)}
+.bj .hl .u{font-size:.42em;font-weight:600;letter-spacing:-.01em;margin-left:.1em;opacity:.55}
+@media (min-width:1024px){.bj .hl{font-size:48px}.bj .hl.md{font-size:40px}.bj .hl.long{font-size:40px}.bj .hl.md.long{font-size:32px}.bj .hl.xlong{font-size:34px}}
+.bj .statn{font-size:22px;line-height:1.15;font-weight:700;letter-spacing:-.025em;margin-top:4px;font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
+.bj .statn.sm{font-size:17px;font-weight:600;letter-spacing:-.015em;margin-top:3px}
+.bj .stats.three .statn{font-size:clamp(17px,5vw,22px)}
+.bj .grid-cols-3>div>.statn.sm{font-size:clamp(14px,4.6vw,17px)}.bj .grid-cols-4>div>.statn.sm{font-size:clamp(14px,4.3vw,17px)}
+.bj .card>.eyebrow:first-child,.bj .card>.flex:first-child>.eyebrow:first-child,.bj .card>div:first-child>.flex:first-child>.eyebrow:first-child,.bj .card>.cardbtn:first-child>.flex:first-child>.eyebrow:first-child{font-size:17px;letter-spacing:-.02em}
+@media (max-width:350px){.bj .card>.eyebrow:first-child,.bj .card>.flex:first-child>.eyebrow:first-child,.bj .card>div:first-child>.flex:first-child>.eyebrow:first-child,.bj .card>.cardbtn:first-child>.flex:first-child>.eyebrow:first-child{font-size:16px}}
+.stats{gap:22px 20px}.stats.three{gap:14px 12px}
+.skillrow{padding:13px 4px}
+.histrow{padding:12px 0;position:relative}
+.histrow+.histrow{box-shadow:none}
+.histrow+.histrow::before{content:"";position:absolute;left:54px;right:0;top:0;height:var(--hair);background:rgba(var(--fg),.11)}
+.hrecent{border-top-color:transparent}
+.sn-foot{border-top-color:transparent}
+/* ---- end of Apple-clean ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -1226,7 +1254,7 @@ function SeatPicker({ seats, onChange, twoHands }) {
   const extra = twoHands && seats < 7;
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-1"><span className="eyebrow">Players at the table</span><span className="text-[11px]" style={{ color: "var(--muted)" }}>including you</span></div>
+      <div className="mb-1"><span className="eyebrow">Players at the table</span></div>
       <svg viewBox="0 0 320 74" className="w-full block ph-hide" style={{ maxHeight: 80 }} role="img" aria-label={`${seats} of 7 seats taken`}>
         <path d={`M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)} A 134 44 0 0 1 ${pts[6][0].toFixed(1)} ${pts[6][1].toFixed(1)}`} fill="none" stroke="rgba(var(--acc),.22)" strokeWidth="1.2" />
         {pts.map(([x, y], i) => {
@@ -1561,7 +1589,7 @@ function SoundCard() {
     <section className="card p-5 mb-4">
       <div className="eyebrow mb-3">Sound</div>
       <Toggle label="Sound effects" sub="Quiet and short. A phone's silent switch mutes them too." on={p.on} onChange={(v) => set({ on: v })} />
-      <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--line)", opacity: p.on ? 1 : 0.4, pointerEvents: p.on ? "auto" : "none", transition: "opacity .2s var(--ez)" }} aria-hidden={!p.on}>
+      <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--sep)", opacity: p.on ? 1 : 0.4, pointerEvents: p.on ? "auto" : "none", transition: "opacity .2s var(--ez)" }} aria-hidden={!p.on}>
         <div>
           <div className="flex items-baseline justify-between"><span className="text-sm" style={{ color: "var(--ivory)" }}>Volume</span><span className="text-[11px] mono" style={{ color: "var(--brass)" }}>{Math.round(p.vol * 100)}%</span></div>
           <input type="range" min={20} max={100} step={10} value={Math.round(p.vol * 100)} onChange={(e) => set({ vol: Number(e.target.value) / 100 })} className="w-full mt-1" aria-label="Sound volume" disabled={!p.on} />
@@ -2260,7 +2288,7 @@ function Trainer({ rules, setRules, spread }) {
           </div>
           <div className={narrow ? "mt-3" : ""}>
             <div className="kbdhint text-[11px] mt-2 text-center" style={{ color: "var(--muted)" }}>Keys: <b>H</b> hit · <b>S</b> stand · <b>D</b> double · <b>P</b> split{rules.surrender ? <> · <b>R</b> surrender</> : null}{wide ? null : <> · <b>O</b> odds</>} · <b>Enter</b> next</div>
-            <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}><Toggle label="Deal the next hand automatically" on={auto} onChange={(v) => { setAuto(v); if (!v) pause(); }} /></div>
+            <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--sep)" }}><Toggle label="Deal the next hand automatically" on={auto} onChange={(v) => { setAuto(v); if (!v) pause(); }} /></div>
           </div>
         </section>
       </div>)}
@@ -2590,9 +2618,9 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
           <div className="eyebrow">Counting</div>
           <div className="text-xs mono" style={{ color: "var(--muted)" }}>{stats.cards.toLocaleString()} cards counted</div>
         </div>
-        <div className="grid grid-cols-3 gap-3 mt-3 text-center">
-          {[["Accuracy", stats.drills ? Math.round((stats.right / stats.drills) * 100) + "%" : "—"], ["Drills", stats.drills], ["Best speed", stats.bestSpeed ? stats.bestSpeed + "s / card" : "—"]].map(([k, v]) => (
-            <div key={k}><div className="eyebrow" style={{ fontSize: 10 }}>{k}</div><div className="mono text-sm mt-1">{v}</div></div>
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          {[["Accuracy", stats.drills ? Math.round((stats.right / stats.drills) * 100) + "%" : "—"], ["Drills", stats.drills], ["Best per card", stats.bestSpeed ? stats.bestSpeed + "s" : "—"]].map(([k, v]) => (
+            <div key={k}><div className="lab">{k}</div><div className="statn sm">{v}</div></div>
           ))}
         </div>
       </section>
@@ -3030,7 +3058,7 @@ function KeyBinder({ keys, onChange }) {
   }, [cap, keys]); // eslint-disable-line
   const changed = PLAY_KEY_ROWS.some(([a]) => keys[a] !== PLAY_KEYS_DEF[a]);
   return (
-    <div className="kbdonly mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+    <div className="kbdonly mt-4 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
       <div className="flex items-baseline justify-between mb-2"><span className="text-sm" style={{ color: "var(--ivory)" }}>Keyboard</span>{changed ? <button type="button" onClick={() => { setCap(null); onChange({ ...PLAY_KEYS_DEF }); }} className="text-[11px] underline underline-offset-2 lnk" style={{ color: "var(--muted)" }}>Reset keys</button> : <span className="text-[11px]" style={{ color: "var(--muted)" }}>click a key to change it</span>}</div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
         {PLAY_KEY_ROWS.map(([a, label]) => (
@@ -3132,7 +3160,7 @@ function ShoePanel({ shoe, dl, tc, showCount, trace }) {
         <span>{pos - 1} seen</span><span>{left} to the cut card</span>
       </div>
       {showCount && (
-        <div className="mt-3.5 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+        <div className="mt-3.5 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
           <div className="flex items-baseline justify-between mb-1.5">
             <span className="eyebrow" style={{ fontSize: 9 }}>True count, this shoe</span>
             <span className="mono text-xs" style={{ color: tc > 0 ? "var(--brass)" : tc < 0 ? "var(--neg-l)" : "var(--ivory-d)" }}>{fmtTC(tc)}</span>
@@ -3553,15 +3581,15 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
         </div>
 
         {/* the live numbers, attached to the table rather than floating in their own card */}
-        <div className="mt-2.5 pb-2.5 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid var(--line)" }}>
+        <div className="mt-3 pb-2.5 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid var(--sep)" }}>
           <div className="shrink-0">
             <div className="eyebrow" style={{ fontSize: 9 }}>Bankroll</div>
-            <div className="mono font-semibold" style={{ fontSize: 17 }}>{cash(bankAnim)}</div>
+            <div className="statn">{cash(bankAnim)}</div>
           </div>
           {history.length > 1 && <div className="flex gap-1.5 flex-wrap justify-center min-w-0" style={{ maxWidth: 140 }}>{history.map((n, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: 99, background: n > 0 ? "var(--brass)" : n < 0 ? "rgba(var(--neg),.8)" : "rgba(var(--fg),.25)", opacity: 0.45 + 0.55 * ((i + 1) / history.length) }} />)}</div>}
           <div className="text-right shrink-0 whitespace-nowrap">
             <div className="eyebrow" style={{ fontSize: 9 }}>{phase === "result" && lastNet !== null && lastNet !== 0 ? <span key={stats.hands} className="pop" style={{ color: lastNet > 0 ? "var(--brass)" : "var(--rose)" }}>{sgnCash(lastNet)} this hand</span> : `Net · ${stats.hands} hand${stats.hands === 1 ? "" : "s"}`}</div>
-            <div className="mono font-semibold" style={{ fontSize: 17, color: stats.net > 0 ? "var(--brass)" : stats.net < 0 ? "var(--neg-l)" : "var(--ivory)" }}>{sgnCash(netAnim)}</div>
+            <div className="statn" style={{ color: stats.net > 0 ? "var(--brass)" : stats.net < 0 ? "var(--neg-l)" : "var(--ivory)" }}>{sgnCash(netAnim)}</div>
           </div>
         </div>
         {/* the message and the controls change height with every phase of a hand: the card glides to its new size
@@ -3643,7 +3671,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
             ? <Seg small value={scope} options={[["session", "This session"], ["all", "All time"]]} onChange={(v) => { if (v === "all") flushAll(); setScope(v); }} style={{ marginBottom: 14 }} />
             : <div className="eyebrow mb-3">This session</div>}
           <StatRow items={[["Hands", view.hands.toLocaleString()], ["Clean", view.hands ? <span style={{ color: view.clean === view.hands ? "var(--brass)" : undefined }}>{Math.round((view.clean / view.hands) * 100) + "%"}</span> : "—"], ["Checks", view.checks ? `${Math.round((view.checksOk / view.checks) * 100)}%` : "—"], ["Net", <span style={{ color: view.net > 0 ? "var(--brass)" : view.net < 0 ? "var(--neg-l)" : undefined }}>{sgnCash(view.net)}</span>]]} />
-          {view.hands > 0 && <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}><PnlMini pts={view.pts} hands={view.hands} /></div>}
+          {view.hands > 0 && <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--sep)" }}><PnlMini pts={view.pts} hands={view.hands} /></div>}
         </section>
       )}
 
@@ -3673,7 +3701,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <Toggle label="Deal the next hand automatically" sub="The wait follows the dealing speed. You still place the bet." on={autoNext} onChange={setAutoNext} />
           <SoundToggle />
         </div>
-        <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+        <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
           <div className="flex items-baseline justify-between mb-1.5"><span className="text-sm" style={{ color: "var(--ivory)" }}>Count check</span><span className="text-[11px] mono" style={{ color: "var(--muted)" }}>{checkEvery ? `every ${checkEvery} hands` : "off"}</span></div>
           <Seg small value={checkEvery} options={[[3, "3"], [5, "5"], [10, "10"], [20, "20"], [0, "Off"]]} onChange={setCheckEvery} />
         </div>
@@ -3683,7 +3711,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
           <div className="flex justify-between -mt-1" style={{ fontSize: 10, color: "var(--muted)" }}><span>faster</span><span>slower</span></div>
         </div>
         <KeyBinder keys={keys} onChange={setKeys} />
-        <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+        <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
           <span className="text-[11px]" style={{ color: "var(--muted)" }}>Mistakes are flagged but the hand plays on, like a real table.</span>
           <ConfirmLink label="New session" confirm="Tap again to restart" onConfirm={reset} className="ml-3 whitespace-nowrap" />
         </div>
@@ -4062,8 +4090,8 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
               const spark = cum.map((v, i) => `${i ? "L" : "M"}${(i / (cum.length - 1)) * 72},${(18 - ((v - lo) / rng) * 16).toFixed(1)}`).join("");
               return (
               <div className="homesess flex items-end justify-between gap-3">
-                <div className="min-w-0"><div className="disp mono text-3xl" style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}$<Glide v={Math.abs(netAnim)} enter round dur={520} f={(x) => x.toLocaleString()} /></div>
-                <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{fmtH(totH)} played · expected {exp >= 0 ? "+" : "−"}${Math.abs(exp).toLocaleString()}</div></div>
+                <div className="min-w-0"><div className={"hl md" + (hlLong(Math.abs(netAnim).toLocaleString(), 6) ? " long" : "")} style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}$<Glide v={Math.abs(netAnim)} enter round dur={520} f={(x) => x.toLocaleString()} /></div>
+                <div className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>{fmtH(totH)} played · expected {exp >= 0 ? "+" : "−"}${Math.abs(exp).toLocaleString()}</div></div>
                 {cum.length > 2 && <svg className="notdesk" width="72" height="20" viewBox="0 0 72 20" aria-hidden="true"><path className="drawline" pathLength="1" d={spark} fill="none" stroke={totR >= 0 ? "var(--brass)" : "var(--rose)"} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" opacity=".8" /></svg>}
                 {cum.length > 2 && (() => { const X = (i) => (i / (cum.length - 1)) * 300, Y = (v) => 66 - ((v - lo) / rng) * 60; const line = cum.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(""); const col = totR >= 0 ? "var(--brass)" : "var(--rose)"; return (
                   <svg className="deskonly homechart wipex" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true">
@@ -4132,7 +4160,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
               <span className="mono text-xs text-right" style={{ color: lv[2] }}>{sc}</span>
             </div>); })}
         </div>
-        <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+        <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
           <span className="text-[11px]" style={{ color: "var(--muted)" }}>{daysOld >= 7 ? "It's been a week — retake to refresh your plan." : "Retake weekly to track the trend."}</span>
           <button onClick={() => setRunning(true)} className="text-xs font-semibold whitespace-nowrap ml-3 lnk" style={{ color: "var(--brass)" }}>Retake</button>
         </div>
@@ -4242,9 +4270,9 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
         {onExpand && <button onClick={onExpand} className="ml-auto text-xs font-semibold whitespace-nowrap lnk" style={{ color: "var(--brass)" }}>Full screen ⤢</button>}
       </div>
       {ddMed != null && (
-        <div className="grid grid-cols-2 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
-          <div><div className="eyebrow" style={{ fontSize: 9 }}>Median drawdown</div><div className="mono text-base font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>−{money(Math.round(ddMed / 25) * 25)}</div><div className="text-[10px]" style={{ color: "var(--muted)" }}>expected over {fmtH(last.h)}</div></div>
-          <div><div className="eyebrow" style={{ fontSize: 9 }}>Your drawdown</div><div className="mono text-base font-semibold mt-0.5" style={{ color: mdd0 > ddMed ? "var(--neg-l)" : "var(--ivory)" }}>{mdd0 ? "−\u2060" + money(Math.round(mdd0)) : "$0"}</div><div className="text-[10px]" style={{ color: "var(--muted)" }}>biggest drop from a peak</div></div>
+        <div className="grid grid-cols-2 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
+          <div><div className="lab">Median drawdown</div><div className="statn sm" style={{ color: "var(--ivory)" }}>−{money(Math.round(ddMed / 25) * 25)}</div><div className="text-[10px]" style={{ color: "var(--muted)" }}>expected over {fmtH(last.h)}</div></div>
+          <div><div className="lab">Your drawdown</div><div className="statn sm" style={{ color: mdd0 > ddMed ? "var(--neg-l)" : "var(--ivory)" }}>{mdd0 ? "−\u2060" + money(Math.round(mdd0)) : "$0"}</div><div className="text-[10px]" style={{ color: "var(--muted)" }}>biggest drop from a peak</div></div>
         </div>
       )}
     </div>
@@ -4386,11 +4414,11 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
           </button>))}
       </div>
       {/* stats: one quiet row */}
-      <div className="grid grid-cols-4 mt-3 pt-3 text-center" style={{ borderTop: "1px solid rgba(var(--fg),.07)" }}>
-        {[["Per hour", last.h > 0 ? sgnMoney(last.act / last.h) : "—", `exp ${sgnMoney(last.h > 0 ? last.exp / last.h : evHour || 0)}`], ["Won", n ? `${Math.round((wins / n) * 100)}%` : "—", `${wins} of ${n}`], ["Best", best ? sgnMoney(best.result) : "—", "session"], ["Drawdown", mdd ? `−${shortMoney(mdd)}` : "$0", ddE ? `median −${shortMoney(ddE.med)}` : "peak to low"]].map(([k, v, sub], i) => (
-          <div key={k} style={{ borderLeft: i ? "1px solid rgba(var(--fg),.07)" : "none" }}>
-            <div className="text-[10px] font-medium" style={{ color: "var(--muted)" }}>{k}</div>
-            <div className="mono text-sm font-semibold mt-0.5" style={{ color: "var(--ivory)" }}>{v}</div>
+      <div className="grid grid-cols-4 mt-3 pt-3 text-center">
+        {[["Per hour", last.h > 0 ? sgnMoney(last.act / last.h) : "—", `exp ${sgnMoney(last.h > 0 ? last.exp / last.h : evHour || 0)}`], ["Won", n ? `${Math.round((wins / n) * 100)}%` : "—", `${wins} of ${n}`], ["Best", best ? sgnMoney(best.result) : "—", "session"], ["Drawdown", mdd ? `−\u2060${shortMoney(mdd)}` : "$0", ddE ? `median −\u2060${shortMoney(ddE.med)}` : "peak to low"]].map(([k, v, sub], i) => (
+          <div key={k}>
+            <div className="lab">{k}</div>
+            <div className="statn sm" style={{ color: "var(--ivory)" }}>{v}</div>
             <div className="text-[10px]" style={{ color: "var(--muted)" }}>{sub}</div>
           </div>))}
       </div>
@@ -4471,7 +4499,7 @@ function PracticeCard({ log, go }) {
         <span className="mono text-xs" style={{ color: "var(--muted)" }}>{d.st >= 2 ? <><span style={{ color: "var(--brass)" }}>{d.st}-day streak</span> · </> : null}{d.on} of 14 days</span>
       </div>
       <div className="flex items-baseline gap-2 mt-2">
-        <span className="disp mono text-3xl" style={{ color: "var(--ivory)" }}><Glide v={d.n} enter round f={(x) => x.toLocaleString()} /></span>
+        <span className="hl md" style={{ color: "var(--ivory)" }}><Glide v={d.n} enter round f={(x) => x.toLocaleString()} /></span>
         <span className="text-xs" style={{ color: "var(--muted)" }}>reps · <span className="mono font-semibold" style={{ color: skillTone(d.acc) }}>{d.acc}%</span> right</span>
       </div>
       <div className="pdays" role="img" aria-label={`Reps a day over the last 14 days, ${d.n} in all`}>
@@ -4540,14 +4568,14 @@ function SkillsCard({ log, go }) {
     <section className="card p-5 mb-4 ph-last">
       <div className="flex items-baseline justify-between mb-1">
         <div className="eyebrow">Your skills</div>
-        {rows.length > 0 && <span className="text-[11px]" style={{ color: "var(--muted)" }}>accuracy · last 7 days</span>}
+        {rows.length > 0 && <span className="text-[11px]" style={{ color: "var(--muted)" }} title="Green from 95%: casino-ready. Red under 85%: needs work.">accuracy · last 7 days</span>}
       </div>
       {!rows.length ? (
         <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>Practice any drill and your accuracy for each skill shows up here.</p>
       ) : (
         <div className="-mx-1">
           {rows.map((r, i) => (
-            <button key={r.k} onClick={() => go && SKILL_GO[r.k] && go(...SKILL_GO[r.k])} className="skillrow w-full text-left" title={r.sub} style={{ borderTop: i ? "1px solid var(--line)" : "none" }}>
+            <button key={r.k} onClick={() => go && SKILL_GO[r.k] && go(...SKILL_GO[r.k])} className="skillrow w-full text-left" title={r.sub}>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-sm font-medium truncate" style={{ color: "var(--ivory)" }}>{r.name}</span>
@@ -4565,7 +4593,6 @@ function SkillsCard({ log, go }) {
             </button>))}
         </div>
       )}
-      {rows.length > 0 && <p className="text-[11px] mt-2" style={{ color: "var(--muted)" }}><span style={{ color: "var(--brass)" }}>●</span> 95%+ is casino-ready · <span style={{ color: "var(--rose)" }}>●</span> under 85% needs work</p>}
     </section>
   );
 }
@@ -4606,9 +4633,9 @@ function SpreadSheet({ cfg0, current, legacy, session, others = 0, onUse, onUseA
             </div>))}
         </div>
         <div className="flex gap-1 mt-1">{COUNTS.map((c) => <span key={c} className="flex-1 text-center mono" style={{ fontSize: 8.5, color: "var(--muted)" }}>{LABEL(c).replace("≤ ", "≤").replace("≥ ", "≥")}</span>)}</div>
-        <div className="grid grid-cols-2 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
-          <div><div className="eyebrow" style={{ fontSize: 9.5 }}>Expected</div><div className="mono text-base font-semibold" style={{ color: snap.ev >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(snap.ev)}/hr</div>{h ? <div className="text-[11px]" style={{ color: "var(--muted)" }}>{sgnMoney(snap.ev * h)} over {h}h</div> : null}</div>
-          <div><div className="eyebrow" style={{ fontSize: 9.5 }}>Swings</div><div className="mono text-base font-semibold">±{money(snap.sd)}/hr</div></div>
+        <div className="grid grid-cols-2 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
+          <div><div className="lab">Expected</div><div className="statn sm" style={{ color: snap.ev >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(snap.ev)}/hr</div>{h ? <div className="text-[11px]" style={{ color: "var(--muted)" }}>{sgnMoney(snap.ev * h)} over {h}h</div> : null}</div>
+          <div><div className="lab">Swings</div><div className="statn sm">±{money(snap.sd)}/hr</div></div>
         </div>
       </div>
       {edit && (
@@ -4857,7 +4884,7 @@ function MonthCal({ k, list, onOpen }) {
   const net = days.reduce((a, o) => a + o.net, 0), hrs = days.reduce((a, o) => a + o.h, 0);
   const ups = days.filter((o) => o.net > 0).length, dns = days.filter((o) => o.net < 0).length;
   return (
-    <div className="fadein mt-4 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
+    <div className="fadein mt-4 pt-4" style={{ borderTop: "1px solid var(--sep)" }}>
       <div className="flex items-baseline justify-between mb-3">
         <div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{monthName(k)}</div>
         <div className="mono text-xs" style={{ color: net > 0 ? "var(--win-l)" : net < 0 ? "var(--neg-l)" : "var(--ivory-d)" }}>{sgnMoney(net)} <span style={{ color: "var(--muted)" }}>· {fmtH(hrs)}</span></div>
@@ -4907,8 +4934,8 @@ function StatTile({ k, v, sub, tone, enter }) {
   return (
     <div className={"min-w-0" + (enter ? " rise" : "")}>
       <div className="lab">{k}</div>
-      <div className="mono text-[17px] font-semibold mt-0.5" style={{ color: tone || "var(--ivory)" }}>{v}</div>
-      {sub && <div className="text-[11px] leading-snug mt-px" style={{ color: "var(--muted)" }}>{sub}</div>}
+      <div className={"statn" + (typeof v === "string" && hlLong(v, 9) ? " sm" : "")} style={{ color: tone || "var(--ivory)" }}>{v}</div>
+      {sub && <div className="text-[11px] leading-snug mt-0.5" style={{ color: "var(--muted)" }}>{sub}</div>}
     </div>
   );
 }
@@ -5041,19 +5068,19 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="eyebrow">{filtered ? [period === "30" ? "Last 30 days" : period === "90" ? "Last 90 days" : period === "ytd" ? "This year" : "All time", casino !== "all" ? byCasino[0]?.name || "" : ""].filter(Boolean).join(" · ") : "All-time result"}</div>
-            <div className="disp mono hl mt-1" style={{ color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={520} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
-            <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{list.length ? `${st.n} session${st.n === 1 ? "" : "s"} · ${fmtH(st.H)} · expected ${sgnMoney(st.E)}` : "No sessions yet"}</div>
+            <div className={"hl mt-1.5" + (hlLong(Math.abs(totAnim).toLocaleString(), 8) ? " xlong" : hlLong(Math.abs(totAnim).toLocaleString(), 5) ? " long" : "")} style={{ color: list.length ? (up ? "var(--brass)" : "var(--rose)") : "var(--muted)" }}>{list.length ? <>{up ? "+" : "−"}$<Glide v={Math.abs(totAnim)} enter round dur={520} f={(x) => x.toLocaleString()} /></> : "$0"}</div>
+            <div className="text-xs mt-2" style={{ color: "var(--muted)" }}>{list.length ? `${st.n} session${st.n === 1 ? "" : "s"} · ${fmtH(st.H)} · expected ${sgnMoney(st.E)}` : "No sessions yet"}</div>
           </div>
           <button onClick={() => setSheet("new")} className="btn md fit shrink-0" aria-label="Log a session">+ Log</button>
         </div>
         {list.length >= 2 && <div className="mt-4"><PnlChart sessions={list} evHour={evHour} sdHour={sdHour} ddMed={null} onExpand={() => setPnlFull(true)} /></div>}
         {list.length > 0 && (
-          <div className="stats three mt-3 pt-4" style={{ borderTop: "1px solid var(--line)" }}>
+          <div className="stats three mt-3 pt-4" style={{ borderTop: "1px solid var(--sep)" }}>
             {[["Per hour", sgnMoney(st.perHour), `exp ${sgnMoney(st.expHour)}`], ["Won", `${Math.round(st.winRate * 100)}%`, `${st.wins} of ${st.n}`], ["Avg session", sgnMoney(st.avg), fmtH(st.avgH)]].map(([k, v, s]) => (
               <div key={k} className="min-w-0">
                 <div className="lab statlab">{k}</div>
-                <div className="mono text-[17px] font-semibold mt-0.5">{v}</div>
-                <div className="text-[11px] mt-px" style={{ color: "var(--muted)" }}>{s}</div>
+                <div className="statn">{v}</div>
+                <div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>{s}</div>
               </div>))}
           </div>
         )}
@@ -5143,7 +5170,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
         {/* months */}
         {months.length >= 2 && (
           <section className="card p-5 mb-4">
-            <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">By month</div><div className="mono text-xs" style={{ color: "var(--muted)" }}>{`${months.length} months`}</div></div>
+            <div className="flex items-baseline justify-between mb-2"><div className="eyebrow">By month</div></div>
             <MonthBars months={months} sel={calMonth} onPick={wide ? (k) => setCalPick(calPick === k ? null : k) : undefined} />
             <Fold open={!!calMonth}>{calShown.current && <MonthCal key={calShown.current} k={calShown.current} list={list} onOpen={setSheet} />}</Fold>
           </section>
@@ -6461,22 +6488,22 @@ function BetSpreadCalculator() {
           <div className="grid grid-cols-2 gap-5">
             <div>
               <div className="eyebrow">Profit / hour</div>
-              <div className="disp hl mt-1 mono" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={400} f={(x) => money(x)} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>/hr</span></div>
-              <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>expected, ± {money(r.sdHour)} (1 SD)</div>
+              <div className={"hl mt-1.5" + (hlLong(money(r.evHour), 4) ? " long" : "")} style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}><Glide v={r.evHour} enter dur={400} f={(x) => money(x)} /><span className="u">/hr</span></div>
+              <div className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>expected, ± {money(r.sdHour)} (1 SD)</div>
             </div>
             <div>
               <div className="eyebrow">Risk of ruin</div>
-              <div className="disp hl mt-1 mono" style={{ color: rorTone }}><Glide v={r.ror} enter dur={400} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="text-lg font-medium ml-0.5" style={{ opacity: .55 }}>%</span></div>
-              <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>chance of losing {money(+bankroll || 0)}</div>
+              <div className={"hl mt-1.5" + (r.ror < 0.001 ? " long" : "")} style={{ color: rorTone }}><Glide v={r.ror} enter dur={400} f={(x) => (x >= 0.9995 ? "100" : pct(x, r.ror < 0.001 ? 3 : 1).replace("%", ""))} /><span className="u">%</span></div>
+              <div className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>chance of losing {money(+bankroll || 0)}</div>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3 mt-5 pt-4 text-center" style={{ borderTop: "1px solid var(--line)" }}>
+          <div className="grid grid-cols-3 gap-3 mt-5 pt-4" style={{ borderTop: "1px solid var(--sep)" }}>
             {[
               ["EV / round", money(r.evHand, 2)],
               ["Avg bet", money(r.avgBet)],
               ["N₀ rounds", isFinite(r.n0) ? Math.round(r.n0).toLocaleString() : "—"],
             ].map(([k, v]) => (
-              <div key={k}><div className="eyebrow" style={{ fontSize: 10 }}>{k}</div><div className="mono text-sm mt-1">{v}</div></div>
+              <div key={k}><div className="lab">{k}</div><div className="statn sm">{v}</div></div>
             ))}
           </div>
           <Info label="What's N₀?">
@@ -6496,10 +6523,10 @@ function BetSpreadCalculator() {
             </div>
             {sess ? (
               <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div><div className="lab">Bring with you</div><div className="mono statn" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>lasts 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
-                <div><div className="lab">Expected profit</div><div className="mono statn" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px]" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
-                <div><div className="lab">Losing session</div><div className="mono statn" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>chance you end down</div></div>
-                <div><div className="lab">Median drawdown</div><div className="mono statn" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.dd90 == null ? "peak to low" : <>1 in 10: <span className="whitespace-nowrap">{`−\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</span></>}</div></div>
+                <div><div className="lab">Bring with you</div><div className="mono statn" style={{ color: "var(--brass)" }}><Glide v={Math.ceil(sess.c99 / 50) * 50} round dur={440} f={(x) => money(x)} /></div><div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>lasts 99% · <span className="whitespace-nowrap">{money(Math.ceil(sess.c95 / 50) * 50)} for 95%</span></div></div>
+                <div><div className="lab">Expected profit</div><div className="mono statn" style={{ color: sess.exp >= 0 ? "var(--ivory)" : "var(--rose)" }}><Glide v={sess.exp} dur={440} f={(x) => sgnMoney(x)} /></div><div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>average over {fmtH(sessT)}</div></div>
+                <div><div className="lab">Losing session</div><div className="mono statn" style={{ color: "var(--ivory)" }}><Glide v={sess.down * 100} round dur={440} f={(x) => x} />%</div><div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>chance you end down</div></div>
+                <div><div className="lab">Median drawdown</div><div className="mono statn" style={{ color: "var(--ivory)" }}>{sess.ddMed == null ? "…" : <span key="v" className="fadein">{"−\u2060" + money(Math.round(sess.ddMed / 25) * 25)}</span>}</div><div className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>{sess.dd90 == null ? "peak to low" : <>1 in 10: <span className="whitespace-nowrap">{`−\u2060${money(Math.round(sess.dd90 / 25) * 25)}`}</span></>}</div></div>
               </div>
             ) : <div className="text-xs" style={{ color: "var(--muted)" }}>Enter your planned hours to see what to bring.</div>}
             <Info label="About these numbers">"Bring with you" covers the deepest you're likely to dip during the session, not just where you finish — including the extra swing from hot and cold shoes clustering, checked against full simulations. Drawdown is the biggest drop from a high point to a low within the session.</Info>
@@ -6689,7 +6716,7 @@ function BetSpreadCalculator() {
             </div>
           )}
 
-          <div className="mt-4 pt-4 text-sm" style={{ borderTop: "1px solid var(--line)", color: "var(--ivory-d)" }}>
+          <div className="mt-4 pt-4 text-sm" style={{ borderTop: "1px solid var(--sep)", color: "var(--ivory-d)" }}>
             Keeping your <em>current</em> spread, you'd need a bankroll of{" "}
             <span className="mono font-semibold" style={{ color: "var(--brass)" }}>{isFinite(bankrollNeeded) ? money(bankrollNeeded) : "—"}</span>{" "}
             to bring risk of ruin down to {pct(Math.min(rorTarget, 0.2), 0)}.
