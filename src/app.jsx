@@ -1412,6 +1412,47 @@ html.scrolled .pillrail .rulespill:active{transform:scale(.9)}
 /* a shortcut tile's name stays on one line on a 320px phone ("Log session" broke in two, so one tile read differently from the rest) */
 @media (max-width:350px){.bj .homepage .qa{font-size:11px;letter-spacing:-.015em;white-space:nowrap}}
 /* ---- end of Home works better ---- */
+/* ---- Liquid glass V: the glass is a drop, and nothing pops in or out (21 Nov, night) ---- */
+.navglide{transition:opacity .3s var(--ez-soft),scale .52s var(--spring),filter .2s var(--ez)}
+.navglide.off{opacity:0;scale:.5}
+@media (prefers-reduced-motion:reduce){.navglide{transition:none!important}}
+.hdock{display:none}
+.rp-a{display:flex;align-items:center;gap:inherit;min-width:0}
+.rp-b{display:none}
+@media (max-width:1023px){
+.shell>header .hctl{visibility:hidden}
+.hdock{display:block;position:-webkit-sticky;position:sticky;top:calc(env(safe-area-inset-top) + 8px - var(--pre,21px));height:0;z-index:46;pointer-events:none}
+.hdockin{position:absolute;right:0;top:var(--pre,21px);width:var(--dw,auto);display:flex;align-items:center;justify-content:flex-end;gap:8px;pointer-events:auto}
+.hdock .rulespill{min-width:0;min-height:34px}
+.hdock.tight .rulespill{gap:0;padding-right:11px}
+.hdock.tight .rulespill svg{display:none}
+.hdock .rulespill,.hdock .iconbtn{background:linear-gradient(180deg,rgba(var(--fg),.12),rgba(var(--fg),.04)),rgba(var(--bgrgb),.3);background-clip:padding-box;border-color:transparent;-webkit-backdrop-filter:blur(14px) saturate(2) brightness(1.18);backdrop-filter:blur(14px) saturate(2) brightness(1.18);box-shadow:var(--gl-body),0 10px 24px -12px rgba(0,0,0,.65),0 2px 6px -2px rgba(0,0,0,.3)}
+:root[data-theme="light"] .hdock .rulespill,:root[data-theme="light"] .hdock .iconbtn{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.46));background-clip:padding-box;-webkit-backdrop-filter:blur(14px) saturate(1.9);backdrop-filter:blur(14px) saturate(1.9);box-shadow:var(--gl-body),0 0 0 var(--hair) rgba(var(--fg),.1),0 10px 22px -12px rgba(var(--fg),.4)}
+.hdock .iconbtn[aria-pressed="true"]{background:linear-gradient(180deg,rgba(var(--acc),.34),rgba(var(--acc),.14)),rgba(var(--bgrgb),.3);background-clip:padding-box;box-shadow:var(--gl-bead),0 10px 24px -12px rgba(0,0,0,.65)}
+.topbar>div>span:first-child{max-width:calc(100% - var(--dw,170px) - 14px)}
+.rulespill.two{display:grid;grid-template-columns:minmax(0,1fr);align-items:center}
+.rulespill.two>.rp-a,.rulespill.two>.rp-b{grid-area:1/1;min-width:0;transition:opacity .3s var(--ez-soft),translate .46s var(--ez)}
+.rulespill.two>.rp-b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--ivory-d);opacity:0;translate:0 7px}
+html.scrolled .rulespill.two>.rp-a{opacity:0;translate:0 -7px}
+html.scrolled .rulespill.two>.rp-b{opacity:1;translate:0 0}
+}
+@media (max-width:370px){.hdock .rulespill{font-size:11px;gap:3px;padding:6px 9px}.hdock .rulespill svg{display:none}.hdockin{gap:8px}}
+@media (prefers-reduced-transparency:reduce){.hdock .rulespill,.hdock .iconbtn{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgb(var(--bgrgb))}}
+@media (prefers-reduced-motion:reduce){.rulespill.two>.rp-a,.rulespill.two>.rp-b{transition:none!important}}
+.pageghost{position:fixed;inset:0;z-index:30;overflow:hidden;pointer-events:none;contain:strict;opacity:1;transition:opacity .2s var(--ez-soft)}
+.pageghost.go{opacity:0}
+.pageghost *{animation:none!important;transition:none!important}
+.pageghost header{visibility:hidden!important}
+.pageghost .hdock,.pageghost .topbar,.pageghost .pillrail,.pageghost .sbar{display:none!important}
+@keyframes titlein{from{opacity:0;filter:blur(5px);transform:translateY(5px)}}
+.shell>header h1,.shell>header .hdrback,.shell>header .eyebrow{animation:titlein .38s var(--ez-soft) backwards}
+@media (prefers-reduced-motion:reduce){.shell>header h1,.shell>header .hdrback,.shell>header .eyebrow{animation:none}.pageghost{display:none}}
+@media (min-width:371px) and (max-width:1023px){.shell>header h1.mid{font-size:clamp(24px,7.4vw,30px);letter-spacing:-.028em;white-space:nowrap}}
+@media (max-width:370px){.shell>header h1.mid{white-space:nowrap}}
+@media (max-width:350px){.shell>header h1.mid{font-size:20px}}
+@media (min-width:371px) and (max-width:1023px) and (max-height:740px){.shell>header h1.mid{font-size:min(26px,7.4vw)}}
+.sn-glide{transition:opacity .2s var(--ez)}
+/* ---- end of liquid glass V ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -2131,82 +2172,125 @@ const bezFn = (x1, y1, x2, y2) => (p) => {
   return by((lo + hi) / 2);
 };
 const slideEase = bezFn(0.22, 0.68, 0.1, 1);
-// The glass spring (Nick, 21 Nov: "Springy like Apple's"). A selection no longer eases to a stop: it is carried on a
-// damped spring, off the mark at once (two thirds of the way in the first fifth of its time), about 5% past its
-// place once, and settled. u is 0 to 1 of the animation's time; z is the damping (lower = more bounce) and k how many
-// time constants fit in it (6.2 leaves a quarter of a percent at the end). CSS has curves fitted to the same springs
-// as --spring, --spring-b and --spring-soft (tools/glass/spring.py writes them).
-const springOf = (z, k = 6.2) => { const a = k, b = (k * Math.sqrt(1 - z * z)) / z; return { p: (u) => (u >= 1 ? 1 : 1 - Math.exp(-a * u) * (Math.cos(b * u) + (a / b) * Math.sin(b * u))), v: (u) => Math.exp(-a * u) * Math.sin(b * u) }; };
-const GLASS = springOf(0.68);
-// The same spring from x0 to x1 when the glass is already moving (v0, in px per whole animation): where it is at u,
-// and how fast. With v0 = 0 these are GLASS.p and GLASS.v scaled to the distance.
-const SPK = 6.2, SPB = (SPK * Math.sqrt(1 - 0.68 * 0.68)) / 0.68;
-const springX = (x0, x1, v0, u) => { if (u >= 1) return x1; const a = x0 - x1, c = (v0 + SPK * a) / SPB; return x1 + Math.exp(-SPK * u) * (a * Math.cos(SPB * u) + c * Math.sin(SPB * u)); };
-const springV = (x0, x1, v0, u) => { const a = x0 - x1, c = (v0 + SPK * a) / SPB; return Math.exp(-SPK * u) * ((SPB * c - SPK * a) * Math.cos(SPB * u) - (SPK * c + SPB * a) * Math.sin(SPB * u)); };
+// The glass is a drop (Nick, 21 Nov: "Springy like Apple's"; then, of the result, "too stiff": it should "stretch and
+// flow more, like a liquid drop"). A selection is not a box on one spring any more: **its two edges ride springs of
+// their own**. The edge in front is quick and the edge behind is slow, so the glass reaches for where it is going,
+// draws out long and a little thinner while it travels, and its tail catches up, lands a touch squashed and taller,
+// and settles. Pressing it makes both edges spring outwards; a wall stops the front edge and the tail piles into it.
+// A state is { L, vL, R, vR, G, vG }: the left and right edges and their speeds (px, px a second, in the track's own
+// coordinates) and the swell (1 = its own size) with its speed. CSS has curves fitted to simpler springs of the same
+// family as --spring, --spring-b and --spring-soft (tools/glass/spring.py writes them).
+const DROP_GX = 0.6;        // of a swell, how much goes sideways (the rest is height)
+const DROP_FRONT = 21, DROP_BACK = 12.5, DROP_STILL = [20, 0.56];   // rad/s: the front edge, the back edge, and both when it only changes size
+// the damping that carries a spring this share of its travel past the mark: an edge settles the same few pixels
+// however far it came (a fixed damping overshot 3px over one tab and 15px over five)
+const zetaFor = (over) => { const l = Math.log(Math.max(0.004, Math.min(0.3, over))); return -l / Math.sqrt(Math.PI * Math.PI + l * l); };
+const dropAim = (x, w, G) => { const g = ((G - 1) * DROP_GX * w) / 2; return [x - g, x + w + g]; };
+const dropRest = (x, w) => ({ L: x, vL: 0, R: x + w, vR: 0, G: 1, vG: 0 });
+// Which spring each edge is on for a state s heading for edges at tL and tR (w: the glass's width; k quickens both).
+// How far an edge has to settle counts the speed it already has, so a flight taken over half way lands as softly as
+// one from rest.
+const dropEdges = (s, tL, tR, w, k = 1) => {
+  const dL = tL - s.L, dR = tR - s.R, d = (dL + dR) / 2; if (Math.abs(d) < 1) return [DROP_STILL, DROP_STILL];
+  const wf = DROP_FRONT * k, wb = DROP_BACK * k, right = d > 0;
+  const front = [wf, zetaFor(2.5 / Math.max(24, Math.hypot(right ? dR : dL, (right ? s.vR : s.vL) / wf)))];
+  const back = [wb, zetaFor(Math.min(5.5, w * 0.08) / Math.max(24, Math.hypot(right ? dL : dR, (right ? s.vL : s.vR) / wb)))];
+  return right ? [back, front] : [front, back];
+};
+const dropStep = (s, tL, tR, tG, h, pL, pR) => {
+  s.vL += (-pL[0] * pL[0] * (s.L - tL) - 2 * pL[1] * pL[0] * s.vL) * h; s.L += s.vL * h;
+  s.vR += (-pR[0] * pR[0] * (s.R - tR) - 2 * pR[1] * pR[0] * s.vR) * h; s.R += s.vR * h;
+  s.vG += (-576 * (s.G - tG) - 29.8 * s.vG) * h; s.G += s.vG * h;
+};
+// What is drawn for a state, as [x, scaleX, scaleY] of a glass w wide resting at x = 0. It depends on the state alone,
+// so a flight handed over to another one is drawn the same on both sides of the join. The stretch levels off at half
+// the glass's width, a squash at a fifth; a wall (lo, hi: how far the edges may go) gives 3px and no more; a long
+// drop is thinner and a squashed one taller, as if it kept its volume.
+const dropShow = (s, w, lo, hi) => {
+  const base = w * (1 + (s.G - 1) * DROP_GX), c = (s.L + s.R) / 2, e = s.R - s.L - base, cap = w * 0.5, sq = base * 0.2;
+  const wd = base + (e > 0 ? cap * Math.tanh(e / cap) : -sq * Math.tanh(-e / sq));
+  let L = c - wd / 2, R = c + wd / 2;
+  if (L < lo) L = lo - 3 * Math.tanh((lo - L) / 3);
+  if (R > hi) R = hi + 3 * Math.tanh((R - hi) / 3);
+  const r = (R - L) / base;
+  return [(L + R) / 2 - w / 2, (R - L) / w, s.G * (r > 1 ? 1 - 0.24 * (r - 1) : 1 + 0.42 * (1 - r))];
+};
+const dropCss = (v) => `translateX(${v[0].toFixed(2)}px) scale(${v[1].toFixed(4)}, ${v[2].toFixed(4)})`;
 const GLIDE_N = 48;   // keyframes: more than one a frame
-const GLIDE_P = Array.from({ length: GLIDE_N + 1 }, (_, k) => GLASS.p(k / GLIDE_N));
-const GLIDE_B = GLIDE_P.map((_, k) => { const u = Math.min(1, k / GLIDE_N / 0.5); return Math.sin(Math.PI * u) ** 2; });   // the swell in flight: up and back down inside the first half
-const glassPull = (v, step) => Math.min(0.09, (0.0065 * Math.abs(v)) / Math.max(1, step));   // how far the glass stretches at a speed (px a second): the tab bar's finger-follower uses the same sum, so nothing changes shape at a hand-over
-// One transform animation, as before (see the note above): the slide, the stretch that follows its speed, the swell
-// (lift: the tab bar's lens grows a tenth while it travels) and whatever size it had are baked into the same
-// keyframes. At the end of its track the glass squashes against the wall instead of springing out of it.
-// **Every flight starts from where the glass is, how large it is and how fast it is going**, so one flight handed
-// over to the next (a press, then the release; a finger's follower, then the spring) never stops and starts again.
+// A whole flight worked out ahead: from state s (changed in place) to rest at x on a glass w wide, swollen to G, over
+// ms; up is the swell of a flight nobody is holding. Returns the state at each keyframe.
+const dropBake = (s, x, w, G, ms, up) => {
+  const [aL, aR] = dropAim(x, w, G), [pL, pR] = dropEdges(s, aL, aR, w, 600 / ms), h = ms / 1000 / GLIDE_N / 4, states = [];
+  for (let k = 0; k <= GLIDE_N; k++) {
+    if (k) for (let j = 1; j <= 4; j++) {
+      const tG = G + up * GLIDE_B[(k - 1) * 4 + j], [tL, tR] = dropAim(x, w, tG);
+      dropStep(s, tL, tR, tG, h, pL, pR);
+      // the last sixth of the time draws whatever is left onto the resting shape, so the end of the animation changes nothing
+      if (k > GLIDE_N * 0.84) { s.L += (aL - s.L) * 0.12; s.R += (aR - s.R) * 0.12; s.G += (G - s.G) * 0.12; s.vL *= 0.88; s.vR *= 0.88; s.vG *= 0.88; }
+    }
+    states.push({ ...s });
+  }
+  return states;
+};
+const GLIDE_B = Array.from({ length: GLIDE_N * 4 + 1 }, (_, k) => { const u = Math.min(1, k / (GLIDE_N * 4) / 0.5); return Math.sin(Math.PI * u) ** 2; });   // the swell of a flight: up and back down over its first half
+// One transform animation (see the note above): the whole flight is worked out ahead, a few milliseconds at a step,
+// and baked into keyframes played linearly, so it runs on the compositor. lift is the swell of a flight nobody is
+// holding (the tab bar's lens grows a tenth while it travels).
+// **Every flight starts from the state the glass is in** - both edges, the swell and their speeds - read off the
+// flight that is running (its states are kept beside its keyframes), so one flight handed over to the next (a press,
+// then the release; a finger's follower, then the spring) never stops and starts again.
 // ctl (a ref) is how the tab bar carries the highlight:
-//   aim(to)            a finger has come down on tab `to`: go there and stay, a little swollen, until told otherwise
-//   state()            where it is now: { x, v (px a second), sx, sy }
-//   hold(x, sx, sy, v) put it exactly there (the finger's follower, every frame)
-//   drop(to, v)        let go: spring onto tab `to` at its own size (v: the follower's speed)
+//   aim(to)    a finger has come down on tab to: go there and stay, a little swollen, until told otherwise
+//   state()    the state it is in now (a copy)
+//   hold(s)    draw this state (the finger's follower, every frame)
+//   drop(to)   let go: spring onto tab to at its own size
+//   box()      { w, step, lo, hi }: the glass's width, the distance between two places and how far its edges may go
 function Glider({ cls, at, style, ms = 480, gap = 0, lift = 0, ctl }) {
   const el = useRef(null), prev = useRef(at), run = useRef(null), held = useRef(null), fl = useRef(null), aimed = useRef(null);
-  const state = (rest) => {
-    const n = el.current, h = held.current, r = run.current, f = fl.current;
-    if (h) return { x: h.x, v: h.v || 0, sx: h.sx, sy: h.sy };
+  const box = () => {
+    const n = el.current, w = n ? n.offsetWidth : 0, step = w + gap; let cnt = 1;
+    try { cnt = Math.max(1, parseInt(getComputedStyle(n).getPropertyValue("--n"), 10) || 1); } catch (_) {}
+    return { w, step, lo: -2.5, hi: cnt * step - gap + 2.5 };
+  };
+  const state = (rest, b) => {
+    const h = held.current, r = run.current, f = fl.current;
+    if (h) return { ...h };
     try {
-      const going = r && f && (r.playState === "running" || (r.playState === "finished" && f.keep));
-      if (n && going) {
-        const m = new DOMMatrixReadOnly(getComputedStyle(n).transform), u = Math.min(1, (Number(r.currentTime) || 0) / f.T);
-        if (isFinite(m.m41)) return { x: m.m41, v: r.playState === "running" ? springV(f.x0, f.x1, f.v0, u) / (f.T / 1000) : 0, sx: m.a || 1, sy: m.d || 1 };
+      if (r && f && (r.playState === "running" || (r.playState === "finished" && f.keep))) {
+        const q = Math.max(0, Math.min(GLIDE_N, ((Number(r.currentTime) || 0) / f.T) * GLIDE_N)), i = Math.min(GLIDE_N - 1, Math.floor(q)), t = q - i, a = f.at[i], c = f.at[i + 1], o = {};
+        for (const key in a) o[key] = a[key] + (c[key] - a[key]) * t;
+        if (r.playState !== "running") o.vL = o.vR = o.vG = 0;
+        return o;
       }
     } catch (_) {}
-    return { x: rest * (n ? n.offsetWidth + gap : 0), v: 0, sx: 1, sy: 1 };
+    return dropRest(rest * b.step, b.w);
   };
-  const fly = (to, rest, o) => {
+  const stop = () => { try { if (run.current) run.current.cancel(); } catch (_) {} run.current = null; fl.current = null; };
+  const fly = (to, rest, grow) => {
     const n = el.current; if (!n) return;
-    const h = held.current, s = state(rest), grow = !!(o && o.grow); held.current = null;
-    try { if (run.current) run.current.cancel(); } catch (_) {}
-    run.current = null; fl.current = null;
-    if (!n.animate || noMotion()) { if (h) n.style.transform = ""; return; }
-    const w = n.offsetWidth, step = w + gap, x1 = to * step, T = ms / 1000;
-    const x0 = s.x, v0 = (o && o.v != null ? o.v : s.v) * T, ex = grow ? 1.07 : 1, ey = grow ? 1.11 : 1, dist = Math.abs(x1 - x0);
-    if (dist < 0.5 && Math.abs(v0) < 2 && Math.abs(s.sx - ex) < 0.004 && Math.abs(s.sy - ey) < 0.004) { if (h) n.style.transform = ""; if (!grow) return; }
-    let cnt = 1; try { cnt = Math.max(1, parseInt(getComputedStyle(n).getPropertyValue("--n"), 10) || 1); } catch (_) {}
-    const hi = (cnt - 1) * step, up = dist > 1 && !grow && Math.abs(s.sx - 1) < 0.02 ? lift : 0;
-    const frames = GLIDE_P.map((pp, k) => {
-      const u = k / GLIDE_N, pull = glassPull(springV(x0, x1, v0, u) / T, step), g = 1 + up * GLIDE_B[k];
-      let x = springX(x0, x1, v0, u), sx = (ex + (s.sx - ex) * (1 - pp)) * g * (1 + pull), sy = (ey + (s.sy - ey) * (1 - pp)) * g * (1 - pull * 0.14);
-      const over = x < 0 ? -x : x > hi ? x - hi : 0;
-      if (over > 0) { const q = Math.min(0.1, over / Math.max(1, w)), wall = x < 0 ? -1 : 1; sx *= 1 - q; sy *= 1 + q * 0.25; x = (wall < 0 ? 0 : hi) + wall * w * q / 2; }
-      return { transform: `translateX(${x.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`, offset: u };
-    });
-    try { run.current = n.animate(frames, { duration: ms, easing: "linear", fill: grow ? "forwards" : "none" }); fl.current = { x0, x1, v0, T: ms, keep: grow }; } catch (_) {}
-    // Start it on this frame's clock. Left to itself an animation waits a frame to begin, so the glass would be
-    // shown twice where the last flight left it: a one-frame stall at every hand-over (measured: 16px a frame, a
-    // frame at -3px, then 24px).
+    const b = box(), { w, step, lo, hi } = b, G = grow || 1, was = !!held.current, s = state(rest, b); held.current = null; stop();
+    if (!n.animate || noMotion() || !w) { n.style.transform = ""; return; }
+    const x1 = to * step, [aL, aR] = dropAim(x1, w, G), d = (aL + aR) / 2 - (s.L + s.R) / 2;
+    if (Math.abs(d) < 0.5 && Math.abs(s.R - s.L - (aR - aL)) < 0.5 && Math.abs(s.G - G) < 0.004 && Math.abs(s.vL) + Math.abs(s.vR) < 4) { if (was) n.style.transform = ""; if (G === 1) return; }
+    const up = Math.abs(d) > 1 && G === 1 && Math.abs(s.G - 1) < 0.02 ? lift : 0, g = G > 1 ? ((G - 1) * DROP_GX * w) / 2 : 0;
+    const states = dropBake(s, x1, w, G, ms, up), frames = states.map((q, k) => ({ transform: dropCss(dropShow(q, w, lo - g, hi + g)), offset: k / GLIDE_N }));
+    try { run.current = n.animate(frames, { duration: ms, easing: "linear", fill: G > 1 ? "forwards" : "none" }); fl.current = { at: states, T: ms, keep: G > 1 }; } catch (_) {}
+    // begun on this frame's clock: left to itself an animation waits a frame to start, which showed the glass twice in the same place at every hand-over
     try { const t = document.timeline.currentTime; if (run.current && t != null) run.current.startTime = t; } catch (_) {}
-    if (h) n.style.transform = "";
+    if (was) n.style.transform = "";
   };
   useLayoutEffect(() => {
     const d = at - prev.current; prev.current = at;
     if (!d) return;
-    if (aimed.current === at) { aimed.current = null; return; }   // the finger already sent it there
+    if (aimed.current === at) { aimed.current = null; return; }   // the finger has taken it there already
     aimed.current = null; fly(at, at - d);
   }, [at]);
   if (ctl) ctl.current = {
-    state: () => state(prev.current),
-    aim: (to) => { aimed.current = to; fly(to, prev.current, { grow: true }); },
-    hold: (x, sx, sy, v) => { const n = el.current; if (!n) return; try { if (run.current) run.current.cancel(); } catch (_) {} run.current = null; fl.current = null; held.current = { x, sx, sy, v: v || 0 }; n.style.transform = `translateX(${x.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`; },
-    drop: (to, v) => { aimed.current = to !== prev.current ? to : null; fly(to, prev.current, v != null ? { v } : null); },
+    box,
+    state: () => state(prev.current, box()),
+    aim: (to) => { aimed.current = to; fly(to, prev.current, 1.14); },
+    hold: (s) => { const n = el.current; if (!n) return; const b = box(), g = ((s.G - 1) * DROP_GX * b.w) / 2; stop(); held.current = { ...s }; n.style.transform = dropCss(dropShow(s, b.w, b.lo - g, b.hi + g)); },
+    drop: (to) => { aimed.current = to !== prev.current ? to : null; fly(to, prev.current); },
   };
   return <i ref={el} className={cls} aria-hidden="true" style={style} />;
 }
@@ -2215,7 +2299,7 @@ function Seg({ value, options, onChange, cols, style, small }) {
   const n = options.length, at = options.findIndex(([v]) => v === value), slide = !cols || cols >= n;
   return (
     <div className={"chipseg" + (slide ? " slide" : " rows")} role="group" style={{ gridTemplateColumns: `repeat(${cols || n}, minmax(0,1fr))`, "--n": n, "--i": Math.max(0, at), ...style }}>
-      {slide && at >= 0 && <Glider cls="thumb" at={at} ms={520} gap={4} lift={0.03} />}
+      {slide && at >= 0 && <Glider cls="thumb" at={at} ms={560} gap={4} lift={0.03} />}
       {options.map(([v, l]) => (
         <button key={String(v)} className={value === v ? "on" : ""} onClick={() => onChange(v)} style={{ height: 36, padding: "0 6px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: small ? 12 : undefined }}>{l}</button>
       ))}
@@ -5844,7 +5928,8 @@ function TabBar({ navTab, go }) {
   const nav = useRef(null), cap = useRef(null), track = useRef(null), lens = useRef(null);
   const isOn = (k) => (k === "trainhub" ? navTab === "train" || navTab === "count" || navTab === "trainhub" : k === "more" ? navTab === "more" || MORE_PAGES.includes(navTab) : navTab === k);
   const at = PHONE_TABS.findIndex(([k]) => isOn(k));
-  if (at < 0) lens.current = null;   // Settings is no tab: there is no highlight to carry, and a tap is a plain click
+  // Settings is no tab: the highlight stays where it was, faded out, and comes back from there; a tap is a plain click
+  const lastAt = useRef(Math.max(0, at)); if (at >= 0) lastAt.current = at;
   const live = useRef(null); live.current = { at, go };
   useEffect(() => {
     const el = nav.current; if (!el) return;
@@ -5867,24 +5952,24 @@ function TabBar({ navTab, go }) {
     const c = cap.current, tr = track.current, el = nav.current; if (!c || !tr || !el) return;
     const N = PHONE_TABS.length;
     // mode: "" nothing down · "press" a finger is down and has not slid · "drag" it is carrying the lens
-    let id = null, mode = "", x0 = 0, far = 0, idx0 = 0, raf = 0, pos = 0, vel = 0, want = 0, gx = 1, gy = 1, mag = 0, since = 0, tLast = 0, done = -1e9;
+    let id = null, mode = "", x0 = 0, far = 0, idx0 = 0, raf = 0, s = null, want = 0, mag = 0, tLast = 0, done = -1e9;
     const step = () => (tr.offsetWidth || 1) / N;
     const local = (cx) => { const r = tr.getBoundingClientRect(), k = r.width / (tr.offsetWidth || 1) || 1; return (cx - r.left) / k; };   // the capsule is larger while pressed and smaller while shrunk
     const tabAt = (cx) => Math.max(0, Math.min(N - 1, Math.floor(local(cx) / step())));
     const btns = () => tr.querySelectorAll(".navbtn");
     const mags = (x, st, k) => { const near = Math.round(x / st); btns().forEach((b, j) => { const d = Math.abs(x - j * st) / st, m = d >= 1 ? 0 : 1 - d * d * (3 - 2 * d); b.style.setProperty("--mag", (m * k).toFixed(3)); b.classList.toggle("under", j === near); }); };
     const clear = () => btns().forEach((b) => { b.style.removeProperty("--mag"); b.classList.remove("under"); });
-    // While the finger carries it, the lens rides a damped spring after the finger (soft as it sets off, tight once
-    // it has caught up), so it has a speed of its own to hand to the release.
+    // While the finger carries it the lens is the same drop with the finger for a target: the edge in front keeps up
+    // and the edge behind trails, so the glass draws out as it is pulled and gathers itself when the finger stops.
+    // Its state (edges, swell and their speeds) is what the release springs away from.
+    const FRONT = [34, 0.86], BACK = [15, 0.72], STILL = [24, 0.8], BIG = 1.17;
     const tick = (now) => {
-      raf = 0; const L = lens.current; if (mode !== "drag" || !L) return;
-      const st = step(), dt = Math.min(34, Math.max(1, now - (tLast || now - 16))) / 1000; tLast = now; since += dt;
-      const w = 18 + 20 * Math.min(1, since / 0.16), z = 0.9;
-      for (let n = Math.ceil(dt / 0.006), h = dt / n; n > 0; n--) { vel += (w * w * (want - pos) - 2 * z * w * vel) * h; pos += vel * h; }
-      const e = 1 - Math.exp(-dt / 0.085); gx += (1.1 - gx) * e; gy += (1.15 - gy) * e; mag += (1 - mag) * (1 - Math.exp(-dt / 0.11));
-      const pull = glassPull(vel, st);
-      L.hold(pos, gx * (1 + pull), gy * (1 - pull * 0.14), vel);
-      mags(pos, st, mag);
+      raf = 0; const L = lens.current; if (mode !== "drag" || !L || !s) return;
+      const b = L.box(), dt = Math.min(34, Math.max(1, now - (tLast || now - 16))) / 1000; tLast = now;
+      const [tL, tR] = dropAim(want, b.w, BIG), d = (tL + tR) / 2 - (s.L + s.R) / 2, pL = d > 3 ? BACK : d < -3 ? FRONT : STILL, pR = d > 3 ? FRONT : d < -3 ? BACK : STILL;
+      for (let n = Math.ceil(dt / 0.004), h = dt / n; n > 0; n--) dropStep(s, tL, tR, BIG, h, pL, pR);
+      mag += (1 - mag) * (1 - Math.exp(-dt / 0.11));
+      L.hold(s); mags((s.L + s.R) / 2 - b.w / 2, b.step, mag);
       raf = requestAnimationFrame(tick);
     };
     const stop = () => { if (raf) { cancelAnimationFrame(raf); raf = 0; } };
@@ -5892,7 +5977,7 @@ function TabBar({ navTab, go }) {
     const down = (e) => {
       if (id !== null && e.isPrimary) abort();   // the last press never got its lift: put the lens back before taking this one
       const L = lens.current;
-      if (e.button || id !== null || !L) return;
+      if (e.button || id !== null || !L || live.current.at < 0) return;
       id = e.pointerId; mode = "press"; x0 = e.clientX; far = 0; idx0 = tabAt(e.clientX);
       if (el.hasAttribute("data-min")) window.dispatchEvent(new Event("bj-navfull"));
       if (e.pointerType === "mouse") { try { c.setPointerCapture(id); } catch (_) {} }   // a finger is held by the tab it came down on already
@@ -5904,8 +5989,7 @@ function TabBar({ navTab, go }) {
       far = Math.max(far, Math.abs(e.clientX - x0));
       if (mode === "press") {
         if (far < 6) return;
-        const s = L.state(), pull = glassPull(s.v, step());
-        mode = "drag"; pos = s.x; vel = s.v; gx = s.sx / (1 + pull); gy = s.sy / (1 - pull * 0.14); mag = 0; since = 0; tLast = 0; c.classList.add("dragging");
+        mode = "drag"; s = L.state(); mag = 0; tLast = 0; c.classList.add("dragging");
       }
       const st = step(); want = Math.max(0, Math.min((N - 1) * st, local(e.clientX) - st / 2));
       if (!raf) raf = requestAnimationFrame(tick);
@@ -5921,7 +6005,7 @@ function TabBar({ navTab, go }) {
       if (cancel || off || was < 0) { L.drop(Math.max(0, was)); return; }
       const to = m === "drag" ? tabAt(e.clientX) : idx0, tap = m === "press" || (far < 14 && to === idx0);   // a tap with a wobble in it is still a tap
       done = performance.now();
-      L.drop(to, m === "drag" ? vel : undefined);
+      L.drop(to);
       if (tap || to !== was) live.current.go(PHONE_TABS[to][0]);
     };
     const up = (e) => end(e, false), cancel = (e) => end(e, true);
@@ -5938,11 +6022,11 @@ function TabBar({ navTab, go }) {
   }, []);
   return (
     <nav ref={nav} className="bottom-nav" aria-label="Sections">
-      <div ref={cap} className="navcap" style={{ "--i": Math.max(0, at), "--n": PHONE_TABS.length }}>
+      <div ref={cap} className="navcap" style={{ "--i": lastAt.current, "--n": PHONE_TABS.length }}>
         {/* the glass: a light, bright blur to its edge, the deep blur of its body, which stops short of the edge, and a skin (tint, bevel, rim) */}
         <span className="nglass" aria-hidden="true"><i className="ng rim" /><i className="ng deep" /><i className="ng skin" /></span>
         <div ref={track} className="navtrack">
-          {at >= 0 && <Glider cls="navglide" at={at} ms={600} lift={0.1} ctl={lens} />}
+          <Glider cls={"navglide" + (at < 0 ? " off" : "")} at={lastAt.current} ms={640} lift={0.1} ctl={lens} />
           {PHONE_TABS.map(([k, l], j) => { const on = j === at, icon = k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]; return (
             <button key={k} onClick={() => go(k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
               <span className="navicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
@@ -5955,9 +6039,20 @@ function TabBar({ navTab, go }) {
 }
 function TopBar({ title, children, onBack }) {
   const [show, setShow] = useState(false);
-  useEffect(() => { const f = () => { const on = window.scrollY > 64; setShow(on); document.documentElement.classList.toggle("scrolled", on); }; f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
+  // it shows once the page's own title has gone up under where this one sits (64px of scroll on most pages, more on Home, whose title sits under the date)
+  const bar = useRef(null);
+  useEffect(() => {
+    let h1 = null;
+    const f = () => {
+      if (!h1 || !h1.isConnected) h1 = document.querySelector(".shell>header h1");
+      const t = bar.current && bar.current.querySelector(".tbtitle");
+      const on = h1 && t ? h1.getBoundingClientRect().bottom < t.offsetTop + 1 : window.scrollY > 64;
+      setShow(on); document.documentElement.classList.toggle("scrolled", on);
+    };
+    f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f);
+  }, []);
   // while it is tucked away the keyboard must not land on it (Tab used to stop on an invisible title first)
-  const bar = useRef(null); useEffect(() => { if (bar.current) bar.current.inert = !show; }, [show]);
+  useEffect(() => { if (bar.current) bar.current.inert = !show; }, [show]);
   return (
     <div ref={bar} className={"topbar" + (show ? " show" : "") + (String(title || "").length > 12 ? " tight" : "")} aria-hidden={!show}>
       {/* the scroll edge: the page blurs and dims into the top of the screen instead of meeting a bar (a fade, then two masked blurs) */}
@@ -6599,7 +6694,21 @@ function BetSpreadCalculator() {
   const shellRef = useRef(null), enterT = useRef(0);
   const markEnter = (ms) => { const el = shellRef.current; if (!el) return; el.setAttribute("data-enter", ""); clearTimeout(enterT.current); enterT.current = setTimeout(() => { try { el.removeAttribute("data-enter"); } catch (_) {} }, ms); };
   useLayoutEffect(() => { markEnter(2600); return () => clearTimeout(enterT.current); }, []); // eslint-disable-line
-  useLayoutEffect(() => { if (tabSeen.current !== tab) { tabSeen.current = tab; markEnter(1500); try { window.scrollTo(0, 0); } catch (_) {} } }, [tab]); // eslint-disable-line
+  // The dock: on a phone the rules pill and the gear are one pair of controls that ride up with the page and stop at
+  // the top (position: sticky), instead of scrolling away and a second pair appearing in their place. The header keeps
+  // an unseen copy for its layout; the dock is laid over that copy, wherever this page's header puts it.
+  const dockRef = useRef(null), hdrRef = useRef(null), fadeGhostRef = useRef(() => {});
+  const placeDock = () => { const el = shellRef.current, h = hdrRef.current, c = h && h.querySelector(".hctl"); if (!el || !c) return; const a = c.getBoundingClientRect(); el.style.setProperty("--pre", Math.round((a.top - h.getBoundingClientRect().top) * 2) / 2 + "px"); el.style.setProperty("--dw", Math.ceil(a.width) + "px"); };
+  useLayoutEffect(() => { placeDock(); const h = hdrRef.current; if (!h || typeof ResizeObserver === "undefined") return; const ro = new ResizeObserver(placeDock); ro.observe(h); const c = h.querySelector(".hctl"); if (c) ro.observe(c); return () => ro.disconnect(); }, []); // eslint-disable-line
+  useLayoutEffect(() => {
+    if (tabSeen.current === tab) return;
+    tabSeen.current = tab; markEnter(1500);
+    // a page opens at its top: the dock glides back down to its place there rather than jumping to it
+    const d = dockRef.current && dockRef.current.firstChild, y0 = d ? d.getBoundingClientRect().top : 0;
+    placeDock(); try { window.scrollTo(0, 0); } catch (_) {}
+    fadeGhostRef.current();
+    if (d && d.animate && !noMotion()) { const dy = y0 - d.getBoundingClientRect().top; if (Math.abs(dy) > 1) { try { d.animate([{ transform: `translateY(${dy.toFixed(1)}px)` }, { transform: "none" }], { duration: 520, easing: "cubic-bezier(.22,.68,.1,1)" }); } catch (_) {} } }
+  }, [tab]); // eslint-disable-line
   const [rules, setRulesRaw] = useState(DEFAULT_RULES);
   const [setupOpen, setSetupOpen] = useState(false);
   const [firstRun, setFirstRun] = useState(true);
@@ -6732,7 +6841,27 @@ function BetSpreadCalculator() {
     : narrow && tab === "count" ? ({ count: "Running count", tc: "True count", totals: "Hand totals", tests: "Tests" })[_lastDrill] || "Drills"
     : ({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", trainhub: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan", more: "More" })[tab];
   const backBtn = back && <button className="hdrback" onClick={() => go(back[0])}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>{back[1]}</button>;
-  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; if (o?.pre) _logPre = o.pre; if (o?.near) openCasinoNear(); if (t === "settings" && navTab !== "settings") cameFrom.current = navTab; const same = t === tab; setNavTab(t); if (same) setTab(t); else startTransition(() => setTab(t)); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } if (same) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) {} } };
+  // The page being left dissolves over the one arriving instead of vanishing in a frame: at the tap a still copy of it
+  // is laid over the screen (under the tab bar and the top), and once the new page is in the copy fades out over a
+  // fifth of a second. Only the copy fades; the real page is swapped exactly as before, so nothing waits for it.
+  // No copy is made of a page that is still arriving itself (its cards would be shown already landed).
+  const ghost = useRef(null), pageAt = useRef(0);
+  const dropGhost = () => { const g = ghost.current; ghost.current = null; if (g) { clearTimeout(g.t); try { g.el.remove(); } catch (_) {} } };
+  const makeGhost = () => {
+    dropGhost();
+    try {
+      const sh = shellRef.current; if (!sh || noMotion() || performance.now() - pageAt.current < 750) return;
+      const r = sh.getBoundingClientRect(), el = document.createElement("div"), cp = sh.cloneNode(false);
+      el.className = "pageghost"; el.setAttribute("aria-hidden", "true"); el.inert = true;
+      cp.removeAttribute("data-enter"); cp.style.cssText += `;position:absolute;margin:0!important;max-width:none!important;top:${r.top}px;left:${r.left}px;width:${r.width}px;opacity:1;transition:none`;
+      for (const n of sh.children) cp.appendChild(n.cloneNode(true));
+      el.appendChild(cp); sh.parentNode.appendChild(el);
+      ghost.current = { el, t: setTimeout(dropGhost, 1400) };
+    } catch (_) {}
+  };
+  const fadeGhost = () => { const g = ghost.current; pageAt.current = performance.now(); if (!g) return; g.el.classList.add("go"); clearTimeout(g.t); g.t = setTimeout(dropGhost, 340); };
+  fadeGhostRef.current = fadeGhost;
+  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; if (o?.pre) _logPre = o.pre; if (o?.near) openCasinoNear(); if (t === "settings" && navTab !== "settings") cameFrom.current = navTab; const same = t === tab; if (!same) makeGhost(); setNavTab(t); if (same) setTab(t); else startTransition(() => setTab(t)); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } if (same) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) {} } };
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
   const [cmd, setCmd] = useState(false);
   const [keysOpen, setKeysOpen] = useState(false); // the keyboard shortcuts list ("?")
@@ -6745,6 +6874,16 @@ function BetSpreadCalculator() {
       const n = snav.current, g = glide.current; if (!n || !g) return;
       const on = n.querySelector(".sn-item.on"); if (!on) { g.style.opacity = 0; return; }
       const snap = jump || g.style.opacity === "0"; if (snap) g.style.transition = "none";
+      // it travels as the tab bar's lens does: a drop whose front edge leads and whose back edge catches up (dropBake, on end)
+      const y1 = on.offsetTop, h = on.offsetHeight, y0 = parseFloat((/translateY\(([-\d.]+)px/.exec(g.style.transform) || [])[1]);
+      if (!snap && isFinite(y0) && Math.abs(y0 - y1) > 1 && g.animate && !noMotion()) {
+        try {
+          let st = dropRest(y0, h); const old = g.getAnimations().find((a) => a.id === "drop");
+          if (old) { const m = new DOMMatrixReadOnly(getComputedStyle(g).transform), hh = h * (m.d || 1), c = m.m42 + h / 2; if (isFinite(c)) st = { L: c - hh / 2, vL: 0, R: c + hh / 2, vR: 0, G: 1, vG: 0 }; old.cancel(); }
+          const an = g.animate(dropBake(st, y1, h, 1, 620, 0).map((q, k) => { const v = dropShow(q, h, -1e6, 1e6); return { transform: `translateY(${v[0].toFixed(2)}px) scale(${(1 + (v[2] - 1) * 0.25).toFixed(4)}, ${v[1].toFixed(4)})`, offset: k / GLIDE_N }; }), { duration: 620, easing: "linear" });   // it is five times wider than tall: only a little of the thinning goes across it
+          an.id = "drop";
+        } catch (_) {}
+      }
       g.style.transform = `translateY(${on.offsetTop}px)`; g.style.height = on.offsetHeight + "px"; g.style.left = on.offsetLeft + "px"; g.style.right = "auto"; g.style.width = on.offsetWidth + "px"; g.style.opacity = 1;
       if (snap) { void g.offsetHeight; g.style.transition = ""; }
     };
@@ -6809,13 +6948,21 @@ function BetSpreadCalculator() {
       {keysOpen && <ShortcutsSheet onClose={() => setKeysOpen(false)} mac={isMac} />}
       <div ref={shellRef} className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s var(--ez)", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
-        <header className={"mb-5 flex items-end justify-between gap-3" + (pageTitle.length > 12 ? " tight" : "")}>
+        <div ref={dockRef} className={"hdock" + (pageTitle.length > 9 ? " tight" : "")}><div className="hdockin">
+          <button onClick={() => setSetupOpen(true)} className={"rulespill" + (narrow && tab === "calc" ? " two" : "")} aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
+            <span className="rp-a"><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></span>
+            {/* Bet spread: once the page is scrolled the pill reads what the spread earns and risks */}
+            {narrow && tab === "calc" && <span className="rp-b mono" aria-hidden="true"><span style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span> · <span style={{ color: rorTone }}>{pct(r.ror, 1)}</span> risk</span>}
+          </button>
+          {gear}
+        </div></div>
+        <header ref={hdrRef} className={"mb-5 flex items-end justify-between gap-3" + (pageTitle.length > 9 ? " tight" : "")}>
           <div className="shrink-0">
             {tab === "progress" && <div className="eyebrow mb-1.5">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>}
             {backBtn}
-            <h1 className={"leading-none font-semibold" + (pageTitle.length > 9 ? " long" : "")}>{pageTitle}</h1>
+            <h1 key={pageTitle} className={"leading-none font-semibold" + (pageTitle.length > 12 ? " long" : pageTitle.length > 9 ? " mid" : "")}>{pageTitle}</h1>
           </div>
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="hctl flex items-center gap-2 min-w-0">
             <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
             <span className="mono">{rulesShort(rules)}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
@@ -6826,10 +6973,7 @@ function BetSpreadCalculator() {
         <div className="pillrail"><div className="mx-auto flex justify-end">
           <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </div></div>
-        <TopBar title={pageTitle} onBack={back ? () => go(back[0]) : null}>
-          {narrow && tab === "calc" && <span className="tbread mono text-[12px] font-semibold whitespace-nowrap" style={{ color: "var(--ivory-d)" }}><span style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span> · <span style={{ color: rorTone }}>{pct(r.ror, 1)}</span> risk</span>}
-          <span className="flex items-center gap-2 min-w-0">{!(narrow && tab === "calc") && <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>}{gear}</span>
-        </TopBar>
+        <TopBar title={pageTitle} onBack={back ? () => go(back[0]) : null} />
         <div className="sbar" aria-hidden="true" />
 
 
