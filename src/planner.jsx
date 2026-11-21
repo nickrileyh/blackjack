@@ -1162,7 +1162,7 @@ function CasinoPop({ c, rot, sessLen, onClose, onCasinos }) {
 
 // ---------- the settings row ----------
 function Settings({ bankroll, prefs, setPrefs, go }) {
-  const narrow = useNarrow(), [open, setOpen] = useState(false);
+  const narrow = useNarrow(), [open, setOpen] = useState(() => { const o = _planOpenSet; _planOpenSet = false; return o; });
   // on a phone the four settings fold into one line, so the page opens on where to play next
   if (narrow && !open) return (
     <button className="card px-5 py-3.5 mb-4 w-full text-left flex items-center justify-between gap-3 cardbtn" onClick={() => setOpen(true)} aria-expanded="false">
@@ -1204,8 +1204,13 @@ export function usePlayNext(bankroll, on = true) {
   const row = first && rot.rows.find((r) => r.c.id === first.c.id);
   return { loading: !all || rot.pending, n: rot.rows.length, ready: rot.ready.length, first, score: x ? x.score : null, ev: x && x.ev > 0 ? x.ev : null,
     when: first ? (first.ready ? "Ready now" : fmtWeekday(first.t)) : "", last: row && row.last ? ago(daysBetween(row.last, rot.today)) : "", back: !!(first && first.back),
-    none: !!all && !rot.pending && rot.rows.length > 0 && !first };
+    none: !!all && !rot.pending && rot.rows.length > 0 && !first,
+    // why nothing is suggested (every casino under the lowest score to suggest), in the words Plan's own card uses
+    minScore: rot.minScore, closest: rot.skipped[0] ? rot.skipped[0].c.name : "", closestScore: rot.skipped[0] && rot.sc.get(rot.skipped[0].c) ? rot.sc.get(rot.skipped[0].c).score : null };
 }
+// Home's "Goal" link opens Plan with its settings unfolded on a phone (that is where the hours a week are set)
+let _planOpenSet = false;
+export const openPlanSettings = () => { _planOpenSet = true; };
 export function PlanPage({ bankroll, mine, go }) {
   const [prefs, setP] = useState(() => _plan || PLAN_DEF), [all, setAll] = useState(null), [pop, setPop] = useState(null), [sessions, setSessions] = useState(null), [setup, setSetup] = useState(null);
   useEffect(() => { (async () => {

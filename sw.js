@@ -1,4 +1,4 @@
-const CACHE = "bj-v125";
+const CACHE = "bj-v126";
 // The app opens from this device's saved copy at once, with or without a connection, and the newest version is fetched
 // behind it. When a newer one has been saved, the open app is told its build stamp (the bj-build meta tag build.sh
 // writes into index.html); the app compares it with its own and offers the update, so nothing is announced by mistake.

@@ -3,7 +3,7 @@
 // Like casinos.jsx: nothing imported from app.jsx may be used while this file loads, only inside components.
 import { useState, useEffect, useMemo } from "react";
 import { Sheet, SESS_KEY, casinoKey, localDay, loadLog, FocusCard, TESTS_KEY, testsOf, TEST_DEFS } from "./app.jsx";
-import { usePlayNext, scoreTone, planHours } from "./planner.jsx";
+import { usePlayNext, scoreTone, planHours, openPlanSettings } from "./planner.jsx";
 import { useWhere, nearestCasinos, distLabel, CAS_KEY } from "./casinos.jsx";
 
 // the phone layout is everything under the line where the sidebar takes over
@@ -147,14 +147,20 @@ export function TripCard({ go, bankroll }) {
   if (t) return <section className="card p-5 mb-4 focuscard"><TimerBody t={t} go={go} /></section>;
   return (
     <section className="card p-5 mb-4">
-      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Casino trip</div><button className="text-[11px] font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => go("plan")}>Plan ›</button></div>
+      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Casino trip</div><button className="text-[11px] font-semibold lnk hlink" style={{ color: "var(--brass)" }} onClick={() => go("plan")}>Plan ›</button></div>
       {next.first ? (
         <button className="cardbtn w-full text-left flex items-center justify-between gap-3 mt-2" onClick={() => go("plan")}>
           <span className="min-w-0"><span className="block text-[11.5px]" style={{ color: "var(--muted)" }}>Next up · {next.when}{next.last ? ` · last visit ${next.last}` : ""}</span><span className="block text-[19px] font-semibold truncate mt-0.5" style={{ color: "var(--ivory)", letterSpacing: "-.01em" }}>{next.first.c.name}</span>{next.back && <span className="block text-[11px]" style={{ color: "var(--neg-l)" }}>first visit since the back-off, keep it short</span>}</span>
           {next.score != null && <span className="text-right leading-none shrink-0"><span className="block mono text-[22px] font-semibold" style={{ color: scoreTone(next.score) }}>{next.score}</span><span className="block lab mt-1" style={{ fontSize: 10.5 }}>score</span></span>}
         </button>
       ) : (
-        <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>{next.loading && next.n ? "Working out where to play next…" : next.none ? "Nothing to suggest right now. The Plan page says why, and when each casino is back." : "Start the clock when you sit down. When you leave, the hours and the casino are already filled in."}</p>
+        next.none ? (
+          // say why here, as Plan's own card does, rather than "the Plan page says why"
+          <button className="cardbtn w-full text-left mt-2" onClick={() => go("plan")}>
+            <span className="block text-[17px] font-semibold" style={{ color: "var(--ivory)" }}>Nothing to suggest yet</span>
+            <span className="block text-xs mt-1" style={{ color: "var(--ivory-d)" }}>Every casino you play scores under {next.minScore} with your {"$" + Math.round(bankroll || 0).toLocaleString()} bankroll{next.closest ? <>. Closest: {next.closest}{next.closestScore != null ? <>, <b style={{ color: scoreTone(next.closestScore) }}>{next.closestScore}</b></> : ""}</> : ""}.</span>
+          </button>
+        ) : <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>{next.loading && next.n ? "Working out where to play next…" : "Start the clock when you sit down. When you leave, the hours and the casino are already filled in."}</p>
       )}
       <div className="grid grid-cols-2 gap-2 mt-3.5">
         <button className="btn md tripbtn" style={{ padding: "0 10px" }} onClick={() => setStart(true)}>Start session</button>
@@ -193,9 +199,9 @@ export function WeekCard({ sessions, go }) {
     <section className="card p-5 mb-4 weekcard">
       <div className="flex items-baseline justify-between gap-3">
         <div className="eyebrow">This week</div>
-        <button className="text-[11px] font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => go("plan")}>{goal ? `Goal ${hrs(goal)}` : "Goal"} ›</button>
+        <button className="text-[11px] font-semibold lnk hlink" style={{ color: "var(--brass)" }} onClick={() => { openPlanSettings(); go("plan"); }} aria-label={`Weekly goal ${goal ? hrs(goal) : ""}: change it on Plan`}>{goal ? `Goal ${hrs(goal)}` : "Goal"} ›</button>
       </div>
-      <button className="cardbtn w-full text-left mt-2" onClick={() => go("sessions")}>
+      <button className="cardbtn whole w-full text-left mt-2" onClick={() => go("sessions")}>
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0"><span className="hl md" style={{ color: done >= g ? "var(--brass)" : "var(--ivory)" }}>{hrs(done).replace(" h", "")}</span><span className="text-sm ml-2" style={{ color: "var(--muted)" }}>of {hrs(g)}</span></div>
           <span className="text-xs text-right pb-0.5" style={{ color: done >= g ? "var(--brass)" : "var(--muted)" }}>{done >= g ? (done - g >= 0.05 ? `${hrs(done - g)} over` : "Goal reached") : `${hrs(g - done)} to go`}</span>
@@ -208,7 +214,7 @@ export function WeekCard({ sessions, go }) {
               <span>{d.lab}</span>
             </div>))}
         </div>
-        <div className="text-xs mt-3" style={{ color: "var(--muted)" }}>{week.n || live ? <>{week.n} session{week.n === 1 ? "" : "s"}{live ? " + one being timed" : ""}{week.n ? <> · <span className="mono" style={{ color: week.res >= 0 ? "var(--brass)" : "var(--rose)" }}>{money0(week.res)}</span></> : ""}</> : "Nothing logged yet this week"}</div>
+        <div className="text-xs mt-3" style={{ color: "var(--muted)" }}>{week.n || live ? <>{!week.n ? "One session being timed" : `${week.n} session${week.n === 1 ? "" : "s"}${live ? " + one being timed" : ""}`}{week.n ? <> · <span className="mono" style={{ color: week.res >= 0 ? "var(--brass)" : "var(--rose)" }}>{money0(week.res)}</span></> : ""}</> : "Nothing logged yet this week"}</div>
       </button>
     </section>
   );

@@ -1400,6 +1400,18 @@ html.scrolled .pillrail .rulespill:active{transform:scale(.9)}
 :root[data-theme="light"] .ng.deep{-webkit-backdrop-filter:blur(12px) saturate(1.1) brightness(.97);backdrop-filter:blur(12px) saturate(1.1) brightness(.97)}
 :root[data-theme="light"] .ng.skin{background:linear-gradient(180deg,rgba(255,255,255,.56),rgba(255,255,255,.34))}
 /* ---- end of liquid glass IV ---- */
+/* ---- Home works better (21 Nov): a card that is one link answers a tap anywhere on it, not only on its text rows
+   (the Tests card's button was 22px tall inside a 62px card); the links in a card's header sit above that and get a
+   finger-sized target on a phone ---- */
+.bj .cardbtn.whole{position:static}
+.bj .cardbtn.whole::after{content:"";position:absolute;inset:0;border-radius:inherit;z-index:0}
+/* no filter on it: the hover kit's brightness() would make the button the box its ::after fills, shrinking the target back to the text rows under a mouse; the card's rim already answers the hover */
+.bj .cardbtn.whole,.bj .cardbtn.whole:hover{filter:none}
+.bj .card:has(>.cardbtn.whole) .hlink,.bj .weekcard .hlink{position:relative;z-index:1}
+@media (pointer:coarse){.bj .hlink{position:relative;z-index:1}.bj .hlink::before{content:"";position:absolute;inset:-14px -12px}}
+/* a shortcut tile's name stays on one line on a 320px phone ("Log session" broke in two, so one tile read differently from the rest) */
+@media (max-width:350px){.bj .homepage .qa{font-size:11px;letter-spacing:-.015em;white-space:nowrap}}
+/* ---- end of Home works better ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -4259,7 +4271,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
   })(); }, []);
   const netTotal = (sess || []).reduce((a, x) => a + x.result, 0);
   const netAnim = netTotal;
-  const NAV = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }] };
+  const NAV = { strategy: ["train", { trainView: "drill", trainMode: "basic" }], deviation: ["train", { trainView: "drill", trainMode: "dev" }], count: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }] };
   const [data, setData] = useState(null);
   const [running, setRunning] = useState(false);
   useEffect(() => { (async () => { try { const r = await window.storage.get(ASSESS_KEY, false); if (r?.value) setData(JSON.parse(r.value)); } catch (_) {} })(); }, []);
@@ -4272,7 +4284,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
     <>
       {testBest && (
         <section className="card p-5 mb-4 hd-last">
-          <button onClick={() => go && go("count", { drill: "tests" })} className="cardbtn w-full text-left">
+          <button onClick={() => go && go("count", { drill: "tests" })} className="cardbtn whole w-full text-left">
             {/* one line: which test and how it went is on the Tests page, one tap away (the card is the link) */}
             <div className="flex items-center justify-between gap-3">
               <div className="eyebrow">Casino-ready tests</div>
@@ -4287,7 +4299,8 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
 
       {sess && (
         <section className="card p-5 mb-4">
-          <button onClick={() => openSessions && openSessions()} className="cardbtn w-full text-left">
+          {/* with nothing logged the card opens the log sheet: it says "log one" */}
+          <button onClick={() => (sess.length ? openSessions && openSessions() : go && go("sessions", { log: true }))} className="cardbtn whole w-full text-left">
             <div className="flex items-baseline justify-between mb-1">
               <div className="eyebrow">Sessions</div>
               <span className="mono text-xs" style={{ color: "var(--muted)" }}>{sess.length ? `${sess.length} session${sess.length > 1 ? "s" : ""} ›` : "log one ›"}</span>
@@ -4299,7 +4312,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
               return (
               <div className="homesess flex items-end justify-between gap-3">
                 <div className="min-w-0"><div className={"hl md" + (hlLong(Math.abs(netAnim).toLocaleString(), 6) ? " long" : "")} style={{ color: totR >= 0 ? "var(--brass)" : "var(--rose)" }}>{totR >= 0 ? "+" : "−"}$<Glide v={Math.abs(netAnim)} enter round dur={520} f={(x) => x.toLocaleString()} /></div>
-                <div className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>{fmtH(totH)} played · expected {exp >= 0 ? "+" : "−"}${Math.abs(exp).toLocaleString()}</div></div>
+                <div className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>All time · {fmtH(totH)} played · <span className="whitespace-nowrap">expected {exp >= 0 ? "+" : "−\u2060"}${Math.abs(exp).toLocaleString()}</span></div></div>
                 {cum.length > 2 && <svg className="notdesk" width="72" height="20" viewBox="0 0 72 20" aria-hidden="true"><path className="drawline" pathLength="1" d={spark} fill="none" stroke={totR >= 0 ? "var(--brass)" : "var(--rose)"} strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" opacity=".8" /></svg>}
                 {cum.length > 2 && (() => { const X = (i) => (i / (cum.length - 1)) * 300, Y = (v) => 66 - ((v - lo) / rng) * 60; const line = cum.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(""); const col = totR >= 0 ? "var(--brass)" : "var(--rose)"; return (
                   <svg className="deskonly homechart wipex" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true">
@@ -4319,7 +4332,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
                     </div>))}
                 </div>
               </div>); })() : (
-              <div className="text-sm" style={{ color: "var(--muted)" }}>Track wins and losses against expectation.</div>
+              <div className="text-sm" style={{ color: "var(--muted)" }}>Log each session after you play to see how you run against what the math expects.</div>
             )}
           </button>
         </section>
@@ -4636,30 +4649,11 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
   return portalTarget ? createPortal(ui, portalTarget) : ui;
 }
 const SESS_KEY = "bj-sessions-v1";
-function Progress({ evHour, sdHour, mix, hph, ready, rules, bets, go, bankroll }) {
+function Progress({ evHour, rules, bets, go, bankroll }) {
   const wide = useWide(); // the practice chart is for a wide screen only
   const [log, setLog] = useState(null);
-  const [skill, setSkill] = useState("strategy");
   const [sessions, setSessions] = useState([]);
-  const [pnlFull, setPnlFull] = useState(false);
-  const [form, setForm] = useState({ date: localDay(), where: "", hours: "", result: "", notes: "", won: true });
   useEffect(() => { (async () => { _logCache = null; setLog(await loadLog()); try { const r = await window.storage.get(SESS_KEY, false); if (r?.value) setSessions(JSON.parse(r.value)); } catch (_) {} })(); }, []);
-  const dayKey = (t) => localDay(t);
-  const days = useMemo(() => { const out = []; for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); out.push(localDay(d.getTime())); } return out; }, []);
-  const bySkill = useMemo(() => {
-    const m = {}; (log || []).forEach((e) => { const k = e.s; m[k] = m[k] || { n: 0, ok: 0, days: {}, ms: [] }; m[k].n++; m[k].ok += e.ok; const d = dayKey(e.t); m[k].days[d] = m[k].days[d] || { n: 0, ok: 0 }; m[k].days[d].n++; m[k].days[d].ok += e.ok; if (e.ms) m[k].ms.push(e.ms); });
-    return m;
-  }, [log]);
-  const cur = bySkill[skill];
-  const weekAgo = Date.now() - 7 * 864e5;
-  const week = (log || []).filter((e) => e.s === skill && e.t >= weekAgo);
-  const saveSessions = (list) => { setSessions(list); try { window.storage.set(SESS_KEY, JSON.stringify(list), false); } catch (_) {} };
-  const addSession = () => { if (!form.hours) return; const amt = Math.abs(+String(form.result).replace(/[^0-9.]/g, "")) || 0; saveSessions([...sessions, { ...form, hours: Math.round(+form.hours * 100) / 100, result: form.won ? amt : -amt, id: Date.now(), snap: { ev: Math.round(evHour * 100) / 100, sd: Math.round(sdHour * 10) / 10, hph, mix } }].sort((a, b) => a.date.localeCompare(b.date))); setForm({ ...form, where: "", hours: "", result: "", notes: "" }); };
-  const totH = sessions.reduce((a, s) => a + s.hours, 0), totR = sessions.reduce((a, s) => a + s.result, 0);
-  const [sect, setSect] = useState("level");
-  const ex = expectOf(sessions, evHour, sdHour);
-  const expEV = ex.exp, sd = ex.sd;
-  const z = sd ? (totR - expEV) / sd : 0;
   const refreshLog = async () => { _logCache = null; setLog(await loadLog()); };
   const timing = !!useSessionTimer(); // a running session goes to the top of the page
   // A computer shows two columns: practice on the left (focus, shortcuts, the last two weeks, skills) and the casino on
@@ -4720,7 +4714,8 @@ function PracticeCard({ log, go }) {
     </section>
   );
 }
-const SKILL_GO = { strategy: ["train", { trainMode: "basic" }], deviation: ["train", { trainMode: "dev" }], count: ["count", { drill: "count" }], pairs: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }], totals: ["count", { drill: "totals" }], play: ["play", {}] };
+// Practice opens on its own view: without trainView a skill would land on Charts or Fill the chart if that was open last
+const SKILL_GO = { strategy: ["train", { trainView: "drill", trainMode: "basic" }], deviation: ["train", { trainView: "drill", trainMode: "dev" }], count: ["count", { drill: "count" }], pairs: ["count", { drill: "count" }], tc: ["count", { drill: "tc" }], totals: ["count", { drill: "totals" }], play: ["play", {}] };
 // the one thing most worth practising today: a core skill you haven't tried, then your weakest under 95%,
 // then anything you haven't touched this week — or, if it's all casino-ready, a shoe of live play
 function FocusCard({ log, go }) {
@@ -4776,7 +4771,7 @@ function SkillsCard({ log, go }) {
     <section className="card p-5 mb-4 ph-last">
       <div className="flex items-baseline justify-between mb-1">
         <div className="eyebrow">Your skills</div>
-        {rows.length > 0 && <span className="text-[11px]" style={{ color: "var(--muted)" }} title="Green from 95%: casino-ready. Red under 85%: needs work.">accuracy · last 7 days</span>}
+        {rows.length > 0 && <span className="text-[11px]" style={{ color: "var(--muted)" }} title="Accuracy over the last 7 days; the arrow is the change from the 7 days before. Green from 95%: casino-ready. Red under 85%: needs work.">{rows.some((r) => r.delta) ? "last 7 days · ▲▼ vs prior 7" : "accuracy · last 7 days"}</span>}
       </div>
       {!rows.length ? (
         <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>Practice any drill and your accuracy for each skill shows up here.</p>
@@ -4788,7 +4783,7 @@ function SkillsCard({ log, go }) {
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-sm font-medium truncate" style={{ color: "var(--ivory)" }}>{r.name}</span>
                   <span className="flex items-baseline gap-2 shrink-0">
-                    {r.delta != null && r.delta !== 0 && <span className="mono text-[11px]" style={{ color: r.delta > 0 ? "var(--brass)" : "var(--neg-l)" }}>{r.delta > 0 ? "▲" : "▼"}{Math.abs(r.delta)}</span>}
+                    {r.delta != null && r.delta !== 0 && <span className="mono text-[11px]" title={`${r.delta > 0 ? "Up" : "Down"} ${Math.abs(r.delta)} points on the 7 days before`} style={{ color: r.delta > 0 ? "var(--brass)" : "var(--neg-l)" }}>{r.delta > 0 ? "▲" : "▼"}{Math.abs(r.delta)}</span>}
                     <span className="mono text-sm font-semibold" style={{ color: skillTone(r.acc) }}>{r.acc}%</span>
                   </span>
                 </div>
