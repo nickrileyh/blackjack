@@ -1225,17 +1225,17 @@ body{background:none}
 @media (max-width:1023px){:root{--gut:20px}}
 @media (min-width:1300px){.trainbar{column-gap:24px}}
 @media (min-width:1400px){:root{--gut:28px;--cpad:28px}.dgrid,.trainbar{column-gap:28px}}
-.bj .hl{font-size:clamp(34px,11.3vw,46px);line-height:1;font-weight:700;letter-spacing:-.038em;font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;white-space:nowrap}
-.bj .hl.md{font-size:clamp(32px,10.3vw,40px)}
-.bj .hl.long{font-size:clamp(30px,9.2vw,36px)}
-.bj .hl.md.long{font-size:30px}
+.bj .hl{font-size:clamp(36px,10.3vw,41px);line-height:1;font-weight:650;letter-spacing:-.03em;font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;white-space:nowrap}
+.bj .hl.md{font-size:clamp(31px,9vw,35px)}
+.bj .hl.long{font-size:clamp(30px,8.6vw,34px)}
+.bj .hl.md.long{font-size:28px}
 .bj .hl.xlong{font-size:clamp(21px,6.6vw,30px)}
 .bj .hl .u{font-size:.42em;font-weight:600;letter-spacing:-.01em;margin-left:.1em;opacity:.55}
-@media (min-width:1024px){.bj .hl{font-size:48px}.bj .hl.md{font-size:40px}.bj .hl.long{font-size:40px}.bj .hl.md.long{font-size:32px}.bj .hl.xlong{font-size:34px}}
-.bj .statn{font-size:22px;line-height:1.15;font-weight:700;letter-spacing:-.025em;margin-top:4px;font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
-.bj .statn.sm{font-size:17px;font-weight:600;letter-spacing:-.015em;margin-top:3px}
-.bj .stats.three .statn{font-size:clamp(17px,5vw,22px)}
-.bj .grid-cols-3>div>.statn.sm{font-size:clamp(14px,4.6vw,17px)}.bj .grid-cols-4>div>.statn.sm{font-size:clamp(14px,4.3vw,17px)}
+@media (min-width:1024px){.bj .hl{font-size:44px}.bj .hl.md{font-size:35px}.bj .hl.long{font-size:38px}.bj .hl.md.long{font-size:30px}.bj .hl.xlong{font-size:32px}}
+.bj .statn{font-size:20px;line-height:1.15;font-weight:650;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
+.bj .statn.sm{font-size:16px;font-weight:600;letter-spacing:-.012em;margin-top:3px}
+.bj .stats.three .statn{font-size:clamp(17px,4.8vw,20px)}
+.bj .grid-cols-3>div>.statn.sm{font-size:clamp(14px,4.3vw,16px)}.bj .grid-cols-4>div>.statn.sm{font-size:clamp(14px,4vw,16px)}
 .bj .card>.eyebrow:first-child,.bj .card>.flex:first-child>.eyebrow:first-child,.bj .card>div:first-child>.flex:first-child>.eyebrow:first-child,.bj .card>.cardbtn:first-child>.flex:first-child>.eyebrow:first-child{font-size:17px;letter-spacing:-.02em}
 @media (max-width:350px){.bj .card>.eyebrow:first-child,.bj .card>.flex:first-child>.eyebrow:first-child,.bj .card>div:first-child>.flex:first-child>.eyebrow:first-child,.bj .card>.cardbtn:first-child>.flex:first-child>.eyebrow:first-child{font-size:16px}}
 .stats{gap:22px 20px}.stats.three{gap:14px 12px}
@@ -1260,6 +1260,76 @@ body{background:none}
 @media (max-width:350px){.bj .scoutfacts{grid-template-columns:auto minmax(0,1fr)}.bj .scoutfacts>:nth-child(3){grid-column:1/-1;margin-top:8px}}
 .bj .ends{font-size:11px;color:var(--muted)}
 /* ---- end of sheets and dialogs ---- */
+/* ---- Liquid glass II: clearer glass, floating top controls, a tab bar that shrinks, glass that answers a touch (21 Nov) ---- */
+:root{
+--gl-edge-hi:linear-gradient(155deg,rgba(255,255,255,.8),rgba(255,255,255,.32) 14%,rgba(255,255,255,.13) 44%,rgba(255,255,255,.11) 70%,rgba(255,255,255,.46));
+--gl-body:inset 0 var(--hair) 0 rgba(255,255,255,.3),inset 1.5px 1.5px 2.5px -1.5px rgba(255,255,255,.36),inset -1.5px -1.5px 2.5px -1.5px rgba(255,255,255,.2),inset 0 0 16px rgba(255,255,255,.05),inset 0 -9px 12px -10px rgba(0,0,0,.42);
+--gl-float:0 18px 40px -16px rgba(0,0,0,.72),0 4px 12px -4px rgba(0,0,0,.36)}
+:root[data-theme="light"]{
+--gl-edge-hi:linear-gradient(155deg,#fff,rgba(255,255,255,.9) 14%,rgba(255,255,255,.65) 44%,rgba(255,255,255,.6) 70%,#fff);
+--gl-body:inset 0 var(--hair) 0 #fff,inset 0 0 12px rgba(255,255,255,.55),inset 0 -7px 10px -9px rgba(var(--fg),.14);
+--gl-float:0 0 0 var(--hair) rgba(var(--fg),.1),0 16px 36px -18px rgba(var(--fg),.42),0 3px 10px -4px rgba(var(--fg),.16)}
+.bottom-nav{background:linear-gradient(to top,rgba(var(--bgrgb),.6),rgba(var(--bgrgb),.24) 50%,rgba(var(--bgrgb),0))}
+.bottom-nav>div{background:linear-gradient(180deg,rgba(var(--fg),.105),rgba(var(--fg),.03)),rgba(var(--bgrgb),.24);-webkit-backdrop-filter:blur(16px) saturate(2.1) brightness(1.16);backdrop-filter:blur(16px) saturate(2.1) brightness(1.16);box-shadow:var(--gl-body),var(--gl-float);transform-origin:50% 100%;transition:transform .5s var(--ez-slide),scale .34s var(--ez)}
+:root[data-theme="light"] .bottom-nav>div{background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.4));-webkit-backdrop-filter:blur(16px) saturate(1.9) brightness(1.03);backdrop-filter:blur(16px) saturate(1.9) brightness(1.03);box-shadow:var(--gl-body),var(--gl-float)}
+.bottom-nav>div::before,.cmdk::before,.sheet::before{background:var(--gl-edge-hi)}
+.navbtn{color:var(--ivory-d)}
+.navbtn.on{color:var(--brass)}
+.cmdk{box-shadow:var(--gl-body),0 40px 90px -20px rgba(0,0,0,.8)}
+.card.rulesdlg{box-shadow:var(--gl-body),0 30px 80px -20px rgba(0,0,0,.8)}
+@media (max-width:1023px){.sheet{box-shadow:var(--gl-body),0 -10px 50px -10px rgba(0,0,0,.7)}}
+@media (min-width:1024px){.sheetwrap .sheet{box-shadow:var(--gl-body),0 40px 90px -20px rgba(0,0,0,.75)}}
+:root[data-theme="light"] .sheet,:root[data-theme="light"] .cmdk,:root[data-theme="light"] .card.rulesdlg{box-shadow:0 0 0 var(--hair) rgba(var(--fg),.1),0 30px 80px -24px rgba(var(--fg),.42)}
+.sheet,.cmdk,.card.rulesdlg{-webkit-backdrop-filter:blur(26px) saturate(2) brightness(1.2);backdrop-filter:blur(26px) saturate(2) brightness(1.2)}
+@supports (background:color-mix(in srgb,red 50%,blue)){:root:not([data-theme="light"]) .sheet,:root:not([data-theme="light"]) .cmdk,:root:not([data-theme="light"]) .card.rulesdlg{background:linear-gradient(rgba(var(--fg),.06),rgba(var(--fg),.035)),color-mix(in srgb,var(--sheet1) 54%,transparent)}}
+.topbar{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;opacity:1;padding-bottom:8px;transform:translateY(calc(-100% - 72px));transition:transform .46s var(--ez)}
+.topbar.show{transform:none;pointer-events:none}
+.topbar.show button,.topbar.show .tbread{pointer-events:auto}
+.topbar::after{display:none}
+.tbedge{position:absolute;left:0;right:0;top:0;height:calc(100% + 46px);z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(var(--bgrgb),.88),rgba(var(--bgrgb),.68) 34%,rgba(var(--bgrgb),.36) 62%,rgba(var(--bgrgb),.11) 86%,rgba(var(--bgrgb),0))}
+.tbedge>i{position:absolute;left:0;right:0;top:0}
+.tbedge>i:nth-child(1){height:100%;-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);-webkit-mask-image:linear-gradient(180deg,#000 52%,transparent);mask-image:linear-gradient(180deg,#000 52%,transparent)}
+.tbedge>i:nth-child(2){height:76%;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);-webkit-mask-image:linear-gradient(180deg,#000 46%,transparent);mask-image:linear-gradient(180deg,#000 46%,transparent)}
+.tbedge>i:nth-child(3){height:52%;-webkit-backdrop-filter:blur(12px) saturate(1.5);backdrop-filter:blur(12px) saturate(1.5);-webkit-mask-image:linear-gradient(180deg,#000 38%,transparent);mask-image:linear-gradient(180deg,#000 38%,transparent)}
+.topbar .tbtitle{min-width:0;font-size:17px;font-weight:600;letter-spacing:-.015em;color:var(--ivory);text-shadow:0 0 12px rgba(var(--bgrgb),.9),0 1px 3px rgba(var(--bgrgb),.7)}
+.topbar .rulespill,.topbar .iconbtn,.topbar .tbback,.topbar .tbread,.pillrail .rulespill{background:linear-gradient(180deg,rgba(var(--fg),.12),rgba(var(--fg),.04)),rgba(var(--bgrgb),.3);background-clip:padding-box;border-color:transparent;-webkit-backdrop-filter:blur(14px) saturate(2) brightness(1.18);backdrop-filter:blur(14px) saturate(2) brightness(1.18);box-shadow:var(--gl-body),0 10px 24px -12px rgba(0,0,0,.65),0 2px 6px -2px rgba(0,0,0,.3)}
+:root[data-theme="light"] .topbar .rulespill,:root[data-theme="light"] .topbar .iconbtn,:root[data-theme="light"] .topbar .tbback,:root[data-theme="light"] .topbar .tbread,:root[data-theme="light"] .pillrail .rulespill{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.46));background-clip:padding-box;-webkit-backdrop-filter:blur(14px) saturate(1.9);backdrop-filter:blur(14px) saturate(1.9);box-shadow:var(--gl-body),0 0 0 var(--hair) rgba(var(--fg),.1),0 10px 22px -12px rgba(var(--fg),.4)}
+.topbar .iconbtn[aria-pressed="true"]{background:linear-gradient(180deg,rgba(var(--acc),.34),rgba(var(--acc),.14)),rgba(var(--bgrgb),.3);background-clip:padding-box;box-shadow:var(--gl-bead),0 10px 24px -12px rgba(0,0,0,.65)}
+.topbar .tbback{display:inline-flex;align-items:center;justify-content:center;flex:none;border-radius:999px;color:var(--ivory)}
+.topbar .tbread{display:inline-block;border-radius:999px;margin-left:auto}
+@media (max-width:1023px){.topbar{padding:calc(env(safe-area-inset-top) + 8px) 14px 8px}.topbar .iconbtn,.topbar .tbback{width:38px;height:38px}.topbar .tbback{margin:0 9px 0 0}.topbar .rulespill{min-height:38px;padding:0 10px 0 13px;font-size:11.5px}.topbar>div>span:first-child{flex:none;max-width:64%}.topbar .tbread{height:38px;line-height:38px;padding:0 13px}}
+.topbar.tight .rulespill svg{display:none}.topbar.tight .rulespill{padding-right:12px}
+@media (max-width:399px){.topbar .tbtitle{font-size:16px}.topbar .rulespill{padding:0 9px 0 12px;font-size:11px}}
+@media (max-width:380px){.topbar .tbtitle{font-size:15px}.topbar.tight .rulespill{padding:0 9px 0 10px}}
+@media (max-width:350px){.topbar{padding-left:11px;padding-right:11px}.topbar .iconbtn,.topbar .tbback{width:34px;height:34px}.topbar .tbback{margin-right:6px}.topbar .rulespill{min-height:34px;padding:0 10px;font-size:11px}.topbar .rulespill svg{display:none}.topbar .tbread{height:34px;line-height:34px;padding:0 10px;font-size:11px}.topbar .tbtitle{font-size:15px}}
+html.navmin .bottom-nav>div{transform:translateY(3px) scale(.8)}
+.navbtn>span:last-child{transition:opacity .24s var(--ez-soft)}
+.navbtn .navicon{transition:transform .5s var(--ez-slide)}
+html.navmin .navbtn>span:last-child{opacity:0}
+html.navmin .navbtn .navicon{transform:translateY(8px) scale(1.12)}
+.bottom-nav>div:active{scale:1.03}
+.bottom-nav>div:active .navglide{filter:brightness(1.3)}
+.navglide{transition:filter .2s var(--ez)}
+.chipseg.slide .thumb{transition:scale .34s var(--ez),filter .2s var(--ez)}
+.chipseg.slide:active .thumb{scale:1.04 1.1;filter:brightness(1.25)}
+.btn:active{transform:scale(1.025)}
+@media(hover:hover) and (min-width:1024px){.btn:not(.ghost):hover:active:not(:disabled){transform:scale(1.02)}}
+.iconbtn:active,.stepbtn:active,.xbtn:active{transform:scale(1.1)}
+.rulespill:active,.chippress:active,.gchip:active,.topbar .tbback:active{transform:scale(1.05)}
+html.scrolled .pillrail .rulespill:active{transform:scale(.9)}
+.navbtn:active{transform:none}
+.acts>button:active:not(:disabled),.opt:active:not(:disabled){transform:scale(1.025)}
+.qa:active{transform:scale(1.04)}
+.rulespill:active,.iconbtn:active,.stepbtn:active,.xbtn:active,.btn.ghost:active,.gchip:active,.topbar .tbback:active{filter:brightness(1.22)}
+.topbar .tbback{transition:transform .41s var(--ez),filter .16s var(--ez)}
+.bj .factv{font-size:16px;font-weight:650}.bj .scoutfacts .statn.sm{font-size:16px}
+.touchlight{position:fixed;inset:0;z-index:300;pointer-events:none;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .55s var(--ez-soft),visibility 0s .55s}
+.touchlight.on{opacity:1;visibility:visible;transition:opacity .1s var(--ez-soft),visibility 0s}
+.touchlight>i{position:absolute;left:-80px;top:-80px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.3),rgba(255,255,255,.13) 32%,rgba(255,255,255,.03) 58%,rgba(255,255,255,0) 70%);will-change:transform}
+:root[data-theme="light"] .touchlight>i{background:radial-gradient(circle,rgba(var(--acc),.2),rgba(var(--acc),.08) 34%,rgba(var(--acc),0) 70%)}
+@media (prefers-reduced-transparency:reduce){.topbar{background:rgba(var(--bgrgb),.97)}.tbedge{display:none}.topbar .rulespill,.topbar .iconbtn,.topbar .tbback,.topbar .tbread,.pillrail .rulespill{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgb(var(--bgrgb))}.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb));-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media (prefers-reduced-motion:reduce){.topbar,.bottom-nav>div,.navbtn .navicon,.navbtn>span:last-child,.navglide,.topbar .tbback{transition:none!important}html.navmin .bottom-nav>div{transform:none}html.navmin .navbtn>span:last-child{opacity:1}html.navmin .navbtn .navicon{transform:none}.bottom-nav>div:active,.chipseg.slide:active .thumb{scale:1}.chipseg.slide .thumb{transition:none!important}}
+/* ---- end of liquid glass II ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -5645,10 +5715,12 @@ function TopBar({ title, children, onBack }) {
   // while it is tucked away the keyboard must not land on it (Tab used to stop on an invisible title first)
   const bar = useRef(null); useEffect(() => { if (bar.current) bar.current.inert = !show; }, [show]);
   return (
-    <div ref={bar} className={"topbar" + (show ? " show" : "")} aria-hidden={!show}>
+    <div ref={bar} className={"topbar" + (show ? " show" : "") + (String(title || "").length > 12 ? " tight" : "")} aria-hidden={!show}>
+      {/* the scroll edge: the page blurs and dims into the top of the screen instead of meeting a bar (three masked blurs over a fade) */}
+      <span className="tbedge" aria-hidden="true"><i /><i /><i /></span>
       <div className="mx-auto flex items-center justify-between gap-3" style={{ maxWidth: "42rem" }}>
         <span className="flex items-center min-w-0">{onBack && <button className="tbback ph-only" onClick={onBack} aria-label="Back"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg></button>}
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[15px] font-semibold truncate" style={{ letterSpacing: "-.01em" }}>{title}</button></span>
+        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="tbtitle truncate">{title}</button></span>
         {children}
       </div>
     </div>
@@ -6035,6 +6107,29 @@ export default function App() {
     window.addEventListener("pointermove", mv, { passive: true });
     return () => { window.removeEventListener("pointermove", mv); if (raf) cancelAnimationFrame(raf); };
   }, []);
+  // liquid glass answers a touch: what is pressed lights up under the finger (or the pointer) and the light follows it.
+  // One layer for the whole app, clipped to the shape of the pressed control, so nothing is added to the controls
+  // themselves; the spot rides a transform. The lift is CSS (:active).
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const host = document.createElement("div"), dot = document.createElement("i"); host.className = "touchlight"; host.setAttribute("aria-hidden", "true"); host.appendChild(dot); document.body.appendChild(host);
+    const SEL = ".btn,.rulespill,.iconbtn,.stepbtn,.xbtn,.gchip,.navbtn,.opt,.qa,.acts>button,.chipseg button,.sn-item,.sn-search,.sn-rules,.tbback,.mrow";
+    let on = false;
+    const place = (e) => { dot.style.transform = "translate(" + e.clientX.toFixed(1) + "px," + e.clientY.toFixed(1) + "px)"; };
+    const down = (e) => {
+      if (e.button || !e.target || !e.target.closest) return;
+      let el = e.target.closest(SEL); if (!el || el.disabled) return;
+      if (el.classList.contains("navbtn")) el = el.parentElement; else if (el.parentElement && el.parentElement.classList.contains("chipseg")) el = el.parentElement;   // a tab lights its capsule, a segment its whole switch
+      const r = el.getBoundingClientRect(), rad = getComputedStyle(el).borderTopLeftRadius || "0px";
+      host.style.clipPath = "inset(" + r.top.toFixed(1) + "px " + (window.innerWidth - r.right).toFixed(1) + "px " + (window.innerHeight - r.bottom).toFixed(1) + "px " + r.left.toFixed(1) + "px round " + rad + ")";
+      place(e); on = true; host.classList.add("on");
+    };
+    const move = (e) => { if (on) place(e); };
+    const up = () => { if (on) { on = false; host.classList.remove("on"); } };
+    const o = { passive: true, capture: true };
+    window.addEventListener("pointerdown", down, o); window.addEventListener("pointermove", move, o); window.addEventListener("pointerup", up, o); window.addEventListener("pointercancel", up, o); window.addEventListener("scroll", up, o); window.addEventListener("blur", up);
+    return () => { window.removeEventListener("pointerdown", down, o); window.removeEventListener("pointermove", move, o); window.removeEventListener("pointerup", up, o); window.removeEventListener("pointercancel", up, o); window.removeEventListener("scroll", up, o); window.removeEventListener("blur", up); host.remove(); };
+  }, []);
   const [gen, setGen] = useState(0);
   const [pending, setPending] = useState(null);
   // A newer version is on this device (the service worker saved it and src/entry.jsx checked its build stamp). In the
@@ -6377,6 +6472,24 @@ function BetSpreadCalculator() {
   // (TrainHub, MoreHub in src/phone.jsx); the pages behind them carry a link back to their menu. The sidebar on a
   // computer lists every page, so the two menus are never shown there.
   const narrow = useNarrow();
+  // the tab bar shrinks while a page is scrolled down and comes back on the way up, as it does in iOS 26. Only a class
+  // on <html> changes, and only when the direction does; the bar itself moves with transform. Short scrolls near the
+  // top (the trainer nudging an answer clear of the bar on a small phone) leave it alone.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!narrow) { root.classList.remove("navmin"); return; }
+    let last = Math.max(0, window.scrollY), turn = last, down = false, min = false;
+    const set = (v) => { if (v !== min) { min = v; root.classList.toggle("navmin", v); } };
+    const f = () => {
+      const y = Math.max(0, window.scrollY), d = y - last; if (!d) return;
+      if ((d > 0) !== down) { down = d > 0; turn = last; }
+      last = y;
+      if (y < 140) set(false); else if (down && y - turn > 30) set(true); else if (!down && turn - y > 12) set(false);
+    };
+    const full = () => { turn = last; set(false); };
+    window.addEventListener("scroll", f, { passive: true }); window.addEventListener("bj-navfull", full);
+    return () => { window.removeEventListener("scroll", f); window.removeEventListener("bj-navfull", full); root.classList.remove("navmin"); };
+  }, [narrow]);
   const wide = useWide();
   // rounds an hour for any spread, the way this page works it out for the one in the table (for the saved spreads)
   const rphOf = useCallback((b, sp) => (hphAuto ? autoRph(roundFreqs(b, sp, cal), b, sp, cal) : Math.max(1, Number(handsPerHour) || 1)), [hphAuto, handsPerHour, cal]);
@@ -6488,8 +6601,8 @@ function BetSpreadCalculator() {
           <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </div></div>
         <TopBar title={pageTitle} onBack={back ? () => go(back[0]) : null}>
-          {narrow && tab === "calc" && <span className="mono text-[12px] font-semibold whitespace-nowrap ml-auto" style={{ color: "var(--ivory-d)" }}><span style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span> · <span style={{ color: rorTone }}>{pct(r.ror, 1)}</span> risk</span>}
-          <span className="flex items-center gap-2 min-w-0">{!(narrow && tab === "calc") && <button onClick={() => setSetupOpen(true)} className="rulespill" style={{ padding: "5px 9px 5px 11px", fontSize: 11 }} aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>}{gear}</span>
+          {narrow && tab === "calc" && <span className="tbread mono text-[12px] font-semibold whitespace-nowrap" style={{ color: "var(--ivory-d)" }}><span style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span> · <span style={{ color: rorTone }}>{pct(r.ror, 1)}</span> risk</span>}
+          <span className="flex items-center gap-2 min-w-0">{!(narrow && tab === "calc") && <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label="Change game rules"><span className="mono">{rulesShort(rules)}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>}{gear}</span>
         </TopBar>
         <div className="sbar" aria-hidden="true" />
 
@@ -6773,7 +6886,7 @@ function BetSpreadCalculator() {
         </div>
       </nav>
       <nav className="bottom-nav" aria-label="Sections">
-        <div className="flex">
+        <div className="flex" onClick={() => window.dispatchEvent(new Event("bj-navfull"))}>
           {(() => { const at = PHONE_TABS.findIndex(([k]) => (k === "trainhub" ? isTrain(navTab) : k === "more" ? navTab === "more" || MORE_PAGES.includes(navTab) : navTab === k)); return at >= 0 ? <Glider cls="navglide" at={at} ms={480} style={{ "--i": at, "--n": PHONE_TABS.length }} /> : null; })()}
           {PHONE_TABS.map(([k, l]) => { const on = k === "trainhub" ? isTrain(navTab) : k === "more" ? navTab === "more" || MORE_PAGES.includes(navTab) : navTab === k, icon = k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]; return (
             <button key={k} onClick={() => go(k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>

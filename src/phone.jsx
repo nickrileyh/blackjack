@@ -339,7 +339,6 @@ export const phoneCss = `
 /* a page behind a menu says where it came from */
 .hdrback{display:inline-flex;align-items:center;gap:2px;margin:0 0 6px -3px;padding:2px 6px 2px 0;font-size:13.5px;font-weight:600;color:var(--brass)}
 .hdrback:active{opacity:.6}
-.topbar .tbback{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;margin:-4px 2px -4px -8px;color:var(--brass)}
 /* large titles and a little more air between the title and the page */
 .shell>header{margin-bottom:18px}
 .shell>header h1{font-size:clamp(28px,8.4vw,34px);letter-spacing:-.03em}
