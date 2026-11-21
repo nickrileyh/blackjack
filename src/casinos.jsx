@@ -385,7 +385,7 @@ function GameEditor({ g, set, onRemove, onUse, used }) {
 }
 // the best game a report describes, in the app's short rule style — only the parts the source actually gave
 const bestLine = (b) => [b.decks ? `${b.decks}D` : null, b.h17 === true ? "H17" : b.h17 === false ? "S17" : null, b.das === true ? "DAS" : b.das === false ? "NDAS" : null, b.ls ? "LS" : null, b.rsa ? "RSA" : null, b.bj65 ? "6:5" : null, b.pen ? `${b.pen}%` : null].filter(Boolean).join(" · ");
-const intelFacts = (intel) => [intel.tablesN ? [String(intel.tablesN), "table games"] : null, intel.min ? [`$${intel.min}`, "lowest 3:2 minimum"] : null, intel.best && bestLine(intel.best) ? [bestLine(intel.best), intel.best.where || "best game reported"] : null].filter(Boolean);
+const intelFacts = (intel) => [intel.tablesN ? [String(intel.tablesN), "Tables", "table games"] : null, intel.min ? [`$${intel.min}`, "3:2 from", "lowest 3:2 minimum"] : null, intel.best && bestLine(intel.best) ? [bestLine(intel.best), "Best game", intel.best.where || "best game reported"] : null].filter(Boolean);
 function IntelBlock({ intel, onCopy, copied }) {
   const rows = [["Tables", intel.tables], ["Blackjack", intel.games], ["Penetration", intel.pen], ["High limit", intel.hl], ["Heat", intel.heat], ["Other games", intel.other], ["Good to know", intel.note]].filter((r) => r[1] && (!Array.isArray(r[1]) || r[1].length));
   const facts = intelFacts(intel);
@@ -393,8 +393,8 @@ function IntelBlock({ intel, onCopy, copied }) {
   return (
     <div className="cbox mb-4">
       <div className="flex items-baseline justify-between gap-3"><span className="eyebrow">Scouting report</span>{intel.asOf && <span className="text-[11px]" style={{ color: "var(--muted)" }}>as of {intel.asOf}</span>}</div>
-      {facts.length > 0 && <div className="grid gap-2 mt-2.5" style={{ gridTemplateColumns: `repeat(${facts.length}, minmax(0,1fr))` }}>{facts.map(([v, k]) => (
-        <div key={k} className="rounded-xl px-2.5 py-2" style={{ background: "rgba(var(--fg),.04)" }}><div className="mono text-[13px] font-semibold leading-tight" style={{ color: "var(--ivory)" }}>{v}</div><div className="text-[10.5px] leading-tight mt-0.5" style={{ color: "var(--muted)" }}>{k}</div></div>))}</div>}
+      {facts.length > 0 && <div className={"scoutfacts" + (facts.length === 2 ? " two" : facts.length === 1 ? " one" : "")}>{facts.map(([v, k, tip]) => (
+        <div key={k} className="min-w-0" title={tip}><div className="lab">{k}</div><div className="statn sm">{v}</div></div>))}</div>}
       <Fold open={open} className="space-y-2.5 pt-3">
         {rows.map(([k, v]) => (
           <div key={k}><div className="text-[11px] font-semibold" style={{ color: "var(--muted)" }}>{k}</div>
@@ -451,7 +451,7 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
         <label className="block"><span className="eyebrow block mb-1.5">Town</span><input className="in" value={d.city} onChange={(e) => set({ city: e.target.value })} /></label>
       </div>}
       <div className="cbox mb-4 flex items-center justify-between gap-3">
-        <div className="min-w-0">{sess && sess.n ? <><div className="text-sm font-semibold mono" style={{ color: sess.net >= 0 ? "var(--brass)" : "var(--neg-l)" }}>{sgnMoney(sess.net)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.n} session{sess.n === 1 ? "" : "s"} · {fmtH(sess.h)} · last {dateShort(sess.last)}</div></> : <div className="text-xs" style={{ color: "var(--muted)" }}>No sessions logged here yet.</div>}</div>
+        <div className="min-w-0">{sess && sess.n ? <><div className="statn sm" style={{ marginTop: 0, color: sess.net >= 0 ? "var(--brass)" : "var(--neg-l)" }}>{sgnMoney(sess.net)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{sess.n} session{sess.n === 1 ? "" : "s"} · {fmtH(sess.h)} · last {dateShort(sess.last)}</div></> : <div className="text-xs" style={{ color: "var(--muted)" }}>No sessions logged here yet.</div>}</div>
         <button type="button" onClick={() => { close(); onLog(d.name); }} className="text-xs font-semibold rounded-full px-3 shrink-0 chippress" style={{ height: 30, background: "rgba(var(--acc),.14)", color: "var(--brass)" }}>Log a session</button>
       </div>
       {intel && <IntelBlock intel={intel} onCopy={copyReported} copied={copied} />}

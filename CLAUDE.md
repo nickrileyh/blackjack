@@ -200,6 +200,18 @@ Nick: "improve style". Asked which way the look should move (fonts staying as th
 - **How it was checked**: against a build of `main` from before the change — the list of cut-off text is identical at 320, 360, 390, 430, 1024, 1180, 1300 and 1440px; the phone trainer's fit is identical to the pixel at six sizes with the same hands dealt; a stress run with a $250,000 bankroll and five-, six- and seven-figure results at eight sizes (nothing past its card except an average session of −$83,000 at 320px, as before); looked at in Emerald, Onyx & Gold, White & blue and Kiera; lint and both arithmetic checks. Chromium only.
 
 
+## Sheets and dialogs brought up to the pages (21 Nov 2026)
+
+Nick: "make all style and appearance better". The two passes above ("One scale", "Apple-clean") were measured on the pages; the pop-ups (every `Sheet`, the Plan's casino pop-up, the casino sheet) had been left in the older, smaller style. This pass gives them the pages' look. **No layout changed.** The CSS is the block "Sheets and dialogs brought up to the pages" at the very end of the `css` string, after Apple-clean.
+
+- **A sheet's title is `.sheettitle`**: 20px bold (18px under 350px wide), set once in `Sheet`. It was 18px semibold, barely bigger than a card's 17px title under it.
+- **Plan's casino pop-up and Table score**: the score is an `.hl` number with its verdict at 17px bold beside it (it was 40px semibold with a 16px verdict). A fact row is **`.factk`** (15px semibold name), **`.facts`** (12px grey line under it) and **`.factv`** (17px bold figure on the right; `.factv.sm`, 15px, where a long rule set sits beside the name). They were 14px, 11.5px and 14px. Rows keep their hairlines: they are a list.
+- **The casino sheet's scouting facts are plain stats** (`.scoutfacts`: `.lab` over `.statn sm`, no box) with short labels — Tables, 3:2 from, Best game (the long wording is on the `title`). They were three tinted boxes inside a box inside the sheet, the last "card in a card" left. Under 350px the best game takes a row of its own. The casino's own record ("+$1,200") is a `.statn sm` too.
+- **Labels inside the log sheet's "More details"** (Lowest point, Players at the table, Heat) are `.lab` like the labels above them; a session's "39th percentile" is 20px bold like Sessions' own luck line.
+- **Small captions are 11px at least**: the 10px ones (History's "exp +$54", the Sessions chart's key, slider ends — now `.ends` — the stat sub-lines beside a drawdown, the footers) went up one. **Chart tick labels keep their 8–10px**: ten to thirteen columns across a phone leave no room for more.
+- **Hover looks no longer stick on a phone.** `.qa:hover`, the dark themes' `.btn.ghost:hover` and Plan's `button.prow:hover` were outside `@media (hover:hover)`, so on a touch screen a tapped ghost button or casino row stayed lit after the tap (a Plan row kept its wash after its pop-up closed). Write a new hover rule inside `@media (hover:hover)`.
+- **How it was checked**: every sheet on a phone (320 and 390 wide) and a computer, dark and light, nothing wider than its sheet; the cut-off-text scan at 320 and 360px is unchanged; lint, both arithmetic checks, the layout and phone checks, the overflow sweep in three themes. Chromium only.
+
 ## Bigger changes, tried and discarded (18 Nov 2026)
 
 Nick said "do bigger changes" and, asked which, picked the table and cards, a Home redesign and new page layouts. All three were built and pushed, then he said "i liked the cards more before" and "just discard all the changes you just made", so the three commits were reverted whole. **Don't rebuild any of these unless he asks for that one by name:**

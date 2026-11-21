@@ -876,7 +876,7 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 :where(button,a[href],[role=button]){transition:filter .16s var(--ease),color .16s var(--ease),background-color .16s var(--ease),border-color .16s var(--ease),opacity .16s var(--ease)}
 :where(button,a[href],[role=button]):where(:not(:disabled):not(.on):not([aria-selected="true"])):hover{filter:brightness(var(--hov))}
 button.lnk:hover,a.lnk:hover,button.underline:hover,a.underline:hover{filter:brightness(var(--hov-t))}
-.qa:hover{background:rgba(var(--fg),.075);border-color:rgba(var(--acc),.34);color:var(--ivory)}
+@media (hover:hover){.qa:hover{background:rgba(var(--fg),.075);border-color:rgba(var(--acc),.34);color:var(--ivory)}}
 .rowh{transition:background-color .16s var(--ease),box-shadow .16s var(--ease)}
 .rowh:hover{filter:none;background:rgba(var(--fg),.04);box-shadow:0 0 0 6px rgba(var(--fg),.04)}
 .card:has(>.cardbtn:hover)::before{background:linear-gradient(155deg,rgba(var(--acc),.8),rgba(var(--acc),.4) 22%,rgba(var(--acc),.26) 60%,rgba(var(--acc),.55))}
@@ -983,7 +983,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14);background:
 .opt:not(.w-full),.qa{border-color:transparent!important;background-clip:padding-box;box-shadow:var(--gl-lens)}
 .qa{border-radius:18px;background:linear-gradient(180deg,rgba(var(--fg),.07),rgba(var(--fg),.03));background-clip:padding-box}
 :root[data-theme="light"] .qa{background:linear-gradient(180deg,#fff,rgba(255,255,255,.82));background-clip:padding-box}
-@media (hover:hover){.qa:hover{background-clip:padding-box;box-shadow:var(--gl-bead)}}
+@media (hover:hover){@media (hover:hover){.qa:hover{background-clip:padding-box;box-shadow:var(--gl-bead)}}}
 .card{background:radial-gradient(120% 80% at 0% 0%,rgba(255,255,255,.028),transparent 55%),linear-gradient(180deg,rgba(var(--fg),.056),rgba(var(--fg),.034))}
 .card .card{background:linear-gradient(180deg,rgba(var(--fg),.05),rgba(var(--fg),.03))}
 :root[data-theme="light"] .card{background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.84))}
@@ -1189,10 +1189,10 @@ body{background:none}
 .bj .sn-label{opacity:1;padding-bottom:6px}
 .bj .mcal .wd{text-transform:none;letter-spacing:0;font-weight:500;font-size:11px}
 @supports (background:color-mix(in srgb,red 5%,blue)){.card{background:color-mix(in srgb,rgb(var(--acc)) 1.6%,rgba(var(--fg),.042))}.card .card{background:rgba(var(--fg),.04)}
-.qa{background:color-mix(in srgb,rgb(var(--acc)) 5%,rgba(var(--fg),.06));background-clip:padding-box}.qa:hover{background:color-mix(in srgb,rgb(var(--acc)) 9%,rgba(var(--fg),.08));background-clip:padding-box}
+.qa{background:color-mix(in srgb,rgb(var(--acc)) 5%,rgba(var(--fg),.06));background-clip:padding-box}@media (hover:hover){.qa:hover{background:color-mix(in srgb,rgb(var(--acc)) 9%,rgba(var(--fg),.08));background-clip:padding-box}}
 .bj .cm-reg{fill:color-mix(in srgb,rgb(var(--acc)) 10%,rgba(var(--fg),.09))}.bj .cm-land{fill:color-mix(in srgb,rgb(var(--acc)) 5%,rgba(var(--fg),.04))}}
 :root:not([data-theme="light"]) .btn.ghost{background:linear-gradient(180deg,rgba(var(--fg),.13),rgba(var(--fg),.06));background-clip:padding-box}
-:root:not([data-theme="light"]) .btn.ghost:hover:not(:disabled){background:linear-gradient(180deg,rgba(var(--fg),.18),rgba(var(--fg),.09));background-clip:padding-box}
+@media (hover:hover){:root:not([data-theme="light"]) .btn.ghost:hover:not(:disabled){background:linear-gradient(180deg,rgba(var(--fg),.18),rgba(var(--fg),.09));background-clip:padding-box}}
 @media (min-width:1300px){.dgrid{column-gap:24px}.dcol>.mb-4,.dcol>*>.card.mb-4{margin-bottom:24px}.dcol>.card.p-5,.dcol>*>.card.p-5{padding:24px}}
 @media (max-width:1023px){.dcol>.card.mb-4,.dcol>*>.card.mb-4{margin-bottom:18px}}
 @media (max-width:350px){.tdots{display:none}}
@@ -1246,6 +1246,20 @@ body{background:none}
 .hrecent{border-top-color:transparent}
 .sn-foot{border-top-color:transparent}
 /* ---- end of Apple-clean ---- */
+/* ---- Sheets and dialogs brought up to the pages (21 Nov): the same bigger, bolder numbers and one label style inside every pop-up ---- */
+.bj .sheettitle{font-size:20px;line-height:1.2;font-weight:700;letter-spacing:-.022em;text-wrap:balance}
+@media (max-width:350px){.bj .sheettitle{font-size:18px}}
+.bj .factk{font-size:15px;line-height:1.3;font-weight:600;letter-spacing:-.01em;color:var(--ivory)}
+.bj .factv{font-size:17px;line-height:1.25;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;text-align:right;white-space:nowrap}
+.bj .factv.sm{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.bj .facts{font-size:12px;line-height:1.4;color:var(--muted);margin-top:2px}
+.bj .sheet .statn.sm{margin-top:2px}
+.bj .scoutfacts{display:grid;gap:4px 22px;margin-top:12px;grid-template-columns:auto auto minmax(0,1fr)}
+.bj .scoutfacts.two{grid-template-columns:auto minmax(0,1fr)}.bj .scoutfacts.one{grid-template-columns:minmax(0,1fr)}
+.bj .scoutfacts .statn.sm{font-size:17px;line-height:1.25}
+@media (max-width:350px){.bj .scoutfacts{grid-template-columns:auto minmax(0,1fr)}.bj .scoutfacts>:nth-child(3){grid-column:1/-1;margin-top:8px}}
+.bj .ends{font-size:11px;color:var(--muted)}
+/* ---- end of sheets and dialogs ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -1593,7 +1607,7 @@ function SoundCard() {
         <div>
           <div className="flex items-baseline justify-between"><span className="text-sm" style={{ color: "var(--ivory)" }}>Volume</span><span className="text-[11px] mono" style={{ color: "var(--brass)" }}>{Math.round(p.vol * 100)}%</span></div>
           <input type="range" min={20} max={100} step={10} value={Math.round(p.vol * 100)} onChange={(e) => set({ vol: Number(e.target.value) / 100 })} className="w-full mt-1" aria-label="Sound volume" disabled={!p.on} />
-          <div className="flex justify-between -mt-1" style={{ fontSize: 10, color: "var(--muted)" }}><span>quieter</span><span>louder</span></div>
+          <div className="flex justify-between -mt-1 ends"><span>quieter</span><span>louder</span></div>
         </div>
         <Toggle label="Cards and chips" sub="Recorded sounds for dealing, betting and the shuffle" on={p.table} onChange={(v) => set({ table: v })} />
         <Toggle label="Answer and result notes" sub="A note for a right or wrong answer, and for a win or a loss" on={p.feedback} onChange={(v) => set({ feedback: v })} />
@@ -1696,7 +1710,7 @@ function Odds({ c, picked, R, side, stale }) {
           </div>
         ))}
       </div>
-      <p className="text-[10px] mt-3" style={{ color: "var(--muted)" }}>Infinite-deck math, dealer {R.h17 ? "hits" : "stands on"} soft 17, one split. Real-shoe numbers differ by a few tenths of a percent.</p>
+      <p className="text-[11px] mt-3" style={{ color: "var(--muted)" }}>Infinite-deck math, dealer {R.h17 ? "hits" : "stands on"} soft 17, one split. Real-shoe numbers differ by a few tenths of a percent.</p>
     </div>
   );
 }
@@ -1717,7 +1731,7 @@ function Grid({ title, rows, R, alt }) {
     <div className="mb-6">
       <div className="flex items-baseline justify-between mb-2">
         <div className="eyebrow">{title}</div>
-        <div className="text-[10px]" style={{ color: "var(--muted)" }}>dealer up-card →</div>
+        <div className="text-[11px]" style={{ color: "var(--muted)" }}>dealer up-card →</div>
       </div>
       <div className="grid gap-1 mono" style={{ gridTemplateColumns: `40px repeat(${UP.length}, minmax(0,1fr))` }}>
         <div />
@@ -1819,7 +1833,7 @@ function Charts({ R, devs, spread }) {
             <div key={d.id} className="devrow rounded-xl" style={{ height: 44, background: "rgba(var(--fg),.04)" }}>
               <div>
                 <div className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{d.name}</div>
-                {d.above === "R" && <div className="text-[10px]" style={{ color: "var(--muted)" }}>surrender</div>}
+                {d.above === "R" && <div className="text-[11px]" style={{ color: "var(--muted)" }}>surrender</div>}
               </div>
               <span className="text-[11px] px-2 py-1 rounded-md text-center" style={{ background: ACOL[d.below] || "rgba(var(--fg),.08)", color: d.below === "D" ? "#1B1407" : "var(--ivory)", opacity: .75 }}>{(ANAME[d.below] || d.below).replace("No insurance","Skip")}</span>
               <div className="flex items-center gap-1">
@@ -3156,7 +3170,7 @@ function ShoePanel({ shoe, dl, tc, showCount, trace }) {
         <div className="shoe-t"><i style={{ width: `${(pos / total) * 100}%` }} />{Array.from({ length: nd - 1 }, (_, i) => <u key={i} style={{ left: `${((i + 1) / nd) * 100}%` }} />)}</div>
         <span className="shoe-c" style={{ left: `${(shoe.cut / total) * 100}%` }} />
       </div>
-      <div className="flex justify-between mt-2 mono" style={{ fontSize: 10, color: "var(--muted)" }}>
+      <div className="flex justify-between mt-2 mono" style={{ fontSize: 11, color: "var(--muted)" }}>
         <span>{pos - 1} seen</span><span>{left} to the cut card</span>
       </div>
       {showCount && (
@@ -3238,7 +3252,7 @@ function HandView({ cards, label, bet, active, total, hidden, small, result, sta
           ? <><div className="pcback pcz dealt" style={{ width: 60, height: 86, borderRadius: 7, "--dx": "120px", "--dy": "-60px", "--r0": "10deg", "--r1": "0deg", "--d": `${d}ms`, animationDuration: `${dur}s` }} /><Flick d={d} fly={dur} /></>
           : <PlayingCard rank={c.rank} suit={c.suit} face={c.face} small delay={d} fly={dur} style={{ rot: "0deg", "--dx": "120px", "--dy": "-60px", "--r0": "10deg" }} />}</div>; })}
       </div>
-      {bet !== undefined && <div className="mono text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>bet ${bet}</div>}
+      {bet !== undefined && <div className="mono text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>bet ${bet}</div>}
     </div>
   );
 }
@@ -3708,7 +3722,7 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
         <div className="mt-4">
           <div className="flex items-baseline justify-between"><span className="text-sm" style={{ color: "var(--ivory)" }}>Dealing speed</span><span className="text-[11px] mono" style={{ color: "var(--brass)" }}>{DEAL_SPEEDS[speedIdx][1]}{speed !== 1 && <span style={{ color: "var(--muted)" }}> · {speed < 1 ? `${+(1 / speed).toFixed(1)}× faster` : `${+speed.toFixed(1)}× slower`}</span>}</span></div>
           <input type="range" min={0} max={DEAL_SPEEDS.length - 1} step={1} value={speedIdx} onChange={(e) => setSpeed(DEAL_SPEEDS[Number(e.target.value)][0])} className="w-full mt-1" aria-label="Dealing speed" />
-          <div className="flex justify-between -mt-1" style={{ fontSize: 10, color: "var(--muted)" }}><span>faster</span><span>slower</span></div>
+          <div className="flex justify-between -mt-1 ends"><span>faster</span><span>slower</span></div>
         </div>
         <KeyBinder keys={keys} onChange={setKeys} />
         <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
@@ -4191,7 +4205,7 @@ function LevelPanel({ rules, bets, log, refreshLog, go, evHour, openSessions }) 
             return (
               <button key={it.id + (it.maintenance ? "m" : "")} onClick={() => go && go(...NAV[it.id])} className="opt w-full text-left rounded-xl px-3 py-2.5" style={{ background: doneFrac >= 1 ? "rgba(var(--acc),.08)" : "rgba(var(--fg),.035)", border: `1px solid ${doneFrac >= 1 ? "rgba(var(--acc),.4)" : "var(--line)"}` }}>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{it.name}{it.maintenance ? <span className="text-[10px] font-normal ml-2" style={{ color: "var(--muted)" }}>keep sharp</span> : null}</span>
+                  <span className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{it.name}{it.maintenance ? <span className="text-[11px] font-normal ml-2" style={{ color: "var(--muted)" }}>keep sharp</span> : null}</span>
                   <span className="mono text-xs" style={{ color: doneFrac >= 1 ? "var(--brass)" : "var(--muted)" }}>{doneFrac >= 1 ? "done" : `${reps.length}/${need}`}{acc !== null ? ` · ${acc}%` : ""} <span style={{ color: "var(--brass)" }}>›</span></span>
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "var(--ivory-d)" }}>{it.what(it.score)} · aim for {it.goal}</div>
@@ -4263,7 +4277,7 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
         <text x={P.l} y={H - 4} fill="var(--muted)" style={{ font: "500 10px Inter" }}>0h</text>
         <text x={W - P.r} y={H - 4} textAnchor="end" fill="var(--muted)" style={{ font: "500 10px Inter" }}>{fmtH(last.h)}</text>
       </svg>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] mt-1" style={{ color: "var(--muted)" }}>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] mt-1" style={{ color: "var(--muted)" }}>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 2, background: "var(--brass)", display: "inline-block", borderRadius: 1 }} /> actual</span>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: "1.5px dashed rgba(var(--fg),.4)", display: "inline-block" }} /> expected</span>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 8, background: "rgba(var(--acc),.12)", display: "inline-block", borderRadius: 2 }} /> ±1 SD</span>
@@ -4271,8 +4285,8 @@ function PnlChart({ sessions, evHour, sdHour, ddMed, onExpand }) {
       </div>
       {ddMed != null && (
         <div className="grid grid-cols-2 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
-          <div><div className="lab">Median drawdown</div><div className="statn sm" style={{ color: "var(--ivory)" }}>−{money(Math.round(ddMed / 25) * 25)}</div><div className="text-[10px]" style={{ color: "var(--muted)" }}>expected over {fmtH(last.h)}</div></div>
-          <div><div className="lab">Your drawdown</div><div className="statn sm" style={{ color: mdd0 > ddMed ? "var(--neg-l)" : "var(--ivory)" }}>{mdd0 ? "−\u2060" + money(Math.round(mdd0)) : "$0"}</div><div className="text-[10px]" style={{ color: "var(--muted)" }}>biggest drop from a peak</div></div>
+          <div><div className="lab">Median drawdown</div><div className="statn sm" style={{ color: "var(--ivory)" }}>−{money(Math.round(ddMed / 25) * 25)}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>expected over {fmtH(last.h)}</div></div>
+          <div><div className="lab">Your drawdown</div><div className="statn sm" style={{ color: mdd0 > ddMed ? "var(--neg-l)" : "var(--ivory)" }}>{mdd0 ? "−\u2060" + money(Math.round(mdd0)) : "$0"}</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>biggest drop from a peak</div></div>
         </div>
       )}
     </div>
@@ -4419,7 +4433,7 @@ function PnlFull({ sessions, evHour, sdHour, mix, hph, onClose }) {
           <div key={k}>
             <div className="lab">{k}</div>
             <div className="statn sm" style={{ color: "var(--ivory)" }}>{v}</div>
-            <div className="text-[10px]" style={{ color: "var(--muted)" }}>{sub}</div>
+            <div className="text-[11px]" style={{ color: "var(--muted)" }}>{sub}</div>
           </div>))}
       </div>
     </div>
@@ -4750,7 +4764,7 @@ function Sheet({ title, onClose: shut, children }) {
         <div className="sheetgrab" onPointerDown={dStart} onPointerMove={dMove} onPointerUp={dEnd} onPointerCancel={dEnd}>
         <div className="flex justify-center pt-2 pb-1"><span style={{ width: 38, height: 4, borderRadius: 4, background: "rgba(var(--fg),.18)" }} /></div>
         <div className="flex items-center justify-between px-5 pt-1 pb-1">
-          <div className="text-lg font-semibold" style={{ letterSpacing: "-.01em" }}>{title}</div>
+          <div className="sheettitle">{title}</div>
           <button onClick={onClose} aria-label="Close" className="xbtn rounded-full flex items-center justify-center" style={{ width: 32, height: 32, fontSize: 18 }}>×</button>
         </div>
         </div>
@@ -4773,7 +4787,7 @@ function SessionLuck({ s, evHour, sdHour }) {
         <div className="eyebrow">How this session ran</div>
         <div className="mono text-xs" style={{ color: "var(--muted)" }}>{z >= 0 ? "+" : "−"}{Math.abs(z).toFixed(2)} SD</div>
       </div>
-      <div className="text-lg font-semibold mt-0.5" style={{ color: tone }}>{pctTxt(p)} percentile</div>
+      <div className="mt-0.5" style={{ color: tone, fontSize: 20, fontWeight: 700, letterSpacing: "-.02em", lineHeight: 1.2 }}>{pctTxt(p)} percentile</div>
       <p className="text-xs mt-0.5 mb-1.5" style={{ color: "var(--ivory-d)" }}>Over {fmtH(h)} the spread you played expects {sgnMoney(exp)} ± {shortMoney(sd)}. You finished {sgnMoney(s.result)}.</p>
       <LuckGauge z={z} pct={p} />
     </div>
@@ -4820,12 +4834,12 @@ function SessionSheet({ initial, casinos, seats0, onSave, onDelete, onClose, onE
       <More open={more} onClick={() => setMore(!more)} className="mb-3">{more ? "Fewer details" : "More details — lowest point, table, heat"}</More>
       <Fold open={more}>
         <div className="rounded-xl p-3 mb-4 space-y-3" style={{ background: "rgba(var(--fg),.035)" }}>
-          <label className="block"><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Lowest point during the session</span>
+          <label className="block"><span className="lab">Lowest point during the session</span>
             <div className="relative mt-1"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>−$</span><input className="in mono" style={{ paddingLeft: 38 }} type="number" inputMode="decimal" placeholder="how far down you got" value={f.low} onChange={(e) => set("low", e.target.value)} /></div>
             <span className="block text-[11px] mt-1" style={{ color: "var(--muted)" }}>Checks the "bring with you" number against real dips.</span></label>
-          <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Players at the table</span>
+          <div><span className="lab">Players at the table</span>
             <div className="chipseg mt-1" style={{ gridTemplateColumns: "repeat(7, 1fr)" }}>{[1, 2, 3, 4, 5, 6, 7].map((k) => <button key={k} type="button" className={f.seats === k ? "on" : ""} onClick={() => set("seats", f.seats === k ? null : k)}>{k}</button>)}</div></div>
-          <div><span className="text-xs" style={{ color: "var(--ivory-d)" }}>Heat</span>
+          <div><span className="lab">Heat</span>
             <div className="chipseg mt-1" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>{HEAT.map(([k, l]) => <button key={k} type="button" className={f.heat === k ? "on" : ""} onClick={() => set("heat", k)}>{l}</button>)}</div></div>
         </div>
       </Fold>
@@ -5159,7 +5173,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
                   </div>
                   <div className="text-right">
                     <div className="mono text-sm font-semibold" style={{ color: c.net >= 0 ? "var(--brass)" : "var(--neg-l)" }}>{sgnMoney(c.net)}</div>
-                    <div className="text-[10px]" style={{ color: "var(--muted)" }}>exp {sgnMoney(c.exp)}</div>
+                    <div className="text-[11px]" style={{ color: "var(--muted)" }}>exp {sgnMoney(c.exp)}</div>
                   </div>
                 </button>))}
             </div>
@@ -5195,7 +5209,7 @@ function SessionsPage({ evHour, sdHour, mix, hph, ready, n0, seats, cfgNow, go }
                     </div>
                     <div className="text-right">
                       <div className="mono text-sm font-semibold" style={{ color: s.result > 0 ? "var(--brass)" : s.result < 0 ? "var(--neg-l)" : "var(--ivory-d)" }}>{sgnMoney(s.result)}</div>
-                      <div className="text-[10px]" style={{ color: "var(--muted)" }}>exp {sgnMoney(sessEv(s, evHour) * (+s.hours || 0))}</div>
+                      <div className="text-[11px]" style={{ color: "var(--muted)" }}>exp {sgnMoney(sessEv(s, evHour) * (+s.hours || 0))}</div>
                     </div>
                   </button>))}
               </div>
@@ -6637,7 +6651,7 @@ function BetSpreadCalculator() {
                 </span>
               </div>
               <input type="range" min={1} max={75} step={1} value={rorPct} onChange={(e) => setRorPct(Number(e.target.value))} className="w-full" aria-label="Risk of ruin cap" />
-              <div className="flex justify-between text-[10px] mb-2" style={{ color: "var(--muted)" }}><span>1% safe</span><span>75% coin-flip</span></div>
+              <div className="flex justify-between text-[11px] mb-2" style={{ color: "var(--muted)" }}><span>1% safe</span><span>75% coin-flip</span></div>
               {frontier && (() => {
                 const mx = Math.max(1, ...frontier.map((x) => (x.infeasible ? 0 : x.ev)), r.evHour);
                 const curPct = r.evHour > 0 ? Math.min(100, (r.evHour / mx) * 100) : 0;
@@ -6682,7 +6696,7 @@ function BetSpreadCalculator() {
                 </span>
               </div>
               <input type="range" min={1} max={goalMax} step={1} value={Math.min(evGoal, goalMax)} onChange={(e) => setEvGoal(Number(e.target.value))} className="w-full" aria-label="Profit goal per hour" />
-              <div className="flex justify-between text-[10px] mb-2" style={{ color: "var(--muted)" }}><span>$1/hr</span><span>${goalMax}/hr</span></div>
+              <div className="flex justify-between text-[11px] mb-2" style={{ color: "var(--muted)" }}><span>$1/hr</span><span>${goalMax}/hr</span></div>
               {goalPreview && goalPreview.goal === evGoal && (
                 <div className="text-sm mb-3 mono" style={{ color: "var(--ivory-d)" }}>{goalPreview.infeasible ? <span style={{ color: "var(--neg-l)" }}>No spread here gets under 75% risk — add bankroll or sit out more counts.</span> : goalPreview.unreachable ? <span style={{ color: "var(--neg-l)" }}>Out of reach even at 75% risk — tops out near ${Math.floor(goalPreview.ev)}/hr.</span> : <>Lowest risk that gets there: <span style={{ color: "var(--brass)" }}>{pct(goalPreview.ror, goalPreview.ror < 0.1 ? 2 : 1)}</span> risk of ruin</>}</div>
               )}
@@ -6725,7 +6739,7 @@ function BetSpreadCalculator() {
         </div></div>
 
         </div>}
-        {tab === "settings" && <p className="text-center text-[10px] mt-10" style={{ color: "var(--muted)", opacity: .7 }}>Strategy and indices follow Blackjack Apprenticeship's {rules.h17 ? "H17" : "S17"} charts · practice tool, not gambling advice</p>}
+        {tab === "settings" && <p className="text-center text-[11px] mt-10" style={{ color: "var(--muted)", opacity: .7 }}>Strategy and indices follow Blackjack Apprenticeship's {rules.h17 ? "H17" : "S17"} charts · practice tool, not gambling advice</p>}
       </div>
       <nav className="sidenav" aria-label="Sections" ref={snav}>
         <div className="sn-brand">

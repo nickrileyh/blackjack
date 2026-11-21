@@ -127,9 +127,9 @@ export function TableScoreCard({ casinos, onUseRules, appRules }) {
       {out && ref && (
         <div key={verdict + score} className="rounded-xl px-4 py-3.5 mt-4 rise" style={{ background: "rgba(var(--fg),.035)" }}>
           <div className="flex items-center gap-4">
-            <div className="mono font-semibold leading-none" style={{ fontSize: 40, color: tone }}>{score}</div>
+            <div className="hl" style={{ color: tone }}>{score}</div>
             <div className="min-w-0">
-              <div className="text-base font-semibold" style={{ color: tone }}>{verdict}</div>
+              <div style={{ color: tone, fontSize: 17, fontWeight: 700, letterSpacing: "-.02em" }}>{verdict}</div>
               <div className="text-xs" style={{ color: "var(--ivory-d)" }}>{why}</div>
             </div>
           </div>
@@ -286,7 +286,7 @@ const planCss = `
 .prow+.prow{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
 /* a computer: a casino's name wraps onto a second line in a narrow window instead of being cut short ("JACK Clevelan…") */
 @media (min-width:1024px){.prow .pname{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;text-wrap:balance}}
-button.prow:hover{background:rgba(var(--fg),.045)}
+@media (hover:hover){button.prow:hover{background:rgba(var(--fg),.045)}}
 .phead{display:grid;gap:10px;padding:0 6px 7px;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 .ptrack{position:relative;height:6px;border-radius:99px;background:rgba(var(--fg),.08);overflow:hidden}
 .ptrack>i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:rgba(var(--fg),.42);transform-origin:0 50%}
@@ -1128,7 +1128,7 @@ function CasinoPop({ c, rot, sessLen, onClose, onCasinos }) {
   const cash = upTo50(cashFor(x, sessLen));
   const over = x && !x.loses && x.ror > cap * 1.001, needB = over && x.ror < 1 ? (setup.bankroll * Math.log(cap)) / Math.log(x.ror) : 0;
   // a long value (a rule set) takes the heading's row to itself, so its note keeps the full width instead of a thin column
-  const Fact = ({ k, v, sub, tone, stack }) => stack ? <div className="py-2.5" style={{ borderTop: "1px solid var(--line)" }}><div className="flex items-baseline justify-between gap-4"><div className="text-sm shrink-0" style={{ color: "var(--ivory)" }}>{k}</div><div className="mono text-sm font-semibold text-right truncate" style={{ color: tone || "var(--ivory)" }}>{v}</div></div><div className="text-[11.5px] leading-snug mt-0.5" style={{ color: "var(--muted)" }}>{sub}</div></div> : <div className="flex items-start justify-between gap-4 py-2.5" style={{ borderTop: "1px solid var(--line)" }}><div className="min-w-0"><div className="text-sm" style={{ color: "var(--ivory)" }}>{k}</div><div className="text-[11.5px] leading-snug" style={{ color: "var(--muted)" }}>{sub}</div></div><div className="mono text-sm font-semibold text-right whitespace-nowrap" style={{ color: tone || "var(--ivory)" }}>{v}</div></div>;
+  const Fact = ({ k, v, sub, tone, stack }) => stack ? <div className="py-3" style={{ borderTop: "1px solid var(--line)" }}><div className="flex items-baseline justify-between gap-4"><div className="factk shrink-0">{k}</div><div className="factv sm truncate" style={{ color: tone || "var(--ivory)" }}>{v}</div></div><div className="facts">{sub}</div></div> : <div className="flex items-start justify-between gap-4 py-3" style={{ borderTop: "1px solid var(--line)" }}><div className="min-w-0"><div className="factk">{k}</div><div className="facts">{sub}</div></div><div className="factv" style={{ color: tone || "var(--ivory)" }}>{v}</div></div>;
   return (
     <Sheet title={c.name} onClose={onClose}>
       <p className="text-xs -mt-2 mb-3" style={{ color: "var(--muted)" }}>{[c.city, c.st].filter(Boolean).join(", ")}</p>
@@ -1140,8 +1140,8 @@ function CasinoPop({ c, rot, sessLen, onClose, onCasinos }) {
       </div>
       {x ? <>
         <div className="flex items-center gap-4 mb-1">
-          <div className="mono font-semibold leading-none" style={{ fontSize: 40, color: scoreTone(x.score) }}>{x.score}</div>
-          <div className="min-w-0"><div className="text-base font-semibold" style={{ color: scoreTone(x.score) }}>{verdict}</div><div className="text-xs" style={{ color: "var(--ivory-d)" }}>{why} The score weighs what it earns by its risk of ruin with your bankroll today.</div></div>
+          <div className="hl" style={{ color: scoreTone(x.score) }}>{x.score}</div>
+          <div className="min-w-0"><div style={{ color: scoreTone(x.score), fontSize: 17, fontWeight: 700, letterSpacing: "-.02em" }}>{verdict}</div><div className="text-xs" style={{ color: "var(--ivory-d)" }}>{why} The score weighs what it earns by its risk of ruin with your bankroll today.</div></div>
         </div>
         <div className="mt-3">
           <Fact k="What it earns you" v={x.ev > 0 ? `${money(x.ev)}/hr` : "—"} sub={x.ev > 0 ? `On average, playing every hand with the ${over ? "safest" : "best"} bets your ${shortMoney(setup.bankroll)} allows here.${ref && ref.ev > 0 ? ` Your usual game earns ${money(ref.ev)}/hr the same way.` : ""}` : "No spread wins here when every hand is played."} />
