@@ -1269,10 +1269,7 @@ body{background:none}
 --gl-edge-hi:linear-gradient(155deg,#fff,rgba(255,255,255,.9) 14%,rgba(255,255,255,.65) 44%,rgba(255,255,255,.6) 70%,#fff);
 --gl-body:inset 0 var(--hair) 0 #fff,inset 0 0 12px rgba(255,255,255,.55),inset 0 -7px 10px -9px rgba(var(--fg),.14);
 --gl-float:0 0 0 var(--hair) rgba(var(--fg),.1),0 16px 36px -18px rgba(var(--fg),.42),0 3px 10px -4px rgba(var(--fg),.16)}
-.bottom-nav{background:linear-gradient(to top,rgba(var(--bgrgb),.6),rgba(var(--bgrgb),.24) 50%,rgba(var(--bgrgb),0))}
-.bottom-nav>div{background:linear-gradient(180deg,rgba(var(--fg),.105),rgba(var(--fg),.03)),rgba(var(--bgrgb),.24);-webkit-backdrop-filter:blur(16px) saturate(2.1) brightness(1.16);backdrop-filter:blur(16px) saturate(2.1) brightness(1.16);box-shadow:var(--gl-body),var(--gl-float);transform-origin:50% 100%;transition:transform .5s var(--ez-slide),scale .34s var(--ez)}
-:root[data-theme="light"] .bottom-nav>div{background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.4));-webkit-backdrop-filter:blur(16px) saturate(1.9) brightness(1.03);backdrop-filter:blur(16px) saturate(1.9) brightness(1.03);box-shadow:var(--gl-body),var(--gl-float)}
-.bottom-nav>div::before,.cmdk::before,.sheet::before{background:var(--gl-edge-hi)}
+.cmdk::before,.sheet::before{background:var(--gl-edge-hi)}
 .navbtn{color:var(--ivory-d)}
 .navbtn.on{color:var(--brass)}
 .cmdk{box-shadow:var(--gl-body),0 40px 90px -20px rgba(0,0,0,.8)}
@@ -1286,11 +1283,11 @@ body{background:none}
 .topbar.show{transform:none;pointer-events:none}
 .topbar.show button,.topbar.show .tbread{pointer-events:auto}
 .topbar::after{display:none}
-.tbedge{position:absolute;left:0;right:0;top:0;height:calc(100% + 46px);z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(var(--bgrgb),.88),rgba(var(--bgrgb),.68) 34%,rgba(var(--bgrgb),.36) 62%,rgba(var(--bgrgb),.11) 86%,rgba(var(--bgrgb),0))}
+.tbedge{position:absolute;left:0;right:0;top:0;height:calc(100% + 46px);z-index:-1;pointer-events:none}
+.tbedge>b{position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--bgrgb),.88),rgba(var(--bgrgb),.68) 34%,rgba(var(--bgrgb),.36) 62%,rgba(var(--bgrgb),.11) 86%,rgba(var(--bgrgb),0))}
 .tbedge>i{position:absolute;left:0;right:0;top:0}
-.tbedge>i:nth-child(1){height:100%;-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);-webkit-mask-image:linear-gradient(180deg,#000 52%,transparent);mask-image:linear-gradient(180deg,#000 52%,transparent)}
-.tbedge>i:nth-child(2){height:76%;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);-webkit-mask-image:linear-gradient(180deg,#000 46%,transparent);mask-image:linear-gradient(180deg,#000 46%,transparent)}
-.tbedge>i:nth-child(3){height:52%;-webkit-backdrop-filter:blur(12px) saturate(1.5);backdrop-filter:blur(12px) saturate(1.5);-webkit-mask-image:linear-gradient(180deg,#000 38%,transparent);mask-image:linear-gradient(180deg,#000 38%,transparent)}
+.tbedge>i:nth-child(2){height:100%;-webkit-backdrop-filter:blur(2.5px);backdrop-filter:blur(2.5px);-webkit-mask-image:linear-gradient(180deg,#000 48%,transparent);mask-image:linear-gradient(180deg,#000 48%,transparent)}
+.tbedge>i:nth-child(3){height:58%;-webkit-backdrop-filter:blur(11px) saturate(1.5);backdrop-filter:blur(11px) saturate(1.5);-webkit-mask-image:linear-gradient(180deg,#000 40%,transparent);mask-image:linear-gradient(180deg,#000 40%,transparent)}
 .topbar .tbtitle{min-width:0;font-size:17px;font-weight:600;letter-spacing:-.015em;color:var(--ivory);text-shadow:0 0 12px rgba(var(--bgrgb),.9),0 1px 3px rgba(var(--bgrgb),.7)}
 .topbar .rulespill,.topbar .iconbtn,.topbar .tbback,.topbar .tbread,.pillrail .rulespill{background:linear-gradient(180deg,rgba(var(--fg),.12),rgba(var(--fg),.04)),rgba(var(--bgrgb),.3);background-clip:padding-box;border-color:transparent;-webkit-backdrop-filter:blur(14px) saturate(2) brightness(1.18);backdrop-filter:blur(14px) saturate(2) brightness(1.18);box-shadow:var(--gl-body),0 10px 24px -12px rgba(0,0,0,.65),0 2px 6px -2px rgba(0,0,0,.3)}
 :root[data-theme="light"] .topbar .rulespill,:root[data-theme="light"] .topbar .iconbtn,:root[data-theme="light"] .topbar .tbback,:root[data-theme="light"] .topbar .tbread,:root[data-theme="light"] .pillrail .rulespill{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.46));background-clip:padding-box;-webkit-backdrop-filter:blur(14px) saturate(1.9);backdrop-filter:blur(14px) saturate(1.9);box-shadow:var(--gl-body),0 0 0 var(--hair) rgba(var(--fg),.1),0 10px 22px -12px rgba(var(--fg),.4)}
@@ -1302,17 +1299,9 @@ body{background:none}
 @media (max-width:399px){.topbar .tbtitle{font-size:16px}.topbar .rulespill{padding:0 9px 0 12px;font-size:11px}}
 @media (max-width:380px){.topbar .tbtitle{font-size:15px}.topbar.tight .rulespill{padding:0 9px 0 10px}}
 @media (max-width:350px){.topbar{padding-left:11px;padding-right:11px}.topbar .iconbtn,.topbar .tbback{width:34px;height:34px}.topbar .tbback{margin-right:6px}.topbar .rulespill{min-height:34px;padding:0 10px;font-size:11px}.topbar .rulespill svg{display:none}.topbar .tbread{height:34px;line-height:34px;padding:0 10px;font-size:11px}.topbar .tbtitle{font-size:15px}}
-html.navmin .bottom-nav>div{transform:translateY(3px) scale(.8)}
-.navbtn>span:last-child{transition:opacity .24s var(--ez-soft)}
-.navbtn .navicon{transition:transform .5s var(--ez-slide)}
-html.navmin .navbtn>span:last-child{opacity:0}
-html.navmin .navbtn .navicon{transform:translateY(8px) scale(1.12)}
-.bottom-nav>div:active{scale:1.03}
-.bottom-nav>div:active .navglide{filter:brightness(1.3)}
-.navglide{transition:filter .2s var(--ez)}
 .chipseg.slide .thumb{transition:scale .34s var(--ez),filter .2s var(--ez)}
 .chipseg.slide:active .thumb{scale:1.04 1.1;filter:brightness(1.25)}
-.btn:active{transform:scale(1.025)}
+.btn:active:not(:disabled){transform:scale(1.025)}
 @media(hover:hover) and (min-width:1024px){.btn:not(.ghost):hover:active:not(:disabled){transform:scale(1.02)}}
 .iconbtn:active,.stepbtn:active,.xbtn:active{transform:scale(1.1)}
 .rulespill:active,.chippress:active,.gchip:active,.topbar .tbback:active{transform:scale(1.05)}
@@ -1327,9 +1316,84 @@ html.scrolled .pillrail .rulespill:active{transform:scale(.9)}
 .touchlight.on{opacity:1;visibility:visible;transition:opacity .1s var(--ez-soft),visibility 0s}
 .touchlight>i{position:absolute;left:-80px;top:-80px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.3),rgba(255,255,255,.13) 32%,rgba(255,255,255,.03) 58%,rgba(255,255,255,0) 70%);will-change:transform}
 :root[data-theme="light"] .touchlight>i{background:radial-gradient(circle,rgba(var(--acc),.2),rgba(var(--acc),.08) 34%,rgba(var(--acc),0) 70%)}
-@media (prefers-reduced-transparency:reduce){.topbar{background:rgba(var(--bgrgb),.97)}.tbedge{display:none}.topbar .rulespill,.topbar .iconbtn,.topbar .tbback,.topbar .tbread,.pillrail .rulespill{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgb(var(--bgrgb))}.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:rgb(var(--bgrgb));-webkit-backdrop-filter:none;backdrop-filter:none}}
-@media (prefers-reduced-motion:reduce){.topbar,.bottom-nav>div,.navbtn .navicon,.navbtn>span:last-child,.navglide,.topbar .tbback{transition:none!important}html.navmin .bottom-nav>div{transform:none}html.navmin .navbtn>span:last-child{opacity:1}html.navmin .navbtn .navicon{transform:none}.bottom-nav>div:active,.chipseg.slide:active .thumb{scale:1}.chipseg.slide .thumb{transition:none!important}}
+@media (prefers-reduced-transparency:reduce){.topbar{background:rgba(var(--bgrgb),.97)}.tbedge{display:none}.topbar .rulespill,.topbar .iconbtn,.topbar .tbback,.topbar .tbread,.pillrail .rulespill{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgb(var(--bgrgb))}}
+@media (prefers-reduced-motion:reduce){.topbar,.topbar .tbback{transition:none!important}.chipseg.slide:active .thumb{scale:1}.chipseg.slide .thumb{transition:none!important}}
 /* ---- end of liquid glass II ---- */
+/* ---- Liquid glass III: springs, a lens that can be dragged, a tab bar that folds to one, heavier edges (21 Nov) ---- */
+:root{--spring:cubic-bezier(.42,1.147,.055,1.076);--spring-b:cubic-bezier(.428,2.219,0,.691);--spring-soft:cubic-bezier(.3,.48,.1,1.1)}
+:root{--bev:calc(var(--hair) * 1.5);
+--gl-edge-hi:linear-gradient(155deg,rgba(255,255,255,.96),rgba(255,255,255,.44) 12%,rgba(255,255,255,.12) 38%,rgba(255,255,255,.1) 68%,rgba(255,255,255,.58));
+--gl-body:inset 0 var(--bev) 0 rgba(255,255,255,.34),inset 0 calc(var(--bev) * -1) 0 rgba(255,255,255,.13),inset 1.5px 1.5px 1.5px -1px rgba(255,255,255,.5),inset -1.5px -1.5px 1.5px -1px rgba(255,255,255,.36),inset 0 5px 7px -4px rgba(255,255,255,.26),inset 0 -7px 9px -5px rgba(0,0,0,.5),inset 6px 0 8px -6px rgba(255,255,255,.14),inset -6px 0 8px -6px rgba(255,255,255,.14),inset 0 0 20px rgba(255,255,255,.05);
+--gl-bead:inset 0 0 0 var(--hair) rgba(var(--acc),.5),inset 0 var(--bev) 0 rgba(255,255,255,.4),inset 0 4px 6px -4px rgba(255,255,255,.3),inset 0 -5px 7px -5px rgba(0,0,0,.4),inset 0 0 10px rgba(var(--acc),.2),0 3px 10px -5px rgba(0,0,0,.55)}
+:root[data-theme="light"]{
+--gl-edge-hi:linear-gradient(155deg,#fff,rgba(255,255,255,.94) 12%,rgba(255,255,255,.7) 40%,rgba(255,255,255,.64) 66%,#fff);
+--gl-body:inset 0 var(--bev) 0 #fff,inset 1.5px 1.5px 1.5px -1px #fff,inset -1.5px -1.5px 1.5px -1px rgba(255,255,255,.85),inset 0 5px 7px -4px rgba(255,255,255,.95),inset 0 -7px 9px -6px rgba(var(--fg),.2),inset 6px 0 8px -6px rgba(255,255,255,.7),inset -6px 0 8px -6px rgba(255,255,255,.7),inset 0 0 14px rgba(255,255,255,.5);
+--gl-bead:inset 0 var(--bev) 0 rgba(255,255,255,.6),inset 0 4px 6px -4px rgba(255,255,255,.4),inset 0 -5px 7px -5px rgba(var(--fg),.22),0 3px 10px -5px rgba(var(--fg),.4)}
+.bottom-nav{background:none;--nr:30px;--np:5px;--ny:10px}
+.bottom-nav::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(to top,rgba(var(--bgrgb),.6),rgba(var(--bgrgb),.24) 50%,rgba(var(--bgrgb),0));transition:opacity .45s var(--ez-soft)}
+.bottom-nav[data-min]::before{opacity:.32}
+.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{display:block;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:scale .56s var(--spring-b)}
+.bottom-nav>div::before{display:none}
+.nglass{position:absolute;inset:0;border-radius:999px;pointer-events:none;transform-origin:0 100%;transition:transform .6s var(--spring-soft);will-change:transform}
+.nglass.dot{right:auto;top:auto;width:54px;height:54px;--nr:27px;transform:scale(calc(1 / var(--fx,.1475)),calc(1 / var(--fy,.9)))}
+.ng{position:absolute;inset:0;border-radius:inherit}
+.ng.rim{-webkit-backdrop-filter:blur(3.5px) saturate(2) brightness(1.62);backdrop-filter:blur(3.5px) saturate(2) brightness(1.62)}
+.ng.deep{-webkit-backdrop-filter:blur(15px) saturate(1.06) brightness(.72);backdrop-filter:blur(15px) saturate(1.06) brightness(.72);
+-webkit-mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - 11px),rgba(0,0,0,.55) calc(var(--nr) - 7px),rgba(0,0,0,.12) calc(var(--nr) - 2.5px),transparent var(--nr)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - 11px),rgba(0,0,0,.55) calc(var(--nr) - 7px),rgba(0,0,0,.12) calc(var(--nr) - 2.5px),transparent var(--nr)),linear-gradient(180deg,transparent,rgba(0,0,0,.12) 2.5px,rgba(0,0,0,.55) 7px,#000 11px,#000 calc(100% - 11px),rgba(0,0,0,.55) calc(100% - 7px),rgba(0,0,0,.12) calc(100% - 2.5px),transparent);mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - 11px),rgba(0,0,0,.55) calc(var(--nr) - 7px),rgba(0,0,0,.12) calc(var(--nr) - 2.5px),transparent var(--nr)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - 11px),rgba(0,0,0,.55) calc(var(--nr) - 7px),rgba(0,0,0,.12) calc(var(--nr) - 2.5px),transparent var(--nr)),linear-gradient(180deg,transparent,rgba(0,0,0,.12) 2.5px,rgba(0,0,0,.55) 7px,#000 11px,#000 calc(100% - 11px),rgba(0,0,0,.55) calc(100% - 7px),rgba(0,0,0,.12) calc(100% - 2.5px),transparent);
+-webkit-mask-size:var(--nr) 100%,var(--nr) 100%,calc(100% - 2 * var(--nr)) 100%;mask-size:var(--nr) 100%,var(--nr) 100%,calc(100% - 2 * var(--nr)) 100%;
+-webkit-mask-position:0 0,100% 0,50% 0;mask-position:0 0,100% 0,50% 0;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+:root[data-theme="light"] .ng.rim{-webkit-backdrop-filter:blur(3.5px) saturate(1.8) brightness(1.08);backdrop-filter:blur(3.5px) saturate(1.8) brightness(1.08)}
+:root[data-theme="light"] .ng.deep{-webkit-backdrop-filter:blur(15px) saturate(1.06) brightness(.96);backdrop-filter:blur(15px) saturate(1.06) brightness(.96)}
+.ng.skin{background:linear-gradient(180deg,rgba(var(--fg),.105),rgba(var(--fg),.03)),rgba(var(--bgrgb),.24);box-shadow:var(--gl-body),var(--gl-float)}
+:root[data-theme="light"] .ng.skin{background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.4))}
+.ng.skin::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:var(--bev);background:var(--gl-edge-hi);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
+.nglass.wide .ng{opacity:1;visibility:visible;transition:opacity .1s linear .01s,visibility 0s}
+.nglass.dot .ng{opacity:0;visibility:hidden;transition:opacity .1s linear .01s,visibility 0s .13s}
+.bottom-nav[data-min] .nglass.wide{transform:scale(var(--fx,.1475),var(--fy,.9))}
+.bottom-nav[data-min] .nglass.dot{transform:none}
+.bottom-nav[data-min] .nglass.wide .ng{opacity:0;visibility:hidden;transition:opacity .14s linear .08s,visibility 0s .24s}
+.bottom-nav[data-min] .nglass.dot .ng{opacity:1;visibility:visible;transition:opacity .14s linear .08s,visibility 0s}
+.navtrack{position:relative;z-index:1;display:flex;transition:transform .6s var(--spring-soft);will-change:transform}
+.navglide{top:0;bottom:0;left:0;width:calc(100% / var(--n));transition:opacity .2s var(--ez-soft),filter .2s var(--ez)}
+:root[data-theme="light"] .navbtn.on{background:none;box-shadow:none}
+.navbtn{touch-action:pan-y;transition:color .18s var(--ez),opacity .26s var(--ez-soft) .17s}
+.navbtn .navicon{transform:translateY(var(--iy,0px)) scale(calc(var(--nz,1) + .17 * var(--mag,0)));transition:transform .6s var(--spring-soft)}
+.navbtn>span:last-child{line-height:14px;transform-origin:50% 0;transform:scale(calc(1 + .05 * var(--mag,0)));transition:opacity .24s var(--ez-soft),transform .4s var(--ez)}
+.bottom-nav[data-min]>div{pointer-events:none;transform-origin:27px calc(100% - 27px)}
+.bottom-nav[data-min] .navtrack{transform:translateX(calc(27px - var(--np) - (var(--i) + .5) * var(--tw,356px) / var(--n)))}
+.bottom-nav[data-min] .navbtn{--iy:var(--ny);--nz:1.08;transition:color .18s var(--ez),opacity .12s var(--ez-soft)}
+.bottom-nav[data-min] .navbtn:not(.cur){opacity:0}
+.bottom-nav[data-min] .navbtn.cur{pointer-events:auto}
+.bottom-nav[data-min] .navbtn>span:last-child{opacity:0;transition:opacity .12s var(--ez-soft)}
+.bottom-nav[data-min] .navglide{opacity:0;transition:opacity .12s var(--ez-soft)}
+@media (max-width:350px){.bottom-nav{--nr:29px;--np:4px;--ny:9px}}
+.bottom-nav>div:active,.navcap.dragging{scale:1.03}
+.bottom-nav>div:active .navglide{filter:brightness(1.3)}
+.navcap.dragging .navicon,.navcap.dragging .navbtn>span:last-child{transition:none}
+.navcap.dragging .navbtn.on{color:var(--ivory-d)}
+.navcap.dragging .navbtn.under{color:var(--brass)}
+.navcap.dragging .navglide{filter:brightness(1.35);box-shadow:var(--gl-bead),inset 0 0 14px rgba(255,255,255,.16),0 8px 20px -8px rgba(0,0,0,.6)}
+.sn-glide{transition:transform .56s var(--spring),opacity .2s var(--ez)}
+.pillrail{transition:transform .52s var(--spring-soft)}
+.btn,.iconbtn,.stepbtn,.xbtn,.rulespill,.chippress,.gchip,.qa,.opt,.acts>button,.topbar .tbback{transition:transform .6s var(--spring-b),scale .56s var(--spring),opacity .26s var(--ez-soft),filter .2s var(--ez),background-color .16s var(--ez),background .16s var(--ez),color .16s var(--ez),border-color .16s var(--ez),box-shadow .2s var(--ez-soft)}
+.btn:active,.iconbtn:active,.stepbtn:active,.xbtn:active,.rulespill:active,.chippress:active,.gchip:active,.qa:active,.opt:active,.acts>button:active,.topbar .tbback:active{transition-duration:.13s;transition-timing-function:var(--ez)}
+.pillrail .rulespill{transition:transform .52s var(--spring),filter .2s var(--ez),background .16s var(--ez),border-color .16s var(--ez)}
+.chipseg.slide .thumb{transition:scale .5s var(--spring-b),filter .2s var(--ez)}
+.switch::after{transition:transform .5s var(--spring),background .16s var(--ez),box-shadow .16s var(--ez)}
+.topbar{transform:none;visibility:hidden;transition:visibility 0s .32s}
+.topbar.show{visibility:visible;transition:visibility 0s}
+.tbedge>b,.tbedge>i{opacity:0;transition:opacity .3s var(--ez-soft)}
+.topbar.show .tbedge>b,.topbar.show .tbedge>i{opacity:1;transition:opacity .42s var(--ez-soft)}
+.topbar .tbtitle{opacity:0;translate:0 -7px;transition:opacity .16s var(--ez-soft),translate .2s var(--ez)}
+.topbar.show .tbtitle{opacity:1;translate:0 0;transition:opacity .3s var(--ez-soft) .03s,translate .56s var(--spring) .03s}
+.topbar .tbback,.topbar .rulespill,.topbar .iconbtn,.topbar .tbread{opacity:0;scale:.6;transition:opacity .15s var(--ez-soft),scale .2s var(--ez),transform .6s var(--spring-b),filter .2s var(--ez),background .16s var(--ez)}
+.topbar.show .tbback,.topbar.show .rulespill,.topbar.show .iconbtn,.topbar.show .tbread{opacity:1;scale:1;transition:opacity .24s var(--ez-soft),scale .6s var(--spring),transform .6s var(--spring-b),filter .2s var(--ez),background .16s var(--ez)}
+.topbar.show .rulespill,.topbar.show .tbread{transition-delay:.04s,.04s,0s,0s,0s}
+.topbar.show .iconbtn{transition-delay:.08s,.08s,0s,0s,0s}
+.topbar.show .tbback:active,.topbar.show .rulespill:active,.topbar.show .iconbtn:active{transition-duration:.13s;transition-delay:0s;transition-timing-function:var(--ez)}
+@media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:none}.ng.rim,.ng.deep{display:none}.ng.skin,:root[data-theme="light"] .ng.skin{background:rgb(var(--bgrgb))}}
+@media (prefers-reduced-motion:reduce){.bottom-nav>div,.nglass,.nglass .ng,.navtrack,.navbtn,.navbtn .navicon,.navbtn>span:last-child,.navglide,.bottom-nav::before,.tbedge>b,.tbedge>i,.topbar .tbtitle,.topbar .tbback,.topbar .rulespill,.topbar .iconbtn,.topbar .tbread,.sn-glide,.pillrail,.pillrail .rulespill,.switch::after{transition:none!important}.bottom-nav>div:active,.navcap.dragging{scale:1}.navbtn .navicon{transform:translateY(var(--iy,0px)) scale(var(--nz,1))}.navbtn>span:last-child{transform:none}}
+/* ---- end of liquid glass III ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -2038,10 +2102,9 @@ function FillChart({ R, devs }) {
 // runs a single compositor animation. It used to be a CSS slide on `translate` plus a separate `scale` animation;
 // with the app's fast-start curve the glass covered a third of the bar and popped 13% wider in its first frame,
 // which Nick saw as the highlight glitching on his phone.
-//   position: --ez-slide (cubic-bezier(.22,.68,.1,1)) — off the mark at once, never more than about half its own
-//             width in a frame, then the long slow finish;
-//   stretch:  follows its speed (longer and a hair thinner while it is fast, its own size as it glides in), eased
-//             in over the first few frames so it never pops, and gentler than before (9% at most).
+//   position: the glass spring (below): off the mark at once, never more than about half its own width in a frame,
+//             a small soft overshoot and a settle (it was --ez-slide, an ease-out, until Nick asked for Apple's spring);
+//   stretch:  follows its speed (longer and a hair thinner while it is fast, its own size as it lands).
 // A second tap while it is still moving carries on from where, and how stretched, it is.
 const bezFn = (x1, y1, x2, y2) => (p) => {
   if (p <= 0) return 0; if (p >= 1) return 1;
@@ -2050,28 +2113,60 @@ const bezFn = (x1, y1, x2, y2) => (p) => {
   return by((lo + hi) / 2);
 };
 const slideEase = bezFn(0.22, 0.68, 0.1, 1);
-const GLIDE_N = 32;   // keyframes: about one a frame
-const GLIDE_P = Array.from({ length: GLIDE_N + 1 }, (_, k) => slideEase(k / GLIDE_N));
-const GLIDE_V = (() => { const v = GLIDE_P.map((_, k) => GLIDE_P[Math.min(GLIDE_N, k + 1)] - GLIDE_P[Math.max(0, k - 1)]), mx = Math.max(...v); return v.map((x) => x / mx); })();   // speed, 0 to 1
-function Glider({ cls, at, style, ms = 480, gap = 0 }) {
-  const el = useRef(null), prev = useRef(at), run = useRef(null);
-  useLayoutEffect(() => {
-    const d = at - prev.current, n = el.current; prev.current = at;
-    if (!d || !n || !n.animate || noMotion()) return;
-    const step = n.offsetWidth + gap, x1 = at * step;
-    let x0 = (at - d) * step, s0 = 1;
+// The glass spring (Nick, 21 Nov: "Springy like Apple's"). A selection no longer eases to a stop: it is carried on a
+// damped spring, off the mark at once (two thirds of the way in the first fifth of its time), about 5% past its
+// place once, and settled. u is 0 to 1 of the animation's time; z is the damping (lower = more bounce) and k how many
+// time constants fit in it (6.2 leaves a quarter of a percent at the end). CSS has the same curves as --spring,
+// --spring-b and --spring-soft (tools/glass/spring.py writes them).
+const springOf = (z, k = 6.2) => { const a = k, b = (k * Math.sqrt(1 - z * z)) / z; return { p: (u) => (u >= 1 ? 1 : 1 - Math.exp(-a * u) * (Math.cos(b * u) + (a / b) * Math.sin(b * u))), v: (u) => Math.exp(-a * u) * Math.sin(b * u) }; };
+const GLASS = springOf(0.68);
+const GLIDE_N = 48;   // keyframes: more than one a frame
+const GLIDE_P = Array.from({ length: GLIDE_N + 1 }, (_, k) => GLASS.p(k / GLIDE_N));
+const GLIDE_V = (() => { const v = GLIDE_P.map((_, k) => GLASS.v(k / GLIDE_N)), mx = Math.max(...v); return v.map((x) => x / mx); })();   // speed, 1 at its fastest, a little below 0 on the way back
+const GLIDE_B = GLIDE_P.map((_, k) => { const u = Math.min(1, k / GLIDE_N / 0.5); return Math.sin(Math.PI * u) ** 2; });   // the swell in flight: up and back down inside the first half
+// One transform animation, as before (see the note above): the slide, the stretch that follows its speed, the swell
+// (lift: the tab bar's lens grows a tenth while it travels) and what is left of a drag's size are baked into the
+// same keyframes. At the end of its track the glass squashes against the wall instead of springing out of it.
+// ctl (a ref) lets the tab bar carry the highlight under a finger: hold(x, sx, sy) puts it there, drop(to) lets it
+// go, and it springs to its tab from wherever, and however large, it was.
+function Glider({ cls, at, style, ms = 480, gap = 0, lift = 0, ctl }) {
+  const el = useRef(null), prev = useRef(at), run = useRef(null), held = useRef(null);
+  const fly = (to, d) => {
+    const n = el.current, h = held.current; held.current = null;
+    if (!n) return;
+    if (!n.animate || noMotion()) { if (h) n.style.transform = ""; return; }
+    const w = n.offsetWidth, step = w + gap, x1 = to * step;
+    let x0 = (to - d) * step, sx0 = 1, sy0 = 1;
     try {
-      if (run.current && run.current.playState === "running") { const m = new DOMMatrixReadOnly(getComputedStyle(n).transform); if (isFinite(m.m41)) { x0 = m.m41; s0 = m.a || 1; } }
+      if (h) { x0 = h.x; sx0 = h.sx; sy0 = h.sy; }
+      else if (run.current && run.current.playState === "running") { const m = new DOMMatrixReadOnly(getComputedStyle(n).transform); if (isFinite(m.m41)) { x0 = m.m41; sx0 = m.a || 1; sy0 = m.d || 1; } }
       if (run.current) run.current.cancel();
     } catch (_) {}
-    const amp = Math.min(0.09, 0.03 + 0.015 * Math.abs(x1 - x0) / Math.max(1, step)), ramp = Math.max(1, Math.round(60 / (ms / GLIDE_N)));   // the stretch eases in over about 60 ms
+    const dist = Math.abs(x1 - x0);
+    if (dist < 0.5 && Math.abs(sx0 - 1) < 0.004 && Math.abs(sy0 - 1) < 0.004) { if (h) n.style.transform = ""; return; }
+    let cnt = 1; try { cnt = Math.max(1, parseInt(getComputedStyle(n).getPropertyValue("--n"), 10) || 1); } catch (_) {}
+    const hi = (cnt - 1) * step, amp = Math.min(0.1, 0.03 + 0.016 * dist / Math.max(1, step)), up = dist > 1 ? lift : 0;
     const frames = GLIDE_P.map((pp, k) => {
-      const r = k >= ramp ? 1 : (k / ramp) * (k / ramp) * (3 - 2 * (k / ramp));
-      const sx = 1 + (s0 - 1) * (1 - r) + amp * GLIDE_V[k] * r, sy = 1 - (sx - 1) * 0.14;
-      return { transform: `translateX(${(x0 + (x1 - x0) * pp).toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`, offset: k / GLIDE_N };
+      const sp = Math.abs(GLIDE_V[k]), g = 1 + up * GLIDE_B[k];
+      let x = x0 + (x1 - x0) * pp, sx = (1 + (sx0 - 1) * (1 - pp)) * g * (1 + amp * sp), sy = (1 + (sy0 - 1) * (1 - pp)) * g * (1 - amp * 0.14 * sp);
+      const over = x < 0 ? -x : x > hi ? x - hi : 0;
+      if (over > 0) { const q = Math.min(0.16, over / Math.max(1, w)), wall = x < 0 ? -1 : 1; sx *= 1 - q; sy *= 1 + q * 0.25; x = (wall < 0 ? 0 : hi) + wall * w * q / 2; }
+      return { transform: `translateX(${x.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`, offset: k / GLIDE_N };
     });
     try { run.current = n.animate(frames, { duration: ms, easing: "linear" }); } catch (_) {}
+    if (h) n.style.transform = "";
+  };
+  useLayoutEffect(() => {
+    const d = at - prev.current; prev.current = at;
+    if (!d && !held.current) return;
+    fly(at, d);
   }, [at]);
+  if (ctl) ctl.current = {
+    where: () => { const n = el.current; if (!n) return 0; if (held.current) return held.current.x; try { if (run.current && run.current.playState === "running") { const m = new DOMMatrixReadOnly(getComputedStyle(n).transform); if (isFinite(m.m41)) return m.m41; } } catch (_) {} return prev.current * (n.offsetWidth + gap); },
+    hold: (x, sx, sy) => { const n = el.current; if (!n) return; try { if (run.current) run.current.cancel(); } catch (_) {} held.current = { x, sx, sy }; n.style.transform = `translateX(${x.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`; },
+    drop: (to) => { if (to === prev.current) fly(to, 0); },   // onto another tab: the page change that follows starts it from here
+    settle: () => { if (held.current) fly(prev.current, 0); },
+  };
   return <i ref={el} className={cls} aria-hidden="true" style={style} />;
 }
 function Seg({ value, options, onChange, cols, style, small }) {
@@ -2079,7 +2174,7 @@ function Seg({ value, options, onChange, cols, style, small }) {
   const n = options.length, at = options.findIndex(([v]) => v === value), slide = !cols || cols >= n;
   return (
     <div className={"chipseg" + (slide ? " slide" : " rows")} role="group" style={{ gridTemplateColumns: `repeat(${cols || n}, minmax(0,1fr))`, "--n": n, "--i": Math.max(0, at), ...style }}>
-      {slide && at >= 0 && <Glider cls="thumb" at={at} ms={400} gap={4} />}
+      {slide && at >= 0 && <Glider cls="thumb" at={at} ms={520} gap={4} lift={0.03} />}
       {options.map(([v, l]) => (
         <button key={String(v)} className={value === v ? "on" : ""} onClick={() => onChange(v)} style={{ height: 36, padding: "0 6px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: small ? 12 : undefined }}>{l}</button>
       ))}
@@ -5709,6 +5804,130 @@ function CommandPalette({ items, onClose }) {
     </div>
   );
 }
+// The phone's tab bar: a capsule of glass floating over the page (CSS: "Liquid glass III").
+//  · Scrolling down folds it into one round button that keeps the current tab's icon, as iOS 26's tab bar does;
+//    scrolling back up, coming near the top or tapping the button opens it again (Nick chose this over the bar that
+//    only shrank, knowing the other tabs are two taps away while it is folded). Only an attribute on the bar changes
+//    (data-min), and only when the direction does. Only the user's own scrolling folds it (a finger, the wheel, the
+//    keys): the trainer nudging an answer clear of the bar on a small phone leaves it alone.
+//  · Sliding a finger along it carries the highlight as a lens: it follows the finger, swells, magnifies the icon
+//    under it and springs onto the tab it is let go over. A plain tap works as before.
+function TabBar({ navTab, go }) {
+  const narrow = useNarrow();
+  const nav = useRef(null), cap = useRef(null), track = useRef(null), lens = useRef(null);
+  const isOn = (k) => (k === "trainhub" ? navTab === "train" || navTab === "count" || navTab === "trainhub" : k === "more" ? navTab === "more" || MORE_PAGES.includes(navTab) : navTab === k);
+  const at = PHONE_TABS.findIndex(([k]) => isOn(k));
+  const shown = useRef(0); if (at >= 0) shown.current = at;   // Settings is no tab: the folded button keeps the tab it was opened from
+  const cur = shown.current;
+  const live = useRef(null); live.current = { at, go };
+  useEffect(() => {
+    const el = nav.current; if (!el) return;
+    if (!narrow) { el.removeAttribute("data-min"); return; }
+    let last = Math.max(0, window.scrollY), turn = last, down = false, min = false, userAt = -1e9;
+    const set = (v) => { if (v === min) return; min = v; if (v) el.setAttribute("data-min", ""); else el.removeAttribute("data-min"); };
+    // only a scroll the user is making folds the bar: the trainer scrolling an answer clear of it (up to 125px on a
+    // small phone, more with the odds open) used to fold it after an answer, and the next tap on a tab only opened it
+    const user = (e) => { if (e.type !== "keydown" || /^( |PageDown|ArrowDown|End)$/.test(e.key)) userAt = performance.now(); };
+    const f = () => {
+      const y = Math.max(0, window.scrollY), d = y - last; if (!d) return;
+      if ((d > 0) !== down) { down = d > 0; turn = last; }
+      last = y;
+      if (y < 140) set(false); else if (down && y - turn > 30 && performance.now() - userAt < 1500) set(true); else if (!down && turn - y > 16) set(false);
+    };
+    const full = () => { turn = last; set(false); };
+    const o = { passive: true };
+    window.addEventListener("scroll", f, o); window.addEventListener("bj-navfull", full); window.addEventListener("touchmove", user, o); window.addEventListener("wheel", user, o); window.addEventListener("keydown", user);
+    return () => { window.removeEventListener("scroll", f, o); window.removeEventListener("bj-navfull", full); window.removeEventListener("touchmove", user, o); window.removeEventListener("wheel", user, o); window.removeEventListener("keydown", user); el.removeAttribute("data-min"); };
+  }, [narrow]);
+  // The fold is two pieces of glass changing places with transforms alone (nothing is laid out again while it moves):
+  // the capsule is squeezed toward its left end while a round piece, stretched to the capsule's size, comes back to
+  // a circle, so the two always fill the same box and one fades into the other on the way. The squeeze is a ratio of
+  // the bar's real size, kept here.
+  useEffect(() => {
+    const c = cap.current, tr = track.current, el = nav.current; if (!c || !tr || !el) return;
+    const fit = () => { const w = c.offsetWidth, h = c.offsetHeight; if (!w || !h) return; el.style.setProperty("--fx", (54 / w).toFixed(5)); el.style.setProperty("--fy", (54 / h).toFixed(5)); el.style.setProperty("--tw", tr.offsetWidth + "px"); };
+    fit(); let ro = null;
+    try { ro = new ResizeObserver(fit); ro.observe(c); } catch (_) { ro = null; window.addEventListener("resize", fit); }
+    return () => { if (ro) ro.disconnect(); else window.removeEventListener("resize", fit); };
+  }, []);
+  useEffect(() => {
+    const c = cap.current, tr = track.current, el = nav.current; if (!c || !tr || !el) return;
+    const N = PHONE_TABS.length;
+    let id = null, x0 = 0, y0 = 0, drag = false, raf = 0, at0 = 0, pos = 0, want = 0, grow = 0, tLast = 0, stamp = -1e9, pend = 0, folded = false, pull = 0;
+    const btns = () => tr.querySelectorAll(".navbtn");
+    const local = (cx) => { const r = tr.getBoundingClientRect(), k = r.width / (tr.offsetWidth || 1) || 1; return (cx - r.left) / k; };   // the capsule is a little larger while it is pressed
+    const mags = (x, step) => { const near = Math.round(x / step); btns().forEach((b, j) => { const d = Math.abs(x - j * step) / step, m = d >= 1 ? 0 : 1 - d * d * (3 - 2 * d); b.style.setProperty("--mag", m.toFixed(3)); b.classList.toggle("under", j === near); }); };
+    const clear = () => btns().forEach((b) => { b.style.removeProperty("--mag"); b.classList.remove("under"); });
+    const tick = (now) => {
+      raf = 0; const L = lens.current; if (!drag || !L) return;
+      const step = tr.offsetWidth / N, dt = Math.min(48, Math.max(1, now - (tLast || now - 16))); tLast = now;
+      const lag = want - pos; pos += lag * (1 - Math.exp(-dt / 50)); grow += (1 - grow) * (1 - Math.exp(-dt / 85));
+      pull += (Math.min(0.14, (Math.abs(lag) / step) * 0.2) - pull) * (1 - Math.exp(-dt / 70));   // it stretches toward the finger while it catches up (smoothed: a finger's samples arrive unevenly)
+      L.hold(pos, (1 + 0.1 * grow) * (1 + pull), (1 + 0.15 * grow) * (1 - pull * 0.2));
+      mags(pos, step);
+      if (Math.abs(want - pos) > 0.2 || grow < 0.995 || pull > 0.002) raf = requestAnimationFrame(tick);
+    };
+    const down = (e) => {
+      folded = el.hasAttribute("data-min");   // noted at the press: the focus that follows opens the bar before the click arrives
+      if (e.button || id !== null || folded || live.current.at < 0 || !lens.current) return;
+      id = e.pointerId; x0 = e.clientX; y0 = e.clientY; drag = false;
+    };
+    const move = (e) => {
+      if (e.pointerId !== id) return;
+      const step = tr.offsetWidth / N, dx = Math.abs(e.clientX - x0);
+      if (!drag) {
+        if (dx < 7 || dx < Math.abs(e.clientY - y0)) return;
+        drag = true; grow = 0; pull = 0; tLast = 0; at0 = live.current.at; pos = lens.current.where(); c.classList.add("dragging");
+        try { c.setPointerCapture(id); } catch (_) {}
+      }
+      want = Math.max(0, Math.min((N - 1) * step, local(e.clientX) - step / 2));
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    const end = (e, cancel) => {
+      if (e.pointerId !== id) return; id = null;
+      if (!drag) return; drag = false;
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      try { c.releasePointerCapture(e.pointerId); } catch (_) {}
+      const step = tr.offsetWidth / N, L = lens.current, was = live.current.at;
+      const to = cancel || was !== at0 ? was : Math.max(0, Math.min(N - 1, Math.round(want / step)));
+      stamp = performance.now(); c.classList.remove("dragging"); clear();
+      if (L) L.drop(to);
+      if (to !== was) { live.current.go(PHONE_TABS[to][0]); clearTimeout(pend); pend = setTimeout(() => { if (lens.current) lens.current.settle(); }, 220); }
+    };
+    const up = (e) => end(e, false), stop = (e) => end(e, true);
+    // one tap on the folded button opens the bar and goes nowhere; the click that ends a drag is not a tap on a tab
+    const click = (e) => {
+      if (folded || el.hasAttribute("data-min")) { folded = false; e.stopPropagation(); e.preventDefault(); window.dispatchEvent(new Event("bj-navfull")); return; }
+      if (performance.now() - stamp < 400) { e.stopPropagation(); e.preventDefault(); }
+    };
+    const focus = () => { if (el.hasAttribute("data-min")) window.dispatchEvent(new Event("bj-navfull")); };
+    c.addEventListener("pointerdown", down); c.addEventListener("pointermove", move); c.addEventListener("pointerup", up); c.addEventListener("pointercancel", stop);
+    c.addEventListener("click", click, true); c.addEventListener("focusin", focus);
+    return () => {
+      c.removeEventListener("pointerdown", down); c.removeEventListener("pointermove", move); c.removeEventListener("pointerup", up); c.removeEventListener("pointercancel", stop);
+      c.removeEventListener("click", click, true); c.removeEventListener("focusin", focus);
+      if (raf) cancelAnimationFrame(raf); clearTimeout(pend); c.classList.remove("dragging"); clear();
+    };
+  }, []);
+  return (
+    <nav ref={nav} className="bottom-nav" aria-label="Sections">
+      <div ref={cap} className="navcap" style={{ "--i": cur, "--n": PHONE_TABS.length }}>
+        {/* the glass, twice: the capsule, and the round piece it folds into. Each is a light, bright blur to its edge,
+            the deep blur of its body, which stops short of the edge, and a skin (tint, bevel, rim) */}
+        <span className="nglass wide" aria-hidden="true"><i className="ng rim" /><i className="ng deep" /><i className="ng skin" /></span>
+        <span className="nglass dot" aria-hidden="true"><i className="ng rim" /><i className="ng deep" /><i className="ng skin" /></span>
+        <div ref={track} className="navtrack">
+          {at >= 0 && <Glider cls="navglide" at={at} ms={600} lift={0.1} ctl={lens} />}
+          {PHONE_TABS.map(([k, l], j) => { const on = j === at, icon = k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]; return (
+            <button key={k} onClick={() => go(k)} className={"navbtn" + (on ? " on" : "") + (j === cur ? " cur" : "")} aria-current={on ? "page" : undefined}>
+              <span className="navicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
+              <span>{l}</span>
+            </button>); })}
+        </div>
+      </div>
+    </nav>
+  );
+}
 function TopBar({ title, children, onBack }) {
   const [show, setShow] = useState(false);
   useEffect(() => { const f = () => { const on = window.scrollY > 64; setShow(on); document.documentElement.classList.toggle("scrolled", on); }; f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
@@ -5716,8 +5935,8 @@ function TopBar({ title, children, onBack }) {
   const bar = useRef(null); useEffect(() => { if (bar.current) bar.current.inert = !show; }, [show]);
   return (
     <div ref={bar} className={"topbar" + (show ? " show" : "") + (String(title || "").length > 12 ? " tight" : "")} aria-hidden={!show}>
-      {/* the scroll edge: the page blurs and dims into the top of the screen instead of meeting a bar (three masked blurs over a fade) */}
-      <span className="tbedge" aria-hidden="true"><i /><i /><i /></span>
+      {/* the scroll edge: the page blurs and dims into the top of the screen instead of meeting a bar (a fade, then two masked blurs) */}
+      <span className="tbedge" aria-hidden="true"><b /><i /><i /></span>
       <div className="mx-auto flex items-center justify-between gap-3" style={{ maxWidth: "42rem" }}>
         <span className="flex items-center min-w-0">{onBack && <button className="tbback ph-only" onClick={onBack} aria-label="Back"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg></button>}
         <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="tbtitle truncate">{title}</button></span>
@@ -6119,7 +6338,7 @@ export default function App() {
     const down = (e) => {
       if (e.button || !e.target || !e.target.closest) return;
       let el = e.target.closest(SEL); if (!el || el.disabled) return;
-      if (el.classList.contains("navbtn")) el = el.parentElement; else if (el.parentElement && el.parentElement.classList.contains("chipseg")) el = el.parentElement;   // a tab lights its capsule, a segment its whole switch
+      if (el.classList.contains("navbtn")) { const cp = el.closest(".navcap"); el = (cp && cp.querySelector(cp.parentElement.hasAttribute("data-min") ? ".nglass.dot" : ".nglass.wide")) || cp || el; } else if (el.parentElement && el.parentElement.classList.contains("chipseg")) el = el.parentElement;   // a tab lights its capsule, a segment its whole switch
       const r = el.getBoundingClientRect(), rad = getComputedStyle(el).borderTopLeftRadius || "0px";
       host.style.clipPath = "inset(" + r.top.toFixed(1) + "px " + (window.innerWidth - r.right).toFixed(1) + "px " + (window.innerHeight - r.bottom).toFixed(1) + "px " + r.left.toFixed(1) + "px round " + rad + ")";
       place(e); on = true; host.classList.add("on");
@@ -6472,24 +6691,6 @@ function BetSpreadCalculator() {
   // (TrainHub, MoreHub in src/phone.jsx); the pages behind them carry a link back to their menu. The sidebar on a
   // computer lists every page, so the two menus are never shown there.
   const narrow = useNarrow();
-  // the tab bar shrinks while a page is scrolled down and comes back on the way up, as it does in iOS 26. Only a class
-  // on <html> changes, and only when the direction does; the bar itself moves with transform. Short scrolls near the
-  // top (the trainer nudging an answer clear of the bar on a small phone) leave it alone.
-  useEffect(() => {
-    const root = document.documentElement;
-    if (!narrow) { root.classList.remove("navmin"); return; }
-    let last = Math.max(0, window.scrollY), turn = last, down = false, min = false;
-    const set = (v) => { if (v !== min) { min = v; root.classList.toggle("navmin", v); } };
-    const f = () => {
-      const y = Math.max(0, window.scrollY), d = y - last; if (!d) return;
-      if ((d > 0) !== down) { down = d > 0; turn = last; }
-      last = y;
-      if (y < 140) set(false); else if (down && y - turn > 30) set(true); else if (!down && turn - y > 12) set(false);
-    };
-    const full = () => { turn = last; set(false); };
-    window.addEventListener("scroll", f, { passive: true }); window.addEventListener("bj-navfull", full);
-    return () => { window.removeEventListener("scroll", f); window.removeEventListener("bj-navfull", full); root.classList.remove("navmin"); };
-  }, [narrow]);
   const wide = useWide();
   // rounds an hour for any spread, the way this page works it out for the one in the table (for the saved spreads)
   const rphOf = useCallback((b, sp) => (hphAuto ? autoRph(roundFreqs(b, sp, cal), b, sp, cal) : Math.max(1, Number(handsPerHour) || 1)), [hphAuto, handsPerHour, cal]);
@@ -6885,16 +7086,7 @@ function BetSpreadCalculator() {
           </button>
         </div>
       </nav>
-      <nav className="bottom-nav" aria-label="Sections">
-        <div className="flex" onClick={() => window.dispatchEvent(new Event("bj-navfull"))}>
-          {(() => { const at = PHONE_TABS.findIndex(([k]) => (k === "trainhub" ? isTrain(navTab) : k === "more" ? navTab === "more" || MORE_PAGES.includes(navTab) : navTab === k)); return at >= 0 ? <Glider cls="navglide" at={at} ms={480} style={{ "--i": at, "--n": PHONE_TABS.length }} /> : null; })()}
-          {PHONE_TABS.map(([k, l]) => { const on = k === "trainhub" ? isTrain(navTab) : k === "more" ? navTab === "more" || MORE_PAGES.includes(navTab) : navTab === k, icon = k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]; return (
-            <button key={k} onClick={() => go(k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
-              <span className="navicon" style={{ position: "relative" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
-              <span>{l}</span>
-            </button>); })}
-        </div>
-      </nav>
+      <TabBar navTab={navTab} go={go} />
     </div></RulesCtx.Provider>
   );
 }
