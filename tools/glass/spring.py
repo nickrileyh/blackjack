@@ -5,7 +5,7 @@ The app's glass moves on damped springs (Nick, 21 Nov 2026: "Springy like Apple'
 (Glider in src/app.jsx: the tab highlight, a segment's thumb) uses the spring itself, springOf() there, the same
 formula as curve() here. CSS has no spring, so for transitions each spring is fitted here with the cubic-bezier that
 follows it most closely: off the mark at once, past its place once, and back. A bezier, not linear(): every browser
-runs a bezier on the compositor, where a press or the tab bar's fold keeps moving while the page is busy; Safari's
+runs a bezier on the compositor, where a press or the tab bar's shrink keeps moving while the page is busy; Safari's
 handling of linear() there could not be checked.
 
     python3 tools/glass/spring.py        prints the three custom properties and how closely each fits
@@ -13,10 +13,10 @@ handling of linear() there could not be checked.
 z is the damping ratio (lower = more bounce), k how many time constants fit in the duration.
   --spring       z .68  about 5% past the mark: a piece of glass arriving, a switch's knob, the sidebar's highlight
   --spring-b     z .42  about 23% back the other way: a pressed control let go (the lift is only a few percent)
-  --spring-soft  z .84  about 1%: the tab bar folding and unfolding, where more would leave the screen
+  --spring-soft  z .84  about 1%: the tab bar shrinking and coming back
 
-The fit of the soft one comes out a little high (2% past the mark), which on a 320px phone would carry the opening
-tab bar to the edge of the screen; in the app its last number is lowered by hand, 1.138 to 1.1, for a peak of 1%:
+The fit of the soft one comes out a little high (2% past the mark), which was too much for the tab bar when it
+folded to one button and opened again on a 320px phone; in the app its last number is lowered by hand, 1.138 to 1.1, for a peak of 1%:
 cubic-bezier(.3,.48,.1,1.1).
 """
 import math, random

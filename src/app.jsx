@@ -1329,13 +1329,12 @@ html.scrolled .pillrail .rulespill:active{transform:scale(.9)}
 --gl-edge-hi:linear-gradient(155deg,#fff,rgba(255,255,255,.94) 12%,rgba(255,255,255,.7) 40%,rgba(255,255,255,.64) 66%,#fff);
 --gl-body:inset 0 var(--bev) 0 #fff,inset 1.5px 1.5px 1.5px -1px #fff,inset -1.5px -1.5px 1.5px -1px rgba(255,255,255,.85),inset 0 5px 7px -4px rgba(255,255,255,.95),inset 0 -7px 9px -6px rgba(var(--fg),.2),inset 6px 0 8px -6px rgba(255,255,255,.7),inset -6px 0 8px -6px rgba(255,255,255,.7),inset 0 0 14px rgba(255,255,255,.5);
 --gl-bead:inset 0 var(--bev) 0 rgba(255,255,255,.6),inset 0 4px 6px -4px rgba(255,255,255,.4),inset 0 -5px 7px -5px rgba(var(--fg),.22),0 3px 10px -5px rgba(var(--fg),.4)}
-.bottom-nav{background:none;--nr:30px;--np:5px;--ny:10px}
+.bottom-nav{background:none;--nr:30px}
 .bottom-nav::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(to top,rgba(var(--bgrgb),.6),rgba(var(--bgrgb),.24) 50%,rgba(var(--bgrgb),0));transition:opacity .45s var(--ez-soft)}
-.bottom-nav[data-min]::before{opacity:.32}
-.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{display:block;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:scale .56s var(--spring-b)}
+.bottom-nav[data-min]::before{opacity:.5}
+.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{display:block;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;transform-origin:50% 100%;transition:transform .56s var(--spring-soft)}
 .bottom-nav>div::before{display:none}
-.nglass{position:absolute;inset:0;border-radius:999px;pointer-events:none;transform-origin:0 100%;transition:transform .6s var(--spring-soft);will-change:transform}
-.nglass.dot{right:auto;top:auto;width:54px;height:54px;--nr:27px;transform:scale(calc(1 / var(--fx,.1475)),calc(1 / var(--fy,.9)))}
+.nglass{position:absolute;inset:0;border-radius:999px;pointer-events:none}
 .ng{position:absolute;inset:0;border-radius:inherit}
 .ng.rim{-webkit-backdrop-filter:blur(3.5px) saturate(2) brightness(1.62);backdrop-filter:blur(3.5px) saturate(2) brightness(1.62)}
 .ng.deep{-webkit-backdrop-filter:blur(15px) saturate(1.06) brightness(.72);backdrop-filter:blur(15px) saturate(1.06) brightness(.72);
@@ -1347,28 +1346,16 @@ html.scrolled .pillrail .rulespill:active{transform:scale(.9)}
 .ng.skin{background:linear-gradient(180deg,rgba(var(--fg),.105),rgba(var(--fg),.03)),rgba(var(--bgrgb),.24);box-shadow:var(--gl-body),var(--gl-float)}
 :root[data-theme="light"] .ng.skin{background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.4))}
 .ng.skin::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:var(--bev);background:var(--gl-edge-hi);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
-.nglass.wide .ng{opacity:1;visibility:visible;transition:opacity .1s linear .01s,visibility 0s}
-.nglass.dot .ng{opacity:0;visibility:hidden;transition:opacity .1s linear .01s,visibility 0s .13s}
-.bottom-nav[data-min] .nglass.wide{transform:scale(var(--fx,.1475),var(--fy,.9))}
-.bottom-nav[data-min] .nglass.dot{transform:none}
-.bottom-nav[data-min] .nglass.wide .ng{opacity:0;visibility:hidden;transition:opacity .14s linear .08s,visibility 0s .24s}
-.bottom-nav[data-min] .nglass.dot .ng{opacity:1;visibility:visible;transition:opacity .14s linear .08s,visibility 0s}
-.navtrack{position:relative;z-index:1;display:flex;transition:transform .6s var(--spring-soft);will-change:transform}
+.navtrack{position:relative;z-index:1;display:flex}
 .navglide{top:0;bottom:0;left:0;width:calc(100% / var(--n));transition:opacity .2s var(--ez-soft),filter .2s var(--ez)}
 :root[data-theme="light"] .navbtn.on{background:none;box-shadow:none}
-.navbtn{touch-action:pan-y;transition:color .18s var(--ez),opacity .26s var(--ez-soft) .17s}
-.navbtn .navicon{transform:translateY(var(--iy,0px)) scale(calc(var(--nz,1) + .17 * var(--mag,0)));transition:transform .6s var(--spring-soft)}
+.navbtn{touch-action:none;transition:color .18s var(--ez)}
+.navbtn .navicon{transform:translateY(var(--iy,0px)) scale(calc(var(--nz,1) + .17 * var(--mag,0)));transition:transform .52s var(--spring-soft)}
 .navbtn>span:last-child{line-height:14px;transform-origin:50% 0;transform:scale(calc(1 + .05 * var(--mag,0)));transition:opacity .24s var(--ez-soft),transform .4s var(--ez)}
-.bottom-nav[data-min]>div{pointer-events:none;transform-origin:27px calc(100% - 27px)}
-.bottom-nav[data-min] .navtrack{transform:translateX(calc(27px - var(--np) - (var(--i) + .5) * var(--tw,356px) / var(--n)))}
-.bottom-nav[data-min] .navbtn{--iy:var(--ny);--nz:1.08;transition:color .18s var(--ez),opacity .12s var(--ez-soft)}
-.bottom-nav[data-min] .navbtn:not(.cur){opacity:0}
-.bottom-nav[data-min] .navbtn.cur{pointer-events:auto}
-.bottom-nav[data-min] .navbtn>span:last-child{opacity:0;transition:opacity .12s var(--ez-soft)}
-.bottom-nav[data-min] .navglide{opacity:0;transition:opacity .12s var(--ez-soft)}
-@media (max-width:350px){.bottom-nav{--nr:29px;--np:4px;--ny:9px}}
-.bottom-nav>div:active,.navcap.dragging{scale:1.03}
-.bottom-nav>div:active .navglide{filter:brightness(1.3)}
+.bottom-nav[data-min]>div{transform:translateY(2px) scale(.8)}
+.bottom-nav[data-min] .navbtn{--iy:8px;--nz:1.12}
+.bottom-nav[data-min] .navbtn>span:last-child{opacity:0}
+@media (max-width:350px){.bottom-nav{--nr:29px}}
 .navcap.dragging .navicon,.navcap.dragging .navbtn>span:last-child{transition:none}
 .navcap.dragging .navbtn.on{color:var(--ivory-d)}
 .navcap.dragging .navbtn.under{color:var(--brass)}
@@ -1386,14 +1373,33 @@ html.scrolled .pillrail .rulespill:active{transform:scale(.9)}
 .topbar.show .tbedge>b,.topbar.show .tbedge>i{opacity:1;transition:opacity .42s var(--ez-soft)}
 .topbar .tbtitle{opacity:0;translate:0 -7px;transition:opacity .16s var(--ez-soft),translate .2s var(--ez)}
 .topbar.show .tbtitle{opacity:1;translate:0 0;transition:opacity .3s var(--ez-soft) .03s,translate .56s var(--spring) .03s}
-.topbar .tbback,.topbar .rulespill,.topbar .iconbtn,.topbar .tbread{opacity:0;scale:.6;transition:opacity .15s var(--ez-soft),scale .2s var(--ez),transform .6s var(--spring-b),filter .2s var(--ez),background .16s var(--ez)}
+.topbar .tbback,.topbar .rulespill,.topbar .iconbtn,.topbar .tbread{opacity:0;scale:.82;transition:opacity .15s var(--ez-soft),scale .2s var(--ez),transform .6s var(--spring-b),filter .2s var(--ez),background .16s var(--ez)}
 .topbar.show .tbback,.topbar.show .rulespill,.topbar.show .iconbtn,.topbar.show .tbread{opacity:1;scale:1;transition:opacity .24s var(--ez-soft),scale .6s var(--spring),transform .6s var(--spring-b),filter .2s var(--ez),background .16s var(--ez)}
 .topbar.show .rulespill,.topbar.show .tbread{transition-delay:.04s,.04s,0s,0s,0s}
 .topbar.show .iconbtn{transition-delay:.08s,.08s,0s,0s,0s}
 .topbar.show .tbback:active,.topbar.show .rulespill:active,.topbar.show .iconbtn:active{transition-duration:.13s;transition-delay:0s;transition-timing-function:var(--ez)}
 @media (prefers-reduced-transparency:reduce){.bottom-nav>div,:root[data-theme="light"] .bottom-nav>div{background:none}.ng.rim,.ng.deep{display:none}.ng.skin,:root[data-theme="light"] .ng.skin{background:rgb(var(--bgrgb))}}
-@media (prefers-reduced-motion:reduce){.bottom-nav>div,.nglass,.nglass .ng,.navtrack,.navbtn,.navbtn .navicon,.navbtn>span:last-child,.navglide,.bottom-nav::before,.tbedge>b,.tbedge>i,.topbar .tbtitle,.topbar .tbback,.topbar .rulespill,.topbar .iconbtn,.topbar .tbread,.sn-glide,.pillrail,.pillrail .rulespill,.switch::after{transition:none!important}.bottom-nav>div:active,.navcap.dragging{scale:1}.navbtn .navicon{transform:translateY(var(--iy,0px)) scale(var(--nz,1))}.navbtn>span:last-child{transform:none}}
+@media (prefers-reduced-motion:reduce){.bottom-nav>div,.navbtn,.navbtn .navicon,.navbtn>span:last-child,.navglide,.bottom-nav::before,.tbedge>b,.tbedge>i,.topbar .tbtitle,.topbar .tbback,.topbar .rulespill,.topbar .iconbtn,.topbar .tbread,.sn-glide,.pillrail,.pillrail .rulespill,.switch::after{transition:none!important}.navbtn .navicon{transform:translateY(var(--iy,0px)) scale(var(--nz,1))}.navbtn>span:last-child{transform:none}}
 /* ---- end of liquid glass III ---- */
+/* ---- Liquid glass IV: clear glass selections, a clearer capsule (21 Nov) ---- */
+:root{
+--gl-bead-t:inset 0 0 0 var(--hair) rgba(var(--acc),.5),inset 0 var(--bev) 0 rgba(255,255,255,.4),inset 0 4px 6px -4px rgba(255,255,255,.3),inset 0 -5px 7px -5px rgba(0,0,0,.4),inset 0 0 10px rgba(var(--acc),.2),0 3px 10px -5px rgba(0,0,0,.55);
+--gl-bead:inset 0 var(--bev) 0 rgba(255,255,255,.44),inset 0 calc(var(--bev) * -1) 0 rgba(255,255,255,.12),inset 1.5px 1.5px 1.5px -1px rgba(255,255,255,.42),inset -1.5px -1.5px 1.5px -1px rgba(255,255,255,.26),inset 0 4px 6px -4px rgba(255,255,255,.2),inset 0 -5px 7px -5px rgba(0,0,0,.3),0 4px 12px -6px rgba(0,0,0,.6)}
+:root[data-theme="light"]{
+--gl-bead-t:inset 0 var(--bev) 0 rgba(255,255,255,.6),inset 0 4px 6px -4px rgba(255,255,255,.4),inset 0 -5px 7px -5px rgba(var(--fg),.22),0 3px 10px -5px rgba(var(--fg),.4);
+--gl-bead:inset 0 var(--bev) 0 #fff,inset 0 4px 6px -4px rgba(255,255,255,.8),inset 0 -5px 7px -5px rgba(var(--fg),.14),0 0 0 var(--hair) rgba(var(--fg),.08),0 3px 10px -5px rgba(var(--fg),.34)}
+.gchip.on{box-shadow:var(--gl-bead-t)}
+.navglide,.sn-glide{background:linear-gradient(180deg,rgba(var(--fg),.2),rgba(var(--fg),.09));box-shadow:var(--gl-bead)}
+:root:not([data-theme="light"]) .chipseg button.on,:root:not([data-theme="light"]) .chipseg.slide .thumb{background:linear-gradient(180deg,rgba(var(--fg),.2),rgba(var(--fg),.09));box-shadow:var(--gl-bead)}
+:root:not([data-theme="light"]) .chipseg.slide button.on{background:none;box-shadow:none}
+:root[data-theme="light"] .navglide{background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.62))}
+:root[data-theme="light"] .sn-glide{background:linear-gradient(180deg,rgba(var(--fg),.085),rgba(var(--fg),.05));box-shadow:inset 0 var(--bev) 0 rgba(255,255,255,.7),inset 0 0 0 var(--hair) rgba(var(--fg),.06)}
+.navcap.dragging .navglide{filter:brightness(1.22);box-shadow:var(--gl-bead),inset 0 0 14px rgba(255,255,255,.14),0 8px 20px -8px rgba(0,0,0,.6)}
+.ng.deep{-webkit-backdrop-filter:blur(12px) saturate(1.1) brightness(.78);backdrop-filter:blur(12px) saturate(1.1) brightness(.78)}
+.ng.skin{background:linear-gradient(180deg,rgba(var(--fg),.1),rgba(var(--fg),.025)),rgba(var(--bgrgb),.2)}
+:root[data-theme="light"] .ng.deep{-webkit-backdrop-filter:blur(12px) saturate(1.1) brightness(.97);backdrop-filter:blur(12px) saturate(1.1) brightness(.97)}
+:root[data-theme="light"] .ng.skin{background:linear-gradient(180deg,rgba(255,255,255,.56),rgba(255,255,255,.34))}
+/* ---- end of liquid glass IV ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -2116,56 +2122,79 @@ const slideEase = bezFn(0.22, 0.68, 0.1, 1);
 // The glass spring (Nick, 21 Nov: "Springy like Apple's"). A selection no longer eases to a stop: it is carried on a
 // damped spring, off the mark at once (two thirds of the way in the first fifth of its time), about 5% past its
 // place once, and settled. u is 0 to 1 of the animation's time; z is the damping (lower = more bounce) and k how many
-// time constants fit in it (6.2 leaves a quarter of a percent at the end). CSS has the same curves as --spring,
-// --spring-b and --spring-soft (tools/glass/spring.py writes them).
+// time constants fit in it (6.2 leaves a quarter of a percent at the end). CSS has curves fitted to the same springs
+// as --spring, --spring-b and --spring-soft (tools/glass/spring.py writes them).
 const springOf = (z, k = 6.2) => { const a = k, b = (k * Math.sqrt(1 - z * z)) / z; return { p: (u) => (u >= 1 ? 1 : 1 - Math.exp(-a * u) * (Math.cos(b * u) + (a / b) * Math.sin(b * u))), v: (u) => Math.exp(-a * u) * Math.sin(b * u) }; };
 const GLASS = springOf(0.68);
+// The same spring from x0 to x1 when the glass is already moving (v0, in px per whole animation): where it is at u,
+// and how fast. With v0 = 0 these are GLASS.p and GLASS.v scaled to the distance.
+const SPK = 6.2, SPB = (SPK * Math.sqrt(1 - 0.68 * 0.68)) / 0.68;
+const springX = (x0, x1, v0, u) => { if (u >= 1) return x1; const a = x0 - x1, c = (v0 + SPK * a) / SPB; return x1 + Math.exp(-SPK * u) * (a * Math.cos(SPB * u) + c * Math.sin(SPB * u)); };
+const springV = (x0, x1, v0, u) => { const a = x0 - x1, c = (v0 + SPK * a) / SPB; return Math.exp(-SPK * u) * ((SPB * c - SPK * a) * Math.cos(SPB * u) - (SPK * c + SPB * a) * Math.sin(SPB * u)); };
 const GLIDE_N = 48;   // keyframes: more than one a frame
 const GLIDE_P = Array.from({ length: GLIDE_N + 1 }, (_, k) => GLASS.p(k / GLIDE_N));
-const GLIDE_V = (() => { const v = GLIDE_P.map((_, k) => GLASS.v(k / GLIDE_N)), mx = Math.max(...v); return v.map((x) => x / mx); })();   // speed, 1 at its fastest, a little below 0 on the way back
 const GLIDE_B = GLIDE_P.map((_, k) => { const u = Math.min(1, k / GLIDE_N / 0.5); return Math.sin(Math.PI * u) ** 2; });   // the swell in flight: up and back down inside the first half
+const glassPull = (v, step) => Math.min(0.09, (0.0065 * Math.abs(v)) / Math.max(1, step));   // how far the glass stretches at a speed (px a second): the tab bar's finger-follower uses the same sum, so nothing changes shape at a hand-over
 // One transform animation, as before (see the note above): the slide, the stretch that follows its speed, the swell
-// (lift: the tab bar's lens grows a tenth while it travels) and what is left of a drag's size are baked into the
-// same keyframes. At the end of its track the glass squashes against the wall instead of springing out of it.
-// ctl (a ref) lets the tab bar carry the highlight under a finger: hold(x, sx, sy) puts it there, drop(to) lets it
-// go, and it springs to its tab from wherever, and however large, it was.
+// (lift: the tab bar's lens grows a tenth while it travels) and whatever size it had are baked into the same
+// keyframes. At the end of its track the glass squashes against the wall instead of springing out of it.
+// **Every flight starts from where the glass is, how large it is and how fast it is going**, so one flight handed
+// over to the next (a press, then the release; a finger's follower, then the spring) never stops and starts again.
+// ctl (a ref) is how the tab bar carries the highlight:
+//   aim(to)            a finger has come down on tab `to`: go there and stay, a little swollen, until told otherwise
+//   state()            where it is now: { x, v (px a second), sx, sy }
+//   hold(x, sx, sy, v) put it exactly there (the finger's follower, every frame)
+//   drop(to, v)        let go: spring onto tab `to` at its own size (v: the follower's speed)
 function Glider({ cls, at, style, ms = 480, gap = 0, lift = 0, ctl }) {
-  const el = useRef(null), prev = useRef(at), run = useRef(null), held = useRef(null);
-  const fly = (to, d) => {
-    const n = el.current, h = held.current; held.current = null;
-    if (!n) return;
-    if (!n.animate || noMotion()) { if (h) n.style.transform = ""; return; }
-    const w = n.offsetWidth, step = w + gap, x1 = to * step;
-    let x0 = (to - d) * step, sx0 = 1, sy0 = 1;
+  const el = useRef(null), prev = useRef(at), run = useRef(null), held = useRef(null), fl = useRef(null), aimed = useRef(null);
+  const state = (rest) => {
+    const n = el.current, h = held.current, r = run.current, f = fl.current;
+    if (h) return { x: h.x, v: h.v || 0, sx: h.sx, sy: h.sy };
     try {
-      if (h) { x0 = h.x; sx0 = h.sx; sy0 = h.sy; }
-      else if (run.current && run.current.playState === "running") { const m = new DOMMatrixReadOnly(getComputedStyle(n).transform); if (isFinite(m.m41)) { x0 = m.m41; sx0 = m.a || 1; sy0 = m.d || 1; } }
-      if (run.current) run.current.cancel();
+      const going = r && f && (r.playState === "running" || (r.playState === "finished" && f.keep));
+      if (n && going) {
+        const m = new DOMMatrixReadOnly(getComputedStyle(n).transform), u = Math.min(1, (Number(r.currentTime) || 0) / f.T);
+        if (isFinite(m.m41)) return { x: m.m41, v: r.playState === "running" ? springV(f.x0, f.x1, f.v0, u) / (f.T / 1000) : 0, sx: m.a || 1, sy: m.d || 1 };
+      }
     } catch (_) {}
-    const dist = Math.abs(x1 - x0);
-    if (dist < 0.5 && Math.abs(sx0 - 1) < 0.004 && Math.abs(sy0 - 1) < 0.004) { if (h) n.style.transform = ""; return; }
+    return { x: rest * (n ? n.offsetWidth + gap : 0), v: 0, sx: 1, sy: 1 };
+  };
+  const fly = (to, rest, o) => {
+    const n = el.current; if (!n) return;
+    const h = held.current, s = state(rest), grow = !!(o && o.grow); held.current = null;
+    try { if (run.current) run.current.cancel(); } catch (_) {}
+    run.current = null; fl.current = null;
+    if (!n.animate || noMotion()) { if (h) n.style.transform = ""; return; }
+    const w = n.offsetWidth, step = w + gap, x1 = to * step, T = ms / 1000;
+    const x0 = s.x, v0 = (o && o.v != null ? o.v : s.v) * T, ex = grow ? 1.07 : 1, ey = grow ? 1.11 : 1, dist = Math.abs(x1 - x0);
+    if (dist < 0.5 && Math.abs(v0) < 2 && Math.abs(s.sx - ex) < 0.004 && Math.abs(s.sy - ey) < 0.004) { if (h) n.style.transform = ""; if (!grow) return; }
     let cnt = 1; try { cnt = Math.max(1, parseInt(getComputedStyle(n).getPropertyValue("--n"), 10) || 1); } catch (_) {}
-    const hi = (cnt - 1) * step, amp = Math.min(0.1, 0.03 + 0.016 * dist / Math.max(1, step)), up = dist > 1 ? lift : 0;
+    const hi = (cnt - 1) * step, up = dist > 1 && !grow && Math.abs(s.sx - 1) < 0.02 ? lift : 0;
     const frames = GLIDE_P.map((pp, k) => {
-      const sp = Math.abs(GLIDE_V[k]), g = 1 + up * GLIDE_B[k];
-      let x = x0 + (x1 - x0) * pp, sx = (1 + (sx0 - 1) * (1 - pp)) * g * (1 + amp * sp), sy = (1 + (sy0 - 1) * (1 - pp)) * g * (1 - amp * 0.14 * sp);
+      const u = k / GLIDE_N, pull = glassPull(springV(x0, x1, v0, u) / T, step), g = 1 + up * GLIDE_B[k];
+      let x = springX(x0, x1, v0, u), sx = (ex + (s.sx - ex) * (1 - pp)) * g * (1 + pull), sy = (ey + (s.sy - ey) * (1 - pp)) * g * (1 - pull * 0.14);
       const over = x < 0 ? -x : x > hi ? x - hi : 0;
-      if (over > 0) { const q = Math.min(0.16, over / Math.max(1, w)), wall = x < 0 ? -1 : 1; sx *= 1 - q; sy *= 1 + q * 0.25; x = (wall < 0 ? 0 : hi) + wall * w * q / 2; }
-      return { transform: `translateX(${x.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`, offset: k / GLIDE_N };
+      if (over > 0) { const q = Math.min(0.1, over / Math.max(1, w)), wall = x < 0 ? -1 : 1; sx *= 1 - q; sy *= 1 + q * 0.25; x = (wall < 0 ? 0 : hi) + wall * w * q / 2; }
+      return { transform: `translateX(${x.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`, offset: u };
     });
-    try { run.current = n.animate(frames, { duration: ms, easing: "linear" }); } catch (_) {}
+    try { run.current = n.animate(frames, { duration: ms, easing: "linear", fill: grow ? "forwards" : "none" }); fl.current = { x0, x1, v0, T: ms, keep: grow }; } catch (_) {}
+    // Start it on this frame's clock. Left to itself an animation waits a frame to begin, so the glass would be
+    // shown twice where the last flight left it: a one-frame stall at every hand-over (measured: 16px a frame, a
+    // frame at -3px, then 24px).
+    try { const t = document.timeline.currentTime; if (run.current && t != null) run.current.startTime = t; } catch (_) {}
     if (h) n.style.transform = "";
   };
   useLayoutEffect(() => {
     const d = at - prev.current; prev.current = at;
-    if (!d && !held.current) return;
-    fly(at, d);
+    if (!d) return;
+    if (aimed.current === at) { aimed.current = null; return; }   // the finger already sent it there
+    aimed.current = null; fly(at, at - d);
   }, [at]);
   if (ctl) ctl.current = {
-    where: () => { const n = el.current; if (!n) return 0; if (held.current) return held.current.x; try { if (run.current && run.current.playState === "running") { const m = new DOMMatrixReadOnly(getComputedStyle(n).transform); if (isFinite(m.m41)) return m.m41; } } catch (_) {} return prev.current * (n.offsetWidth + gap); },
-    hold: (x, sx, sy) => { const n = el.current; if (!n) return; try { if (run.current) run.current.cancel(); } catch (_) {} held.current = { x, sx, sy }; n.style.transform = `translateX(${x.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`; },
-    drop: (to) => { if (to === prev.current) fly(to, 0); },   // onto another tab: the page change that follows starts it from here
-    settle: () => { if (held.current) fly(prev.current, 0); },
+    state: () => state(prev.current),
+    aim: (to) => { aimed.current = to; fly(to, prev.current, { grow: true }); },
+    hold: (x, sx, sy, v) => { const n = el.current; if (!n) return; try { if (run.current) run.current.cancel(); } catch (_) {} run.current = null; fl.current = null; held.current = { x, sx, sy, v: v || 0 }; n.style.transform = `translateX(${x.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`; },
+    drop: (to, v) => { aimed.current = to !== prev.current ? to : null; fly(to, prev.current, v != null ? { v } : null); },
   };
   return <i ref={el} className={cls} aria-hidden="true" style={style} />;
 }
@@ -5804,122 +5833,123 @@ function CommandPalette({ items, onClose }) {
     </div>
   );
 }
-// The phone's tab bar: a capsule of glass floating over the page (CSS: "Liquid glass III").
-//  · Scrolling down folds it into one round button that keeps the current tab's icon, as iOS 26's tab bar does;
-//    scrolling back up, coming near the top or tapping the button opens it again (Nick chose this over the bar that
-//    only shrank, knowing the other tabs are two taps away while it is folded). Only an attribute on the bar changes
-//    (data-min), and only when the direction does. Only the user's own scrolling folds it (a finger, the wheel, the
-//    keys): the trainer nudging an answer clear of the bar on a small phone leaves it alone.
-//  · Sliding a finger along it carries the highlight as a lens: it follows the finger, swells, magnifies the icon
-//    under it and springs onto the tab it is let go over. A plain tap works as before.
+// The phone's tab bar: a capsule of glass floating over the page (CSS: "Liquid glass III" and "IV").
+//  · Scrolling down shrinks it (data-min on the bar: four fifths the size, labels gone); scrolling back up, coming
+//    near the top or touching it brings it back. All six tabs stay one tap away at either size. (For a few hours on
+//    21 Nov it folded into one round button instead, as iOS 26's does; Nick: "i dont like how it closes into one
+//    button".) Only an attribute changes, and only when the direction does, and only the user's own scrolling
+//    shrinks it (a finger, the wheel, the keys): the trainer scrolling an answer clear of the bar leaves it alone.
+//  · The highlight belongs to the finger from the moment it touches the bar. Touch a tab and the lens is already
+//    on its way there; lift, and that tab opens. Keep the finger down and slide, and the lens follows it, swollen,
+//    magnifying the icon under it, and springs onto the tab it is let go over. Nothing has to be "started": the
+//    first version waited for 7px of sideways movement and let the page scroll under a slanted swipe, and Nick
+//    found it hard to start. Nothing on the bar scrolls the page (touch-action: none).
 function TabBar({ navTab, go }) {
   const narrow = useNarrow();
   const nav = useRef(null), cap = useRef(null), track = useRef(null), lens = useRef(null);
   const isOn = (k) => (k === "trainhub" ? navTab === "train" || navTab === "count" || navTab === "trainhub" : k === "more" ? navTab === "more" || MORE_PAGES.includes(navTab) : navTab === k);
   const at = PHONE_TABS.findIndex(([k]) => isOn(k));
-  const shown = useRef(0); if (at >= 0) shown.current = at;   // Settings is no tab: the folded button keeps the tab it was opened from
-  const cur = shown.current;
+  if (at < 0) lens.current = null;   // Settings is no tab: there is no highlight to carry, and a tap is a plain click
   const live = useRef(null); live.current = { at, go };
   useEffect(() => {
     const el = nav.current; if (!el) return;
     if (!narrow) { el.removeAttribute("data-min"); return; }
     let last = Math.max(0, window.scrollY), turn = last, down = false, min = false, userAt = -1e9;
     const set = (v) => { if (v === min) return; min = v; if (v) el.setAttribute("data-min", ""); else el.removeAttribute("data-min"); };
-    // only a scroll the user is making folds the bar: the trainer scrolling an answer clear of it (up to 125px on a
-    // small phone, more with the odds open) used to fold it after an answer, and the next tap on a tab only opened it
     const user = (e) => { if (e.type !== "keydown" || /^( |PageDown|ArrowDown|End)$/.test(e.key)) userAt = performance.now(); };
     const f = () => {
       const y = Math.max(0, window.scrollY), d = y - last; if (!d) return;
       if ((d > 0) !== down) { down = d > 0; turn = last; }
       last = y;
-      if (y < 140) set(false); else if (down && y - turn > 30 && performance.now() - userAt < 1500) set(true); else if (!down && turn - y > 16) set(false);
+      if (y < 140) set(false); else if (down && y - turn > 30 && performance.now() - userAt < 1500) set(true); else if (!down && turn - y > 14) set(false);
     };
     const full = () => { turn = last; set(false); };
     const o = { passive: true };
     window.addEventListener("scroll", f, o); window.addEventListener("bj-navfull", full); window.addEventListener("touchmove", user, o); window.addEventListener("wheel", user, o); window.addEventListener("keydown", user);
     return () => { window.removeEventListener("scroll", f, o); window.removeEventListener("bj-navfull", full); window.removeEventListener("touchmove", user, o); window.removeEventListener("wheel", user, o); window.removeEventListener("keydown", user); el.removeAttribute("data-min"); };
   }, [narrow]);
-  // The fold is two pieces of glass changing places with transforms alone (nothing is laid out again while it moves):
-  // the capsule is squeezed toward its left end while a round piece, stretched to the capsule's size, comes back to
-  // a circle, so the two always fill the same box and one fades into the other on the way. The squeeze is a ratio of
-  // the bar's real size, kept here.
-  useEffect(() => {
-    const c = cap.current, tr = track.current, el = nav.current; if (!c || !tr || !el) return;
-    const fit = () => { const w = c.offsetWidth, h = c.offsetHeight; if (!w || !h) return; el.style.setProperty("--fx", (54 / w).toFixed(5)); el.style.setProperty("--fy", (54 / h).toFixed(5)); el.style.setProperty("--tw", tr.offsetWidth + "px"); };
-    fit(); let ro = null;
-    try { ro = new ResizeObserver(fit); ro.observe(c); } catch (_) { ro = null; window.addEventListener("resize", fit); }
-    return () => { if (ro) ro.disconnect(); else window.removeEventListener("resize", fit); };
-  }, []);
   useEffect(() => {
     const c = cap.current, tr = track.current, el = nav.current; if (!c || !tr || !el) return;
     const N = PHONE_TABS.length;
-    let id = null, x0 = 0, y0 = 0, drag = false, raf = 0, at0 = 0, pos = 0, want = 0, grow = 0, tLast = 0, stamp = -1e9, pend = 0, folded = false, pull = 0;
+    // mode: "" nothing down · "press" a finger is down and has not slid · "drag" it is carrying the lens
+    let id = null, mode = "", x0 = 0, far = 0, idx0 = 0, raf = 0, pos = 0, vel = 0, want = 0, gx = 1, gy = 1, mag = 0, since = 0, tLast = 0, done = -1e9;
+    const step = () => (tr.offsetWidth || 1) / N;
+    const local = (cx) => { const r = tr.getBoundingClientRect(), k = r.width / (tr.offsetWidth || 1) || 1; return (cx - r.left) / k; };   // the capsule is larger while pressed and smaller while shrunk
+    const tabAt = (cx) => Math.max(0, Math.min(N - 1, Math.floor(local(cx) / step())));
     const btns = () => tr.querySelectorAll(".navbtn");
-    const local = (cx) => { const r = tr.getBoundingClientRect(), k = r.width / (tr.offsetWidth || 1) || 1; return (cx - r.left) / k; };   // the capsule is a little larger while it is pressed
-    const mags = (x, step) => { const near = Math.round(x / step); btns().forEach((b, j) => { const d = Math.abs(x - j * step) / step, m = d >= 1 ? 0 : 1 - d * d * (3 - 2 * d); b.style.setProperty("--mag", m.toFixed(3)); b.classList.toggle("under", j === near); }); };
+    const mags = (x, st, k) => { const near = Math.round(x / st); btns().forEach((b, j) => { const d = Math.abs(x - j * st) / st, m = d >= 1 ? 0 : 1 - d * d * (3 - 2 * d); b.style.setProperty("--mag", (m * k).toFixed(3)); b.classList.toggle("under", j === near); }); };
     const clear = () => btns().forEach((b) => { b.style.removeProperty("--mag"); b.classList.remove("under"); });
+    // While the finger carries it, the lens rides a damped spring after the finger (soft as it sets off, tight once
+    // it has caught up), so it has a speed of its own to hand to the release.
     const tick = (now) => {
-      raf = 0; const L = lens.current; if (!drag || !L) return;
-      const step = tr.offsetWidth / N, dt = Math.min(48, Math.max(1, now - (tLast || now - 16))); tLast = now;
-      const lag = want - pos; pos += lag * (1 - Math.exp(-dt / 50)); grow += (1 - grow) * (1 - Math.exp(-dt / 85));
-      pull += (Math.min(0.14, (Math.abs(lag) / step) * 0.2) - pull) * (1 - Math.exp(-dt / 70));   // it stretches toward the finger while it catches up (smoothed: a finger's samples arrive unevenly)
-      L.hold(pos, (1 + 0.1 * grow) * (1 + pull), (1 + 0.15 * grow) * (1 - pull * 0.2));
-      mags(pos, step);
-      if (Math.abs(want - pos) > 0.2 || grow < 0.995 || pull > 0.002) raf = requestAnimationFrame(tick);
+      raf = 0; const L = lens.current; if (mode !== "drag" || !L) return;
+      const st = step(), dt = Math.min(34, Math.max(1, now - (tLast || now - 16))) / 1000; tLast = now; since += dt;
+      const w = 18 + 20 * Math.min(1, since / 0.16), z = 0.9;
+      for (let n = Math.ceil(dt / 0.006), h = dt / n; n > 0; n--) { vel += (w * w * (want - pos) - 2 * z * w * vel) * h; pos += vel * h; }
+      const e = 1 - Math.exp(-dt / 0.085); gx += (1.1 - gx) * e; gy += (1.15 - gy) * e; mag += (1 - mag) * (1 - Math.exp(-dt / 0.11));
+      const pull = glassPull(vel, st);
+      L.hold(pos, gx * (1 + pull), gy * (1 - pull * 0.14), vel);
+      mags(pos, st, mag);
+      raf = requestAnimationFrame(tick);
     };
+    const stop = () => { if (raf) { cancelAnimationFrame(raf); raf = 0; } };
+    const abort = () => { if (id === null) return; const L = lens.current, was = live.current.at; id = null; mode = ""; stop(); c.classList.remove("dragging"); clear(); if (L && was >= 0) L.drop(was); };
     const down = (e) => {
-      folded = el.hasAttribute("data-min");   // noted at the press: the focus that follows opens the bar before the click arrives
-      if (e.button || id !== null || folded || live.current.at < 0 || !lens.current) return;
-      id = e.pointerId; x0 = e.clientX; y0 = e.clientY; drag = false;
+      if (id !== null && e.isPrimary) abort();   // the last press never got its lift: put the lens back before taking this one
+      const L = lens.current;
+      if (e.button || id !== null || !L) return;
+      id = e.pointerId; mode = "press"; x0 = e.clientX; far = 0; idx0 = tabAt(e.clientX);
+      if (el.hasAttribute("data-min")) window.dispatchEvent(new Event("bj-navfull"));
+      if (e.pointerType === "mouse") { try { c.setPointerCapture(id); } catch (_) {} }   // a finger is held by the tab it came down on already
+      L.aim(idx0);
     };
     const move = (e) => {
       if (e.pointerId !== id) return;
-      const step = tr.offsetWidth / N, dx = Math.abs(e.clientX - x0);
-      if (!drag) {
-        if (dx < 7 || dx < Math.abs(e.clientY - y0)) return;
-        drag = true; grow = 0; pull = 0; tLast = 0; at0 = live.current.at; pos = lens.current.where(); c.classList.add("dragging");
-        try { c.setPointerCapture(id); } catch (_) {}
+      const L = lens.current; if (!L) return;
+      far = Math.max(far, Math.abs(e.clientX - x0));
+      if (mode === "press") {
+        if (far < 6) return;
+        const s = L.state(), pull = glassPull(s.v, step());
+        mode = "drag"; pos = s.x; vel = s.v; gx = s.sx / (1 + pull); gy = s.sy / (1 - pull * 0.14); mag = 0; since = 0; tLast = 0; c.classList.add("dragging");
       }
-      want = Math.max(0, Math.min((N - 1) * step, local(e.clientX) - step / 2));
+      const st = step(); want = Math.max(0, Math.min((N - 1) * st, local(e.clientX) - st / 2));
       if (!raf) raf = requestAnimationFrame(tick);
     };
     const end = (e, cancel) => {
-      if (e.pointerId !== id) return; id = null;
-      if (!drag) return; drag = false;
-      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      if (e.pointerId !== id) return;
+      const L = lens.current, was = live.current.at, m = mode; id = null; mode = ""; stop();
       try { c.releasePointerCapture(e.pointerId); } catch (_) {}
-      const step = tr.offsetWidth / N, L = lens.current, was = live.current.at;
-      const to = cancel || was !== at0 ? was : Math.max(0, Math.min(N - 1, Math.round(want / step)));
-      stamp = performance.now(); c.classList.remove("dragging"); clear();
-      if (L) L.drop(to);
-      if (to !== was) { live.current.go(PHONE_TABS[to][0]); clearTimeout(pend); pend = setTimeout(() => { if (lens.current) lens.current.settle(); }, 220); }
+      c.classList.remove("dragging"); clear();
+      if (!L) return;
+      // a tap that wandered well off the bar before lifting is taken back, as on any button
+      const r = c.getBoundingClientRect(), off = m === "press" && (e.clientY < r.top - 40 || e.clientY > r.bottom + 40);
+      if (cancel || off || was < 0) { L.drop(Math.max(0, was)); return; }
+      const to = m === "drag" ? tabAt(e.clientX) : idx0, tap = m === "press" || (far < 14 && to === idx0);   // a tap with a wobble in it is still a tap
+      done = performance.now();
+      L.drop(to, m === "drag" ? vel : undefined);
+      if (tap || to !== was) live.current.go(PHONE_TABS[to][0]);
     };
-    const up = (e) => end(e, false), stop = (e) => end(e, true);
-    // one tap on the folded button opens the bar and goes nowhere; the click that ends a drag is not a tap on a tab
-    const click = (e) => {
-      if (folded || el.hasAttribute("data-min")) { folded = false; e.stopPropagation(); e.preventDefault(); window.dispatchEvent(new Event("bj-navfull")); return; }
-      if (performance.now() - stamp < 400) { e.stopPropagation(); e.preventDefault(); }
-    };
+    const up = (e) => end(e, false), cancel = (e) => end(e, true);
+    const click = (e) => { if (performance.now() - done < 600) { e.stopPropagation(); e.preventDefault(); } };   // the lift already opened the tab; a click with no finger behind it (the keyboard) is let through
+    const hush = (e) => { if (id !== null && e.cancelable) e.preventDefault(); };   // nothing scrolls from under a finger on the bar, whatever the browser makes of touch-action
     const focus = () => { if (el.hasAttribute("data-min")) window.dispatchEvent(new Event("bj-navfull")); };
-    c.addEventListener("pointerdown", down); c.addEventListener("pointermove", move); c.addEventListener("pointerup", up); c.addEventListener("pointercancel", stop);
-    c.addEventListener("click", click, true); c.addEventListener("focusin", focus);
+    c.addEventListener("pointerdown", down); c.addEventListener("pointermove", move); c.addEventListener("pointerup", up); c.addEventListener("pointercancel", cancel);
+    c.addEventListener("click", click, true); c.addEventListener("touchmove", hush, { passive: false }); c.addEventListener("focusin", focus); window.addEventListener("blur", abort);
     return () => {
-      c.removeEventListener("pointerdown", down); c.removeEventListener("pointermove", move); c.removeEventListener("pointerup", up); c.removeEventListener("pointercancel", stop);
-      c.removeEventListener("click", click, true); c.removeEventListener("focusin", focus);
-      if (raf) cancelAnimationFrame(raf); clearTimeout(pend); c.classList.remove("dragging"); clear();
+      c.removeEventListener("pointerdown", down); c.removeEventListener("pointermove", move); c.removeEventListener("pointerup", up); c.removeEventListener("pointercancel", cancel);
+      c.removeEventListener("click", click, true); c.removeEventListener("touchmove", hush); c.removeEventListener("focusin", focus); window.removeEventListener("blur", abort);
+      stop(); c.classList.remove("dragging"); clear();
     };
   }, []);
   return (
     <nav ref={nav} className="bottom-nav" aria-label="Sections">
-      <div ref={cap} className="navcap" style={{ "--i": cur, "--n": PHONE_TABS.length }}>
-        {/* the glass, twice: the capsule, and the round piece it folds into. Each is a light, bright blur to its edge,
-            the deep blur of its body, which stops short of the edge, and a skin (tint, bevel, rim) */}
-        <span className="nglass wide" aria-hidden="true"><i className="ng rim" /><i className="ng deep" /><i className="ng skin" /></span>
-        <span className="nglass dot" aria-hidden="true"><i className="ng rim" /><i className="ng deep" /><i className="ng skin" /></span>
+      <div ref={cap} className="navcap" style={{ "--i": Math.max(0, at), "--n": PHONE_TABS.length }}>
+        {/* the glass: a light, bright blur to its edge, the deep blur of its body, which stops short of the edge, and a skin (tint, bevel, rim) */}
+        <span className="nglass" aria-hidden="true"><i className="ng rim" /><i className="ng deep" /><i className="ng skin" /></span>
         <div ref={track} className="navtrack">
           {at >= 0 && <Glider cls="navglide" at={at} ms={600} lift={0.1} ctl={lens} />}
           {PHONE_TABS.map(([k, l], j) => { const on = j === at, icon = k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]; return (
-            <button key={k} onClick={() => go(k)} className={"navbtn" + (on ? " on" : "") + (j === cur ? " cur" : "")} aria-current={on ? "page" : undefined}>
+            <button key={k} onClick={() => go(k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
               <span className="navicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>
               <span>{l}</span>
             </button>); })}
@@ -6338,7 +6368,7 @@ export default function App() {
     const down = (e) => {
       if (e.button || !e.target || !e.target.closest) return;
       let el = e.target.closest(SEL); if (!el || el.disabled) return;
-      if (el.classList.contains("navbtn")) { const cp = el.closest(".navcap"); el = (cp && cp.querySelector(cp.parentElement.hasAttribute("data-min") ? ".nglass.dot" : ".nglass.wide")) || cp || el; } else if (el.parentElement && el.parentElement.classList.contains("chipseg")) el = el.parentElement;   // a tab lights its capsule, a segment its whole switch
+      if (el.classList.contains("navbtn")) el = el.closest(".navcap") || el; else if (el.parentElement && el.parentElement.classList.contains("chipseg")) el = el.parentElement;   // a tab lights its capsule, a segment its whole switch
       const r = el.getBoundingClientRect(), rad = getComputedStyle(el).borderTopLeftRadius || "0px";
       host.style.clipPath = "inset(" + r.top.toFixed(1) + "px " + (window.innerWidth - r.right).toFixed(1) + "px " + (window.innerHeight - r.bottom).toFixed(1) + "px " + r.left.toFixed(1) + "px round " + rad + ")";
       place(e); on = true; host.classList.add("on");
