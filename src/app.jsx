@@ -1494,6 +1494,39 @@ html.tshrink.tsdo .topbar .tbtitle{animation:tbtin linear both;animation-timelin
 :root[data-theme="light"] .touchlight>b{background:radial-gradient(var(--fr,64px) var(--fr,64px) at var(--fx,50%) var(--fy,50%),rgba(var(--acc),.75),rgba(var(--acc),.22) 42%,rgba(var(--acc),0) 72%)}
 @media (prefers-reduced-transparency:reduce){.touchlight>b{display:none}}
 /* ---- end of liquid glass VI ---- */
+/* ---- Liquid glass VII: the bevel, and a real lens on the tab bar (22 Nov) ---- */
+/* The bevel, as far as Safari can draw it (Nick: "better distortion on the bevel and main glass like apples"). Safari
+   can't bend the page behind glass on a web page (it drops backdrop-filter: url(), WebKit bug 245510), so the tab
+   capsule's edge does what real glass does that it can show: its rim layer reaches 10px past the capsule and is masked
+   back to it, so its blur takes in light from just outside, and a bright thing beside the bar glows in its edge as if
+   bent into it; the rim is sharper, brighter and more coloured than the body; the body is clearer than before; and the
+   two ends carry a faint cool and warm tint, where a real edge splits light. The real bending is the lens, below. */
+.ng.rim{inset:-10px;border-radius:0;-webkit-backdrop-filter:blur(2.5px) saturate(2.3) brightness(1.55) contrast(1.1);backdrop-filter:blur(2.5px) saturate(2.3) brightness(1.55) contrast(1.1);
+-webkit-mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - .6px),transparent var(--nr)),linear-gradient(180deg,transparent 10px,#000 10px,#000 calc(100% - 10px),transparent calc(100% - 10px)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - .6px),transparent var(--nr));mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - .6px),transparent var(--nr)),linear-gradient(180deg,transparent 10px,#000 10px,#000 calc(100% - 10px),transparent calc(100% - 10px)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - .6px),transparent var(--nr));-webkit-mask-size:calc(var(--nr) + 10px) 100%,calc(100% - 2 * var(--nr) - 20px) 100%,calc(var(--nr) + 10px) 100%;mask-size:calc(var(--nr) + 10px) 100%,calc(100% - 2 * var(--nr) - 20px) 100%,calc(var(--nr) + 10px) 100%;-webkit-mask-position:0 0,50% 0,100% 0;mask-position:0 0,50% 0,100% 0;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.ng.deep{-webkit-backdrop-filter:blur(10px) saturate(1.8) brightness(.86);backdrop-filter:blur(10px) saturate(1.8) brightness(.86);-webkit-mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),linear-gradient(180deg,transparent,rgba(0,0,0,.1) 2px,rgba(0,0,0,.5) 5.5px,#000 9px,#000 calc(100% - 9px),rgba(0,0,0,.5) calc(100% - 5.5px),rgba(0,0,0,.1) calc(100% - 2px),transparent);mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),linear-gradient(180deg,transparent,rgba(0,0,0,.1) 2px,rgba(0,0,0,.5) 5.5px,#000 9px,#000 calc(100% - 9px),rgba(0,0,0,.5) calc(100% - 5.5px),rgba(0,0,0,.1) calc(100% - 2px),transparent)}
+:root[data-theme="light"] .ng.deep{-webkit-backdrop-filter:blur(10px) saturate(1.3) brightness(.98);backdrop-filter:blur(10px) saturate(1.3) brightness(.98)}
+.ng.skin{background:linear-gradient(180deg,rgba(var(--fg),.08),rgba(var(--fg),.015)),rgba(var(--bgrgb),.14)}
+:root:not([data-theme="light"]) .ng.skin::after{content:"";position:absolute;inset:var(--bev);border-radius:inherit;padding:2px;pointer-events:none;background:radial-gradient(60px 46px at 0% 30%,rgba(130,215,255,.22),rgba(130,215,255,0) 70%),radial-gradient(60px 46px at 100% 72%,rgba(255,180,130,.2),rgba(255,180,130,0) 70%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;filter:blur(.6px)}
+/* The lens (the highlight is an <i>, so the copy is set upright: font-style). While a finger is on the tab bar (.lensing) its glass rises over the icons, thickens, and shows a copy of
+   the bar under it (.lensrow) magnified 1.25 times about its centre and cut off at its rim: an icon half under the
+   glass is bent at its edge, as on an iPhone. Glider keeps the copy lined up with the real bar in every flight and
+   held frame; the fill (solid: it hides the real icons under the glass) is a shade lighter than the bar, as the resting
+   highlight is, and the bevel is drawn again on top of the copy. */
+.navglide{overflow:hidden}
+.navglide>.lensrow{position:absolute;left:0;top:0;height:100%;width:calc(var(--n) * 100%);display:flex;font-style:normal;transform-origin:0 0;transform:translateX(calc(var(--i) * -100% / var(--n)));opacity:0;pointer-events:none;will-change:transform;transition:opacity .22s var(--ez-soft)}
+.navglide::before,.navglide::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .22s var(--ez-soft)}
+.navglide::before{background:linear-gradient(180deg,rgba(var(--fg),.15),rgba(var(--fg),.05)),rgb(var(--bgrgb))}
+.navglide::after{z-index:1;box-shadow:inset 0 0 0 var(--hair) rgba(255,255,255,.16),inset 0 var(--bev) 0 rgba(255,255,255,.55),inset 2px 2px 2px -1.5px rgba(255,255,255,.55),inset -2px -2px 2px -1.5px rgba(255,255,255,.3),inset 0 6px 9px -6px rgba(255,255,255,.22),inset 0 -7px 9px -7px rgba(0,0,0,.4)}
+:root[data-theme="light"] .navglide::before{background:linear-gradient(180deg,#fff,#f4f6f9)}
+:root[data-theme="light"] .navglide::after{box-shadow:inset 0 var(--bev) 0 #fff,inset 0 5px 7px -5px rgba(255,255,255,.9),inset 0 -6px 8px -6px rgba(var(--fg),.16),inset 0 0 0 var(--hair) rgba(var(--fg),.08)}
+.navcap.lensing .navglide>.lensrow,.navcap.lensing .navglide::before,.navcap.lensing .navglide::after{opacity:1;transition:opacity .1s var(--ez-soft)}
+/* over the icons while it is a lens; back under them once the copy has faded out */
+.navglide{transition:opacity .3s var(--ez-soft),scale .52s var(--spring),filter .2s var(--ez),z-index 0s linear .24s}
+.navcap.lensing .navglide{z-index:2;filter:none;transition:opacity .3s var(--ez-soft),scale .52s var(--spring),filter .2s var(--ez),z-index 0s}
+.touchlight>i{transition:opacity .16s var(--ez-soft)}
+.touchlight.lens>i{opacity:0}
+@media (prefers-reduced-motion:reduce){.navglide>.lensrow,.navglide::before,.navglide::after{display:none}}
+/* ---- end of liquid glass VII ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -2299,8 +2332,29 @@ const GLIDE_B = Array.from({ length: GLIDE_N * 4 + 1 }, (_, k) => { const u = Ma
 //   hold(s)    draw this state (the finger's follower, every frame)
 //   drop(to)   let go: spring onto tab to at its own size
 //   box()      { w, step, lo, hi }: the glass's width, the distance between two places and how far its edges may go
-function Glider({ cls, at, style, ms = 480, gap = 0, lift = 0, ctl }) {
+// The lens (Liquid glass VII, 22 Nov: Nick asked for "better distortion ... like apples"). A child of the glass with the
+// class "lensrow" is a copy of what the glass slides over (the tab bar's own icons and labels), laid out like it: as wide
+// as the whole track, from its left edge. Glider keeps it lined up with the real thing under the glass and magnified M
+// times about the glass's centre, in every flight and every held frame, so what passes under the glass is really bent.
+// It is the one way a web page can refract in Safari: Safari can't bend the page behind glass (backdrop-filter: url()),
+// but this copy is the page's own. t: the glass's [x, scaleX, scaleY] (dropShow); w, H: its size.
+const lensCss = (t, w, H, M) => { const ax = M / t[1], ay = M / t[2], cx = t[0] + w / 2; return `translate(${(w / 2 - ax * cx).toFixed(2)}px, ${((H / 2) * (1 - ay)).toFixed(2)}px) scale(${ax.toFixed(4)}, ${ay.toFixed(4)})`; };
+function Glider({ cls, at, style, ms = 480, gap = 0, lift = 0, ctl, children }) {
   const el = useRef(null), prev = useRef(at), run = useRef(null), held = useRef(null), fl = useRef(null), aimed = useRef(null);
+  // the lens: its copies, their running animations, and the magnification while held or at the end of a kept flight
+  const lruns = useRef([]), heldM = useRef(1), keptM = useRef(1);
+  const rows = () => { const n = el.current; return n ? Array.from(n.children).filter((c) => c.classList.contains("lensrow")) : []; };
+  const magNow = () => {
+    if (held.current) return heldM.current;
+    const r = run.current, f = fl.current;
+    try {
+      if (r && f && f.Ms && (r.playState === "running" || (r.playState === "finished" && f.keep))) {
+        const q = Math.max(0, Math.min(GLIDE_N, ((Number(r.currentTime) || 0) / f.T) * GLIDE_N)), i = Math.min(GLIDE_N - 1, Math.floor(q));
+        return f.Ms[i] + (f.Ms[i + 1] - f.Ms[i]) * (q - i);
+      }
+    } catch (_) {}
+    return keptM.current;
+  };
   const box = () => {
     const n = el.current, w = n ? n.offsetWidth : 0, step = w + gap; let cnt = 1;
     try { cnt = Math.max(1, parseInt(getComputedStyle(n).getPropertyValue("--n"), 10) || 1); } catch (_) {}
@@ -2319,19 +2373,25 @@ function Glider({ cls, at, style, ms = 480, gap = 0, lift = 0, ctl }) {
     } catch (_) {}
     return dropRest(rest * b.step, b.w);
   };
-  const stop = () => { try { if (run.current) run.current.cancel(); } catch (_) {} run.current = null; fl.current = null; };
-  const fly = (to, rest, grow) => {
+  const stop = () => { try { if (run.current) run.current.cancel(); } catch (_) {} lruns.current.forEach((a) => { try { a.cancel(); } catch (_) {} }); lruns.current = []; run.current = null; fl.current = null; };
+  const unhold = (n) => { n.style.transform = ""; rows().forEach((r) => { r.style.transform = ""; }); };
+  // M1: the lens's magnification at the end of the flight (it gets there in the first half)
+  const fly = (to, rest, grow, M1 = 1) => {
     const n = el.current; if (!n) return;
-    const b = box(), { w, step, lo, hi } = b, G = grow || 1, was = !!held.current, s = state(rest, b); held.current = null; stop();
-    if (!n.animate || noMotion() || !w) { n.style.transform = ""; return; }
+    const b = box(), { w, step, lo, hi } = b, G = grow || 1, was = !!held.current, s = state(rest, b), M0 = magNow(); held.current = null; stop();
+    if (!n.animate || noMotion() || !w) { unhold(n); keptM.current = 1; return; }
     const x1 = to * step, [aL, aR] = dropAim(x1, w, G), d = (aL + aR) / 2 - (s.L + s.R) / 2;
-    if (Math.abs(d) < 0.5 && Math.abs(s.R - s.L - (aR - aL)) < 0.5 && Math.abs(s.G - G) < 0.004 && Math.abs(s.vL) + Math.abs(s.vR) < 4) { if (was) n.style.transform = ""; if (G === 1) return; }
+    if (Math.abs(d) < 0.5 && Math.abs(s.R - s.L - (aR - aL)) < 0.5 && Math.abs(s.G - G) < 0.004 && Math.abs(s.vL) + Math.abs(s.vR) < 4 && Math.abs(M0 - M1) < 0.004) { if (was) unhold(n); if (G === 1) { keptM.current = 1; return; } }
     const up = Math.abs(d) > 1 && G === 1 && Math.abs(s.G - 1) < 0.02 ? lift : 0, g = G > 1 ? ((G - 1) * DROP_GX * w) / 2 : 0;
-    const states = dropBake(s, x1, w, G, ms, up), frames = states.map((q, k) => ({ transform: dropCss(dropShow(q, w, lo - g, hi + g)), offset: k / GLIDE_N }));
-    try { run.current = n.animate(frames, { duration: ms, easing: "linear", fill: G > 1 ? "forwards" : "none" }); fl.current = { at: states, T: ms, keep: G > 1 }; } catch (_) {}
+    const states = dropBake(s, x1, w, G, ms, up), vs = states.map((q) => dropShow(q, w, lo - g, hi + g)), frames = vs.map((v, k) => ({ transform: dropCss(v), offset: k / GLIDE_N }));
+    const opts = { duration: ms, easing: "linear", fill: G > 1 ? "forwards" : "none" }, R = rows();
+    const Ms = vs.map((v, k) => { const u = Math.min(1, k / GLIDE_N / 0.45); return M0 + (M1 - M0) * (1 - (1 - u) ** 3); });
+    try { run.current = n.animate(frames, opts); fl.current = { at: states, T: ms, keep: G > 1, Ms }; } catch (_) {}
+    if (R.length) { const H = n.offsetHeight; try { lruns.current = R.map((r) => r.animate(vs.map((v, k) => ({ transform: lensCss(v, w, H, Ms[k]), offset: k / GLIDE_N })), opts)); } catch (_) { lruns.current = []; } }
+    keptM.current = G > 1 ? M1 : 1;
     // begun on this frame's clock: left to itself an animation waits a frame to start, which showed the glass twice in the same place at every hand-over
-    try { const t = document.timeline.currentTime; if (run.current && t != null) run.current.startTime = t; } catch (_) {}
-    if (was) n.style.transform = "";
+    try { const t = document.timeline.currentTime; if (t != null) [run.current, ...lruns.current].forEach((a) => { if (a) a.startTime = t; }); } catch (_) {}
+    if (was) unhold(n);
   };
   useLayoutEffect(() => {
     const d = at - prev.current; prev.current = at;
@@ -2342,11 +2402,16 @@ function Glider({ cls, at, style, ms = 480, gap = 0, lift = 0, ctl }) {
   if (ctl) ctl.current = {
     box,
     state: () => state(prev.current, box()),
-    aim: (to) => { aimed.current = to; fly(to, prev.current, 1.14); },
-    hold: (s) => { const n = el.current; if (!n) return; const b = box(), g = ((s.G - 1) * DROP_GX * b.w) / 2; stop(); held.current = { ...s }; n.style.transform = dropCss(dropShow(s, b.w, b.lo - g, b.hi + g)); },
-    drop: (to) => { aimed.current = to !== prev.current ? to : null; fly(to, prev.current); },
+    aim: (to, M) => { aimed.current = to; fly(to, prev.current, M ? 1.2 : 1.14, M || 1); },   // a lens (M) swells a little more: room for what it magnifies
+    hold: (s, M = 1) => {
+      const n = el.current; if (!n) return; const b = box(), g = ((s.G - 1) * DROP_GX * b.w) / 2; stop(); held.current = { ...s }; heldM.current = M;
+      const v = dropShow(s, b.w, b.lo - g, b.hi + g); n.style.transform = dropCss(v);
+      const R = rows(); if (R.length) { const t = lensCss(v, b.w, n.offsetHeight, M); R.forEach((r) => { r.style.transform = t; }); }
+    },
+    drop: (to) => { aimed.current = to !== prev.current ? to : null; fly(to, prev.current, 1, 1); },
+    mag: magNow,
   };
-  return <i ref={el} className={cls} aria-hidden="true" style={style} />;
+  return <i ref={el} className={cls} aria-hidden="true" style={style}>{children}</i>;
 }
 function Seg({ value, options, onChange, cols, style, small }) {
   // one row → the selected pill is a separate element that slides between options; wrapped rows keep the plain style
@@ -6086,28 +6151,31 @@ function TabBar({ navTab, go }) {
     const c = cap.current, tr = track.current, el = nav.current; if (!c || !tr || !el) return;
     const N = PHONE_TABS.length;
     // mode: "" nothing down · "press" a finger is down and has not slid · "drag" it is carrying the lens
-    let id = null, mode = "", x0 = 0, far = 0, idx0 = 0, raf = 0, s = null, want = 0, mag = 0, tLast = 0, done = -1e9;
+    let id = null, mode = "", x0 = 0, far = 0, idx0 = 0, raf = 0, s = null, want = 0, M = 1, tLast = 0, done = -1e9;
     const step = () => (tr.offsetWidth || 1) / N;
     const local = (cx) => { const r = tr.getBoundingClientRect(), k = r.width / (tr.offsetWidth || 1) || 1; return (cx - r.left) / k; };   // the capsule is larger while pressed and smaller while shrunk
     const tabAt = (cx) => Math.max(0, Math.min(N - 1, Math.floor(local(cx) / step())));
-    const btns = () => tr.querySelectorAll(".navbtn");
-    const mags = (x, st, k) => { const near = Math.round(x / st); btns().forEach((b, j) => { const d = Math.abs(x - j * st) / st, m = d >= 1 ? 0 : 1 - d * d * (3 - 2 * d); b.style.setProperty("--mag", (m * k).toFixed(3)); b.classList.toggle("under", j === near); }); };
-    const clear = () => btns().forEach((b) => { b.style.removeProperty("--mag"); b.classList.remove("under"); });
+    // the real buttons, and their copies in the lens (Glider keeps those lined up and magnified)
+    const btns = () => tr.querySelectorAll(":scope > .navbtn"), copies = () => tr.querySelectorAll(".lensrow > .navbtn");
+    const mags = (x, st) => { const near = Math.round(x / st); [btns(), copies()].forEach((l) => l.forEach((b, j) => b.classList.toggle("under", j === near))); };
+    const clear = () => [btns(), copies()].forEach((l) => l.forEach((b) => b.classList.remove("under")));
+    // the lens magnifies what is under it this much while a finger is on the bar; it is shown only then (.lensing)
+    const LENS_M = 1.25, lensOn = (v) => { c.classList.toggle("lensing", v); const t = document.querySelector(".touchlight"); if (t) t.classList.toggle("lens", v); };   // the lens is the answer to the touch: the light spot under the finger stands back
     // While the finger carries it the lens is the same drop with the finger for a target: the edge in front keeps up
     // and the edge behind trails, so the glass draws out as it is pulled and gathers itself when the finger stops.
     // Its state (edges, swell and their speeds) is what the release springs away from.
-    const FRONT = [34, 0.86], BACK = [15, 0.72], STILL = [24, 0.8], BIG = 1.17;
+    const FRONT = [34, 0.86], BACK = [15, 0.72], STILL = [24, 0.8], BIG = 1.2;
     const tick = (now) => {
       raf = 0; const L = lens.current; if (mode !== "drag" || !L || !s) return;
       const b = L.box(), dt = Math.min(34, Math.max(1, now - (tLast || now - 16))) / 1000; tLast = now;
       const [tL, tR] = dropAim(want, b.w, BIG), d = (tL + tR) / 2 - (s.L + s.R) / 2, pL = d > 3 ? BACK : d < -3 ? FRONT : STILL, pR = d > 3 ? FRONT : d < -3 ? BACK : STILL;
       for (let n = Math.ceil(dt / 0.004), h = dt / n; n > 0; n--) dropStep(s, tL, tR, BIG, h, pL, pR);
-      mag += (1 - mag) * (1 - Math.exp(-dt / 0.11));
-      L.hold(s); mags((s.L + s.R) / 2 - b.w / 2, b.step, mag);
+      M += (LENS_M - M) * (1 - Math.exp(-dt / 0.09));
+      L.hold(s, M); mags((s.L + s.R) / 2 - b.w / 2, b.step);
       raf = requestAnimationFrame(tick);
     };
     const stop = () => { if (raf) { cancelAnimationFrame(raf); raf = 0; } };
-    const abort = () => { if (id === null) return; const L = lens.current, was = live.current.at; id = null; mode = ""; stop(); c.classList.remove("dragging"); clear(); if (L && was >= 0) L.drop(was); };
+    const abort = () => { if (id === null) return; const L = lens.current, was = live.current.at; id = null; mode = ""; stop(); c.classList.remove("dragging"); lensOn(false); clear(); if (L && was >= 0) L.drop(was); };
     const down = (e) => {
       if (id !== null && e.isPrimary) abort();   // the last press never got its lift: put the lens back before taking this one
       const L = lens.current;
@@ -6115,7 +6183,7 @@ function TabBar({ navTab, go }) {
       id = e.pointerId; mode = "press"; x0 = e.clientX; far = 0; idx0 = tabAt(e.clientX);
       if (el.hasAttribute("data-min")) window.dispatchEvent(new Event("bj-navfull"));
       if (e.pointerType === "mouse") { try { c.setPointerCapture(id); } catch (_) {} }   // a finger is held by the tab it came down on already
-      L.aim(idx0);
+      lensOn(!noMotion()); L.aim(idx0, LENS_M);
     };
     const move = (e) => {
       if (e.pointerId !== id) return;
@@ -6123,7 +6191,7 @@ function TabBar({ navTab, go }) {
       far = Math.max(far, Math.abs(e.clientX - x0));
       if (mode === "press") {
         if (far < 6) return;
-        mode = "drag"; s = L.state(); mag = 0; tLast = 0; c.classList.add("dragging");
+        mode = "drag"; s = L.state(); M = L.mag(); tLast = 0; c.classList.add("dragging");
       }
       const st = step(); want = Math.max(0, Math.min((N - 1) * st, local(e.clientX) - st / 2));
       if (!raf) raf = requestAnimationFrame(tick);
@@ -6132,7 +6200,7 @@ function TabBar({ navTab, go }) {
       if (e.pointerId !== id) return;
       const L = lens.current, was = live.current.at, m = mode; id = null; mode = ""; stop();
       try { c.releasePointerCapture(e.pointerId); } catch (_) {}
-      c.classList.remove("dragging"); clear();
+      c.classList.remove("dragging"); lensOn(false); clear();
       if (!L) return;
       // a tap that wandered well off the bar before lifting is taken back, as on any button
       const r = c.getBoundingClientRect(), off = m === "press" && (e.clientY < r.top - 40 || e.clientY > r.bottom + 40);
@@ -6151,7 +6219,7 @@ function TabBar({ navTab, go }) {
     return () => {
       c.removeEventListener("pointerdown", down); c.removeEventListener("pointermove", move); c.removeEventListener("pointerup", up); c.removeEventListener("pointercancel", cancel);
       c.removeEventListener("click", click, true); c.removeEventListener("touchmove", hush); c.removeEventListener("focusin", focus); window.removeEventListener("blur", abort);
-      stop(); c.classList.remove("dragging"); clear();
+      stop(); c.classList.remove("dragging"); lensOn(false); clear();
     };
   }, []);
   return (
@@ -6160,7 +6228,10 @@ function TabBar({ navTab, go }) {
         {/* the glass: a light, bright blur to its edge, the deep blur of its body, which stops short of the edge, and a skin (tint, bevel, rim) */}
         <span className="nglass" aria-hidden="true"><i className="ng rim" /><i className="ng deep" /><i className="ng skin" /></span>
         <div ref={track} className="navtrack">
-          <Glider cls={"navglide" + (at < 0 ? " off" : "")} at={lastAt.current} ms={640} lift={0.1} ctl={lens} />
+          <Glider cls={"navglide" + (at < 0 ? " off" : "")} at={lastAt.current} ms={640} lift={0.1} ctl={lens}>
+            {/* the lens's copy of the bar: shown, magnified and lined up only while a finger is on it */}
+            <span className="lensrow" aria-hidden="true">{PHONE_TABS.map(([k, l], j) => <span key={k} className={"navbtn" + (j === at ? " on" : "")}><span className="navicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">{k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]}</svg></span><span>{l}</span></span>)}</span>
+          </Glider>
           {PHONE_TABS.map(([k, l], j) => { const on = j === at, icon = k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]; return (
             <button key={k} onClick={() => go(k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
               <span className="navicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{icon}</svg></span>

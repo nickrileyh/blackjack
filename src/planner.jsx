@@ -4,7 +4,7 @@
 //  - PlanPage (the Plan tab): the casino rotation and the bankroll growth plan.
 // Like casinos.jsx, nothing from app.jsx may be used while this file loads — only inside functions.
 import { useState, useEffect, useMemo, useRef, useId } from "react";
-import { Sheet, More, useGlideH, compute, sessionCash, tailFix, shoeRounds, useDeferred, Seg, Info, rulesShort, money, shortMoney, sgnMoney, fmtTC, pct, COUNTS, calFor, autoRph, roundFreqs, optimizeSpread, DEFAULT_RULES, sessEv, sessSd, Toggle, Glide } from "./app.jsx";
+import { Sheet, More, Fold, useGlideH, compute, sessionCash, tailFix, shoeRounds, useDeferred, Seg, Info, rulesShort, money, shortMoney, sgnMoney, fmtTC, pct, COUNTS, calFor, autoRph, roundFreqs, optimizeSpread, DEFAULT_RULES, sessEv, sessSd, Toggle, Glide } from "./app.jsx";
 import { loadCasinoAll, openCasinoId } from "./casinos.jsx";
 import { useNarrow } from "./phone.jsx";
 import { makeGame } from "./sim.js";
@@ -282,10 +282,33 @@ export function nextUp(rows, today, scoreOfC, n = 3) {
 export const milesBetween = (a, b) => { const r = Math.PI / 180, x = (b.lon - a.lon) * r * Math.cos(((a.lat + b.lat) / 2) * r), y = (b.lat - a.lat) * r; return Math.sqrt(x * x + y * y) * 3959; };
 
 const planCss = `
-.prow{display:grid;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 6px;border-radius:12px;transition:background .15s var(--ez)}
-.prow+.prow{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
-/* a computer: a casino's name wraps onto a second line in a narrow window instead of being cut short ("JACK Clevelan…") */
-@media (min-width:1024px){.prow .pname{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;text-wrap:balance}}
+.prow{position:relative;display:grid;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 6px;border-radius:12px;transition:background .15s var(--ez)}
+/* the hairline between two rows is straight and starts at the text, as in Apple's lists (a box-shadow followed the
+   row's rounded corners and drew a faint curved line at each end) */
+.prow+.prow::before{content:"";position:absolute;left:6px;right:6px;top:0;height:var(--hair);background:rgba(var(--fg),.08);pointer-events:none}
+.pc2+.pc2::before{left:52px;right:4px}
+.por+.por::before{left:42px;right:4px}
+/* A casino row (Plan, 22 Nov: "easier to understand and cleaner looking"): its score as a ring out of 100 on the left,
+   its name and how it stands (ready, resting, skipped) in the middle, what it earns an hour and its risk of ruin at the
+   right end, and in the rotation a bar under it that fills as it rests. One row for phone and computer. */
+.pring{position:relative;display:inline-grid;place-items:center;flex:none}
+.pring>svg{position:absolute;inset:0;overflow:visible}
+.pring>b{position:relative;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
+.pc2{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"r n v" "r s k";column-gap:12px;row-gap:2px;padding:12px 4px}
+.pc2.hasbar{grid-template-areas:"r n v" "r s k" "r b b"}
+.pc2>.pring{grid-area:r;align-self:center}
+.pc2>.pname{grid-area:n;min-width:0;font-size:14px;line-height:1.3;font-weight:600;color:var(--ivory);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
+.pc2>.psub{grid-area:s;min-width:0;font-size:11.5px;line-height:1.35;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc2>.pval{grid-area:v;justify-self:end;font-size:14px;line-height:1.3;font-weight:650;letter-spacing:-.01em;color:var(--ivory);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pval .u{font-size:11px;font-weight:500;letter-spacing:0;color:var(--muted);margin-left:1px}
+.pc2>.pk{grid-area:k;justify-self:end;font-size:11.5px;line-height:1.35;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pc2>.prest{grid-area:b;margin-top:8px;height:4px}
+/* a casino's name wraps onto a second line instead of being cut short ("JACK Clevelan…", "Hollywood Casino at The M…"),
+   on a phone as on a computer; the line under it may still end in "…" (a place, a report's date) */
+.por{grid-template-columns:auto minmax(0,1fr) auto;column-gap:10px;padding:8px 4px}
+.psmall{font-size:11px;line-height:1.35;color:var(--muted);margin-top:2px}
+/* the casino to play next wraps onto a second line rather than end in "…" ("Hard Rock Casino Cincinn…") */
+.pclamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
 @media (hover:hover){button.prow:hover{background:rgba(var(--fg),.045)}}
 .phead{display:grid;gap:10px;padding:0 6px 7px;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 .ptrack{position:relative;height:6px;border-radius:99px;background:rgba(var(--fg),.08);overflow:hidden}
@@ -293,7 +316,6 @@ const planCss = `
 .ptrack>i.ok{background:var(--brass)}
 .ptrack>i.x{background:rgba(var(--neg),.7)}
 .ptrack.big{height:10px}
-.pnum{font-variant-numeric:tabular-nums;font-weight:600;font-size:12.5px;text-align:right;white-space:nowrap}
 .pset{display:flex;align-items:center;gap:10px;min-width:0;white-space:nowrap}
 .pslide{display:flex;align-items:center;gap:10px;min-width:0}
 .pslide input{flex:1 1 auto;min-width:0}
@@ -303,8 +325,6 @@ const planCss = `
 .pslide.risk .pslv{min-width:38px}
 .pslide.horizon .pslv{min-width:72px}
 .pset>.eyebrow{font-size:12px}
-.pchip{display:inline-flex;align-items:baseline;gap:6px;padding:5px 11px;border-radius:99px;background:linear-gradient(180deg,rgba(var(--fg),.08),rgba(var(--fg),.035));box-shadow:inset 0 1px 0 var(--gl-hi);font-size:11.5px;color:var(--muted);white-space:nowrap}
-.pchip>b{font-weight:600;font-size:13px;color:var(--ivory);font-variant-numeric:tabular-nums}
 .pbig{font-size:26px;line-height:1.1;font-weight:700;letter-spacing:-.02em}
 .pstat>div:first-child{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 .pstat>div:nth-child(2){font-size:20px;line-height:1.15;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:3px}
@@ -325,6 +345,7 @@ const planCss = `
 .pgset>*+*{box-shadow:0 -1px 0 rgba(var(--fg),.06)}
 .pgrow{display:flex;align-items:center;justify-content:space-between;gap:10px 14px}
 .pgseg{width:196px;flex:none}
+.pgsum{margin:-6px -8px;padding:6px 8px;width:calc(100% + 16px);border-radius:12px}
 .pplan{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:rgba(var(--fg),.04);color:var(--muted)}
 .pplan .k{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pplan .v{font-size:15px;font-weight:600;color:var(--ivory);margin-top:3px;font-variant-numeric:tabular-nums}
@@ -350,13 +371,8 @@ const planCss = `
    row (what it is on the left, the number on the right), and the move-up table is a short list */
 @media (max-width:1023px){
 .phead{display:none}
-.pcas{grid-template-columns:auto auto minmax(0,1fr) 92px!important;grid-template-areas:"n n n w" "a b c c";align-items:center;row-gap:6px;column-gap:14px;padding:13px 4px}
-.pcas.norest{grid-template-areas:"n n n n" "a b c c"}
 .pgrow.target{flex-wrap:wrap}
 .pgrow.target>.pgoal{flex:1 1 100%;text-align:left}
-.pcas>:nth-child(1){grid-area:n}.pcas>:nth-child(2){grid-area:a}.pcas>:nth-child(3){grid-area:b}.pcas>:nth-child(4){grid-area:c}.pcas>:nth-child(5){grid-area:w;justify-self:end;width:92px}
-.pcas .pnum{text-align:left;font-size:12px}
-.pcas .pnum::before{content:attr(data-l) " ";font-weight:500;font-size:11px;color:var(--muted)}
 .pstats{grid-template-columns:1fr;gap:0}.bj .pstats.pt-4{padding-top:2px}
 .pgbig{font-size:clamp(36px,10.3vw,41px)}
 .pstats>.pstat{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k v" "s v";align-items:center;column-gap:14px;padding:12px 0}
@@ -377,19 +393,32 @@ function Step({ v, set, min, max, step = 1, f = String, label }) {
     </span>
   );
 }
-// the three numbers every casino row carries: score, risk of ruin, dollars an hour
 // a risk as a percentage: one decimal under 1%, and "<0.1%" rather than a "0.0%" that reads as no risk at all
 const tinyPct = (p) => (p < 0.0005 ? "<0.1%" : pct(p, p < 0.0095 ? 1 : 0));
-function Nums({ x, cap }) {
-  const dash = (l) => <span className="pnum" data-l={l} style={{ color: "var(--muted)" }}>—</span>;
-  if (!x) return <>{dash("Score")}{dash("Risk")}{dash("$/hr")}</>;
+// A score out of 100 as a ring that fills in the score's own colour, the number inside (Nick asked for Plan to be
+// "easier to understand": a bare "Score 1" didn't say out of what). `s` undefined: still being worked out; null: no
+// game saved or reported, so no score.
+function ScoreRing({ s, size = 36 }) {
+  const w = size >= 34 ? 3 : 2.5, r = (size - w) / 2, C = 2 * Math.PI * r, v = s == null ? 0 : Math.max(0, Math.min(100, s)), c = size / 2;
+  return (
+    <span className="pring" style={{ width: size, height: size }} title={s == null ? (s === null ? "No score: no game saved or reported here" : "Working out the score") : `Score ${s} of 100`}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+        <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(var(--fg),.1)" strokeWidth={w} />
+        {v > 0 && <circle cx={c} cy={c} r={r} fill="none" stroke={scoreTone(v)} strokeWidth={w} strokeLinecap="round" strokeDasharray={`${(C * v) / 100} ${C}`} transform={`rotate(-90 ${c} ${c})`} />}
+      </svg>
+      <b style={{ color: s == null ? "var(--muted)" : scoreTone(v), fontSize: size >= 34 ? 12.5 : 11 }}>{s === undefined ? "…" : s === null ? "—" : s}</b>
+    </span>
+  );
+}
+// what a casino earns an hour and its risk of ruin, for the right-hand end of its row
+function Worth({ x, cap }) {
+  if (!x) return <><span className="pval" style={{ color: "var(--muted)" }}>—</span><span className="pk" /></>;
   return (<>
-    <span className="pnum" data-l="Score" style={{ color: scoreTone(x.score) }}>{x.score}</span>
-    <span className="pnum" data-l="Risk" style={{ color: x.loses ? "var(--muted)" : x.ror > cap * 1.001 ? "var(--rose)" : "var(--ivory-d)" }}>{x.loses ? "—" : tinyPct(x.ror)}</span>
-    <span className="pnum" data-l="$/hr" style={{ color: "var(--ivory-d)" }}>{x.ev > 0 ? money(x.ev) : "—"}</span>
+    <span className="pval">{x.ev > 0 ? <>{money(x.ev)}<span className="u">/hr</span></> : <span style={{ color: "var(--muted)" }}>loses</span>}</span>
+    <span className="pk" style={x.loses ? undefined : x.ror > cap * 1.001 ? { color: "var(--rose)" } : undefined}>{x.loses ? "" : `${tinyPct(x.ror)} risk`}</span>
   </>);
 }
-const NUMCOLS = "34px 40px 44px";
+const scoreAt = (sc, c) => { const x = sc.get(c); return x === undefined ? (gamesAt(c).length ? undefined : null) : x ? x.score : null; };
 
 function useRotation(all, prefs, bankroll, lite) {
   const now = useMemo(() => Date.now(), []), today = startOfDay(now);
@@ -429,31 +458,32 @@ function PlayNext({ rot, onOpen }) {
   if (!rows.length) return <section className="card p-5 mb-4"><div className="eyebrow mb-2">Play next</div><p className="text-sm" style={{ color: "var(--ivory-d)" }}>Nothing to plan yet. Log a session on the Sessions page, or mark a casino as "been" on the Casinos page, and this fills in: where to play next, when each casino is safe to go back to, and what each one is worth to you.</p></section>;
   const x = first ? sc.get(first.c) : null, row = first && rows.find((r) => r.c.id === first.c.id);
   const bestSkip = skipped[0] && sc.get(skipped[0].c), allSkipped = !pending && skipped.length === rows.length;
+  const over = x && !x.loses && x.ror > cap * 1.001;
   return (
     <section className="card p-5 mb-4">
-      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Play next</div><div className="text-[11px]" style={{ color: "var(--muted)" }}>{pending ? "" : `${ready.length} of ${rows.length} ready`}</div></div>
+      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Play next</div>{!pending && !allSkipped && <div className="text-[11px]" style={{ color: "var(--muted)" }}>{ready.length} of {rows.length} ready now</div>}</div>
       {pending && <div className="text-sm mt-2" style={{ color: "var(--muted)" }}>Working out the scores…</div>}
       {allSkipped && <div className="mt-2">
-        <div className="pbig" style={{ color: "var(--ivory)" }}>Nothing to suggest</div>
-        <p className="text-xs mt-1.5" style={{ color: "var(--ivory-d)" }}>Every casino you play scores under {minScore} with {money(setupB(sc))} at a {pct(cap, 0)} risk limit.{bestSkip ? <> The closest is {skipped[0].c.name} at <b style={{ color: scoreTone(bestSkip.score) }}>{bestSkip.score}</b>.</> : ""}</p>
+        <div className="pbig" style={{ color: "var(--ivory)" }}>Nothing to suggest yet</div>
+        <p className="text-xs mt-1.5" style={{ color: "var(--ivory-d)" }}>With {money(setupB(sc))} at your {rk(cap)} risk limit, every casino you play scores under {minScore} out of 100, so none is suggested.{bestSkip ? <> The best is {skipped[0].c.name}, at <b style={{ color: scoreTone(bestSkip.score) }}>{bestSkip.score}</b>.</> : ""} Tap one below to see why.</p>
       </div>}
       {first && <button className="block text-left w-full mt-2" onClick={() => onOpen(first.c)}>
-        <div className="pbig truncate" style={{ color: "var(--brass)" }}>{first.c.name}</div>
+        <div className="pbig pclamp" style={{ color: "var(--brass)" }}>{first.c.name}</div>
         <div className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{first.ready ? "Ready now" : `Ready ${fmtWeekday(first.t)}`}{row && row.last ? ` · last visit ${ago(daysBetween(row.last, today))}` : ""}{first.back ? " · first visit since the back-off, keep it short" : ""}</div>
       </button>}
-      {x ? <div className="flex flex-wrap gap-1.5 mt-3">
-        <span className="pchip">Score <b style={{ color: scoreTone(x.score) }}>{x.score}</b></span>
-        {!x.loses && <span className="pchip">Risk of ruin <b style={x.ror > cap * 1.001 ? { color: "var(--rose)" } : undefined}>{tinyPct(x.ror)}</b></span>}
-        {x.ev > 0 && <span className="pchip">Earns <b>{money(x.ev)}/hr</b></span>}
+      {x ? <div className="stats three mt-4">
+        <div><div className="lab">Score</div><div className="statn sm" style={{ color: scoreTone(x.score) }}>{x.score}</div><div className="psmall">out of 100</div></div>
+        <div><div className="lab">Risk of ruin</div><div className="statn sm" style={over ? { color: "var(--rose)" } : undefined}>{x.loses ? "—" : tinyPct(x.ror)}</div><div className="psmall">{over ? `over your ${rk(cap)}` : `your limit ${rk(cap)}`}</div></div>
+        <div><div className="lab">Earns</div><div className="statn sm">{x.ev > 0 ? money(x.ev) : "—"}</div><div className="psmall">an hour</div></div>
       </div> : first && <div className="text-xs mt-3" style={{ color: "var(--muted)" }}>{gamesAt(first.c).length ? "Working out the score…" : "No game saved or reported here, so no score yet."}</div>}
       {plan.length > 1 && <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
-        <div className="eyebrow mb-1" style={{ fontSize: 10 }}>Or</div>
-        {plan.slice(1).map((v) => { const y = sc.get(v.c); return (
-          <button key={v.c.id} className="prow" style={{ gridTemplateColumns: "minmax(0,1fr) auto 30px", padding: "8px 6px" }} onClick={() => onOpen(v.c)}>
+        <div className="lab mb-1">Or</div>
+        {plan.slice(1).map((v) => (
+          <button key={v.c.id} className="prow por" onClick={() => onOpen(v.c)}>
+            <ScoreRing s={scoreAt(sc, v.c)} size={28} />
             <span className="text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{v.c.name}</span>
-            <span className="text-[11px] font-semibold whitespace-nowrap" style={{ color: v.ready ? "var(--brass)" : v.back ? "var(--rose)" : "var(--ivory-d)" }}>{v.ready ? "Ready" : `Back ${fmtDay(v.t)}`}</span>
-            <span className="pnum" style={{ color: y ? scoreTone(y.score) : "var(--muted)" }}>{y ? y.score : "—"}</span>
-          </button>); })}
+            <span className="text-[11.5px] font-semibold whitespace-nowrap" style={{ color: v.ready ? "var(--brass)" : v.back ? "var(--rose)" : "var(--ivory-d)" }}>{v.ready ? "Ready" : `Back ${fmtDay(v.t)}`}</span>
+          </button>))}
       </div>}
     </section>
   );
@@ -463,24 +493,27 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
   const setRest = (k, v) => setPrefs({ rest: { ...prefs.rest, [k]: v } }), [allC, setAllC] = useState(false), [allS, setAllS] = useState(false);
   const mineRef = useGlideH(allC), scoutRef = useGlideH(allS);
   const mine = [...ready, ...resting, ...skipped], seen = allC ? mine : mine.slice(0, 5), scouts = allS ? scout : scout.slice(0, 3);
-  const numHead = <><span className="text-right">Score</span><span className="text-right">Risk</span><span className="text-right">$/hr</span></>;
   if (!rows.length) return null;
   return (<>
     <section className="card p-5 mb-4">
-      <div className="eyebrow mb-3">Your casinos</div>
-      <div className="phead" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS} 92px` }}><span>Casino</span>{numHead}<span className="text-right">Rested</span></div>
+      <div className="flex items-baseline justify-between gap-3 mb-1"><div className="eyebrow">Your casinos</div><span className="text-[11px]" style={{ color: "var(--muted)" }}>score out of 100</span></div>
       <div ref={mineRef}>
-      {seen.map((r) => { const rd = isReady(r), sk = low(r.c), frac = rd ? 1 : r.until && r.from ? Math.max(0.04, Math.min(0.96, (now - r.from) / Math.max(DAY, r.until - r.from))) : 0.04; return (
-        <button key={r.c.id} className="prow pcas" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS} 92px` }} onClick={() => onOpen(r.c)}>
-          <span className="min-w-0"><span className="block text-sm font-semibold truncate pname" style={{ color: "var(--ivory)" }}>{r.c.name}</span><span className="block text-[11px] truncate ph-hide" style={{ color: "var(--muted)" }}>{r.last ? ago(daysBetween(r.last, today)) : "no sessions"}{r.why ? ` · ${r.why}` : ""}</span></span>
-          <Nums x={sc.get(r.c)} cap={cap} />
-          <span className="min-w-0"><span className="block text-[11px] font-semibold text-right mb-1.5" style={{ color: sk ? "var(--muted)" : rd ? "var(--brass)" : r.kind === "backed" ? "var(--rose)" : "var(--ivory-d)" }} title={sk ? `Scores under ${minScore}, so it is never suggested` : undefined}>{sk ? "Skipped" : rd ? "Ready" : r.until ? `Back ${fmtDay(r.until)}` : "Backed off"}</span>
-            <span className="ptrack block" aria-hidden="true"><i className={"barx " + (sk ? "" : rd ? "ok" : r.kind === "backed" ? "x" : "")} style={{ width: `${frac * 100}%` }} /></span></span>
+      {seen.map((r) => {
+        const rd = isReady(r), sk = low(r.c), frac = rd ? 1 : r.until && r.from ? Math.max(0.04, Math.min(0.96, (now - r.from) / Math.max(DAY, r.until - r.from))) : 0.04;
+        // how it stands, in words: ready, resting until a day, or skipped (scores under the cut-off, so never suggested)
+        const [st, tone] = sk ? [`Skipped · scores under ${minScore}`, "var(--muted)"] : rd ? ["Ready", "var(--brass)"] : r.kind === "backed" ? [r.until ? `Backed off · back ${fmtDay(r.until)}` : "Backed off", "var(--rose)"] : [`Resting · back ${fmtDay(r.until)}`, "var(--ivory-d)"];
+        return (
+        <button key={r.c.id} className={"prow pc2" + (sk ? "" : " hasbar")} onClick={() => onOpen(r.c)}>
+          <ScoreRing s={scoreAt(sc, r.c)} />
+          <span className="pname">{r.c.name}</span>
+          <span className="psub"><span style={{ color: tone, fontWeight: 600 }}>{st}</span><span className="ph-hide">{r.last ? ` · ${ago(daysBetween(r.last, today))}` : " · no sessions"}{r.why && !sk ? ` · ${r.why}` : ""}</span></span>
+          <Worth x={sc.get(r.c)} cap={cap} />
+          {!sk && <span className="ptrack prest" aria-hidden="true"><i className={"barx " + (rd ? "ok" : r.kind === "backed" ? "x" : "")} style={{ width: `${frac * 100}%` }} /></span>}
         </button>); })}
       </div>
       {mine.length > 5 && <More open={allC} onClick={() => setAllC(!allC)} className="mt-2">{allC ? "Fewer" : `All ${mine.length} casinos`}</More>}
-      <Info label="What the columns mean">
-        <b>Score</b>: what the casino's best game is worth to you with the bankroll you have now. It is the table's dollars an hour weighed by its risk of ruin against your limit, so a table that would put your bankroll at serious risk scores near 0 however well it pays, and it climbs as your bankroll grows. 50 earns what your usual game does when played safely inside your limit, 67 twice that, 33 half. <b>Risk</b>: the risk of ruin there, meaning the chance of losing your whole bankroll if you kept playing that table's bets and never cut them. Red is over your limit. <b>$/hr</b>: what those bets earn on average. All three assume you play every hand with the best bets for your bankroll, and use the games you saved for that casino, or its scouting report when you haven't saved any. <b>Rested</b>: the bar fills as the casino rests. Full and green is ready; red is a back-off counting down. <b>Skipped</b>: the casino scores under {minScore}, so it is never suggested as a place to play. The score's colour runs from red at 0 to green at 100.
+      <Info label="How scores work">
+        <b>Score</b>, out of 100: what a casino's best game is worth to you with the bankroll you have now. It is what the game earns an hour, weighed by its risk of ruin against your limit, so a table that would put your bankroll at serious risk scores near 0 however well it pays, and climbs as your bankroll grows into it. 50 earns what your usual game does, played safely inside your limit; 67 twice that, 33 half. The ring's colour runs from red at 0 to green at 100. <b>Risk</b> is the risk of ruin: the chance of losing your whole bankroll if you kept playing that table's bets and never cut them; red is over your limit. <b>$/hr</b> is what those bets earn on average. All three assume you play every hand with the best bets for your bankroll, using the games you saved for the casino, or its scouting report when you haven't saved any. The bar under a casino fills as it rests: full and green is ready, red is a back-off counting down. A casino scoring under {minScore} is skipped: never suggested as a place to play.
       </Info>
       <Info label="Rest days and lowest score">
         <div className="space-y-2.5 mb-3 mt-1">
@@ -492,13 +525,14 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
       </Info>
     </section>
     {scout.length > 0 && <section className="card p-5 mb-4">
-      <div className="eyebrow mb-3">Worth scouting</div>
-      <div className="phead" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS}` }}><span>Casino</span>{numHead}</div>
+      <div className="eyebrow mb-1">Worth scouting</div>
       <div ref={scoutRef}>
       {scouts.map((x) => (
-        <button key={x.c.id} className="prow pcas norest" style={{ gridTemplateColumns: `minmax(0,1fr) ${NUMCOLS}` }} onClick={() => onOpen(x.c)}>
-          <span className="min-w-0"><span className="block text-sm font-semibold truncate pname" style={{ color: "var(--ivory)" }}>{x.c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{[x.c.city, x.c.st].filter(Boolean).join(", ")} · {Math.round(x.mi / 5) * 5} mi · ${x.s.mn} tables{x.c.intel && x.c.intel.asOf ? ` · ${x.c.intel.asOf}` : ""}</span></span>
-          <Nums x={x.s} cap={cap} />
+        <button key={x.c.id} className="prow pc2" onClick={() => onOpen(x.c)}>
+          <ScoreRing s={x.s.score} />
+          <span className="pname">{x.c.name}</span>
+          <span className="psub">{[x.c.city, x.c.st].filter(Boolean).join(", ")} · {Math.round(x.mi / 5) * 5} mi · ${x.s.mn} tables{x.c.intel && x.c.intel.asOf ? <span className="ph-hide"> · {x.c.intel.asOf}</span> : ""}</span>
+          <Worth x={x.s} cap={cap} />
         </button>))}
       </div>
       {scout.length > 3 && <More open={allS} onClick={() => setAllS(!allS)} className="mt-2">{allS ? "Fewer" : `${scout.length - 3} more`}</More>}
@@ -943,17 +977,21 @@ function BankrollNow({ gr, mine, bankroll, prefs, go }) {
       <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Your bankroll</div><button className="text-[11px] font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => go("calc")}>Change spread ›</button></div>
       {!(bankroll > 0) ? <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>Set your bankroll on the Bet spread page first.</p> : <>
         <div className="pghead" style={{ marginTop: 10 }}>
-          <div><div className="pgbig" style={{ color: "var(--ivory)" }}>{money(bankroll)}</div><div className="pgsub">{cur ? `covers $${cur.m} tables, every hand, at ${rk(risk)} risk` : ladder ? `every hand at ${rk(risk)} risk takes ${shortMoney(ladder.lv[0].need)}` : ladBusy ? "working out the tables…" : "no table wins playing every hand"}</div></div>
+          <div><div className="pgbig" style={{ color: "var(--ivory)" }}>{money(bankroll)}</div><div className="pgsub">{cur ? `Covers $${cur.m} tables, playing every hand at ${rk(risk)} risk` : ladder ? `Not enough for $${ladder.lv[0].m} tables yet, playing every hand at ${rk(risk)} risk` : ladBusy ? "Working out the tables…" : "No table wins playing every hand"}</div></div>
         </div>
-        {over && <p className="pnote mt-3">Your own spread{mine.mn ? ` at $${mine.mn} tables` : ""} runs {pct(mine.ror, 0)} risk of ruin, over your {rk(risk)} limit. It needs {shortMoney(ownNeed)}.</p>}
         {next && <div className="mt-4">
           <div className="ptrack big"><i className="barx ok" style={{ width: `${Math.max(3, Math.min(100, 100 * way))}%` }} /></div>
           <div className="flex items-baseline justify-between gap-3 text-xs mt-2"><span style={{ color: "var(--ivory-d)" }}><b style={{ color: "var(--ivory)" }}>${next.m} tables</b> at {shortMoney(next.need)} · {shortMoney(Math.max(0, next.need - bankroll))} to go</span><span style={{ color: "var(--muted)" }}>{next.state !== "later" ? "" : reach && reach.med != null ? `typically ${whenOf(reach.med)}` : reach ? "a long way off" : "…"}</span></div>
         </div>}
-        {wins ? <div className="pstats mt-4 pt-4" style={{ borderTop: "1px solid var(--sep)" }}>
-          <div className="pstat"><div>A normal month</div><div style={{ color: mEv >= 0 ? "var(--ivory)" : "var(--neg-l)" }}>{sgnMoney(mEv)}</div><div>8 in 10: {sgnShort(mEv - 1.2816 * mSd)} to {sgnShort(mEv + 1.2816 * mSd)}</div></div>
-          <div className="pstat"><div>Bring per session</div><div>{cash ? money(cash) : "—"}</div><div>for {sessLen} hours, 19 times in 20</div></div>
-          <div className="pstat"><div>Risk of ruin now</div><div style={{ color: over ? "var(--rose)" : "var(--ivory)" }}>{tinyPct(mine.ror)}</div><div>your spread, as it is</div></div>
+        {/* these three use Nick's own spread from Bet spread, not the every-hand bets above: the label says so, and an
+            over-limit spread is told once, in the risk's own line (it was a red box over the bar as well) */}
+        {wins ? <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--sep)" }}>
+          <div className="lab">Playing your spread from Bet spread{mine.mn ? ` · $${mine.mn} tables` : ""}</div>
+          <div className="pstats mt-2">
+            <div className="pstat"><div>A normal month</div><div style={{ color: mEv >= 0 ? "var(--ivory)" : "var(--neg-l)" }}>{sgnMoney(mEv)}</div><div>8 months in 10: {sgnShort(mEv - 1.2816 * mSd)} to {sgnShort(mEv + 1.2816 * mSd)}</div></div>
+            <div className="pstat"><div>Bring per session</div><div>{cash ? money(cash) : "—"}</div><div>enough for {sessLen} hours, 19 times in 20</div></div>
+            <div className="pstat"><div>Risk of ruin</div><div style={{ color: over ? "var(--rose)" : "var(--ivory)" }}>{tinyPct(mine.ror)}</div><div>{over ? `over your ${rk(risk)} limit; it needs ${shortMoney(ownNeed)}` : `inside your ${rk(risk)} limit`}</div></div>
+          </div>
         </div> : <p className="text-xs mt-4 pt-4" style={{ color: "var(--ivory-d)", borderTop: "1px solid var(--sep)" }}>Your spread on Bet spread doesn't win yet, so there is no month or session to plan around.</p>}
       </>}
     </section>
@@ -1006,7 +1044,7 @@ function DealBox({ deal, gr, bankroll, span }) {
 // part "chart" is "Where it's heading", part "ladder" the move-up list: on a computer the list continues the left
 // column (.dgrid.twol, .dcol.contl) so the two columns end near each other; on a phone it stays under the chart
 function Growth({ gr, deal, bankroll, prefs, setPrefs, part }) {
-  const [more, setMore] = useState(false), [allT, setAllT] = useState(false);
+  const [more, setMore] = useState(false), [allT, setAllT] = useState(false), [gOpen, setGOpen] = useState(false);
   const statsRef = useGlideH(more), ladRef = useGlideH(allT);
   const { risk, whenOf, kind, model, logged, game, gameRor, gameNeed, noEdge, goal, goalS, sim, simStale, hist, loading, ladder, far, ladBusy, lad, today, todayBets, todayRor, sess } = gr;
   // the chart is drawn with what it was dealt from (a stale one, dimmed, while the next is worked out)
@@ -1041,7 +1079,7 @@ function Growth({ gr, deal, bankroll, prefs, setPrefs, part }) {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
         <div><div className="k">By {whenOf(hours)}</div><div className="v">${then.m} tables</div><div className="s">typically · <span className="mono">{money(then.ev)}</span>/hr</div></div>
       </div>}
-      {auto && today && today.over && <p className="pnote mt-3">{money(bankroll)} is under the {shortMoney(lad.lv[0].need)} it takes to play ${today.m} tables inside your {rk(risk)} limit. Until it gets there this plays their smallest winning spread, at {pct(todayRor, 0)} risk of ruin.</p>}
+      {auto && today && today.over && <p className="text-[11.5px] mt-2.5 leading-snug" style={{ color: "var(--muted)" }}>Below {shortMoney(lad.lv[0].need)} it plays the smallest winning spread at ${today.m} tables, at <span style={{ color: "var(--rose)" }}>{pct(todayRor, 0)} risk of ruin</span>.</p>}
       {!auto && gameRor > risk * 1.001 && <p className="pnote mt-3">Too big for {money(bankroll)}: at this size this game goes broke {pct(gameRor, 0)} of the time sooner or later. It needs {shortMoney(gameNeed)} for your {rk(risk)} limit.</p>}
       <div className="mt-3"><GrowthChart sim={sim} B={sim.B} lv={lv} flat={auto ? null : flat} hours={hours} whenOf={whenOf} hist={hist} ladder={up} dealt={deal.d} /></div>
       <div className="plegend mt-2">{hist && <span><i className="ln" style={{ background: "rgba(var(--fg),.6)" }} />your results</span>}<span><i className="ln" style={{ background: "var(--brass)" }} />typical</span><span><i style={{ background: "rgba(var(--acc),.62)" }} />half the time</span><span><i style={{ background: "rgba(var(--acc),.3)" }} />8 in 10</span>{up && !auto && <span><i className="ln dash" />never moving up</span>}{deal.d && deal.d.paths && deal.d.paths.length > 0 && <span><i className="ln" style={{ background: "rgba(var(--fg),.32)" }} />dealt with real cards</span>}</div>
@@ -1049,7 +1087,7 @@ function Growth({ gr, deal, bankroll, prefs, setPrefs, part }) {
       <div className="pstats mt-4 pt-4" style={{ borderTop: "1px solid var(--sep)" }} ref={statsRef}>
         <div className="pstat"><div>Ending ahead</div><div style={{ color: sim.below > 0.4 ? "var(--neg-l)" : "var(--ivory)" }}>{Math.round((1 - sim.below) * 100)}%</div><div>above {shortMoney(bankroll)} in {span}</div></div>
         <div className="pstat"><div>Losing half</div><div style={{ color: sim.half > 0.1 ? "var(--neg-l)" : "var(--ivory)" }}>{sim.half < 0.005 ? "<1%" : `${Math.round(sim.half * 100)}%`}</div><div>ever down to {shortMoney(bankroll / 2)}</div></div>
-        <div className="pstat"><div>Worst dip</div><div>{shortMoney(sim.ddMid)}</div><div>typical; 1 in 10 passes {shortMoney(sim.ddBad)}</div></div>
+        <div className="pstat"><div>Biggest drop</div><div>{shortMoney(sim.ddMid)}</div><div>from a high, typically; 1 in 10 over {shortMoney(sim.ddBad)}</div></div>
         {more && <>
           <div className="pstat"><div>Going broke</div><div style={{ color: sim.bust > 0.05 ? "var(--neg-l)" : "var(--ivory)" }}>{sim.bust < 0.005 ? "<1%" : `${Math.round(sim.bust * 100)}%`}</div><div>within {span}</div></div>
           {up && sim.s0 < lv.length - 1 && <div className="pstat"><div>Moved up</div><div>{Math.round(100 * sim.end.slice(sim.s0 + 1).reduce((a, b) => a + b, 0))}%</div><div>ending at ${lv[sim.s0 + 1].m} tables or bigger</div></div>}
@@ -1060,11 +1098,19 @@ function Growth({ gr, deal, bankroll, prefs, setPrefs, part }) {
       </div>
       </>}
       {bankroll > 0 && <div className="pgset mt-4">
+        {/* the game the chart plays folds to one line (Nick, 22 Nov: Plan "cleaner looking"); the switch, what it plays
+            and "Include moving up" are under Change */}
         <div>
-          <div className="pgrow game"><span className="text-sm" style={{ color: "var(--ivory)" }}>Game</span><div className="pgseg" style={{ width: logged ? 268 : 196 }}><Seg small value={kind} options={games} onChange={(v) => setPrefs({ game: v })} /></div></div>
-          <div className="text-[11px] mt-1.5" style={{ color: "var(--muted)" }}>{auto ? <>The best bets for your bankroll at {rk(risk)} risk, playing every hand, resized every {sess}-hour session{prefs.moveUp || !today ? "" : `, staying at $${today.m} tables`}.</> : kind === "logged" ? <>{logged.n} logged session{logged.n === 1 ? "" : "s"}: <span className="mono">{money(logged.ev)}</span>/hr, swings of <span className="mono">{money(logged.sd)}</span>, never resized.</> : game.ev > 0 ? <>Bet spread today: <span className="mono">{money(game.ev)}</span>/hr, swings of <span className="mono">{money(game.sd)}</span>, never resized.</> : "Bet spread today: no edge yet."}{noEdge && !auto ? " Your logged sessions average out to no edge." : ""}</div>
+          <button type="button" className="pgrow pgsum rowh text-left" onClick={() => setGOpen(!gOpen)} aria-expanded={gOpen}>
+            <span className="text-sm shrink-0" style={{ color: "var(--ivory)" }}>Game</span>
+            <span className="flex items-baseline justify-end gap-3 min-w-0"><span className="text-[12.5px] truncate" style={{ color: "var(--ivory-d)" }}>{(games.find((g) => g[0] === kind) || games[0])[1]}{model ? (prefs.moveUp ? " · moving up" : " · no moving up") : ""}</span><span className="text-xs font-semibold shrink-0" style={{ color: "var(--brass)" }}>{gOpen ? "Done" : "Change"}</span></span>
+          </button>
+          <Fold open={gOpen}><div className="pt-3">
+          <div className="pgseg" style={{ width: "100%", maxWidth: logged ? 300 : 230 }}><Seg small value={kind} options={games} onChange={(v) => setPrefs({ game: v })} /></div>
+          <div className="text-[11px] mt-2" style={{ color: "var(--muted)" }}>{auto ? <>The best bets for your bankroll at {rk(risk)} risk, playing every hand, resized every {sess}-hour session{prefs.moveUp || !today ? "" : `, staying at $${today.m} tables`}.</> : kind === "logged" ? <>{logged.n} logged session{logged.n === 1 ? "" : "s"}: <span className="mono">{money(logged.ev)}</span>/hr, swings of <span className="mono">{money(logged.sd)}</span>, never resized.</> : game.ev > 0 ? <>Bet spread today: <span className="mono">{money(game.ev)}</span>/hr, swings of <span className="mono">{money(game.sd)}</span>, never resized.</> : "Bet spread today: no edge yet."}{noEdge && !auto ? " Your logged sessions average out to no edge." : ""}</div>
+          {model && <div className="mt-1"><Toggle label="Include moving up" sub={prefs.moveUp ? "Up and down the tables in the move-up list" : auto && today ? `Stays at $${today.m} tables; the bets still follow the bankroll` : "Stays at the table you play now"} on={!!prefs.moveUp} onChange={(v) => setPrefs({ moveUp: v })} /></div>}
+          </div></Fold>
         </div>
-        {model && <Toggle label="Include moving up" sub={prefs.moveUp ? "Up and down the tables in the move-up list" : auto && today ? `Stays at $${today.m} tables; the bets still follow the bankroll` : "Stays at the table you play now"} on={!!prefs.moveUp} onChange={(v) => setPrefs({ moveUp: v })} />}
         {model && sim && <div className="pgrow target">
           <label className="flex items-center gap-3 text-sm" style={{ color: "var(--ivory)" }}>Target
             <span className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 mono" style={{ color: "var(--muted)" }}>$</span><input className="in mono" style={{ paddingLeft: 24, width: 116, height: 36 }} type="number" inputMode="numeric" min="0" placeholder={String(Math.round(bankroll * 2))} value={prefs.goal} onChange={(e) => setPrefs({ goal: e.target.value })} aria-label="Target bankroll" /></span></label>
@@ -1166,7 +1212,7 @@ function Settings({ bankroll, prefs, setPrefs, go }) {
   // on a phone the four settings fold into one line, so the page opens on where to play next
   if (narrow && !open) return (
     <button className="card px-5 py-3.5 mb-4 w-full text-left flex items-center justify-between gap-3 cardbtn" onClick={() => setOpen(true)} aria-expanded="false">
-      <span className="min-w-0"><span className="eyebrow block" style={{ fontSize: 10 }}>Your plan</span><span className="block text-sm mt-0.5 truncate" style={{ color: "var(--ivory)" }}><span className="mono font-semibold">{money(bankroll)}</span> · {rk(prefs.risk)} risk · {prefs.hours} h a week</span></span>
+      <span className="min-w-0"><span className="eyebrow block" style={{ fontSize: 10 }}>Your plan</span><span className="block text-sm mt-0.5" style={{ color: "var(--ivory)", textWrap: "balance" }}><span className="mono font-semibold">{money(bankroll)}</span> · {rk(prefs.risk)} risk · <span className="whitespace-nowrap">{prefs.hours} h a week</span></span></span>
       <span className="text-xs font-semibold shrink-0" style={{ color: "var(--brass)" }}>Change</span>
     </button>);
   return (
@@ -1179,11 +1225,11 @@ function Settings({ bankroll, prefs, setPrefs, go }) {
       </div>
       <Info label="How this page works">
         <ol className="list-decimal pl-4 space-y-1">
-          <li>Set your risk limit (0.5% to 20%) and pace in the row above. Every number on the page follows them and your bankroll.</li>
-          <li><b>Casino scores and moving up</b> assume you play every hand, with the best bets your bankroll allows at your risk limit. When a table is too big for your bankroll it shows the safest bets and the risk they carry. Click any casino for the details and the bets to use.</li>
-          <li><b>Where it's heading</b> plays the best bets for your bankroll at your risk limit, resized as it grows and shrinks (Optimized), or your logged average or the spread on Bet spread if you switch it. Slide how far ahead it looks, from 2 months to 5 years.</li>
-          <li><b>A normal month, cash to bring and risk of ruin now</b> use your own rules and spread from Bet spread, exactly as that page prices them.</li>
-          <li>Log each session after you play and the plan moves on by itself.</li>
+          <li><b>Play next</b> picks the casino that has rested longest, nudged towards better games, and leaves out any scoring under your lowest score. Tap any casino for its details and the bets to use there.</li>
+          <li><b>Scores</b> and <b>moving up</b> assume you play every hand with the best bets your bankroll allows at your risk limit. A table too big for your bankroll shows its safest bets and the risk they still carry.</li>
+          <li><b>Where it's heading</b> plays those same best bets as your bankroll grows and shrinks, unless you switch its game to your logged results or your Bet spread spread.</li>
+          <li>Your bankroll's <b>month, cash to bring and risk of ruin</b> use your own spread from Bet spread, as that page prices it.</li>
+          <li>Every number follows your bankroll, risk limit and hours a week. Log each session after you play and the plan moves on by itself.</li>
         </ol>
       </Info>
     </section>
