@@ -361,7 +361,7 @@ html,body{background:var(--bg)}
 .tabs button.on{color:var(--ivory)}
 .tabs button.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:2px;background:var(--brass);animation:tabin .27s var(--ease)}
 @keyframes tabin{from{transform:scaleX(.3);opacity:0}to{transform:none;opacity:1}}
-.topbar{position:fixed;left:0;right:0;top:0;z-index:45;padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;background:rgba(var(--bgrgb),.78);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid rgba(var(--fg),.06);transform:translateY(-110%);opacity:0;transition:transform .27s var(--ease),opacity .16s var(--ease);pointer-events:none}
+.topbar{position:fixed;left:0;right:0;top:0;z-index:45;padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;background:rgba(var(--bgrgb),.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid rgba(var(--fg),.06);transform:translateY(-110%);opacity:0;transition:transform .27s var(--ease),opacity .16s var(--ease);pointer-events:none}
 .topbar.show{transform:none;opacity:1;pointer-events:auto}
 .rack{display:grid;grid-template-columns:repeat(var(--n),minmax(0,64px));gap:10px;justify-content:center}
 .rack .chipbtn{width:100%;height:auto;aspect-ratio:1;container-type:inline-size}.rack .chipface::before{inset:11cqw}.rack .chipface::after{inset:17cqw}
@@ -403,7 +403,7 @@ html,body{background:var(--bg)}
 .stepbtn{width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;line-height:1;color:var(--ivory-d);background:rgba(var(--fg),.06);border:1px solid rgba(var(--fg),.1);transition:transform .12s var(--ez),background .15s var(--ez)}
 .stepbtn:active{transform:scale(.9)}
 .stepbtn:disabled{opacity:.35}
-.pnlwrap{position:relative}.pnltip{position:absolute;top:-6px;left:0;transition:transform .2s var(--ez);animation:tipin .2s var(--ez-soft) backwards;pointer-events:none;white-space:nowrap;padding:7px 11px;border-radius:12px;font-size:11px;line-height:1.35;color:var(--ivory-d);background:color-mix(in srgb,var(--bg2) 86%,transparent);box-shadow:var(--gl-lens),0 10px 26px -12px rgba(var(--sh),.9);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);z-index:2}.pnltip b{color:var(--ivory);font-weight:600}
+.pnlwrap{position:relative}.pnltip{position:absolute;top:-6px;left:0;transition:transform .2s var(--ez);animation:tipin .2s var(--ez-soft) backwards;pointer-events:none;white-space:nowrap;padding:7px 11px;border-radius:12px;font-size:11px;line-height:1.35;color:var(--ivory-d);background:color-mix(in srgb,var(--bg2) 86%,transparent);box-shadow:var(--gl-lens),0 10px 26px -12px rgba(var(--sh),.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:2}.pnltip b{color:var(--ivory);font-weight:600}
 .tcrow{display:grid;grid-template-columns:64px 1fr 64px 64px 84px;align-items:center;gap:10px;font-size:12.5px;padding:7px 10px;border-radius:10px}.tcrow>span:nth-child(n+3){text-align:right}.tcrow.h{font-size:10px;color:var(--muted);padding-top:0;padding-bottom:4px}
 .wrow{display:grid;grid-template-columns:104px 1fr 62px;align-items:center;gap:12px;padding:6px 0;font-size:13px}
 .skillrow{display:flex;align-items:center;gap:10px;padding:11px 4px;border-radius:10px;transition:background .15s var(--ez)}
@@ -732,7 +732,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 /* the tab bar: a floating capsule, with the page fading out beneath it */
 .bottom-nav{padding:22px 12px max(10px,calc(env(safe-area-inset-bottom) - 12px));background:linear-gradient(to top,rgba(var(--bgrgb),.86),rgba(var(--bgrgb),.5) 55%,rgba(var(--bgrgb),0));backdrop-filter:none;-webkit-backdrop-filter:none;border-top:0;box-shadow:none;pointer-events:none}
 :root[data-theme="light"] .bottom-nav{box-shadow:none}
-.bottom-nav>div{position:relative;pointer-events:auto;max-width:27rem;padding:5px;border-radius:999px;background:linear-gradient(180deg,rgba(var(--fg),.1),rgba(var(--fg),.045)),rgba(var(--bgrgb),.5);-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9);box-shadow:0 14px 34px -14px rgba(0,0,0,.75),0 2px 8px -3px rgba(0,0,0,.4)}
+.bottom-nav>div{position:relative;pointer-events:auto;max-width:27rem;padding:5px;border-radius:999px;background:linear-gradient(180deg,rgba(var(--fg),.1),rgba(var(--fg),.045)),rgba(var(--bgrgb),.5);-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);box-shadow:0 14px 34px -14px rgba(0,0,0,.75),0 2px 8px -3px rgba(0,0,0,.4)}
 :root[data-theme="light"] .bottom-nav>div{background:rgba(255,255,255,.62);box-shadow:0 0 0 1px rgba(var(--fg),.06),0 14px 34px -16px rgba(var(--fg),.4),0 2px 8px -3px rgba(var(--fg),.16)}
 .navbtn{min-height:50px;border-radius:999px;padding:5px 0 3px;gap:2px;transition:color .18s var(--ease),transform .13s var(--ease),background .16s var(--ease)}
 @media (max-width:350px){.bottom-nav{padding-left:6px;padding-right:6px}.bottom-nav>div{padding:4px}}
@@ -741,12 +741,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .navbtn .navicon,.navbtn.on .navicon{background:none;box-shadow:none;height:26px}
 .sn-glide{background:linear-gradient(180deg,rgba(var(--acc),.2),rgba(var(--acc),.1));box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px rgba(var(--acc),.14)}
 /* the top bar: blurred glass that fades away at its lower edge */
-.topbar{background:linear-gradient(180deg,rgba(var(--bgrgb),.9),rgba(var(--bgrgb),.72) 60%,rgba(var(--bgrgb),.4));-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9);border-bottom:0;box-shadow:none;padding-bottom:22px;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent)}
+.topbar{background:linear-gradient(180deg,rgba(var(--bgrgb),.9),rgba(var(--bgrgb),.72) 60%,rgba(var(--bgrgb),.4));-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);border-bottom:0;box-shadow:none;padding-bottom:22px;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent)}
 :root[data-theme="light"] .topbar{box-shadow:none}
-.sidenav{-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9);box-shadow:inset -1px 0 0 var(--gl-rim)}
+.sidenav{-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);box-shadow:inset -1px 0 0 var(--gl-rim)}
 /* small controls: one glass capsule */
 .rulespill,.iconbtn,.stepbtn,.btn.ghost,.sn-search,.sn-rules{background:linear-gradient(180deg,rgba(var(--fg),.09),rgba(var(--fg),.035));box-shadow:inset 0 1px 0 var(--gl-hi)}
-.pillrail .rulespill,.topbar .rulespill,.syncpill{-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9)}
+.pillrail .rulespill,.topbar .rulespill,.syncpill{-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px)}
 .syncpill{background:rgba(var(--bgrgb),.7);box-shadow:inset 0 1px 0 var(--gl-hi),0 12px 30px -12px rgba(0,0,0,.7)}
 .btn{border-radius:999px;box-shadow:0 8px 22px -10px rgba(var(--acc),.55),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.12)}
 .btn.ghost{box-shadow:inset 0 1px 0 var(--gl-hi)}
@@ -854,8 +854,8 @@ input[type=range]::-moz-range-thumb{width:28px;height:22px;border-radius:999px;b
 .xbtn{color:var(--ivory-d);background:linear-gradient(180deg,rgba(var(--fg),.13),rgba(var(--fg),.05));box-shadow:inset 0 1px 0 var(--gl-hi);transition:transform .41s var(--fluid),background .16s var(--ease)}
 .xbtn:active{transform:scale(.92);transition-duration:.12s}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) and (color:color-mix(in srgb,red 50%,transparent)){
-.sheet,.cmdk,.card.rulesdlg{background:radial-gradient(120% 70% at 0% 0%,var(--gl-sheen),transparent 60%),linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.02) 55%),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 58%,transparent),color-mix(in srgb,var(--sheet2) 72%,transparent) 55%);-webkit-backdrop-filter:blur(30px) saturate(1.9) brightness(1.12);backdrop-filter:blur(30px) saturate(1.9) brightness(1.12)}
-:root[data-theme="light"] .sheet,:root[data-theme="light"] .cmdk,:root[data-theme="light"] .card.rulesdlg{background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(255,255,255,.7));-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8)}
+.sheet,.cmdk,.card.rulesdlg{background:radial-gradient(120% 70% at 0% 0%,var(--gl-sheen),transparent 60%),linear-gradient(180deg,rgba(var(--fg),.075),rgba(var(--fg),.02) 55%),linear-gradient(180deg,color-mix(in srgb,var(--sheet1) 58%,transparent),color-mix(in srgb,var(--sheet2) 72%,transparent) 55%);-webkit-backdrop-filter:blur(30px) brightness(1.12);backdrop-filter:blur(30px) brightness(1.12)}
+:root[data-theme="light"] .sheet,:root[data-theme="light"] .cmdk,:root[data-theme="light"] .card.rulesdlg{background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(255,255,255,.7));-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px)}
 }
 /* ---- hover, press and focus: one kit (Nick: everything you can click reacts, and reacts the same way).
    Hover only where there is a pointer. The first hover rule is the safety net: any button or link without a look of
@@ -934,8 +934,8 @@ input[type=range]:hover::-webkit-slider-thumb{filter:brightness(1.12)}
 :root[data-theme="light"] .card{border:0;background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.8));box-shadow:0 0 0 var(--hair) rgba(var(--fg),.1),0 1px 2px rgba(var(--fg),.06),0 10px 28px -16px rgba(var(--fg),.26)}
 .sheet,.cmdk,.card.rulesdlg{border:0}
 /* the tab capsule: clearer glass */
-.bottom-nav>div{background:linear-gradient(180deg,rgba(var(--fg),.11),rgba(var(--fg),.04)),rgba(var(--bgrgb),.42);-webkit-backdrop-filter:blur(20px) saturate(2.1) brightness(1.06);backdrop-filter:blur(20px) saturate(2.1) brightness(1.06);box-shadow:inset 0 0 10px rgba(255,255,255,.04),inset 0 -7px 10px -8px rgba(0,0,0,.35),0 14px 34px -14px rgba(0,0,0,.75),0 2px 8px -3px rgba(0,0,0,.4)}
-:root[data-theme="light"] .bottom-nav>div{background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(20px) saturate(1.9);backdrop-filter:blur(20px) saturate(1.9);box-shadow:0 0 0 var(--hair) rgba(var(--fg),.1),0 14px 34px -16px rgba(var(--fg),.4),0 2px 8px -3px rgba(var(--fg),.16)}
+.bottom-nav>div{background:linear-gradient(180deg,rgba(var(--fg),.11),rgba(var(--fg),.04)),rgba(var(--bgrgb),.42);-webkit-backdrop-filter:blur(20px) brightness(1.06);backdrop-filter:blur(20px) brightness(1.06);box-shadow:inset 0 0 10px rgba(255,255,255,.04),inset 0 -7px 10px -8px rgba(0,0,0,.35),0 14px 34px -14px rgba(0,0,0,.75),0 2px 8px -3px rgba(0,0,0,.4)}
+:root[data-theme="light"] .bottom-nav>div{background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 0 0 var(--hair) rgba(var(--fg),.1),0 14px 34px -16px rgba(var(--fg),.4),0 2px 8px -3px rgba(var(--fg),.16)}
 /* a selection is a bead of the glass */
 .navglide,.sn-glide{background:linear-gradient(180deg,rgba(var(--acc),.3),rgba(var(--acc),.12));box-shadow:var(--gl-bead)}
 :root:not([data-theme="light"]) .chipseg button.on,:root:not([data-theme="light"]) .chipseg.slide .thumb{background:linear-gradient(180deg,rgba(var(--acc),.3),rgba(var(--acc),.12));box-shadow:var(--gl-bead)}
@@ -946,7 +946,7 @@ input[type=range]:hover::-webkit-slider-thumb{filter:brightness(1.12)}
 .gchip.on{border-color:transparent;box-shadow:var(--gl-bead)}
 :root[data-theme="light"] .gchip.on{border-color:transparent}
 .pillrail .rulespill:hover,.sn-search:hover,.sn-rules:hover{border-color:transparent}
-.pillrail .rulespill,.topbar .rulespill{-webkit-backdrop-filter:blur(16px) saturate(2);backdrop-filter:blur(16px) saturate(2)}
+.pillrail .rulespill,.topbar .rulespill{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 .btn{background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.05) 46%,rgba(255,255,255,0) 55%),linear-gradient(180deg,var(--acc-hi),var(--brass));box-shadow:0 8px 22px -10px rgba(var(--acc),.55),inset 0 0 0 var(--hair) rgba(255,255,255,.3),inset 0 var(--hair) 0 rgba(255,255,255,.6),inset 0 -2px 4px -1px rgba(0,0,0,.18)}
 .btn.ghost{background:linear-gradient(180deg,rgba(var(--fg),.09),rgba(var(--fg),.035));background-clip:padding-box;box-shadow:var(--gl-lens)}
 /* panels: the rim is the ::before; these add the light gathered inside the edge and the drop shadow */
@@ -1277,7 +1277,7 @@ body{background:none}
 @media (max-width:1023px){.sheet{box-shadow:var(--gl-body),0 -10px 50px -10px rgba(0,0,0,.7)}}
 @media (min-width:1024px){.sheetwrap .sheet{box-shadow:var(--gl-body),0 40px 90px -20px rgba(0,0,0,.75)}}
 :root[data-theme="light"] .sheet,:root[data-theme="light"] .cmdk,:root[data-theme="light"] .card.rulesdlg{box-shadow:0 0 0 var(--hair) rgba(var(--fg),.1),0 30px 80px -24px rgba(var(--fg),.42)}
-.sheet,.cmdk,.card.rulesdlg{-webkit-backdrop-filter:blur(26px) saturate(2) brightness(1.2);backdrop-filter:blur(26px) saturate(2) brightness(1.2)}
+.sheet,.cmdk,.card.rulesdlg{-webkit-backdrop-filter:blur(26px) brightness(1.2);backdrop-filter:blur(26px) brightness(1.2)}
 @supports (background:color-mix(in srgb,red 50%,blue)){:root:not([data-theme="light"]) .sheet,:root:not([data-theme="light"]) .cmdk,:root:not([data-theme="light"]) .card.rulesdlg{background:linear-gradient(rgba(var(--fg),.06),rgba(var(--fg),.035)),color-mix(in srgb,var(--sheet1) 54%,transparent)}}
 .topbar{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;opacity:1;padding-bottom:8px;transform:translateY(calc(-100% - 72px));transition:transform .46s var(--ez)}
 .topbar.show{transform:none;pointer-events:none}
@@ -1287,10 +1287,10 @@ body{background:none}
 .tbedge>b{position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--bgrgb),.88),rgba(var(--bgrgb),.68) 34%,rgba(var(--bgrgb),.36) 62%,rgba(var(--bgrgb),.11) 86%,rgba(var(--bgrgb),0))}
 .tbedge>i{position:absolute;left:0;right:0;top:0}
 .tbedge>i:nth-child(2){height:100%;-webkit-backdrop-filter:blur(2.5px);backdrop-filter:blur(2.5px);-webkit-mask-image:linear-gradient(180deg,#000 48%,transparent);mask-image:linear-gradient(180deg,#000 48%,transparent)}
-.tbedge>i:nth-child(3){height:58%;-webkit-backdrop-filter:blur(11px) saturate(1.5);backdrop-filter:blur(11px) saturate(1.5);-webkit-mask-image:linear-gradient(180deg,#000 40%,transparent);mask-image:linear-gradient(180deg,#000 40%,transparent)}
+.tbedge>i:nth-child(3){height:58%;-webkit-backdrop-filter:blur(11px);backdrop-filter:blur(11px);-webkit-mask-image:linear-gradient(180deg,#000 40%,transparent);mask-image:linear-gradient(180deg,#000 40%,transparent)}
 .topbar .tbtitle{min-width:0;font-size:17px;font-weight:600;letter-spacing:-.015em;color:var(--ivory);text-shadow:0 0 12px rgba(var(--bgrgb),.9),0 1px 3px rgba(var(--bgrgb),.7)}
-.topbar .rulespill,.topbar .iconbtn,.topbar .tbback,.topbar .tbread,.pillrail .rulespill{background:linear-gradient(180deg,rgba(var(--fg),.12),rgba(var(--fg),.04)),rgba(var(--bgrgb),.3);background-clip:padding-box;border-color:transparent;-webkit-backdrop-filter:blur(14px) saturate(2) brightness(1.18);backdrop-filter:blur(14px) saturate(2) brightness(1.18);box-shadow:var(--gl-body),0 10px 24px -12px rgba(0,0,0,.65),0 2px 6px -2px rgba(0,0,0,.3)}
-:root[data-theme="light"] .topbar .rulespill,:root[data-theme="light"] .topbar .iconbtn,:root[data-theme="light"] .topbar .tbback,:root[data-theme="light"] .topbar .tbread,:root[data-theme="light"] .pillrail .rulespill{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.46));background-clip:padding-box;-webkit-backdrop-filter:blur(14px) saturate(1.9);backdrop-filter:blur(14px) saturate(1.9);box-shadow:var(--gl-body),0 0 0 var(--hair) rgba(var(--fg),.1),0 10px 22px -12px rgba(var(--fg),.4)}
+.topbar .rulespill,.topbar .iconbtn,.topbar .tbback,.topbar .tbread,.pillrail .rulespill{background:linear-gradient(180deg,rgba(var(--fg),.12),rgba(var(--fg),.04)),rgba(var(--bgrgb),.3);background-clip:padding-box;border-color:transparent;-webkit-backdrop-filter:blur(14px) brightness(1.18);backdrop-filter:blur(14px) brightness(1.18);box-shadow:var(--gl-body),0 10px 24px -12px rgba(0,0,0,.65),0 2px 6px -2px rgba(0,0,0,.3)}
+:root[data-theme="light"] .topbar .rulespill,:root[data-theme="light"] .topbar .iconbtn,:root[data-theme="light"] .topbar .tbback,:root[data-theme="light"] .topbar .tbread,:root[data-theme="light"] .pillrail .rulespill{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.46));background-clip:padding-box;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--gl-body),0 0 0 var(--hair) rgba(var(--fg),.1),0 10px 22px -12px rgba(var(--fg),.4)}
 .topbar .iconbtn[aria-pressed="true"]{background:linear-gradient(180deg,rgba(var(--acc),.34),rgba(var(--acc),.14)),rgba(var(--bgrgb),.3);background-clip:padding-box;box-shadow:var(--gl-bead),0 10px 24px -12px rgba(0,0,0,.65)}
 .topbar .tbback{display:inline-flex;align-items:center;justify-content:center;flex:none;border-radius:999px;color:var(--ivory)}
 .topbar .tbread{display:inline-block;border-radius:999px;margin-left:auto}
@@ -1336,13 +1336,13 @@ html.scrolled .pillrail .rulespill:active{transform:scale(.9)}
 .bottom-nav>div::before{display:none}
 .nglass{position:absolute;inset:0;border-radius:999px;pointer-events:none}
 .ng{position:absolute;inset:0;border-radius:inherit}
-.ng.rim{-webkit-backdrop-filter:blur(3.5px) saturate(2) brightness(1.62);backdrop-filter:blur(3.5px) saturate(2) brightness(1.62)}
-.ng.deep{-webkit-backdrop-filter:blur(15px) saturate(1.06) brightness(.72);backdrop-filter:blur(15px) saturate(1.06) brightness(.72);
+.ng.rim{-webkit-backdrop-filter:blur(3.5px) brightness(1.62);backdrop-filter:blur(3.5px) brightness(1.62)}
+.ng.deep{-webkit-backdrop-filter:blur(15px) brightness(.72);backdrop-filter:blur(15px) brightness(.72);
 -webkit-mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - 11px),rgba(0,0,0,.55) calc(var(--nr) - 7px),rgba(0,0,0,.12) calc(var(--nr) - 2.5px),transparent var(--nr)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - 11px),rgba(0,0,0,.55) calc(var(--nr) - 7px),rgba(0,0,0,.12) calc(var(--nr) - 2.5px),transparent var(--nr)),linear-gradient(180deg,transparent,rgba(0,0,0,.12) 2.5px,rgba(0,0,0,.55) 7px,#000 11px,#000 calc(100% - 11px),rgba(0,0,0,.55) calc(100% - 7px),rgba(0,0,0,.12) calc(100% - 2.5px),transparent);mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - 11px),rgba(0,0,0,.55) calc(var(--nr) - 7px),rgba(0,0,0,.12) calc(var(--nr) - 2.5px),transparent var(--nr)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - 11px),rgba(0,0,0,.55) calc(var(--nr) - 7px),rgba(0,0,0,.12) calc(var(--nr) - 2.5px),transparent var(--nr)),linear-gradient(180deg,transparent,rgba(0,0,0,.12) 2.5px,rgba(0,0,0,.55) 7px,#000 11px,#000 calc(100% - 11px),rgba(0,0,0,.55) calc(100% - 7px),rgba(0,0,0,.12) calc(100% - 2.5px),transparent);
 -webkit-mask-size:var(--nr) 100%,var(--nr) 100%,calc(100% - 2 * var(--nr)) 100%;mask-size:var(--nr) 100%,var(--nr) 100%,calc(100% - 2 * var(--nr)) 100%;
 -webkit-mask-position:0 0,100% 0,50% 0;mask-position:0 0,100% 0,50% 0;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
-:root[data-theme="light"] .ng.rim{-webkit-backdrop-filter:blur(3.5px) saturate(1.8) brightness(1.08);backdrop-filter:blur(3.5px) saturate(1.8) brightness(1.08)}
-:root[data-theme="light"] .ng.deep{-webkit-backdrop-filter:blur(15px) saturate(1.06) brightness(.96);backdrop-filter:blur(15px) saturate(1.06) brightness(.96)}
+:root[data-theme="light"] .ng.rim{-webkit-backdrop-filter:blur(3.5px) brightness(1.08);backdrop-filter:blur(3.5px) brightness(1.08)}
+:root[data-theme="light"] .ng.deep{-webkit-backdrop-filter:blur(15px) brightness(.96);backdrop-filter:blur(15px) brightness(.96)}
 .ng.skin{background:linear-gradient(180deg,rgba(var(--fg),.105),rgba(var(--fg),.03)),rgba(var(--bgrgb),.24);box-shadow:var(--gl-body),var(--gl-float)}
 :root[data-theme="light"] .ng.skin{background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.4))}
 .ng.skin::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:var(--bev);background:var(--gl-edge-hi);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
@@ -1395,9 +1395,9 @@ html.scrolled .pillrail .rulespill:active{transform:scale(.9)}
 :root[data-theme="light"] .navglide{background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.62))}
 :root[data-theme="light"] .sn-glide{background:linear-gradient(180deg,rgba(var(--fg),.085),rgba(var(--fg),.05));box-shadow:inset 0 var(--bev) 0 rgba(255,255,255,.7),inset 0 0 0 var(--hair) rgba(var(--fg),.06)}
 .navcap.dragging .navglide{filter:brightness(1.22);box-shadow:var(--gl-bead),inset 0 0 14px rgba(255,255,255,.14),0 8px 20px -8px rgba(0,0,0,.6)}
-.ng.deep{-webkit-backdrop-filter:blur(12px) saturate(1.1) brightness(.78);backdrop-filter:blur(12px) saturate(1.1) brightness(.78)}
+.ng.deep{-webkit-backdrop-filter:blur(12px) brightness(.78);backdrop-filter:blur(12px) brightness(.78)}
 .ng.skin{background:linear-gradient(180deg,rgba(var(--fg),.1),rgba(var(--fg),.025)),rgba(var(--bgrgb),.2)}
-:root[data-theme="light"] .ng.deep{-webkit-backdrop-filter:blur(12px) saturate(1.1) brightness(.97);backdrop-filter:blur(12px) saturate(1.1) brightness(.97)}
+:root[data-theme="light"] .ng.deep{-webkit-backdrop-filter:blur(12px) brightness(.97);backdrop-filter:blur(12px) brightness(.97)}
 :root[data-theme="light"] .ng.skin{background:linear-gradient(180deg,rgba(255,255,255,.56),rgba(255,255,255,.34))}
 /* ---- end of liquid glass IV ---- */
 /* ---- Home works better (21 Nov): a card that is one link answers a tap anywhere on it, not only on its text rows
@@ -1426,8 +1426,8 @@ html.scrolled .pillrail .rulespill:active{transform:scale(.9)}
 .hdock .rulespill{min-width:0;min-height:34px}
 .hdock.tight .rulespill{gap:0;padding-right:11px}
 .hdock.tight .rulespill svg{display:none}
-.hdock .rulespill,.hdock .iconbtn{background:linear-gradient(180deg,rgba(var(--fg),.12),rgba(var(--fg),.04)),rgba(var(--bgrgb),.3);background-clip:padding-box;border-color:transparent;-webkit-backdrop-filter:blur(14px) saturate(2) brightness(1.18);backdrop-filter:blur(14px) saturate(2) brightness(1.18);box-shadow:var(--gl-body),0 10px 24px -12px rgba(0,0,0,.65),0 2px 6px -2px rgba(0,0,0,.3)}
-:root[data-theme="light"] .hdock .rulespill,:root[data-theme="light"] .hdock .iconbtn{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.46));background-clip:padding-box;-webkit-backdrop-filter:blur(14px) saturate(1.9);backdrop-filter:blur(14px) saturate(1.9);box-shadow:var(--gl-body),0 0 0 var(--hair) rgba(var(--fg),.1),0 10px 22px -12px rgba(var(--fg),.4)}
+.hdock .rulespill,.hdock .iconbtn{background:linear-gradient(180deg,rgba(var(--fg),.12),rgba(var(--fg),.04)),rgba(var(--bgrgb),.3);background-clip:padding-box;border-color:transparent;-webkit-backdrop-filter:blur(14px) brightness(1.18);backdrop-filter:blur(14px) brightness(1.18);box-shadow:var(--gl-body),0 10px 24px -12px rgba(0,0,0,.65),0 2px 6px -2px rgba(0,0,0,.3)}
+:root[data-theme="light"] .hdock .rulespill,:root[data-theme="light"] .hdock .iconbtn{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.46));background-clip:padding-box;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--gl-body),0 0 0 var(--hair) rgba(var(--fg),.1),0 10px 22px -12px rgba(var(--fg),.4)}
 .hdock .iconbtn[aria-pressed="true"]{background:linear-gradient(180deg,rgba(var(--acc),.34),rgba(var(--acc),.14)),rgba(var(--bgrgb),.3);background-clip:padding-box;box-shadow:var(--gl-bead),0 10px 24px -12px rgba(0,0,0,.65)}
 .topbar>div>span:first-child{max-width:calc(100% - var(--dw,170px) - 14px)}
 .rulespill.two{display:grid;grid-template-columns:minmax(0,1fr);align-items:center}
@@ -1485,7 +1485,7 @@ html.tshrink.tsdo .topbar .tbtitle{animation:tbtin linear both;animation-timelin
 --gl-edge-hi:radial-gradient(115% 150% at 0% 0%,#fff,rgba(255,255,255,.9) 24%,rgba(255,255,255,.55) 50%),radial-gradient(115% 150% at 100% 100%,#fff,rgba(255,255,255,.7) 26%,rgba(255,255,255,0) 50%),linear-gradient(rgba(255,255,255,.62),rgba(255,255,255,.55))}
 /* the tab capsule lets more of what is under it through, in colour (vibrancy), and keeps its words readable with a
    soft shadow of the page's own colour behind them */
-.ng.deep{-webkit-backdrop-filter:blur(13px) saturate(1.65) brightness(.84);backdrop-filter:blur(13px) saturate(1.65) brightness(.84)}
+.ng.deep{-webkit-backdrop-filter:blur(13px) brightness(.84);backdrop-filter:blur(13px) brightness(.84)}
 .ng.skin{background:linear-gradient(180deg,rgba(var(--fg),.095),rgba(var(--fg),.02)),rgba(var(--bgrgb),.18)}
 :root:not([data-theme="light"]) .navbtn>span:last-child{text-shadow:0 0 7px rgba(var(--bgrgb),.85),0 1px 2px rgba(var(--bgrgb),.6)}
 :root:not([data-theme="light"]) .navbtn .navicon svg{filter:drop-shadow(0 0 5px rgba(var(--bgrgb),.7))}
@@ -1498,15 +1498,14 @@ html.tshrink.tsdo .topbar .tbtitle{animation:tbtin linear both;animation-timelin
 /* The bevel, as far as Safari can draw it (Nick: "better distortion on the bevel and main glass like apples"). Safari
    can't bend the page behind glass on a web page (it drops backdrop-filter: url(), WebKit bug 245510), so the tab
    capsule's edge does what real glass does that it can show: its rim layer reaches 10px past the capsule and is masked
-   back to it, so its blur takes in light from just outside, and a bright thing beside the bar glows in its edge as if
-   bent into it; the rim is sharper, brighter and more coloured than the body; the body is clearer than before; and the
-   two ends carry a faint cool and warm tint, where a real edge splits light. The real bending is the lens, below. */
-.ng.rim{inset:-10px;border-radius:0;-webkit-backdrop-filter:blur(2.5px) saturate(2.3) brightness(1.55) contrast(1.1);backdrop-filter:blur(2.5px) saturate(2.3) brightness(1.55) contrast(1.1);
+   back to it, so its blur takes in light from just outside; the rim is sharper and a little brighter than the body. Nothing under the
+   glass is made more colourful (Nick, 22 Nov: "the saturation shouldnt be increased at all under the effect"). The real
+   bending is the lens, below, and the page drawn into the bar's top edge (Liquid glass VIII). */
+.ng.rim{inset:-10px;border-radius:0;-webkit-backdrop-filter:blur(3px) brightness(1.12);backdrop-filter:blur(3px) brightness(1.12);
 -webkit-mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - .6px),transparent var(--nr)),linear-gradient(180deg,transparent 10px,#000 10px,#000 calc(100% - 10px),transparent calc(100% - 10px)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - .6px),transparent var(--nr));mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - .6px),transparent var(--nr)),linear-gradient(180deg,transparent 10px,#000 10px,#000 calc(100% - 10px),transparent calc(100% - 10px)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - .6px),transparent var(--nr));-webkit-mask-size:calc(var(--nr) + 10px) 100%,calc(100% - 2 * var(--nr) - 20px) 100%,calc(var(--nr) + 10px) 100%;mask-size:calc(var(--nr) + 10px) 100%,calc(100% - 2 * var(--nr) - 20px) 100%,calc(var(--nr) + 10px) 100%;-webkit-mask-position:0 0,50% 0,100% 0;mask-position:0 0,50% 0,100% 0;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
-.ng.deep{-webkit-backdrop-filter:blur(10px) saturate(1.8) brightness(.86);backdrop-filter:blur(10px) saturate(1.8) brightness(.86);-webkit-mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),linear-gradient(180deg,transparent,rgba(0,0,0,.1) 2px,rgba(0,0,0,.5) 5.5px,#000 9px,#000 calc(100% - 9px),rgba(0,0,0,.5) calc(100% - 5.5px),rgba(0,0,0,.1) calc(100% - 2px),transparent);mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),linear-gradient(180deg,transparent,rgba(0,0,0,.1) 2px,rgba(0,0,0,.5) 5.5px,#000 9px,#000 calc(100% - 9px),rgba(0,0,0,.5) calc(100% - 5.5px),rgba(0,0,0,.1) calc(100% - 2px),transparent)}
-:root[data-theme="light"] .ng.deep{-webkit-backdrop-filter:blur(10px) saturate(1.3) brightness(.98);backdrop-filter:blur(10px) saturate(1.3) brightness(.98)}
+.ng.deep{-webkit-backdrop-filter:blur(10px) brightness(.86);backdrop-filter:blur(10px) brightness(.86);-webkit-mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),linear-gradient(180deg,transparent,rgba(0,0,0,.1) 2px,rgba(0,0,0,.5) 5.5px,#000 9px,#000 calc(100% - 9px),rgba(0,0,0,.5) calc(100% - 5.5px),rgba(0,0,0,.1) calc(100% - 2px),transparent);mask-image:radial-gradient(circle at 100% 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),radial-gradient(circle at 0 50%,#000 calc(var(--nr) - 9px),rgba(0,0,0,.5) calc(var(--nr) - 5.5px),rgba(0,0,0,.1) calc(var(--nr) - 2px),transparent var(--nr)),linear-gradient(180deg,transparent,rgba(0,0,0,.1) 2px,rgba(0,0,0,.5) 5.5px,#000 9px,#000 calc(100% - 9px),rgba(0,0,0,.5) calc(100% - 5.5px),rgba(0,0,0,.1) calc(100% - 2px),transparent)}
+:root[data-theme="light"] .ng.deep{-webkit-backdrop-filter:blur(10px) brightness(.98);backdrop-filter:blur(10px) brightness(.98)}
 .ng.skin{background:linear-gradient(180deg,rgba(var(--fg),.08),rgba(var(--fg),.015)),rgba(var(--bgrgb),.14)}
-:root:not([data-theme="light"]) .ng.skin::after{content:"";position:absolute;inset:var(--bev);border-radius:inherit;padding:2px;pointer-events:none;background:radial-gradient(60px 46px at 0% 30%,rgba(130,215,255,.22),rgba(130,215,255,0) 70%),radial-gradient(60px 46px at 100% 72%,rgba(255,180,130,.2),rgba(255,180,130,0) 70%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;filter:blur(.6px)}
 /* The lens (the highlight is an <i>, so the copy is set upright: font-style). While a finger is on the tab bar (.lensing) its glass rises over the icons, thickens, and shows a copy of
    the bar under it (.lensrow) magnified 1.25 times about its centre and cut off at its rim: an icon half under the
    glass is bent at its edge, as on an iPhone. Glider keeps the copy lined up with the real bar in every flight and
@@ -1527,6 +1526,38 @@ html.tshrink.tsdo .topbar .tbtitle{animation:tbtin linear both;animation-timelin
 .touchlight.lens>i{opacity:0}
 @media (prefers-reduced-motion:reduce){.navglide>.lensrow,.navglide::before,.navglide::after{display:none}}
 /* ---- end of liquid glass VII ---- */
+/* ---- Liquid glass VIII: the page drawn into the bar's edge (22 Nov, afternoon) ---- */
+/* The page, drawn into the bar's top edge: the refraction Safari can't do with a filter (see useBend). The band is the ring
+   from the glass's edge to --bwb inside it, feathered over --bf into the body, in the top half of the capsule only (the
+   caps' upper arcs included): the side the page passes on its way under the bar. It sits over the rim layer and under
+   the skin, so the tint and the bevel are on top of it as on the rest of the glass. Its own background is the page's
+   colour (the copy has none of its own). */
+.navcap{--bwb:10px;--bd:14px;--bf:4px}
+.ng.bend{overflow:hidden;contain:strict;pointer-events:none;font-style:normal;background:rgb(var(--bgrgb));transition:opacity .34s var(--ez-soft);
+-webkit-mask-image:linear-gradient(180deg,#000 0,#000 30%,transparent 48%),radial-gradient(circle at 100% 50%,transparent calc(var(--nr) - var(--bwb) - var(--bf)),#000 calc(var(--nr) - var(--bwb)),#000 calc(var(--nr) - .6px),transparent var(--nr)),radial-gradient(circle at 0 50%,transparent calc(var(--nr) - var(--bwb) - var(--bf)),#000 calc(var(--nr) - var(--bwb)),#000 calc(var(--nr) - .6px),transparent var(--nr)),linear-gradient(180deg,transparent 0,#000 .6px,#000 var(--bwb),transparent calc(var(--bwb) + var(--bf)));mask-image:linear-gradient(180deg,#000 0,#000 30%,transparent 48%),radial-gradient(circle at 100% 50%,transparent calc(var(--nr) - var(--bwb) - var(--bf)),#000 calc(var(--nr) - var(--bwb)),#000 calc(var(--nr) - .6px),transparent var(--nr)),radial-gradient(circle at 0 50%,transparent calc(var(--nr) - var(--bwb) - var(--bf)),#000 calc(var(--nr) - var(--bwb)),#000 calc(var(--nr) - .6px),transparent var(--nr)),linear-gradient(180deg,transparent 0,#000 .6px,#000 var(--bwb),transparent calc(var(--bwb) + var(--bf)));-webkit-mask-size:100% 100%,var(--nr) 100%,var(--nr) 100%,calc(100% - 2 * var(--nr)) 100%;mask-size:100% 100%,var(--nr) 100%,var(--nr) 100%,calc(100% - 2 * var(--nr)) 100%;-webkit-mask-position:0 0,0 0,100% 0,50% 0;mask-position:0 0,0 0,100% 0,50% 0;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+-webkit-mask-composite:source-in,source-over,source-over,source-over;mask-composite:intersect,add,add,add}
+/* what is drawn in is light through the edge, not print on the glass: a touch soft and a touch bright */
+.bendwrap{filter:blur(.45px) brightness(1.08)}
+.ng.bend.off{opacity:0;transition:none}
+/* the bar shrinks to four fifths on scroll: the copy is scaled back by the inverse, about the same point, so it stays on
+   the page it copies (within a percent while the bar is on its way) */
+.bendwrap{position:absolute;inset:0;transform-origin:50% 100%;transition:transform .56s var(--spring-soft)}
+.bottom-nav[data-min] .bendwrap{transform:translateY(-2.5px) scale(1.25)}
+/* the copy moves with the page: a scroll-driven animation from the copy's place at the top of the page to its place at
+   the bottom (useBend sets the two ends); where there are no scroll timelines a scroll handler draws it instead */
+.bendroll{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;transform:translate(var(--bx,0px),var(--by0,0px)) scale(1,var(--bk,1))}
+@supports (animation-timeline:scroll()){.bendroll{animation:bendroll linear both;animation-timeline:scroll(root)}}
+@keyframes bendroll{from{transform:translate(var(--bx,0px),var(--by0,0px)) scale(1,var(--bk,1))}to{transform:translate(var(--bx,0px),var(--by1,0px)) scale(1,var(--bk,1))}}
+/* the copy is still: nothing in it arrives, glides or animates */
+.bendroll *{animation:none!important;transition:none!important}
+.bendroll>.bendclone{position:absolute!important;left:0!important;top:0!important;margin:0!important;max-width:none!important;opacity:1!important}
+/* a sticky piece (the brushes over Fill the chart) sits in the copy where it sits in the page before it sticks: the copy
+   doesn't scroll, so it can't stick */
+.bendroll .sticky{position:relative!important;top:auto!important}
+@media (prefers-reduced-motion:reduce){.ng.bend,.bendwrap{transition:none}}
+@media (min-width:1024px){.ng.bend{display:none}}
+@media (prefers-reduced-transparency:reduce){.ng.bend{display:none}}
+/* ---- end of liquid glass VIII ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -6122,9 +6153,101 @@ function CommandPalette({ items, onClose }) {
 //    magnifying the icon under it, and springs onto the tab it is let go over. Nothing has to be "started": the
 //    first version waited for 7px of sideways movement and let the page scroll under a slanted swipe, and Nick
 //    found it hard to start. Nothing on the bar scrolls the page (touch-action: none).
+// Liquid glass VIII (22 Nov 2026, afternoon): the bar's top edge really bends the page behind it. Nick, of VII: "it looks
+// bad ... the saturatuon shouldnt ve increased at all under the effect and i still dont see distortion make it closer to
+// apples style". Safari can't bend what is behind glass (it drops backdrop-filter: url()), so the bar carries a copy of
+// the page (the shell's children, inert) in its top edge (.ng.bend), lined up with the real page and drawn squeezed
+// towards the edge: nothing moves at the band's inner line (--bwb in), and at the glass's edge what is --bd above the
+// bar is drawn in, so what is just above the bar wraps into its rim as it does under Apple's glass. One copy: made again
+// once the page has settled after a change (never while it scrolls, at most every 2.5 s unless the page itself changed);
+// its scrolling is a CSS scroll-driven animation (.bendroll), so it moves with the page on the compositor; a page change
+// hides it at once until the new page's copy is in. Phones only; off under reduced transparency.
+const BEND_SKIP = ".hdock,.pillrail,.topbar";   // the band's width and pull are --bwb and --bd on .navcap (the mask reads them too)
+const BEND_INHERIT = ["color", "font-family", "font-size", "font-weight", "font-style", "line-height", "letter-spacing", "word-spacing", "text-align", "text-transform", "text-shadow", "white-space", "font-variant-numeric", "font-feature-settings", "-webkit-font-smoothing", "text-rendering"];
+function useBend(capRef) {
+  useEffect(() => {
+    const cap = capRef.current, host = cap && cap.querySelector(".nglass");
+    if (!host || typeof MutationObserver === "undefined") return;
+    const mq = (q) => { try { return window.matchMedia(q); } catch (_) { return null; } };
+    const narrowQ = mq("(max-width: 1023px)"), clearQ = mq("(prefers-reduced-transparency: reduce)");
+    const want = () => (!narrowQ || narrowQ.matches) && !(clearQ && clearQ.matches);
+    const band = document.createElement("i"), wrap = document.createElement("i"), roll = document.createElement("i");
+    band.className = "ng bend off"; band.setAttribute("aria-hidden", "true"); wrap.className = "bendwrap"; roll.className = "bendroll"; roll.inert = true;
+    wrap.appendChild(roll); band.appendChild(wrap); host.insertBefore(band, host.querySelector(".ng.skin"));
+    const shellEl = () => document.querySelector(".shell:not(.bendclone)"), se = () => document.scrollingElement || document.documentElement;
+    let geo = null, t = 0, raf = 0, rafP = 0, lastScroll = -1e9, lastInput = -1e9, madeAt = -1e9, made = false;
+    const draw = () => { raf = 0; if (!geo) return; roll.style.transform = `translate(${geo.ox.toFixed(2)}px, ${(geo.ty0 - geo.k * (se().scrollTop || 0)).toFixed(2)}px) scale(1, ${geo.k.toFixed(4)})`; };
+    // where the copy sits: the page's own position, seen from the capsule as laid out (unscaled), squeezed about the line --bwb below its top
+    const place = () => {
+      rafP = 0; const sh = shellEl(), nav = cap.offsetParent; if (!sh || !nav || !made) return;
+      const nr = nav.getBoundingClientRect(), sr = sh.getBoundingClientRect(), S = se().scrollTop || 0, max = Math.max(1, se().scrollHeight - se().clientHeight);
+      const cs = getComputedStyle(cap), wb = parseFloat(cs.getPropertyValue("--bwb")) || 10, d = parseFloat(cs.getPropertyValue("--bd")) || 14;
+      const top = nr.top + cap.offsetTop, left = nr.left + cap.offsetLeft, k = wb / (wb + d);
+      const ox = sr.left - left, ty0 = wb + k * (sr.top + S - top - wb);
+      geo = { ox, ty0, k };
+      const st = roll.style; st.setProperty("--bx", ox.toFixed(2) + "px"); st.setProperty("--by0", ty0.toFixed(2) + "px"); st.setProperty("--by1", (ty0 - k * max).toFixed(2) + "px"); st.setProperty("--bk", k.toFixed(4));
+      if (!SCROLL_TL) draw();
+    };
+    const placeSoon = () => { if (!rafP) rafP = requestAnimationFrame(place); };
+    const make = () => {
+      t = 0; const sh = shellEl();
+      if (!sh || !want()) { band.classList.add("off"); roll.replaceChildren(); made = false; return; }
+      const now = performance.now();
+      if (now - lastScroll < 180 || now - lastInput < 700 || document.hidden) return later(260);   // never while the page is moving or a finger is at work
+      const cl = sh.cloneNode(false); cl.removeAttribute("data-enter"); cl.classList.add("bendclone");
+      for (const n of sh.children) { if (n.nodeType === 1 && n.matches(BEND_SKIP)) continue; cl.appendChild(n.cloneNode(true)); }
+      cl.querySelectorAll(".fixed,.sheetwrap,.rulesscrim,.cmdk-wrap,.pageghost").forEach((e) => e.remove());   // what doesn't scroll with the page can't be in its copy
+      cl.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+      cl.querySelectorAll("input,select,textarea,button,a").forEach((e) => { e.removeAttribute("name"); e.setAttribute("tabindex", "-1"); });
+      cl.style.width = sh.offsetWidth + "px";
+      // the copy takes the page's own type and colour, not the tab bar's
+      // (a line height is read back in pixels; it is passed on as a ratio, as the page sets it, or every line in the copy would be the parent's height)
+      const ps = getComputedStyle(sh.parentNode || sh);
+      for (const p of BEND_INHERIT) {
+        let v = ps.getPropertyValue(p);
+        if (p === "line-height" && /px$/.test(v)) v = String(+(parseFloat(v) / (parseFloat(ps.fontSize) || 16)).toFixed(4));
+        roll.style.setProperty(p, v);
+      }
+      roll.replaceChildren(cl); made = true; madeAt = now; place();
+      if (band.classList.contains("off")) requestAnimationFrame(() => requestAnimationFrame(() => band.classList.remove("off")));
+    };
+    function later(ms) { clearTimeout(t); t = setTimeout(make, ms); }
+    // the page changed: the copy is made again once it settles. A new page hides the old copy at once.
+    const mo = new MutationObserver((list) => {
+      if (!want()) return;
+      const sh = shellEl(); let page = false, real = false;
+      for (const m of list) {
+        if (m.type === "attributes" && m.target === sh && m.attributeName === "data-page") page = true;
+        const n = m.target.nodeType === 1 ? m.target : m.target.parentNode;
+        if (n && n.closest && n.closest(BEND_SKIP)) continue;   // the dock, the rail and the top change as the page scrolls; they aren't drawn
+        real = true;
+      }
+      if (page) { band.classList.add("off"); later(700); return; }
+      if (real) later(Math.max(450, 2500 - (performance.now() - madeAt)));
+    });
+    const sh0 = shellEl(); if (sh0) mo.observe(sh0, { subtree: true, childList: true, characterData: true, attributes: true });
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(placeSoon) : null; if (ro) { if (sh0) ro.observe(sh0); ro.observe(cap); }
+    const onScroll = () => { lastScroll = performance.now(); if (!SCROLL_TL && made && !raf) raf = requestAnimationFrame(draw); };
+    const onInput = () => { lastInput = performance.now(); };
+    const onResize = () => { placeSoon(); later(320); };
+    const onMedia = () => { if (want()) later(300); else make(); };
+    window.addEventListener("scroll", onScroll, { passive: true }); window.addEventListener("resize", onResize);
+    ["pointerdown", "keydown", "touchstart"].forEach((e) => window.addEventListener(e, onInput, { passive: true, capture: true }));
+    [narrowQ, clearQ].forEach((q) => { try { q && q.addEventListener("change", onMedia); } catch (_) {} });
+    later(1300);   // after the app has opened
+    return () => {
+      clearTimeout(t); cancelAnimationFrame(raf); cancelAnimationFrame(rafP); mo.disconnect(); if (ro) ro.disconnect();
+      window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onResize);
+      ["pointerdown", "keydown", "touchstart"].forEach((e) => window.removeEventListener(e, onInput, { capture: true }));
+      [narrowQ, clearQ].forEach((q) => { try { q && q.removeEventListener("change", onMedia); } catch (_) {} });
+      band.remove();
+    };
+  }, []);
+}
 function TabBar({ navTab, go }) {
   const narrow = useNarrow();
   const nav = useRef(null), cap = useRef(null), track = useRef(null), lens = useRef(null);
+  useBend(cap);
   const isOn = (k) => (k === "trainhub" ? navTab === "train" || navTab === "count" || navTab === "trainhub" : k === "more" ? navTab === "more" || MORE_PAGES.includes(navTab) : navTab === k);
   const at = PHONE_TABS.findIndex(([k]) => isOn(k));
   // Settings is no tab: the highlight stays where it was, faded out, and comes back from there; a tap is a plain click
@@ -6257,7 +6380,7 @@ function TopBar({ title, children, onBack }) {
     root.classList.toggle("tshrink", on); root.classList.toggle("tsdo", on && SCROLL_TL);
     let h1 = null, raf = 0;
     const measure = () => {
-      h1 = document.querySelector(".shell>header h1");
+      h1 = document.querySelector(".shell:not(.bendclone)>header h1");
       const t = bar.current && bar.current.querySelector(".tbtitle"); if (!h1 || !t) return;
       // the small title gets smaller rather than end in "…" (the big one shrinks onto it, so both must show it whole)
       const fitKey = t.textContent + "|" + window.innerWidth;
@@ -6287,7 +6410,7 @@ function TopBar({ title, children, onBack }) {
     let mq = 0; const again = () => { if (!mq) mq = requestAnimationFrame(() => { mq = 0; measure(); f(); }); };
     measure(); f();
     window.addEventListener("scroll", f, { passive: true }); window.addEventListener("resize", again);
-    const hdr = document.querySelector(".shell>header"), ro = typeof ResizeObserver !== "undefined" && hdr ? new ResizeObserver(again) : null; if (ro) ro.observe(hdr);
+    const hdr = document.querySelector(".shell:not(.bendclone)>header"), ro = typeof ResizeObserver !== "undefined" && hdr ? new ResizeObserver(again) : null; if (ro) ro.observe(hdr);
     try { document.fonts && document.fonts.ready.then(again); } catch (_) {}
     window.addEventListener("bj-title", again);
     return () => { window.removeEventListener("scroll", f); window.removeEventListener("resize", again); window.removeEventListener("bj-title", again); if (ro) ro.disconnect(); if (raf) cancelAnimationFrame(raf); if (mq) cancelAnimationFrame(mq); };
