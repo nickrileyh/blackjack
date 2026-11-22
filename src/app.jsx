@@ -1444,7 +1444,7 @@ html.scrolled .rulespill.two>.rp-b{opacity:1;translate:0 0}
 .pageghost *{animation:none!important;transition:none!important}
 .pageghost header{visibility:hidden!important}
 .pageghost .hdock,.pageghost .topbar,.pageghost .pillrail,.pageghost .sbar{display:none!important}
-@keyframes titlein{from{opacity:0;filter:blur(5px);transform:translateY(5px)}}
+@keyframes titlein{from{opacity:0;filter:blur(5px)}}
 .shell>header h1,.shell>header .hdrback,.shell>header .eyebrow{animation:titlein .38s var(--ez-soft) backwards}
 @media (prefers-reduced-motion:reduce){.shell>header h1,.shell>header .hdrback,.shell>header .eyebrow{animation:none}.pageghost{display:none}}
 @media (min-width:371px) and (max-width:1023px){.shell>header h1.mid{font-size:clamp(24px,7.4vw,30px);letter-spacing:-.028em;white-space:nowrap}}
@@ -1453,6 +1453,47 @@ html.scrolled .rulespill.two>.rp-b{opacity:1;translate:0 0}
 @media (min-width:371px) and (max-width:1023px) and (max-height:740px){.shell>header h1.mid{font-size:min(26px,7.4vw)}}
 .sn-glide{transition:opacity .2s var(--ez)}
 /* ---- end of liquid glass V ---- */
+/* ---- Liquid glass VI: titles follow the scroll, pop-ups follow the finger, the material (21 Nov, late) ---- */
+/* pages behind a menu: the pill and the gear sit on the back link's row, centred on it, overhanging above, so the
+   title keeps its place and gets the whole width (the header is exactly as tall as before) */
+@media (max-width:1023px){
+.shell>header.hasback{position:relative}
+.shell>header.hasback .hdrback{position:relative;top:-3px}
+.shell>header.hasback .hctl{position:absolute;right:0;top:-8px}
+}
+/* Bet spread, the one long title on a tab of its own, is as big as the room beside the pill allows (full size from 390 wide) */
+@media (min-width:371px) and (max-width:1023px){.shell>header h1.mid{font-size:min(clamp(28px,8.4vw,34px),calc((100vw - 223px) / 5.1))}}
+@media (min-width:371px) and (max-width:1023px) and (max-height:740px){.shell>header h1.mid{font-size:min(26px,calc((100vw - 223px) / 5.1))}}
+/* titles follow the scroll: the big title shrinks onto the small one (TopBar measures --tr, --tk, --tx) */
+html.tshrink .shell>header h1{transform-origin:0 50%}
+html.tshrink .topbar .tbtitle{visibility:visible;translate:none!important;transition:none!important;opacity:0;letter-spacing:-.03em}
+html.tshrink .topbar:not(.show) .tbtitle{pointer-events:none}
+@supports (animation-timeline:scroll()){
+html.tshrink.tsdo .shell>header h1{animation:titlein .38s var(--ez-soft) backwards,tshrink linear both;animation-timeline:auto,scroll(root);animation-range:normal,0px var(--tr,64px)}
+html.tshrink.tsdo .topbar .tbtitle{animation:tbtin linear both;animation-timeline:scroll(root);animation-range:calc(var(--tr,64px) - .5px) var(--tr,64px)}
+}
+@keyframes tshrink{from{transform:none;visibility:visible}to{transform:translateX(var(--tx,0px)) scale(var(--tk,.52));visibility:hidden}}
+@keyframes tbtin{from{opacity:0}to{opacity:1}}
+.pageghost h1{visibility:hidden!important}
+/* the material, closer to Apple's: light from the top left catches the glass in two places — a crisp glint on the
+   upper-left curve and a softer one on the lower-right — and is faint between, instead of an even ring all round */
+:root{
+--gl-edge-hi:radial-gradient(115% 150% at 0% 0%,rgba(255,255,255,.98),rgba(255,255,255,.42) 20%,rgba(255,255,255,.06) 46%,rgba(255,255,255,0) 60%),radial-gradient(115% 150% at 100% 100%,rgba(255,255,255,.62),rgba(255,255,255,.2) 20%,rgba(255,255,255,0) 44%),linear-gradient(rgba(255,255,255,.17),rgba(255,255,255,.1));
+--gl-body:inset 0 var(--bev) 0 rgba(255,255,255,.26),inset 2px 2px 2px -1.5px rgba(255,255,255,.5),inset -1.5px -1.5px 1.5px -1px rgba(255,255,255,.2),inset 0 6px 8px -5px rgba(255,255,255,.16),inset 0 -8px 10px -6px rgba(0,0,0,.46),inset 0 0 18px rgba(255,255,255,.045);
+--gl-float:0 20px 44px -18px rgba(0,0,0,.72),0 5px 14px -6px rgba(0,0,0,.36)}
+:root[data-theme="light"]{
+--gl-edge-hi:radial-gradient(115% 150% at 0% 0%,#fff,rgba(255,255,255,.9) 24%,rgba(255,255,255,.55) 50%),radial-gradient(115% 150% at 100% 100%,#fff,rgba(255,255,255,.7) 26%,rgba(255,255,255,0) 50%),linear-gradient(rgba(255,255,255,.62),rgba(255,255,255,.55))}
+/* the tab capsule lets more of what is under it through, in colour (vibrancy), and keeps its words readable with a
+   soft shadow of the page's own colour behind them */
+.ng.deep{-webkit-backdrop-filter:blur(13px) saturate(1.65) brightness(.84);backdrop-filter:blur(13px) saturate(1.65) brightness(.84)}
+.ng.skin{background:linear-gradient(180deg,rgba(var(--fg),.095),rgba(var(--fg),.02)),rgba(var(--bgrgb),.18)}
+:root:not([data-theme="light"]) .navbtn>span:last-child{text-shadow:0 0 7px rgba(var(--bgrgb),.85),0 1px 2px rgba(var(--bgrgb),.6)}
+:root:not([data-theme="light"]) .navbtn .navicon svg{filter:drop-shadow(0 0 5px rgba(var(--bgrgb),.7))}
+/* the rim catching the light at the finger (the ring in .touchlight; App places it) */
+.touchlight>b{position:absolute;box-sizing:border-box;padding:1.5px;background:radial-gradient(var(--fr,64px) var(--fr,64px) at var(--fx,50%) var(--fy,50%),rgba(255,255,255,.88),rgba(255,255,255,.26) 42%,rgba(255,255,255,0) 72%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
+:root[data-theme="light"] .touchlight>b{background:radial-gradient(var(--fr,64px) var(--fr,64px) at var(--fx,50%) var(--fy,50%),rgba(var(--acc),.75),rgba(var(--acc),.22) 42%,rgba(var(--acc),0) 72%)}
+@media (prefers-reduced-transparency:reduce){.touchlight>b{display:none}}
+/* ---- end of liquid glass VI ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -5026,32 +5067,108 @@ function sessionStats(list, evHour, sdHour) {
   };
 }
 
+// A move of a sheet after the finger lets go, worked out ahead as a damped spring from where it is and how fast it
+// was going (px, px a second) towards x1, and played as one transform animation (like the glass). It stops early once
+// past `stop` (a sheet leaving needs only to be off the screen). Returns { frames, ms }.
+function sheetFlight(x0, v0, x1, w, z, stop) {
+  const h = 1 / 240, frames = []; let x = x0, v = v0, t = 0;
+  frames.push(x);
+  while (t < 0.9) {
+    for (let i = 0; i < 2; i++) { v += (w * w * (x1 - x) - 2 * z * w * v) * h; x += v * h; t += h; }
+    frames.push(x);
+    if (stop != null ? x >= stop : Math.abs(x - x1) < 0.4 && Math.abs(v) < 12) break;
+  }
+  if (stop == null) frames[frames.length - 1] = x1;
+  return { frames, ms: Math.max(60, Math.round(t * 1000)) };
+}
+// pulled the wrong way (up, past where a sheet sits) it gives a little and then hardly at all, like a sheet on an iPhone
+const sheetRubber = (x) => (1 - 1 / ((x * 0.55) / 90 + 1)) * 90;
+
 function Sheet({ title, onClose: shut, children }) {
   // closing plays a short exit first (.out), then tells the owner — so a sheet leaves the way it came in
   const [out, setOut] = useState(false); const gone = useRef(false);
   const live = useRef(true); useEffect(() => () => { live.current = false; }, []);
-  const leave = () => { shut(); setTimeout(() => { if (live.current) { gone.current = false; setOut(false); const el = box.current; if (el) { el.style.transition = ""; el.style.transform = ""; } } }, 80); };   // still here? the owner kept it open
+  const leave = () => { shut(); setTimeout(() => { if (live.current) { gone.current = false; setOut(false); resetPlace(); } }, 80); };   // still here? the owner kept it open
   const onClose = () => { if (gone.current) return; gone.current = true; if (noMotion()) { leave(); return; } setOut(true); setTimeout(leave, 220); };
   useEffect(() => {
     const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
     const k = (e) => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", k);
     return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", k); };
   }, []); // eslint-disable-line
-  // on a phone the sheet's top (the grab bar and title) drags down to close it
-  const box = useRef(null), drag = useRef(null);
+  // Pop-ups follow the finger (Nick's pick, 21 Nov): on a phone a sheet can be pulled down from anywhere on it — its
+  // top always, its contents when they are scrolled to the top and the pull starts downwards (a push up still scrolls
+  // them, a sideways move is left to sliders and rows). It moves 1:1 with the finger, gives only a little when pulled
+  // up, and the dimming behind it lifts as it goes down. Let go and it leaves at the speed of the flick, or springs
+  // back from where it is with the speed it had: past about a third of its height, or flicked down, it closes.
+  const box = useRef(null), wrapRef = useRef(null), flight = useRef(null);
   useModalFocus(box);
-  const settle = (dy, ms) => { const el = box.current; if (!el) return; el.style.transition = ms ? `transform ${ms}ms cubic-bezier(.2,.8,.2,1)` : "none"; el.style.transform = dy ? `translateY(${dy}px)` : ""; };
-  const dStart = (e) => { if (e.pointerType === "mouse" || e.target.closest("button,input,a") || window.innerWidth >= 1024) return; drag.current = { id: e.pointerId, y: e.clientY, t: e.timeStamp, dy: 0 }; };
-  const dMove = (e) => { const d = drag.current; if (!d || d.id !== e.pointerId) return; d.dy = Math.max(0, e.clientY - d.y); if (d.dy > 4) { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} settle(d.dy, 0); } };
-  const dEnd = (e) => {
-    const d = drag.current; if (!d || d.id !== e.pointerId) return; drag.current = null;
-    const fast = d.dy > 36 && d.dy / Math.max(1, e.timeStamp - d.t) > 0.55;
-    if (e.type !== "pointercancel" && (d.dy > 110 || fast)) { const el = box.current; settle(el ? el.offsetHeight : 600, 190); if (!gone.current) { gone.current = true; setOut(true); setTimeout(leave, 220); } } else if (d.dy) settle(0, 240);
-  };
+  const stopFlight = () => { const f = flight.current; flight.current = null; if (f) f.forEach((a) => { try { a.cancel(); } catch (_) {} }); };
+  // (the dimming is the wrapper's own inline colour, var(--scrim): put back, never cleared — cleared, there is none)
+  const resetPlace = () => { stopFlight(); const el = box.current, w = wrapRef.current; if (el) { el.style.transition = ""; el.style.transform = ""; } if (w) w.style.backgroundColor = "var(--scrim)"; };
+  useEffect(() => {
+    const el = box.current; if (!el) return;
+    let g = null;
+    const scrimOf = () => { const m = (getComputedStyle(wrapRef.current).backgroundColor || "").match(/[\d.]+/g); return m && m.length >= 3 ? [m[0], m[1], m[2], m[3] != null ? +m[3] : 1] : null; };
+    const tint = (k) => { const w = wrapRef.current; if (w && g && g.scrim) w.style.backgroundColor = `rgba(${g.scrim[0]},${g.scrim[1]},${g.scrim[2]},${(g.scrim[3] * Math.max(0, Math.min(1, k))).toFixed(3)})`; };
+    const start = (e) => {
+      g = null;
+      if (window.innerWidth >= 1024 || e.touches.length !== 1 || gone.current) return;
+      const t = e.target; if (t && t.closest && t.closest('input[type="range"], textarea, select, .noswipe')) return;
+      const body = el.querySelector(".sheetbody"), tc = e.touches[0];
+      g = { x0: tc.clientX, y0: tc.clientY, mode: "", grab: !!(t && t.closest && t.closest(".sheetgrab")), top: !body || body.scrollTop <= 0, pts: [[performance.now(), tc.clientY]], pos: 0 };
+    };
+    const move = (e) => {
+      if (!g || g.mode === "pass") return;
+      const tc = e.touches[0], dx = tc.clientX - g.x0, dy = tc.clientY - g.y0;
+      if (!g.mode) {
+        // decided on the first move, since a scroll the browser has begun can't be taken over
+        if (Math.abs(dx) > Math.abs(dy) || (!g.grab && (!g.top || dy <= 0))) { g.mode = "pass"; return; }
+        g.mode = "drag"; g.h = el.offsetHeight;
+        // from wherever it is: an entrance still running, or a spring back caught by a second pull
+        let from = 0; try { const m = new DOMMatrixReadOnly(getComputedStyle(el).transform); from = m.m42 || 0; } catch (_) {}
+        stopFlight(); el.getAnimations().forEach((a) => { try { a.cancel(); } catch (_) {} });
+        const w = wrapRef.current; if (w) w.getAnimations().forEach((a) => { try { a.cancel(); } catch (_) {} });
+        if (w) w.style.backgroundColor = "var(--scrim)"; g.scrim = scrimOf(); g.y0 -= from > 0 ? from : 0;
+        el.classList.add("dragging");
+      }
+      e.preventDefault();
+      const d = tc.clientY - g.y0, pos = d >= 0 ? d : -sheetRubber(-d);
+      g.pos = pos; g.pts.push([performance.now(), tc.clientY]); if (g.pts.length > 10) g.pts.shift();   // one clock for every browser (event times aren't)
+      el.style.transition = "none"; el.style.transform = pos ? `translateY(${pos.toFixed(1)}px)` : "";
+      tint(pos > 0 ? 1 - pos / Math.max(1, g.h) : 1);
+    };
+    const end = (e) => {
+      const cur = g; g = null;
+      if (!cur || cur.mode !== "drag") return;
+      el.classList.remove("dragging");
+      const p = cur.pts, now = performance.now(); let i = p.length - 1; while (i > 0 && now - p[i - 1][0] < 90) i--;
+      const v = p[p.length - 1][0] > p[i][0] ? ((p[p.length - 1][1] - p[i][1]) / (p[p.length - 1][0] - p[i][0])) * 1000 : 0;   // px a second, down is positive
+      const pos = cur.pos, h = cur.h, scrim = cur.scrim, w = wrapRef.current;
+      const close = e.type !== "touchcancel" && pos > 0 && ((pos > Math.min(150, h * 0.32) && v > -250) || (v > 550 && pos > 8));
+      const fly = (f, toK, then) => {
+        stopFlight();
+        if (noMotion() || !el.animate) { then && then(); return; }
+        const kf = f.frames.map((x, j) => ({ transform: `translateY(${x.toFixed(2)}px)`, offset: j / (f.frames.length - 1) }));
+        const a = [el.animate(kf, { duration: f.ms, easing: "linear", fill: "forwards" })];
+        if (w && scrim) { const k0 = pos > 0 ? Math.max(0, 1 - pos / Math.max(1, h)) : 1; a.push(w.animate([{ backgroundColor: `rgba(${scrim[0]},${scrim[1]},${scrim[2]},${(scrim[3] * k0).toFixed(3)})` }, { backgroundColor: `rgba(${scrim[0]},${scrim[1]},${scrim[2]},${(scrim[3] * toK).toFixed(3)})` }], { duration: f.ms, easing: "cubic-bezier(.22,.61,.36,1)", fill: "forwards" })); }
+        flight.current = a; a[0].onfinish = () => { if (flight.current === a) then && then(); };
+      };
+      if (close) {
+        gone.current = true;
+        fly(sheetFlight(pos, Math.max(v, 900), h + 60, 13, 1, h + 12), 0, () => leave());
+      } else {
+        fly(sheetFlight(pos, v, 0, 17, 0.88), 1, resetPlace);
+      }
+    };
+    el.addEventListener("touchstart", start, { passive: true });
+    el.addEventListener("touchmove", move, { passive: false });
+    el.addEventListener("touchend", end); el.addEventListener("touchcancel", end);
+    return () => { el.removeEventListener("touchstart", start); el.removeEventListener("touchmove", move); el.removeEventListener("touchend", end); el.removeEventListener("touchcancel", end); stopFlight(); };
+  }, []); // eslint-disable-line
   const ui = (
-    <div className={"bj sheetwrap fixed inset-0 flex flex-col justify-end" + (out ? " out" : "")} style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} {...backdrop(onClose)} role="dialog" aria-modal="true" aria-label={title}>
+    <div ref={wrapRef} className={"bj sheetwrap fixed inset-0 flex flex-col justify-end" + (out ? " out" : "")} style={{ zIndex: 70, background: "var(--scrim)", minHeight: 0 }} {...backdrop(onClose)} role="dialog" aria-modal="true" aria-label={title}>
       <div ref={box} tabIndex={-1} className="sheet mx-auto w-full" style={{ maxWidth: "42rem", maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden", outline: "none" }} onClick={(e) => e.stopPropagation()}>
-        <div className="sheetgrab" onPointerDown={dStart} onPointerMove={dMove} onPointerUp={dEnd} onPointerCancel={dEnd}>
+        <div className="sheetgrab">
         <div className="flex justify-center pt-2 pb-1"><span style={{ width: 38, height: 4, borderRadius: 4, background: "rgba(var(--fg),.18)" }} /></div>
         <div className="flex items-center justify-between px-5 pt-1 pb-1">
           <div className="sheettitle">{title}</div>
@@ -6054,20 +6171,58 @@ function TabBar({ navTab, go }) {
     </nav>
   );
 }
+// Titles follow the scroll (Nick's pick, 21 Nov: "the big page title shrinks into the top exactly as far as you
+// scroll, instead of switching over at one point"). Over the first R pixels of scroll the page's own title shrinks
+// and slides until it lies exactly on the small title in the top (same size, same place), where the two hand over.
+// R, the scale and the slide are measured (--tr, --tk, --tx on the root) and the drawing is a CSS scroll-driven
+// animation where the browser has them (Safari 26, Chrome), so it moves with the scroll itself; elsewhere the scroll
+// handler draws it. Under reduced motion the small title just appears at R, as before.
+const SCROLL_TL = typeof CSS !== "undefined" && CSS.supports && CSS.supports("animation-timeline", "scroll()");
 function TopBar({ title, children, onBack }) {
   const [show, setShow] = useState(false);
-  // it shows once the page's own title has gone up under where this one sits (64px of scroll on most pages, more on Home, whose title sits under the date)
-  const bar = useRef(null);
+  const bar = useRef(null), geo = useRef({ R: 64, k: 0.52, tx: 0 });
   useEffect(() => {
-    let h1 = null;
-    const f = () => {
-      if (!h1 || !h1.isConnected) h1 = document.querySelector(".shell>header h1");
-      const t = bar.current && bar.current.querySelector(".tbtitle");
-      const on = h1 && t ? h1.getBoundingClientRect().bottom < t.offsetTop + 1 : window.scrollY > 64;
-      setShow(on); document.documentElement.classList.toggle("scrolled", on);
+    const root = document.documentElement, on = !noMotion();
+    root.classList.toggle("tshrink", on); root.classList.toggle("tsdo", on && SCROLL_TL);
+    let h1 = null, raf = 0;
+    const measure = () => {
+      h1 = document.querySelector(".shell>header h1");
+      const t = bar.current && bar.current.querySelector(".tbtitle"); if (!h1 || !t) return;
+      // the small title gets smaller rather than end in "…" (the big one shrinks onto it, so both must show it whole)
+      const fitKey = t.textContent + "|" + window.innerWidth;
+      if (t.dataset.fit !== fitKey) { t.dataset.fit = fitKey; t.style.fontSize = ""; if (t.scrollWidth > t.clientWidth + 0.5) { const f0 = parseFloat(getComputedStyle(t).fontSize) || 17; t.style.fontSize = Math.max(13, Math.floor((f0 * t.clientWidth / t.scrollWidth) * 2) / 2) + "px"; } }
+      let x = 0, y = 0; for (let n = h1; n; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }   // where it is laid out, ignoring the shrink itself
+      const r = t.getBoundingClientRect(), fl = parseFloat(getComputedStyle(h1).fontSize) || 32, fc = parseFloat(getComputedStyle(t).fontSize) || 17;
+      const R = Math.max(8, y + h1.offsetHeight / 2 - (r.top + r.height / 2)), k = fc / fl, tx = r.left - x;
+      geo.current = { R, k, tx };
+      // set on the two titles only (not the whole page, which would restyle everything), and only when they change
+      const v = R.toFixed(1) + "px|" + k.toFixed(4) + "|" + tx.toFixed(1) + "px";
+      if (h1.dataset.tv !== v) { h1.dataset.tv = v; h1.style.setProperty("--tr", R.toFixed(1) + "px"); h1.style.setProperty("--tk", k.toFixed(4)); h1.style.setProperty("--tx", tx.toFixed(1) + "px"); }
+      if (t.dataset.tv !== v) { t.dataset.tv = v; t.style.setProperty("--tr", R.toFixed(1) + "px"); }
     };
-    f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f);
+    const draw = (sy) => {   // only where CSS can't do it
+      if (!on || SCROLL_TL || !h1) return;
+      const { R, k, tx } = geo.current, p = Math.max(0, Math.min(1, sy / R)), t = bar.current && bar.current.querySelector(".tbtitle");
+      h1.style.transformOrigin = "0 50%"; h1.style.transform = p > 0 ? `translateX(${(tx * p).toFixed(2)}px) scale(${(1 + (k - 1) * p).toFixed(4)})` : "";
+      h1.style.visibility = p >= 1 ? "hidden" : ""; if (t) t.style.opacity = p >= 1 ? "1" : "0";
+    };
+    const f = () => {
+      if (!h1 || !h1.isConnected) measure();
+      const sy = window.scrollY, at = h1 ? sy >= geo.current.R - 0.5 : sy > 64;
+      setShow(at); root.classList.toggle("scrolled", at);
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(window.scrollY); });
+    };
+    // measured in the next frame, not in the middle of a page change (reading the layout there made a tab switch drop a frame)
+    let mq = 0; const again = () => { if (!mq) mq = requestAnimationFrame(() => { mq = 0; measure(); f(); }); };
+    measure(); f();
+    window.addEventListener("scroll", f, { passive: true }); window.addEventListener("resize", again);
+    const hdr = document.querySelector(".shell>header"), ro = typeof ResizeObserver !== "undefined" && hdr ? new ResizeObserver(again) : null; if (ro) ro.observe(hdr);
+    try { document.fonts && document.fonts.ready.then(again); } catch (_) {}
+    window.addEventListener("bj-title", again);
+    return () => { window.removeEventListener("scroll", f); window.removeEventListener("resize", again); window.removeEventListener("bj-title", again); if (ro) ro.disconnect(); if (raf) cancelAnimationFrame(raf); if (mq) cancelAnimationFrame(mq); };
   }, []);
+  // a new page has a new title (and a back arrow or not): measure again once it is laid out
+  useLayoutEffect(() => { try { window.dispatchEvent(new Event("bj-title")); } catch (_) {} }, [title, !!onBack]);
   // while it is tucked away the keyboard must not land on it (Tab used to stop on an invisible title first)
   useEffect(() => { if (bar.current) bar.current.inert = !show; }, [show]);
   return (
@@ -6468,20 +6623,31 @@ export default function App() {
   // themselves; the spot rides a transform. The lift is CSS (:active).
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const host = document.createElement("div"), dot = document.createElement("i"); host.className = "touchlight"; host.setAttribute("aria-hidden", "true"); host.appendChild(dot); document.body.appendChild(host);
+    const host = document.createElement("div"), dot = document.createElement("i"), ring = document.createElement("b"); host.className = "touchlight"; host.setAttribute("aria-hidden", "true"); host.appendChild(dot); host.appendChild(ring); document.body.appendChild(host);
+    // the rim catches the light where the finger is (Liquid glass VI): a ring the shape of the pressed control, lit
+    // around the finger and following it; it is measured again as the control lifts under the finger
+    let cur = null, box = null, tm = [];
     const SEL = ".btn,.rulespill,.iconbtn,.stepbtn,.xbtn,.gchip,.navbtn,.opt,.qa,.acts>button,.chipseg button,.sn-item,.sn-search,.sn-rules,.tbback,.mrow";
     let on = false;
-    const place = (e) => { dot.style.transform = "translate(" + e.clientX.toFixed(1) + "px," + e.clientY.toFixed(1) + "px)"; };
+    let fx = 0, fy = 0;
+    const place = (e) => { fx = e.clientX; fy = e.clientY; dot.style.transform = "translate(" + fx.toFixed(1) + "px," + fy.toFixed(1) + "px)"; if (box) { ring.style.setProperty("--fx", (fx - box.left).toFixed(1) + "px"); ring.style.setProperty("--fy", (fy - box.top).toFixed(1) + "px"); } };
+    const fit = () => {
+      if (!cur || !on) return;
+      const r = cur.getBoundingClientRect(), rad = getComputedStyle(cur).borderTopLeftRadius || "0px"; box = r;
+      host.style.clipPath = "inset(" + r.top.toFixed(1) + "px " + (window.innerWidth - r.right).toFixed(1) + "px " + (window.innerHeight - r.bottom).toFixed(1) + "px " + r.left.toFixed(1) + "px round " + rad + ")";
+      ring.style.left = r.left.toFixed(1) + "px"; ring.style.top = r.top.toFixed(1) + "px"; ring.style.width = r.width.toFixed(1) + "px"; ring.style.height = r.height.toFixed(1) + "px"; ring.style.borderRadius = rad;
+      ring.style.setProperty("--fr", Math.round(Math.max(28, Math.min(64, Math.min(r.width, r.height) * 0.9 + 10))) + "px");   // a glint at the finger, not a halo round a small button
+      ring.style.setProperty("--fx", (fx - r.left).toFixed(1) + "px"); ring.style.setProperty("--fy", (fy - r.top).toFixed(1) + "px");
+    };
     const down = (e) => {
       if (e.button || !e.target || !e.target.closest) return;
       let el = e.target.closest(SEL); if (!el || el.disabled) return;
       if (el.classList.contains("navbtn")) el = el.closest(".navcap") || el; else if (el.parentElement && el.parentElement.classList.contains("chipseg")) el = el.parentElement;   // a tab lights its capsule, a segment its whole switch
-      const r = el.getBoundingClientRect(), rad = getComputedStyle(el).borderTopLeftRadius || "0px";
-      host.style.clipPath = "inset(" + r.top.toFixed(1) + "px " + (window.innerWidth - r.right).toFixed(1) + "px " + (window.innerHeight - r.bottom).toFixed(1) + "px " + r.left.toFixed(1) + "px round " + rad + ")";
-      place(e); on = true; host.classList.add("on");
+      cur = el; on = true; fx = e.clientX; fy = e.clientY; fit(); place(e); host.classList.add("on");
+      tm.forEach(clearTimeout); tm = [70, 160].map((t) => setTimeout(fit, t));
     };
     const move = (e) => { if (on) place(e); };
-    const up = () => { if (on) { on = false; host.classList.remove("on"); } };
+    const up = () => { if (on) { on = false; cur = null; tm.forEach(clearTimeout); tm = []; host.classList.remove("on"); } };
     const o = { passive: true, capture: true };
     window.addEventListener("pointerdown", down, o); window.addEventListener("pointermove", move, o); window.addEventListener("pointerup", up, o); window.addEventListener("pointercancel", up, o); window.addEventListener("scroll", up, o); window.addEventListener("blur", up);
     return () => { window.removeEventListener("pointerdown", down, o); window.removeEventListener("pointermove", move, o); window.removeEventListener("pointerup", up, o); window.removeEventListener("pointercancel", up, o); window.removeEventListener("scroll", up, o); window.removeEventListener("blur", up); host.remove(); };
@@ -6857,6 +7023,9 @@ function BetSpreadCalculator() {
   const pageTitle = narrow && tab === "train" ? ({ drill: "Practice", fill: "Fill the chart", charts: "Charts" })[_trainView] || "Train"
     : narrow && tab === "count" ? ({ count: "Running count", tc: "True count", totals: "Hand totals", tests: "Tests" })[_lastDrill] || "Drills"
     : ({ progress: "Home", settings: "Settings", calc: "Bet spread", train: "Train", count: "Train", trainhub: "Train", play: "Live play", sessions: "Sessions", casinos: "Casinos", plan: "Plan", more: "More" })[tab];
+  // On a phone a page behind a menu has its back link above the title; the rules pill and the gear sit on that row
+  // (Nick's pick, 21 Nov: "Pill moves up"), so the title has the whole width and is the size every other title is.
+  const hasBack = !!back && narrow;
   const backBtn = back && <button className="hdrback" onClick={() => go(back[0])}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>{back[1]}</button>;
   // The page being left dissolves over the one arriving instead of vanishing in a frame: at the tap a still copy of it
   // is laid over the screen (under the tab bar and the top), and once the new page is in the copy fades out over a
@@ -6965,7 +7134,7 @@ function BetSpreadCalculator() {
       {keysOpen && <ShortcutsSheet onClose={() => setKeysOpen(false)} mac={isMac} />}
       <div ref={shellRef} className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s var(--ez)", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
-        <div ref={dockRef} className={"hdock" + (pageTitle.length > 9 ? " tight" : "")}><div className="hdockin">
+        <div ref={dockRef} className={"hdock" + (pageTitle.length > 9 && !hasBack ? " tight" : "")}><div className="hdockin">
           <button onClick={() => setSetupOpen(true)} className={"rulespill" + (narrow && tab === "calc" ? " two" : "")} aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
             <span className="rp-a"><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></span>
             {/* Bet spread: once the page is scrolled the pill reads what the spread earns and risks */}
@@ -6973,11 +7142,11 @@ function BetSpreadCalculator() {
           </button>
           {gear}
         </div></div>
-        <header ref={hdrRef} className={"mb-5 flex items-end justify-between gap-3" + (pageTitle.length > 9 ? " tight" : "")}>
+        <header ref={hdrRef} className={"mb-5 flex items-end justify-between gap-3" + (pageTitle.length > 9 && !hasBack ? " tight" : "") + (hasBack ? " hasback" : "")}>
           <div className="shrink-0">
             {tab === "progress" && <div className="eyebrow mb-1.5">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>}
             {backBtn}
-            <h1 key={pageTitle} className={"leading-none font-semibold" + (pageTitle.length > 12 ? " long" : pageTitle.length > 9 ? " mid" : "")}>{pageTitle}</h1>
+            <h1 key={pageTitle} className={"leading-none font-semibold" + (hasBack ? "" : pageTitle.length > 12 ? " long" : pageTitle.length > 9 ? " mid" : "")}>{pageTitle}</h1>
           </div>
           <div className="hctl flex items-center gap-2 min-w-0">
             <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
