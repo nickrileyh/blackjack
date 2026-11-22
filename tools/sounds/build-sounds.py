@@ -10,6 +10,15 @@ only real silence is cut from the ends. Where a recording is too long for the pa
 CHANGING ITS PITCH (never trimmed shorter): each stretch is tried a few ways and the one that best keeps the
 recording's tone and snap is used. Clips in one group are then levelled to be equally loud.
 To change which recordings are used, or how fast they play, edit CLIPS below and run this again, then ./build.sh.
+
+Two more steps make them sound like one table (Nick: "make sound effects better for train and live practice more
+realistic", Nov 2026):
+  * MATCH: the dealt cards are tone-matched to one another, so every card sounds like the same deck on the same felt
+    and only the small details change. (Two of the five recordings used before were mostly a low thump and three were
+    bright paper, so one card in two sounded like a different object.)
+  * FELT: everything that lands on the table has the very top and the rumble taken off, as felt and a little distance
+    do. The shuffle happens in the dealer's hands above the table and is left as recorded.
+Both are minimum-phase filters, so nothing is heard before a snap.
 """
 import base64, os, subprocess, tempfile, wave
 import numpy as np
@@ -19,14 +28,25 @@ SR = 44100
 # group -> [(file, start seconds or None for "where the sound starts", end seconds or None for "where it dies away", tempo)]
 # tempo 1.3 = 30% faster at the same pitch
 CLIPS = {
-    "card": [("card-slide-2", None, None, 1.0), ("card-slide-4", None, None, 1.3), ("card-slide-5", None, None, 1.3), ("card-slide-6", None, None, 1.3), ("card-slide-8", None, None, 1.5)],
-    "chip": [("chip-lay-1", None, None, 1.0), ("chip-lay-2", None, None, 1.0), ("chips-stack-4", None, None, 1.0), ("chips-stack-5", None, None, 1.0)],
+    # the four recordings of a card that slides and then lands, as recorded (no stretching: their slides are short enough
+    # to sit under a dealt card at the app's normal pace); 2 and 5, mostly a thump, are no longer used
+    "card": [("card-slide-4", None, None, 1.0), ("card-slide-6", None, None, 1.0), ("card-slide-7", None, None, 1.0), ("card-slide-8", None, None, 1.0)],
+    # a chip set down with some body to it (a stack, two chips meeting) rather than the thin ticks of chip-lay-1 and 2
+    "chip": [("chips-stack-3", None, None, 1.0), ("chips-stack-4", None, None, 1.0), ("chips-collide-1", None, None, 1.0), ("chips-collide-2", None, None, 1.0)],
     # all seven shuffling strokes of the three-second recording, quickened to fit the "Shuffling" pause
     "shuffle": [("card-shuffle", 0.06, 2.98, 1.55)],
+    # the dealer paying a win: chips cut from the rack and set beside the bet
+    "pay": [("chips-handle-3", None, None, 1.0), ("chips-handle-4", None, None, 1.0)],
+    # the dealer taking a losing bet
+    "take": [("chips-collide-3", None, None, 1.0), ("chips-collide-1", None, None, 1.0)],
+    # the dealer gathering the cards off the felt before the next hand
+    "collect": [("card-shove-1", None, None, 1.25), ("card-shove-3", None, None, 1.25)],
 }
-# the same five card recordings, quicker again at the same pitch, for the fast dealing speeds in Live play:
+MATCH = {"card", "cardq"}                                   # tone-matched to one another within the group
+FELT = {"card", "cardq", "chip", "pay", "take", "collect"}   # given the felt's tone
+# the same card recordings, quicker at the same pitch, for the fast dealing speeds in Live play:
 # a card that flies in a tenth of a second needs a sound that fits inside it (sound.js picks the set by flight time)
-QUICK = 1.6
+QUICK = 1.5
 CLIPS["cardq"] = [(n, a, b, round(t * QUICK, 2)) for n, a, b, t in CLIPS["card"]]
 STRETCHES = ["atempo={t}", "rubberband=tempo={t}:transients=crisp:detector=percussive", "rubberband=tempo={t}:transients=crisp:detector=percussive:window=short:phase=independent"]
 
@@ -72,6 +92,34 @@ def faster(y, tempo):
             if best is None or score < best[0]: best = (score, z, f.split("=")[0] + (" short window" if "short" in f else ""))
     return best[1], f"x{tempo} by {best[2]}"
 
+# ---- tone ----
+CENTRES = [63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
+
+def band_db(y):
+    """The level of each octave band, in dB."""
+    S = np.abs(np.fft.rfft(y * np.hanning(len(y)), 1 << 16)) ** 2; f = np.fft.rfftfreq(1 << 16, 1 / SR)
+    return np.array([10 * np.log10(S[(f >= c / np.sqrt(2)) & (f < c * np.sqrt(2))].sum() + 1e-20) for c in CENTRES])
+
+def curve(gains_db, f):
+    """A smooth gain curve through the octave-band gains (straight lines in log frequency), as a magnitude."""
+    lf = np.log2(np.maximum(f, 20)); return 10 ** (np.interp(lf, np.log2(CENTRES), gains_db) / 20)
+
+def min_phase_apply(y, gains_db):
+    """Filter y by the gain curve with a minimum-phase filter (cepstrum method): the tone changes, nothing rings before a snap."""
+    n = 1 << int(np.ceil(np.log2(len(y) + SR // 10)))
+    f = np.fft.rfftfreq(n, 1 / SR); mag = np.maximum(curve(gains_db, f), 1e-4)
+    c = np.fft.irfft(np.log(mag), n); fold = np.zeros(n); fold[0] = c[0]; fold[1:n // 2] = 2 * c[1:n // 2]; fold[n // 2] = c[n // 2]
+    H = np.exp(np.fft.rfft(fold, n))
+    return np.fft.irfft(np.fft.rfft(y, n) * H, n)[:len(y)]
+
+# felt and a little distance: a soft roll-off over 6 kHz and nothing under 60 Hz
+FELT_DB = np.array([-9, -2, 0, 0, 0, 0, -1, -3.5, -9])
+
+def match(clips):
+    """Bring each clip three quarters of the way to the group's median tone, by at most 7 dB in any band."""
+    b = [band_db(c) - band_db(c).max() for c in clips]; target = np.median(b, axis=0)
+    return [min_phase_apply(c, np.clip(0.75 * (target - x), -7, 7)) for c, x in zip(clips, b)]
+
 def mp3(y):
     with tempfile.TemporaryDirectory() as d:
         wav, out = os.path.join(d, "a.wav"), os.path.join(d, "a.mp3"); write(wav, y)
@@ -81,7 +129,10 @@ def mp3(y):
 lines, total = [], 0
 for group, items in CLIPS.items():
     made = [faster(cut(decode(n), a, b), t) for n, a, b, t in items]
-    clips = [fade(y) for y, _ in made]
+    clips = [y for y, _ in made]
+    if group in MATCH: clips = match(clips)
+    if group in FELT: clips = [min_phase_apply(c, FELT_DB) for c in clips]
+    clips = [fade(y) for y in clips]
     loud = [np.sqrt(np.mean(np.sort(c ** 2)[-int(0.05 * SR):])) for c in clips]           # loudness of each clip's loudest 50 ms
     clips = [c * (min(loud) / l) for c, l in zip(clips, loud)]
     k = 0.89 / max(np.abs(c).max() for c in clips)                                         # as loud as the group allows without clipping
@@ -92,5 +143,6 @@ for group, items in CLIPS.items():
 open(os.path.join(HERE, "..", "..", "src", "sound-data.js"), "w").write(
     "// Generated by tools/sounds/build-sounds.py — do not edit by hand.\n"
     "// Recorded card, chip and shuffle sounds from Kenney's \"Casino Audio\" pack (CC0, kenney.nl), as MP3 in base64.\n"
+    "// card, cardq: a dealt card; chip: a bet; shuffle; pay: a win paid; take: a losing bet taken; collect: cards gathered.\n"
     "export const CLIPS = {\n" + "\n".join(lines) + "\n};\n")
 print(f"src/sound-data.js: {total / 1024:.1f} KB of MP3")

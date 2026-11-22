@@ -15,10 +15,13 @@ try {
   else if (raw) { const o = JSON.parse(raw); for (const k in prefs) if (typeof o[k] === typeof prefs[k]) prefs[k] = o[k]; if (!(o.v >= VER)) prefs.feedback = false; }
   prefs.vol = Math.max(0.2, Math.min(1, prefs.vol));
 } catch (_) {}
-const GROUP = { card: "table", chip: "table", shuffle: "table", right: "feedback", wrong: "feedback", win: "feedback", blackjack: "feedback", lose: "feedback", pass: "feedback" };
+const GROUP = { card: "table", chip: "table", shuffle: "table", pay: "table", take: "table", collect: "table", right: "feedback", wrong: "feedback", win: "feedback", blackjack: "feedback", lose: "feedback", pass: "feedback" };
 const level = () => 1.4 * prefs.vol * prefs.vol;   // 0.8 on the slider is the level the sounds were balanced at
 // how loud each recording plays next to the others: cards are the most frequent, so they sit lowest
-const TRIM = { card: 0.4, cardq: 0.4, chip: 0.44, shuffle: 0.4 };
+const TRIM = { card: 0.4, cardq: 0.4, chip: 0.44, shuffle: 0.4, pay: 0.3, take: 0.24, collect: 0.2 };
+// How much of each recording goes into the room (see audio()): enough that the table sits in a room rather than in
+// your ear, not so much that a deal turns to wash. The notes keep their own amount.
+const WET = 0.5;
 
 let ctx = null, out = null, room = null, noise = null, loading = null;
 const clips = {};           // group -> [{ buf, from }] once decoded
@@ -82,10 +85,27 @@ function pick(group) {
   let i = Math.floor(Math.random() * set.length); if (set.length > 1 && i === lastClip[group]) i = (i + 1) % set.length;
   lastClip[group] = i; return set[i];
 }
-function play(c, group, t, { gain = 1, rate = [0.985, 1.015] } = {}) {
+// Where a sound is: pan is { from, to, at } in stereo (-1 left … 1 right): it starts at `from` and reaches `to` at time
+// `at` (a card heard leaving the shoe on the right and arriving at its place). A number is a sound that stays put.
+// Every recording also varies a little each time it plays (pitch within a quarter of a semitone, level), as no two
+// cards or chips land exactly alike.
+function play(c, group, t, { gain = 1, rate = [0.975, 1.025], pan = null, wet = WET } = {}) {
   const s = ctx.createBufferSource(); s.buffer = c.buf; s.playbackRate.value = rnd(rate[0], rate[1]);
   const g = ctx.createGain(); g.gain.value = TRIM[group] * gain;
-  s.connect(g); g.connect(out); s.start(t, c.from);
+  s.connect(g); let node = g;
+  if (pan != null && ctx.createStereoPanner) {
+    try {
+      const p = ctx.createStereoPanner(), cl = (v) => Math.max(-1, Math.min(1, Number(v) || 0));
+      const to = cl(typeof pan === "number" ? pan : pan.to), from = typeof pan === "number" || pan.from == null ? to : cl(pan.from);
+      p.pan.setValueAtTime(from, t);
+      if (from !== to) p.pan.linearRampToValueAtTime(to, Math.max(t + 0.01, (typeof pan === "object" && pan.at) || t + 0.2));
+      g.gain.value *= Math.SQRT2;   // a panner halves the power of a sound in the middle; keep the level it had unplaced
+      g.connect(p); node = p;
+    } catch (_) {}
+  }
+  node.connect(out);
+  if (wet && room) { const w = ctx.createGain(); w.gain.value = wet; node.connect(w); w.connect(room); }
+  s.start(t, c.from);
 }
 function clip(group, t, opts) { const c = pick(group); if (c) play(c, group, t, opts); }
 
@@ -93,7 +113,7 @@ function clip(group, t, opts) { const c = pick(group); if (c) play(c, group, t, 
 // card lands, not where it sets off — so the sound keeps time with the cards at any dealing speed. A fast deal (under
 // a fifth of a second in the air) uses the quicker set of the same recordings, and lets cards follow each other closer.
 const LAND = 0.5;           // the share of its flight after which a card on the app's ease-out has all but arrived (95% of the way)
-function card(t, now, fly) {
+function card(t, now, fly, pan) {
   const group = fly && fly < 0.2 && clips.cardq && clips.cardq.length ? "cardq" : "card";
   const c = pick(group); if (!c) return;
   const gap = fly ? Math.max(0.035, Math.min(0.09, fly * 0.2)) : 0.09;   // at Normal pace the cards of a deal are 75 ms apart: let them be
@@ -101,7 +121,7 @@ function card(t, now, fly) {
   if (hit < lastCard + gap) hit = lastCard + gap;      // cards that land together are heard one after another
   if (hit - now > 4) return;                           // …but never a backlog
   lastCard = hit;
-  play(c, group, Math.max(now, hit - c.peak), { gain: rnd(0.85, 1) });
+  play(c, group, Math.max(now, hit - c.peak), { gain: rnd(0.85, 1), pan: pan == null ? null : typeof pan === "number" ? pan : { ...pan, at: hit } });
 }
 
 // ---- the notes (optional) ----
@@ -122,8 +142,14 @@ function note(t, f, gain = 0.2, len = 0.34) {
 }
 
 const SOUNDS = {
-  chip(t) { clip("chip", t); },
-  shuffle(t) { clip("shuffle", t, { rate: [1, 1] }); },
+  chip(t, o) { clip("chip", t, { pan: o.pan }); },
+  // the dealer pays a win: a stack set beside the bet (blackjack's 3 to 2 is two of them)
+  pay(t, o) { clip("pay", t, { pan: o.pan }); if (o.big) clip("pay", t + 0.15, { gain: 0.85, pan: o.pan }); },
+  // the dealer takes a losing bet
+  take(t, o) { clip("take", t, { pan: o.pan }); },
+  // the dealer gathers the cards and sweeps them to the discard rack, on the dealer's right (your left)
+  collect(t, o) { clip("collect", t, { gain: o.soft ? 0.7 : 1, pan: { from: o.from == null ? 0 : o.from, to: -0.45, at: t + 0.4 } }); },
+  shuffle(t) { clip("shuffle", t, { rate: [1, 1], pan: 0.15 }); },
   right(t) { note(t, 1318.5, 0.19, 0.3); },
   wrong(t) { note(t, 392, 0.2, 0.2); note(t + 0.1, 311.1, 0.2, 0.3); },
   win(t) { note(t, 659.3, 0.18, 0.3); note(t + 0.1, 987.8, 0.19, 0.42); },
@@ -133,17 +159,18 @@ const SOUNDS = {
 };
 
 // sfx(name, delayMs, true) plays even when that sound's group is switched off (the sample after changing a setting);
-// sfx("card", delayMs, { fly }) times a card's sound to its flight.
+// sfx("card", delayMs, { fly, pan }) times a card's sound to its flight and places it (pan: { from, to } — where it
+// leaves the shoe and where it lands); sfx("pay", ms, { big }), sfx("collect", ms, { soft }) and others take { pan }.
 export function sfx(name, delayMs = 0, opt) {
   const force = opt === true, o = opt && typeof opt === "object" ? opt : {};
   if ((name !== "card" && !SOUNDS[name]) || !prefs.on || (!force && !prefs[GROUP[name]])) return;
   const c = audio(); if (!c || c.state !== "running") return;   // not woken by a tap yet, or the page is asleep: stay silent rather than play late
   if (typeof document !== "undefined" && document.hidden) return;
   let t = c.currentTime + Math.max(0, delayMs) / 1000;
-  if (name === "card") { try { card(t, c.currentTime, o.fly); } catch (_) {} return; }
+  if (name === "card") { try { card(t, c.currentTime, o.fly, o.pan); } catch (_) {} return; }
   if (lastAt[name] != null && Math.abs(t - lastAt[name]) < 0.09) return;
   lastAt[name] = t;
-  try { SOUNDS[name](t); } catch (_) {}
+  try { SOUNDS[name](t, o); } catch (_) {}
 }
 // resolves once the recordings are decoded (for tests; the app never needs to wait)
 export const soundReady = () => { audio(); return loading || Promise.resolve(); };

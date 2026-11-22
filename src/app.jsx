@@ -1724,14 +1724,27 @@ const SUIT_PATHS = {
 };
 function Suit({ s }) { return <svg className="suit" viewBox="0 0 100 100" aria-hidden="true">{SUIT_PATHS[s]}</svg>; }
 const DEAL_FLY = 0.34;   // seconds a dealt card takes to arrive unless told otherwise (the .dealt rule in the css says the same)
+// Where a card lands across the table, -1 at its left edge to 1 at its right (the window's, if it isn't on a felt), for
+// its sound: a card is heard leaving the shoe on the right and arriving at its place (see play() in sound.js).
+function cardPan(el) {
+  try {
+    const slot = el.closest(".slot") || el.parentElement, felt = el.closest(".felt"), r = slot.getBoundingClientRect();
+    const box = felt ? felt.getBoundingClientRect() : { left: 0, width: window.innerWidth || 1 };
+    const x = ((r.left + r.width / 2 - box.left) / Math.max(1, box.width) - 0.5) * 2;
+    if (!isFinite(x)) return null;
+    const to = Math.max(-1, Math.min(1, x)) * 0.5;
+    return { from: Math.min(0.75, to + 0.35), to };
+  } catch (_) { return null; }
+}
 function PlayingCard({ rank, suit, face, delay = 0, from = "shoe", style, big, small, fly }) {
   const red = suit === "♥" || suit === "♦";
   const label = face || (rank === 11 ? "A" : rank === 10 ? ["10", "J", "Q", "K"][Math.abs((rank * 7 + suit.charCodeAt(0)) % 4)] : String(rank));
   const isFace = label === "J" || label === "Q" || label === "K";
   const pipRank = label === "10" ? 10 : rank;
-  useEffect(() => { sfx("card", delay, { fly: fly || DEAL_FLY }); }, []); // eslint-disable-line
+  const self = useRef(null);
+  useEffect(() => { sfx("card", delay, { fly: fly || DEAL_FLY, pan: cardPan(self.current) }); }, []); // eslint-disable-line
   return (
-    <div className={"pc dealt " + (red ? "red " : "") + (big ? "big" : small ? "sm" : "")} style={{ "--dx": from === "shoe" ? "140px" : "0px", "--dy": "-150px", "--r0": "14deg", "--r1": style?.rot || "0deg", "--d": `${delay}ms`, ...(fly ? { animationDuration: `${fly}s` } : null), ...style }}>
+    <div ref={self} className={"pc dealt " + (red ? "red " : "") + (big ? "big" : small ? "sm" : "")} style={{ "--dx": from === "shoe" ? "140px" : "0px", "--dy": "-150px", "--r0": "14deg", "--r1": style?.rot || "0deg", "--d": `${delay}ms`, ...(fly ? { animationDuration: `${fly}s` } : null), ...style }}>
       <div className="cn tl"><b className={label === "10" ? "ten" : ""}>{label}</b></div>
       <div className="cn br"><b className={label === "10" ? "ten" : ""}>{label}</b></div>
       {rank === 11 ? <div className="face ace"><Suit s={suit} /></div>
@@ -1782,7 +1795,7 @@ function FeltPrint() {
 }
 
 // <Flick d={ms} /> draws nothing: it plays the card sound for a face-down card, which isn't a PlayingCard
-function Flick({ d = 0, fly }) { useEffect(() => { sfx("card", d, { fly: fly || DEAL_FLY }); }, []); return null; } // eslint-disable-line
+function Flick({ d = 0, fly }) { const self = useRef(null); useEffect(() => { sfx("card", d, { fly: fly || DEAL_FLY, pan: cardPan(self.current) }); }, []); return <i ref={self} hidden />; } // eslint-disable-line
 function useSoundPrefs() {
   const [v, setV] = useState(soundPrefs());
   useEffect(() => { const h = () => setV(soundPrefs()); window.addEventListener("bj-sound", h); return () => window.removeEventListener("bj-sound", h); }, []);
@@ -2438,7 +2451,7 @@ function Trainer({ rules, setRules, spread }) {
   const pause = () => { if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; setTimer(null); } };
   useEffect(() => () => pause(), []);
   useEffect(() => { pause(); setResult(null); setMore(false); }, [mode, rules]);
-  const advance = (p, n) => { setLeaving(true); setTimeout(() => { setResult(null); setMore(false); setCur({ ...dress(pick(p, n)), _pv: poolVer }); setLeaving(false); }, 190); };
+  const advance = (p, n) => { sfx("collect", 0, { soft: true }); setLeaving(true); setTimeout(() => { setResult(null); setMore(false); setCur({ ...dress(pick(p, n)), _pv: poolVer }); setLeaving(false); }, 190); };
   const next = () => { if (leaving) return; pause(); advance(prog, qn); };
 
   useEffect(() => {
@@ -3709,9 +3722,10 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     let hs = hands.map((x) => ({ ...x, cards: [...x.cards] })); let cur = hs[active];
         if (a === "H") { cur.cards.push(draw()); const v = handValue(cur.cards); if (v.bust || v.total === 21) cur.done = true; }
     if (a === "S") cur.done = true;
-    if (a === "D") { cur.cards.push(draw()); cur.bet *= 2; cur.doubled = true; cur.done = true; }
+    if (a === "D") { sfx("chip"); cur.cards.push(draw()); cur.bet *= 2; cur.doubled = true; cur.done = true; }
     if (a === "R") { cur.surrendered = true; cur.done = true; }
     if (a === "P") {
+      sfx("chip");
       const [c1, c2] = cur.cards; const aces = c1.rank === 11;
       const h1 = { cards: [c1, draw()], bet: cur.bet, done: aces, fromSplit: true };
       const h2 = { cards: [c2, draw()], bet: cur.bet, done: aces, fromSplit: true };
@@ -3755,9 +3769,12 @@ function Play({ rules, bets, minBet, bankroll0, evHour, sdHour, rph }) {
     // one quiet note for how the round came out, after the last card has landed
     const natural = res.length === 1 && res[0].cards.length === 2 && !res[0].fromSplit && net > res[0].bet;
     if (net > 0) sfx(natural ? "blackjack" : "win", 260); else if (net < 0) sfx("lose", 260);
+    // and what you would hear at a table: the dealer paying the win (two stacks for a blackjack) or taking the bet
+    if (net > 0) sfx("pay", 480, { big: natural }); else if (net < 0) sfx("take", 480);
     setPhase("result");
   };
   const nextHand = () => {
+    if (hands.length || dealer.length) sfx("collect");   // the dealer gathers the cards before the next bet
     setHands([]); setDealer([]); setPhantom(null); setMsg(null);
     if (checkEvery > 0 && stats.hands > 0 && stats.hands % checkEvery === 0) { setGuess(0); setPhase("check"); return; }
     setPhase("bet");
