@@ -1586,6 +1586,20 @@ html.tshrink.tsdo .topbar .tbtitle{animation:tbtin linear both;animation-timelin
 .bendbounce{position:absolute;inset:0}
 @media (prefers-reduced-motion:reduce){.ng.bend.stale{transition:none}}
 /* ---- end of liquid glass IX ---- */
+
+/* ---- Polish (22 Nov, night): bugs and loose ends found going over every page ---- */
+/* The rules pill on a computer rides up with the page and stops in the top bar, the way the phone's dock does. It used
+   to wait at the title's height until the title had handed over, so a card coming up underneath slid under it, and on
+   a page that can scroll less than that (Live play at 900px tall: 31px) it stayed over the card for good. Only where
+   the title follows the scroll by CSS (html.tsdo); elsewhere it glides as before. */
+@media (min-width:1024px){
+html.tsdo .pillrail,html.tsdo.scrolled .pillrail{transform:none;transition:none}
+html.tsdo .pillrail>div{transform-origin:100% 0;animation:railup linear both;animation-timeline:scroll(root);animation-range:0px 37px}
+html.tsdo.scrolled .pillrail .rulespill{transform:none}
+html.tsdo.scrolled .pillrail .rulespill:active{transform:scale(1.05)}
+}
+@keyframes railup{to{transform:translateY(-37px) scale(.86)}}
+/* ---- end of polish ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -5473,9 +5487,9 @@ function MonthBars({ months, sel, onPick }) {
   const span = H - P.t - P.b - (up ? lab : 0) - (dn ? lab : 0), sc = span / Math.max(1, up + dn);
   const bw = Math.min((W / months.length) * 0.62, 72), y0 = P.t + (up ? lab : 0) + up * sc; // a bar is never wider than 72px: three months on a wide card were three slabs
   return (
-    <div ref={box}><svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className="block" role="img" aria-label="Results by month">
+    <div ref={box}><svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className="block" role={onPick ? "group" : "img"} aria-label="Results by month">
       <line x1="0" x2={W} y1={y0} y2={y0} stroke="rgba(var(--fg),.15)" />
-      {months.map((m, i) => { const cw = W / months.length, cx = (i + 0.5) * cw, h = Math.max(1.5, Math.abs(m.net) * sc); const pick = onPick ? { className: "mbar", role: "button", tabIndex: 0, "aria-pressed": sel === m.k, "aria-label": `${monthName(m.k)}: show the days`, onClick: () => onPick(m.k), onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPick(m.k); } } } : {}; return (
+      {months.map((m, i) => { const cw = W / months.length, cx = (i + 0.5) * cw, h = Math.max(1.5, Math.abs(m.net) * sc); const pick = onPick ? { className: "mbar", role: "button", tabIndex: 0, "aria-pressed": sel === m.k, "aria-label": `${shortMoney(m.net)} ${monthName(m.k, true)}: show the days of ${monthName(m.k)}`, onClick: () => onPick(m.k), onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPick(m.k); } } } : {}; return (
         <g key={m.k} {...pick} style={{ opacity: sel && sel !== m.k ? 0.38 : 1, transition: "opacity .2s var(--ez)" }}>
           {onPick && <rect x={cx - cw / 2 + 1} width={cw - 2} y="1" height={H - 2} rx="6" fill={sel === m.k ? "rgba(var(--fg),.05)" : "transparent"} />}
           <rect className="growy" style={{ transformOrigin: m.net >= 0 ? "50% 100%" : "50% 0%", animationDelay: `${i * 0.04}s` }} x={cx - bw / 2} width={bw} y={m.net >= 0 ? y0 - h : y0} height={h} rx={big ? 5 : 3} fill={m.net >= 0 ? "var(--brass)" : "var(--rose)"} opacity=".9" />
@@ -5816,7 +5830,7 @@ function Backup() {
       const obj = JSON.parse(text); if (!isObj(obj) || obj.app !== "blackjack-trainer" || !isObj(obj.data) || !Object.keys(obj.data).some((k) => BACKUP_KEYS.includes(k))) throw new Error("bad");
       for (const k of Object.keys(obj.data)) if (BACKUP_KEYS.includes(k) && obj.data[k] != null) await window.storage.set(k, typeof obj.data[k] === "string" ? obj.data[k] : JSON.stringify(obj.data[k]), false);
       _logCache = null; setStatus("Restored. Reloading…"); setTimeout(() => { try { location.reload(); } catch (_) {} }, 900);
-    } catch (_) { setStatus("That doesn't look like a backup from this app."); }
+    } catch (_) { setStatus({ bad: true, t: "That doesn't look like a backup from this app." }); }
   };
   return (
     <section className="card p-5 mt-4">
@@ -5827,7 +5841,7 @@ function Backup() {
         <button className="btn ghost md" onClick={importAll} disabled={!text.trim()}>Restore</button>
       </div>
       <textarea className="in mono text-[11px]" rows={3} placeholder="Paste a backup here to restore" value={text} onChange={(e) => setText(e.target.value)} />
-      {status && <div className="text-xs mt-2" style={{ color: "var(--brass)" }}>{status}</div>}
+      {status && <div className="text-xs mt-2" role="status" style={{ color: status.bad ? "var(--neg-l)" : "var(--brass)" }}>{status.t || status}</div>}
     </section>
   );
 }
@@ -7133,9 +7147,12 @@ function BetSpreadCalculator() {
     tabSeen.current = tab; markEnter(1500);
     // a page opens at its top: the dock glides back down to its place there rather than jumping to it
     const d = dockRef.current && dockRef.current.firstChild, y0 = d ? d.getBoundingClientRect().top : 0;
+    // on a computer the rules pill rides with the scroll (see "Polish" in the css): it glides back down to the title too
+    const rp = typeof document !== "undefined" && document.documentElement.classList.contains("tsdo") ? document.querySelector(".pillrail .rulespill") : null, rb = rp && rp.offsetParent ? rp.getBoundingClientRect() : null;
     placeDock(); try { window.scrollTo(0, 0); } catch (_) {}
     fadeGhostRef.current();
     if (d && d.animate && !noMotion()) { const dy = y0 - d.getBoundingClientRect().top; if (Math.abs(dy) > 1) { try { d.animate([{ transform: `translateY(${dy.toFixed(1)}px)` }, { transform: "none" }], { duration: 520, easing: "cubic-bezier(.22,.68,.1,1)" }); } catch (_) {} } }
+    if (rb && rp.animate && !noMotion()) { const rail = rp.closest(".pillrail"), top = rail ? parseFloat(getComputedStyle(rail).paddingTop) || 0 : 0, h = rp.offsetHeight || rb.height, dy = rb.top - top; if (Math.abs(dy) > 1 && h) { try { rp.animate([{ transform: `translateY(${dy.toFixed(1)}px) scale(${(rb.height / h).toFixed(4)})` }, { transform: "none" }], { duration: 520, easing: "cubic-bezier(.22,.68,.1,1)" }); } catch (_) {} } }
   }, [tab]); // eslint-disable-line
   const [rules, setRulesRaw] = useState(DEFAULT_RULES);
   const [setupOpen, setSetupOpen] = useState(false);
@@ -7377,10 +7394,10 @@ function BetSpreadCalculator() {
       {setupOpen && <RulesModal rules={rules} onSave={saveRules} onClose={() => setSetupOpen(false)} first={firstRun} />}
       {cmd && <CommandPalette items={cmdItems} onClose={() => setCmd(false)} />}
       {keysOpen && <ShortcutsSheet onClose={() => setKeysOpen(false)} mac={isMac} />}
-      <div ref={shellRef} className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s var(--ez)", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
+      <main ref={shellRef} className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s var(--ez)", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
         <div ref={dockRef} className={"hdock" + (pageTitle.length > 9 && !hasBack ? " tight" : "")}><div className="hdockin">
-          <button onClick={() => setSetupOpen(true)} className={"rulespill" + (narrow && tab === "calc" ? " two" : "")} aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
+          <button onClick={() => setSetupOpen(true)} className={"rulespill" + (narrow && tab === "calc" ? " two" : "")} aria-label={`${rulesShort(rules)}. Game rules: ${rulesLabel(rules)}. Change`}>
             <span className="rp-a"><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></span>
             {/* Bet spread: once the page is scrolled the pill reads what the spread earns and risks */}
             {narrow && tab === "calc" && <span className="rp-b mono" aria-hidden="true"><span style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span> · <span style={{ color: rorTone }}>{pct(r.ror, 1)}</span> risk</span>}
@@ -7394,7 +7411,7 @@ function BetSpreadCalculator() {
             <h1 key={pageTitle} className={"leading-none font-semibold" + (hasBack ? "" : pageTitle.length > 12 ? " long" : pageTitle.length > 9 ? " mid" : "")}>{pageTitle}</h1>
           </div>
           <div className="hctl flex items-center gap-2 min-w-0">
-            <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
+            <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`${rulesShort(rules)}. Game rules: ${rulesLabel(rules)}. Change`}>
             <span className="mono">{rulesShort(rules)}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
           </button>
@@ -7402,7 +7419,7 @@ function BetSpreadCalculator() {
           </div>
         </header>
         <div className="pillrail"><div className="mx-auto flex justify-end">
-          <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
+          <button onClick={() => setSetupOpen(true)} className="rulespill" aria-label={`${rulesShort(rules)}. Game rules: ${rulesLabel(rules)}. Change`}><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
         </div></div>
         <TopBar title={pageTitle} onBack={back ? () => go(back[0]) : null} />
         <div className="sbar" aria-hidden="true" />
@@ -7529,7 +7546,7 @@ function BetSpreadCalculator() {
               }}>
                 <span className="mono text-sm font-medium tcl">{LABEL(row.c)}</span>
                 <input className="in sm mono text-sm" type="number" inputMode="numeric" step={5} min={0} value={bets[row.c]} aria-label={`Bet at TC ${LABEL(row.c)}`} onChange={(e) => setBets({ ...bets, [row.c]: e.target.value === "" ? "" : Math.max(0, Number(e.target.value)) })} />
-                <button className="mono text-xs rounded-lg" style={{ height: 34, background: spotsMap[row.c] === 2 ? "var(--brass)" : "rgba(var(--fg),.07)", color: spotsMap[row.c] === 2 ? "var(--ink)" : "var(--muted)", fontWeight: 600, opacity: spotsMap[row.c] === 2 && seats >= 7 ? 0.5 : 1 }} aria-label={`Hands at ${LABEL(row.c)}`} onClick={() => setSpotsMap((m) => ({ ...m, [row.c]: m[row.c] === 2 ? 1 : 2 }))}>{spotsMap[row.c] === 2 ? "×2" : "×1"}</button>
+                <button className="mono text-xs rounded-lg" style={{ height: 34, background: spotsMap[row.c] === 2 ? "var(--brass)" : "rgba(var(--fg),.07)", color: spotsMap[row.c] === 2 ? "var(--ink)" : "var(--muted)", fontWeight: 600, opacity: spotsMap[row.c] === 2 && seats >= 7 ? 0.5 : 1 }} aria-label={`${spotsMap[row.c] === 2 ? "×2" : "×1"}: hands at ${LABEL(row.c)}`} aria-pressed={spotsMap[row.c] === 2} onClick={() => setSpotsMap((m) => ({ ...m, [row.c]: m[row.c] === 2 ? 1 : 2 }))}>{spotsMap[row.c] === 2 ? "×2" : "×1"}</button>
                 {showFreq && <span className="mono text-xs text-right" style={{ color: "var(--ivory-d)" }}>{(row.f * 100).toFixed(row.f < 0.01 ? 2 : 1)}%</span>}
                 <span className="mono text-xs text-right" style={{ color: row.edge > 0 ? "var(--brass)" : "var(--rose)" }}>{(row.edge * 100).toFixed(2).replace("-", "−")}%</span>
                 <span className="mono text-xs text-right evc" style={{ color: row.evHand > 0 ? "var(--ivory)" : row.evHand < 0 ? "var(--rose)" : "var(--muted)" }}>{row.bet ? money(row.evHand, 2) : "—"}</span>
@@ -7579,7 +7596,7 @@ function BetSpreadCalculator() {
                       )}
                       <div className="flex items-end gap-1" style={{ height: 64 }}>
                         {frontier.map((p, i) => { const sel = Math.round(p.cap * 100) === rorPct; return (
-                          <button key={p.cap} onClick={() => setRorPct(Math.round(p.cap * 100))} className="relative flex-1 flex flex-col items-center justify-end h-full" aria-label={`${Math.round(p.cap * 100)}% risk`}>
+                          <button key={p.cap} onClick={() => setRorPct(Math.round(p.cap * 100))} className="relative flex-1 flex flex-col items-center justify-end h-full" aria-pressed={sel} aria-label={`${Math.round(p.cap * 100)}% risk${p.infeasible ? ", out of reach" : `: $${p.ev.toFixed(0)}/hr`}`}>
                             {sel && !p.infeasible && <span className="absolute mono whitespace-nowrap" style={{ fontSize: 9, top: -13, color: "var(--brass)" }}>${p.ev.toFixed(0)}</span>}
                             <div className="w-full rounded-t bary" style={{ "--i": i, height: p.infeasible ? 3 : `${Math.max(8, (p.ev / mx) * 100)}%`, background: p.infeasible ? "rgba(var(--neg),.35)" : sel ? "var(--brass)" : p.ev > r.evHour ? "rgba(var(--acc),.45)" : "rgba(var(--acc),.22)", transition: "height .34s var(--ez), background .16s var(--ez)" }} />
                           </button>); })}
@@ -7653,14 +7670,14 @@ function BetSpreadCalculator() {
         </div></div>
 
         </div>}
-        {tab === "settings" && <p className="text-center text-[11px] mt-10" style={{ color: "var(--muted)", opacity: .7 }}>Strategy and indices follow Blackjack Apprenticeship's {rules.h17 ? "H17" : "S17"} charts · practice tool, not gambling advice</p>}
-      </div>
+        {tab === "settings" && <p className="text-center text-[11px] mt-10" style={{ color: "var(--muted)" }}>Strategy and indices follow Blackjack Apprenticeship's {rules.h17 ? "H17" : "S17"} charts · practice tool, not gambling advice</p>}
+      </main>
       <nav className="sidenav" aria-label="Sections" ref={snav}>
         <div className="sn-brand">
           <span className="sn-tile" aria-hidden="true"><svg viewBox="0 0 512 512"><path d="M240 92C206 136 108 204 108 288C108 332 140 362 178 362C204 362 224 350 234 332C232 368 216 396 190 414H290C264 396 248 368 246 332C256 350 276 362 302 362C340 362 372 332 372 288C372 204 274 136 240 92Z" style={{ fill: "var(--ivory)" }} /><circle cx="338" cy="346" r="100" style={{ fill: "var(--b2)" }} /><circle cx="338" cy="346" r="80" style={{ fill: "var(--brass)" }} /></svg></span>
           <span className="min-w-0"><span className="sn-name block">Blackjack</span><span className="sn-tag block">Count · Play · Win</span></span>
         </div>
-        <button className="sn-search" onClick={() => setCmd(true)} aria-label="Jump to a page, drill or setting">
+        <button className="sn-search" onClick={() => setCmd(true)} aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
           <span>Jump to…</span><kbd>{isMac ? "⌘K" : "Ctrl K"}</kbd>
         </button>
@@ -7672,11 +7689,11 @@ function BetSpreadCalculator() {
             <span>{SIDE_NAMES[k] || l}</span>
           </button></Fragment>); })}
         <div className="sn-foot">
-          {spreadLoaded && <button onClick={() => go("calc")} className="sn-rules" aria-label="Your spread. Open the calculator">
+          {spreadLoaded && <button onClick={() => go("calc")} className="sn-rules">
             <span className="block lab">Your spread</span>
             <span className="flex items-baseline justify-between gap-2 mt-1"><span className="mono text-[13px] font-semibold" style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span><span className="mono text-[11px] font-semibold" style={{ color: rorTone }}>{pct(r.ror, 1)} risk</span></span>
           </button>}
-          <button onClick={() => setSetupOpen(true)} className="sn-rules" aria-label={`Game rules: ${rulesLabel(rules)}. Change`}>
+          <button onClick={() => setSetupOpen(true)} className="sn-rules">
             <span className="block lab">Game rules</span>
             <span className="flex items-center justify-between gap-2 mt-1"><span className="mono text-[13px] font-semibold" style={{ color: "var(--ivory)" }}>{rulesShort(rules)}</span><span className="text-[11px] font-semibold" style={{ color: "var(--brass)" }}>Change</span></span>
           </button>

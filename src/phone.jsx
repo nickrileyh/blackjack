@@ -158,7 +158,7 @@ export function TripCard({ go, bankroll }) {
           // say why here, as Plan's own card does, rather than "the Plan page says why"
           <button className="cardbtn w-full text-left mt-2" onClick={() => go("plan")}>
             <span className="block text-[17px] font-semibold" style={{ color: "var(--ivory)" }}>Nothing to suggest yet</span>
-            <span className="block text-xs mt-1" style={{ color: "var(--ivory-d)" }}>Every casino you play scores under {next.minScore} with your {"$" + Math.round(bankroll || 0).toLocaleString()} bankroll{next.closest ? <>. Closest: {next.closest}{next.closestScore != null ? <>, <b style={{ color: scoreTone(next.closestScore) }}>{next.closestScore}</b></> : ""}</> : ""}.</span>
+            <span className="block text-xs mt-1" style={{ color: "var(--ivory-d)" }}>Every casino you play scores under {next.minScore} with your {"$" + Math.round(bankroll || 0).toLocaleString()} bankroll{next.closest ? <>. The best is {next.closest}{next.closestScore != null ? <>, at <b style={{ color: scoreTone(next.closestScore) }}>{next.closestScore}</b></> : ""}</> : ""}.</span>
           </button>
         ) : <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>{next.loading && next.n ? "Working out where to play next…" : "Start the clock when you sit down. When you leave, the hours and the casino are already filled in."}</p>
       )}
