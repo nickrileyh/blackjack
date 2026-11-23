@@ -452,6 +452,8 @@ no insurance.
 
 ## Where the calculator's numbers come from
 
+**Penetration moves in 1% steps everywhere** (Nick, 22 Nov 2026: "I would like them to all be 1 by 1%"): the game-rules dialog, the session editor, a casino's game, Table score, the count drill's cut card, and a scouted game's penetration (no longer rounded to 5%). The tables are measured every 5% from 50 to 90% and `calRow` blends linearly between the two nearest, so a 1% step gives an honest in-between figure (75→80% moves $/hr and risk of ruin a step each way, never backwards). Don't put a `step={5}` back on a penetration slider.
+
 `CALR` / `CALQ` / `CALD` / `CALX` at the top of `src/app.jsx` are measured tables, packed by `tools/sim/build_cal.py` from
 the simulator in `tools/sim/table_sim.c` (64 billion rounds in all; the README there lists what each part is and how to
 re-run it). Don't edit those lines by hand. Three things must say the same thing whenever a play or an index changes:

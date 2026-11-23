@@ -117,7 +117,7 @@ export function TableScoreCard({ casinos, onUseRules, appRules }) {
         {row("Dealer on soft 17", <Seg small value={!!R.h17} options={[[false, "Stands"], [true, "Hits"]]} onChange={(v) => setR("h17", v)} />)}
         {row("Surrender", <Seg small value={!!R.surrender} options={[[false, "No"], [true, "Yes"]]} onChange={(v) => setR("surrender", v)} />)}
         {row("Double after split", <Seg small value={R.das !== false} options={[[false, "No"], [true, "Yes"]]} onChange={(v) => setR("das", v)} />)}
-        {row(<>Penetration <span className="mono" style={{ color: "var(--brass)" }}>{R.pen}%</span></>, <input type="range" min={50} max={90} step={5} value={R.pen} onChange={(e) => setR("pen", Number(e.target.value))} aria-label="Penetration" />)}
+        {row(<>Penetration <span className="mono" style={{ color: "var(--brass)" }}>{R.pen}%</span></>, <input type="range" min={50} max={90} step={1} value={R.pen} onChange={(e) => setR("pen", Number(e.target.value))} aria-label="Penetration" />)}
         {row("Players, you included", <Seg small value={g.seats} options={[1, 2, 3, 4, 5, 6, 7].map((k) => [k, String(k)])} onChange={(v) => setG((o) => ({ ...o, seats: v }))} />)}
       </div>
       <div className="grid grid-cols-2 gap-2 mt-3">
@@ -173,7 +173,7 @@ export function gamesAt(c) {
   const it = c.intel; if (!it) return [];
   const out = [], b = it.best;
   // a report that doesn't say how the dealer plays soft 17 is taken as the worse rule (hits)
-  if (b && !b.bj65 && (b.decks || b.h17 != null)) out.push({ label: b.where || "Best game reported", rules: { decks: [1, 2, 4, 6, 8].includes(b.decks) ? b.decks : 6, h17: b.h17 != null ? !!b.h17 : true, das: b.das != null ? !!b.das : true, surrender: !!b.ls, rsa: !!b.rsa, pen: b.pen ? Math.min(90, Math.max(50, Math.round(b.pen / 5) * 5)) : PEN_GUESS[[1, 2, 4, 6, 8].includes(b.decks) ? b.decks : 6] }, min: b.min || it.min || "", max: b.max || "" });
+  if (b && !b.bj65 && (b.decks || b.h17 != null)) out.push({ label: b.where || "Best game reported", rules: { decks: [1, 2, 4, 6, 8].includes(b.decks) ? b.decks : 6, h17: b.h17 != null ? !!b.h17 : true, das: b.das != null ? !!b.das : true, surrender: !!b.ls, rsa: !!b.rsa, pen: b.pen ? Math.min(90, Math.max(50, Math.round(b.pen))) : PEN_GUESS[[1, 2, 4, 6, 8].includes(b.decks) ? b.decks : 6] }, min: b.min || it.min || "", max: b.max || "" });
   // a line that spells out the same game as `best` (same decks, soft-17 rule and minimum) isn't a second game: it lends
   // `best` the limits the summary leaves out — doubling on 9–11 or 10–11 only, no resplits — so they aren't scored away
   (Array.isArray(it.games) ? it.games : []).flatMap((line) => String(line).split(";")).forEach((line) => {

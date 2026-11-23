@@ -2927,7 +2927,7 @@ function Counter({ decks0 = 8, pen0 = 75, mode0 = "cards" }) {
             </div>
             <div className="grid items-center gap-3" style={{ gridTemplateColumns: "1fr 200px" }}>
               <span className="text-sm" style={{ color: "var(--ivory-d)" }}>Cut card <span className="mono" style={{ color: "var(--brass)" }}>{pen}%</span></span>
-              <input type="range" min={50} max={90} step={5} value={pen} onChange={(e) => { setPen(Number(e.target.value)); setShoe(null); }} aria-label="Penetration" />
+              <input type="range" min={50} max={90} step={1} value={pen} onChange={(e) => { setPen(Number(e.target.value)); setShoe(null); }} aria-label="Penetration" />
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1.5"><span style={{ color: "var(--ivory-d)" }}>Speed</span><span className="mono" style={{ color: "var(--brass)" }}>{speed}s per card</span></div>
@@ -3185,7 +3185,7 @@ function RulesModal({ rules, onSave, onClose, first }) {
           {row("Surrender", <Seg value={!!draft.surrender} options={[[false, "Not offered"], [true, "Offered"]]} onChange={(v) => setDraft({ ...draft, surrender: v })} />)}
           {row("Insurance", <Seg value={!!draft.insurance} options={[[false, "Not offered"], [true, "Offered"]]} onChange={(v) => setDraft({ ...draft, insurance: v })} />)}
           {row("Decks", <Seg value={draft.decks} options={[[1, "1"], [2, "2"], [4, "4"], [6, "6"], [8, "8"]]} onChange={(v) => setDraft({ ...draft, decks: v })} />)}
-          {row(<>Penetration <span className="mono" style={{ color: "var(--brass)" }}>{draft.pen}%</span></>, <input type="range" min={50} max={90} step={5} value={draft.pen} onChange={(e) => setDraft({ ...draft, pen: Number(e.target.value) })} aria-label="Penetration" />)}
+          {row(<>Penetration <span className="mono" style={{ color: "var(--brass)" }}>{draft.pen}%</span></>, <input type="range" min={50} max={90} step={1} value={draft.pen} onChange={(e) => setDraft({ ...draft, pen: Number(e.target.value) })} aria-label="Penetration" />)}
           {row("Blackjack pays", <Seg value={!!draft.bj65} options={[[false, "3 to 2"], [true, "6 to 5"]]} onChange={(v) => setDraft({ ...draft, bj65: v })} />)}
         </div>
         <button onClick={() => setAdv((v) => !v)} aria-expanded={adv} className="rowh w-full flex items-center justify-between gap-3 mt-5 py-2.5" style={{ borderTop: "1px solid var(--line)" }}>

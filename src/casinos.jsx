@@ -363,7 +363,7 @@ function GameEditor({ g, set, onRemove, onUse, used }) {
         {row("Blackjack pays", <Seg value={!!R.bj65} options={[[false, "3 to 2"], [true, "6 to 5"]]} onChange={(v) => setR("bj65", v)} />)}
         {row("Surrender", <Seg value={!!R.surrender} options={[[false, "No"], [true, "Yes"]]} onChange={(v) => setR("surrender", v)} />)}
         {row("Double after split", <Seg value={dasOn(R)} options={[[false, "No"], [true, "Yes"]]} onChange={(v) => setR("das", v)} />)}
-        {row(<>Penetration <span className="mono" style={{ color: "var(--brass)" }}>{R.pen}%</span></>, <input type="range" min={50} max={90} step={5} value={R.pen} onChange={(e) => setR("pen", Number(e.target.value))} aria-label="Penetration" />)}
+        {row(<>Penetration <span className="mono" style={{ color: "var(--brass)" }}>{R.pen}%</span></>, <input type="range" min={50} max={90} step={1} value={R.pen} onChange={(e) => setR("pen", Number(e.target.value))} aria-label="Penetration" />)}
       </div>
       <More open={more} onClick={() => setMore(!more)} className="mt-4 mb-1">{more ? "Fewer rules" : "More rules — doubling, splitting"}</More>
       <Fold open={more} className="space-y-3 pt-2">
@@ -428,7 +428,7 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
   const game = edit && d.games.find((g) => g.id === edit);
   // copy the game a scouting report describes into your own list, to correct against what you see at the table
   const copyReported = () => {
-    const b = intel.best, pen = b.pen ? Math.min(90, Math.max(50, Math.round(b.pen / 5) * 5)) : appRules.pen;
+    const b = intel.best, pen = b.pen ? Math.min(90, Math.max(50, Math.round(b.pen))) : appRules.pen;
     const rules = { ...appRules, decks: [1, 2, 4, 6, 8].includes(b.decks) ? b.decks : appRules.decks, pen, ...(b.h17 != null ? { h17: !!b.h17 } : {}), ...(b.das != null ? { das: !!b.das } : {}), surrender: !!b.ls, rsa: !!b.rsa, bj65: !!b.bj65 }; // a rule the report doesn't mention is taken as not offered
     set({ games: [...d.games, { id: "g" + Date.now().toString(36), label: b.where || "Reported game", rules, min: b.min || "", max: b.max || "", tables: "", note: `From the scouting report${intel.asOf ? ", " + intel.asOf : ""} — check it at the table` }] }); setCopied(true);
   };
