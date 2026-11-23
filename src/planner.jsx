@@ -18,7 +18,7 @@ async function loadSetup() {
 
 // ---------- plan settings (this device only) ----------
 const PLAN_KEY = "bj-plan-v1";
-export const REST_DEF = { base: 7, backed: 90 };
+export const REST_DEF = { base: 7, backed: 90, watch: 60 };   // watch: the least a casino rests after any visit while you are on its watch list
 const PLAN_DEF = { hours: 8, weeks: 52, risk: 0.05, goal: "", rest: REST_DEF, minScore: 10, moveUp: true, game: "auto", gv: 3 }; // moveUp: the chart's "Include moving up" switch // minScore: a casino scoring under it is never suggested
 // hours a week of play: the one pace setting (Nick: "instead of selecting hours and number of sessions can we just select
 // hours"). A plan saved before that carried sessions a week and hours a session; their product carries over.
@@ -245,7 +245,13 @@ const oneIn = (p) => (p < 0.005 ? "Almost never" : p > 0.5 ? `About ${Math.round
 // Rest after a visit, from two numbers you can change on the Plan page: `base` (days after an ordinary visit) and `backed`
 // (days after a back-off). Medium heat, being watched, or three visits in 30 days rests a casino three times the base;
 // High heat six times; a second back-off at the same casino twice the back-off rest.
-export const restSet = (r) => ({ base: r.base, warm: r.base * 3, hot: r.base * 6, busy: r.base * 3, backed: r.backed, backedAgain: r.backed * 2 });
+export const restSet = (r) => ({ base: r.base, warm: r.base * 3, hot: r.base * 6, busy: r.base * 3, backed: r.backed, backedAgain: r.backed * 2, watch: r.watch || REST_DEF.watch });
+// On their watch list (Nick, 22 Nov: Rivers Pittsburgh put him on theirs, and he asked whether it ever goes away). It is
+// the casino's own note on you; nothing makes it run out, so it is a mark you set and clear on the casino (watchOn: the
+// day it started). While it is on, every visit rests the casino at least R.watch days, counted from the later of the
+// last visit and the day you were listed.
+export const watchOf = (c) => (c && c.mark && c.mark.watchOn) || null;
+export const listedFor = (d) => { const n = daysBetween(dayOf(d), Date.now()); return n <= 0 ? "today" : n === 1 ? "1 day" : n < 60 ? `${n} days` : n < 730 ? `${Math.round(n / 30.44)} months` : `${(n / 365.25).toFixed(1).replace(/\.0$/, "")} years`; };
 // days a casino rests after a visit on day t (dates: every visit so far, as days, t included)
 function restDays(c, t, dates, lastHeat, R) {
   const m = c.mark || {}, recent = dates.filter((d) => d <= t && daysBetween(d, t) <= 30).length;
@@ -265,8 +271,10 @@ export function restOf(c, R) {
     const n = Math.max(1, (s && s.backedN) || 0), days = n >= 2 ? R.backedAgain : R.backed;
     return { kind: "backed", from, until: from ? addDays(from, days) : null, last, dates, days, why: n >= 2 ? `backed off ${n} times` : "backed off" };
   }
-  const { days, why } = last ? restDays(c, last, dates, s.lastHeat, R) : { days: 0, why: "" };
-  return { kind: "rest", from: last, until: last ? addDays(last, days) : null, last, dates, days, why };
+  let { days, why } = last ? restDays(c, last, dates, s.lastHeat, R) : { days: 0, why: "" }, from = last;
+  const w = watchOf(c);
+  if (w) { const t = dayOf(w); if (!from || t > from) from = t; if (days < R.watch) { days = R.watch; why = "on their watch list"; } }
+  return { kind: "rest", from, until: from ? addDays(from, days) : null, last, dates, days, why, watch: w };
 }
 // days rested × 0.75 at a score of 0, × 1 at 50 (or unknown), × 1.25 at 100
 const weightAt = (last, t, score) => ((last ? Math.max(0, daysBetween(last, t)) : 365) + 1) * (0.75 + (score == null ? 50 : score) / 200);
@@ -277,7 +285,7 @@ export function nextUp(rows, today, scoreOfC, n = 3) {
   const live = rows.filter((r) => r.kind !== "backed" || r.until), ok = (r) => !r.until || r.until <= today;
   const ready = live.filter(ok).sort((a, b) => weightAt(b.last, today, scoreOfC(b.c)) - weightAt(a.last, today, scoreOfC(a.c)));
   const later = live.filter((r) => !ok(r)).sort((a, b) => a.until - b.until || weightAt(b.last, b.until, scoreOfC(b.c)) - weightAt(a.last, a.until, scoreOfC(a.c)));
-  return [...ready, ...later].slice(0, n).map((r) => ({ c: r.c, t: ok(r) ? today : r.until, ready: ok(r), back: r.kind === "backed" }));
+  return [...ready, ...later].slice(0, n).map((r) => ({ c: r.c, t: ok(r) ? today : r.until, ready: ok(r), back: r.kind === "backed", watch: !!r.watch }));
 }
 export const milesBetween = (a, b) => { const r = Math.PI / 180, x = (b.lon - a.lon) * r * Math.cos(((a.lat + b.lat) / 2) * r), y = (b.lat - a.lat) * r; return Math.sqrt(x * x + y * y) * 3959; };
 
@@ -315,6 +323,7 @@ const planCss = `
 .ptrack>i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:rgba(var(--fg),.42);transform-origin:0 50%}
 .ptrack>i.ok{background:var(--brass)}
 .ptrack>i.x{background:rgba(var(--neg),.7)}
+.ptrack>i.w{background:color-mix(in srgb,var(--watch) 75%,transparent)}
 .ptrack.big{height:10px}
 .pset{display:flex;align-items:center;gap:10px;min-width:0;white-space:nowrap}
 .pslide{display:flex;align-items:center;gap:10px;min-width:0}
@@ -423,8 +432,8 @@ const scoreAt = (sc, c) => { const x = sc.get(c); return x === undefined ? (game
 function useRotation(all, prefs, bankroll, lite) {
   const now = useMemo(() => Date.now(), []), today = startOfDay(now);
   const R = restSet(prefs.rest);
-  const rows = useMemo(() => (all || []).filter((c) => (c.sess && c.sess.n) || (c.mark && (c.mark.status === "been" || c.mark.status === "backed")))
-    .filter((c) => !(c.mark && c.mark.hidden)).map((c) => ({ c, ...restOf(c, R) })), [all, prefs.rest.base, prefs.rest.backed]); // eslint-disable-line
+  const rows = useMemo(() => (all || []).filter((c) => (c.sess && c.sess.n) || (c.mark && (c.mark.status === "been" || c.mark.status === "backed" || c.mark.watchOn)))
+    .filter((c) => !(c.mark && c.mark.hidden)).map((c) => ({ c, ...restOf(c, R) })), [all, prefs.rest.base, prefs.rest.backed, prefs.rest.watch]); // eslint-disable-line
   // places with a scouting report near where you play that aren't in the rotation yet
   const near = useMemo(() => {
     if (lite) return []; // Home's card only needs the casinos you play
@@ -469,20 +478,20 @@ function PlayNext({ rot, onOpen }) {
       </div>}
       {first && <button className="block text-left w-full mt-2" onClick={() => onOpen(first.c)}>
         <div className="pbig pclamp" style={{ color: "var(--brass)" }}>{first.c.name}</div>
-        <div className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{first.ready ? "Ready now" : `Ready ${fmtWeekday(first.t)}`}{row && row.last ? ` · last visit ${ago(daysBetween(row.last, today))}` : ""}{first.back ? " · first visit since the back-off, keep it short" : ""}</div>
+        <div className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{first.ready ? "Ready now" : `Ready ${fmtWeekday(first.t)}`}{row && row.last ? ` · last visit ${ago(daysBetween(row.last, today))}` : ""}{first.back ? " · first visit since the back-off, keep it short" : first.watch ? " · you're on their watch list, keep it short" : ""}</div>
       </button>}
       {x ? <div className="stats three mt-4">
         <div><div className="lab">Score</div><div className="statn sm" style={{ color: scoreTone(x.score) }}>{x.score}</div><div className="psmall">out of 100</div></div>
         <div><div className="lab">Risk of ruin</div><div className="statn sm" style={over ? { color: "var(--rose)" } : undefined}>{x.loses ? "—" : tinyPct(x.ror)}</div><div className="psmall">{over ? `over your ${rk(cap)}` : `your limit ${rk(cap)}`}</div></div>
         <div><div className="lab">Earns</div><div className="statn sm">{x.ev > 0 ? money(x.ev) : "—"}</div><div className="psmall">an hour</div></div>
-      </div> : first && <div className="text-xs mt-3" style={{ color: "var(--muted)" }}>{gamesAt(first.c).length ? "Working out the score…" : "No game saved or reported here, so no score yet."}</div>}
+      </div> : first && <div className="text-xs mt-3" style={{ color: "var(--muted)" }}>{gamesAt(first.c).length ? "Working out the score…" : first.c.intel ? "No game saved here, and its report doesn't spell one out, so no score yet." : "No game saved or reported here, so no score yet."}</div>}
       {plan.length > 1 && <div className="mt-4 pt-3" style={{ borderTop: "1px solid var(--sep)" }}>
         <div className="lab mb-1">Or</div>
         {plan.slice(1).map((v) => (
           <button key={v.c.id} className="prow por" onClick={() => onOpen(v.c)}>
             <ScoreRing s={scoreAt(sc, v.c)} size={28} />
             <span className="text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{v.c.name}</span>
-            <span className="text-[11.5px] font-semibold whitespace-nowrap" style={{ color: v.ready ? "var(--brass)" : v.back ? "var(--rose)" : "var(--ivory-d)" }}>{v.ready ? "Ready" : `Back ${fmtDay(v.t)}`}</span>
+            <span className="text-[11.5px] font-semibold whitespace-nowrap" style={{ color: v.ready ? "var(--brass)" : v.back ? "var(--rose)" : v.watch ? "var(--watch)" : "var(--ivory-d)" }}>{v.ready ? (v.watch ? "Ready · watch list" : "Ready") : `Back ${fmtDay(v.t)}`}</span>
           </button>))}
       </div>}
     </section>
@@ -501,14 +510,14 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
       {seen.map((r) => {
         const rd = isReady(r), sk = low(r.c), frac = rd ? 1 : r.until && r.from ? Math.max(0.04, Math.min(0.96, (now - r.from) / Math.max(DAY, r.until - r.from))) : 0.04;
         // how it stands, in words: ready, resting until a day, or skipped (scores under the cut-off, so never suggested)
-        const [st, tone] = sk ? [`Skipped · scores under ${minScore}`, "var(--muted)"] : rd ? ["Ready", "var(--brass)"] : r.kind === "backed" ? [r.until ? `Backed off · back ${fmtDay(r.until)}` : "Backed off", "var(--rose)"] : [`Resting · back ${fmtDay(r.until)}`, "var(--ivory-d)"];
+        const [st, tone] = sk ? [`Skipped · scores under ${minScore}`, "var(--muted)"] : rd ? [r.watch ? "Ready · watch list" : "Ready", "var(--brass)"] : r.kind === "backed" ? [r.until ? `Backed off · back ${fmtDay(r.until)}` : "Backed off", "var(--rose)"] : r.watch ? [`Watch list · back ${fmtDay(r.until)}`, "var(--watch)"] : [`Resting · back ${fmtDay(r.until)}`, "var(--ivory-d)"];
         return (
         <button key={r.c.id} className={"prow pc2" + (sk ? "" : " hasbar")} onClick={() => onOpen(r.c)}>
           <ScoreRing s={scoreAt(sc, r.c)} />
           <span className="pname">{r.c.name}</span>
-          <span className="psub"><span style={{ color: tone, fontWeight: 600 }}>{st}</span><span className="ph-hide">{r.last ? ` · ${ago(daysBetween(r.last, today))}` : " · no sessions"}{r.why && !sk ? ` · ${r.why}` : ""}</span></span>
+          <span className="psub"><span style={{ color: tone, fontWeight: 600 }}>{st}</span><span className="ph-hide">{r.last ? ` · ${ago(daysBetween(r.last, today))}` : " · no sessions"}{r.why && !sk && !(r.watch && !rd && r.kind !== "backed" && r.why === "on their watch list") ? ` · ${r.why}` : ""}</span></span>
           <Worth x={sc.get(r.c)} cap={cap} />
-          {!sk && <span className="ptrack prest" aria-hidden="true"><i className={"barx " + (rd ? "ok" : r.kind === "backed" ? "x" : "")} style={{ width: `${frac * 100}%` }} /></span>}
+          {!sk && <span className="ptrack prest" aria-hidden="true"><i className={"barx " + (rd ? "ok" : r.kind === "backed" ? "x" : r.watch ? "w" : "")} style={{ width: `${frac * 100}%` }} /></span>}
         </button>); })}
       </div>
       {mine.length > 5 && <More open={allC} onClick={() => setAllC(!allC)} className="mt-2">{allC ? "Fewer" : `All ${mine.length} casinos`}</More>}
@@ -520,8 +529,9 @@ function Rotation({ rot, prefs, setPrefs, onOpen }) {
           <div className="flex items-center justify-between gap-3"><span className="text-sm">Never suggest a casino scoring under</span><Step v={prefs.minScore} set={(v) => setPrefs({ minScore: v })} min={0} max={50} step={5} f={(v) => (v > 0 ? String(v) : "Off")} label="lowest score to suggest" /></div>
           <div className="flex items-center justify-between gap-3"><span className="text-sm">Rest after a visit</span><Step v={prefs.rest.base} set={(v) => setRest("base", v)} min={1} max={30} f={(v) => `${v} d`} label="rest after a visit" /></div>
           <div className="flex items-center justify-between gap-3"><span className="text-sm">Rest after a back-off</span><Step v={prefs.rest.backed} set={(v) => setRest("backed", v)} min={30} max={365} step={15} f={(v) => `${v} d`} label="rest after a back-off" /></div>
+          <div className="flex items-center justify-between gap-3"><span className="text-sm">Rest on a watch list</span><Step v={R.watch} set={(v) => setRest("watch", v)} min={15} max={365} step={15} f={(v) => `${v} d`} label="rest while on a watch list" /></div>
         </div>
-        A casino rests {R.base} days after a visit; {R.warm} days if you rated its heat Medium, were watched last time, or went 3 or more times in 30 days; {R.hot} days at High heat. A back-off rests it {R.backed} days, or {R.backedAgain} days once you've been backed off there twice. Play next picks the ready casino with the most days rested, nudged by score: a great game counts about like a quarter more rest. The two under it are the next best, or the next to come back.
+        A casino rests {R.base} days after a visit; {R.warm} days if you rated its heat Medium, were watched last time, or went 3 or more times in 30 days; {R.hot} days at High heat. A back-off rests it {R.backed} days, or {R.backedAgain} days once you've been backed off there twice. While you're on a casino's watch list (you mark it on the casino), every visit rests it at least {R.watch} days. Play next picks the ready casino with the most days rested, nudged by score: a great game counts about like a quarter more rest. The two under it are the next best, or the next to come back.
       </Info>
     </section>
     {scout.length > 0 && <section className="card p-5 mb-4">
@@ -1179,9 +1189,9 @@ function CasinoPop({ c, rot, sessLen, onClose, onCasinos }) {
     <Sheet title={c.name} onClose={onClose}>
       <p className="text-xs -mt-2 mb-3" style={{ color: "var(--muted)" }}>{[c.city, c.st].filter(Boolean).join(", ")}</p>
       <div className="rounded-xl px-4 py-3 mb-3" style={{ background: "rgba(var(--fg),.035)" }}>
-        <div className="text-sm font-semibold" style={{ color: !row || sk ? "var(--ivory)" : rd ? "var(--brass)" : row.kind === "backed" ? "var(--rose)" : "var(--ivory)" }}>{!row ? "Not in your rotation yet" : sk ? "Not suggested" : rd ? "Ready to play" : row.until ? `Resting until ${fmtWeekday(row.until)}` : "Backed off"}</div>
+        <div className="text-sm font-semibold" style={{ color: !row || sk ? "var(--ivory)" : rd ? "var(--brass)" : row.kind === "backed" ? "var(--rose)" : row.watch ? "var(--watch)" : "var(--ivory)" }}>{!row ? "Not in your rotation yet" : sk ? "Not suggested" : rd ? "Ready to play" : row.until ? `Resting until ${fmtWeekday(row.until)}` : "Backed off"}</div>
         <div className="text-xs mt-0.5" style={{ color: "var(--ivory-d)" }}>
-          {!row ? "You haven't logged a session here. Scout it, log the session, and it joins the rotation." : <>{row.last ? `Last visit ${ago(daysBetween(row.last, today))}.` : "No sessions logged."}{!rd && row.days ? ` It rests ${row.days} days${row.why ? ` (${row.why})` : ""}.` : ""}{sk ? ` It scores under ${rot.minScore} with your bankroll, so the plan leaves it out.` : ""}</>}
+          {!row ? "You haven't logged a session here. Scout it, log the session, and it joins the rotation." : <>{row.last ? `Last visit ${ago(daysBetween(row.last, today))}.` : "No sessions logged."}{!rd && row.days ? ` It rests ${row.days} days${row.why ? ` (${row.why})` : ""}.` : ""}{sk ? ` It scores under ${rot.minScore} with your bankroll, so the plan leaves it out.` : ""}{row.watch ? ` On their watch list since ${fmtDay(dayOf(row.watch))} (${listedFor(row.watch)}).` : ""}</>}
         </div>
       </div>
       {x ? <>
@@ -1199,7 +1209,7 @@ function CasinoPop({ c, rot, sessLen, onClose, onCasinos }) {
         </div>
         {x.ev > 0 && <><div className="eyebrow mt-3 mb-1.5" style={{ fontSize: 9.5 }}>{over ? "Safest bets here, by true count" : "Best bets here, by true count"}</div>
           <div className="flex flex-wrap gap-1.5">{spreadLine(x.bets).map(([k, v]) => <span key={k} className="rounded-lg px-2 py-1 text-[11px]" style={{ background: "rgba(var(--fg),.05)", color: "var(--ivory-d)" }}><span className="mono" style={{ color: "var(--muted)" }}>{k}</span> <span className="mono font-semibold" style={{ color: "var(--ivory)" }}>{v}</span></span>)}</div></>}
-      </> : <p className="text-sm mb-1" style={{ color: "var(--ivory-d)" }}>{x === undefined && gamesAt(c).length ? "Working out the score…" : "No score yet: there's no game saved here and no scouting report. Save the game you see on the Casinos page and it gets one."}</p>}
+      </> : <p className="text-sm mb-1" style={{ color: "var(--ivory-d)" }}>{x === undefined && gamesAt(c).length ? "Working out the score…" : `No score yet: there's no game saved here${c.intel ? ", and its scouting report doesn't spell one out in full" : " and no scouting report"}. Save the game you see on the Casinos page and it gets one.`}</p>}
       {se && se.n > 0 && <div className="mt-3"><Fact k="Your record here" v={sgnMoney(se.net)} tone={se.net < 0 ? "var(--neg-l)" : undefined} sub={`${se.n} session${se.n === 1 ? "" : "s"} · ${Math.round(se.h * 10) / 10} hours · ${sgnMoney(se.h > 0 ? se.net / se.h : 0)}/hr${se.backedN ? ` · backed off ${se.backedN === 1 ? "once" : se.backedN + " times"}` : ""}`} /></div>}
       <div className="text-center mt-4"><button className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={onCasinos}>Open on the Casinos page to edit games, heat and notes ›</button></div>
     </Sheet>
@@ -1249,7 +1259,7 @@ export function usePlayNext(bankroll, on = true) {
   const rot = useRotation(on ? all : null, prefs, bankroll, true), first = rot.plan[0] || null, x = first ? rot.sc.get(first.c) : null;
   const row = first && rot.rows.find((r) => r.c.id === first.c.id);
   return { loading: !all || rot.pending, n: rot.rows.length, ready: rot.ready.length, first, score: x ? x.score : null, ev: x && x.ev > 0 ? x.ev : null,
-    when: first ? (first.ready ? "Ready now" : fmtWeekday(first.t)) : "", last: row && row.last ? ago(daysBetween(row.last, rot.today)) : "", back: !!(first && first.back),
+    when: first ? (first.ready ? "Ready now" : fmtWeekday(first.t)) : "", last: row && row.last ? ago(daysBetween(row.last, rot.today)) : "", back: !!(first && first.back), watch: !!(first && first.watch),
     none: !!all && !rot.pending && rot.rows.length > 0 && !first,
     // why nothing is suggested (every casino under the lowest score to suggest), in the words Plan's own card uses
     minScore: rot.minScore, closest: rot.skipped[0] ? rot.skipped[0].c.name : "", closestScore: rot.skipped[0] && rot.sc.get(rot.skipped[0].c) ? rot.sc.get(rot.skipped[0].c).score : null };

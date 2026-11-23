@@ -153,6 +153,15 @@ near("high heat rests 42", restOf(cas("a", { n: 1, last: "2026-11-09", dates: ["
 near("one back-off rests 90 days from the back-off", restOf(cas("a", { n: 2, last: "2026-11-10", dates: ["2026-11-01", "2026-11-10"], backed: "2026-11-10", backedN: 1 }), R).until, addDays(D("2026-11-10"), 90), 0);
 near("a second back-off rests 180", restOf(cas("a", { n: 2, last: "2026-11-10", dates: ["2026-11-01", "2026-11-10"], backed: "2026-11-10", backedN: 2 }), R).until, addDays(D("2026-11-10"), 180), 0);
 ok("never played is ready", restOf(cas("a", null, { status: "been" }), R).until === null);
+// on their watch list (watchOn): every visit rests at least R.watch days (60 unless changed), from the later of the last
+// visit and the day of the listing; a longer rest still wins, and a back-off still comes first
+near("a watch list stretches a plain visit to 60 days", restOf(cas("a", { n: 1, last: "2026-11-09", dates: ["2026-11-09"] }, { watchOn: "2026-11-09" }), R).until, addDays(D("2026-11-09"), 60), 0);
+near("listed after the last visit logged: counted from the listing", restOf(cas("a", { n: 1, last: "2026-11-01", dates: ["2026-11-01"] }, { watchOn: "2026-11-20" }), R).until, addDays(D("2026-11-20"), 60), 0);
+near("listed with no session logged: counted from the listing", restOf(cas("a", null, { status: "been", watchOn: "2026-11-22" }), R).until, addDays(D("2026-11-22"), 60), 0);
+near("the watch-list rest is the one set on the page", restOf(cas("a", { n: 1, last: "2026-11-09", dates: ["2026-11-09"] }, { watchOn: "2026-11-09" }), restSet({ base: 7, backed: 90, watch: 30 })).until, addDays(D("2026-11-09"), 30), 0);
+near("a back-off still rests as a back-off", restOf(cas("a", { n: 1, last: "2026-11-10", dates: ["2026-11-10"], backed: "2026-11-10", backedN: 1 }, { watchOn: "2026-11-10" }), R).until, addDays(D("2026-11-10"), 90), 0);
+ok("a casino off the watch list rests as before", restOf(cas("a", { n: 1, last: "2026-11-09", dates: ["2026-11-09"] }, { watchOn: null }), R).days === 7);
+ok("old plans without a watch-list rest get 60 days", restSet({ base: 7, backed: 90 }).watch === 60);
 { const today = D("2026-11-16"), rows = ["a", "b", "c", "d", "e", "f", "g"].map((id) => { const c = cas(id, null, { status: "been" }); return { c, ...restOf(c, R) }; });
   const plan = nextUp(rows, today, () => 50);
   ok("one pick and two alternates", plan.length === 3 && new Set(plan.map((v) => v.c.id)).size === 3 && plan.every((v) => v.ready && v.t === today), plan.map((v) => v.c.id).join());
@@ -166,6 +175,8 @@ ok("never played is ready", restOf(cas("a", null, { status: "been" }), R).until 
   const bk = [cas("x", { n: 1, last: "2026-09-01", dates: ["2026-09-01"], backed: "2026-09-01", backedN: 1 })].map((c) => ({ c, ...restOf(c, R) })), pb = nextUp(bk, today, () => 50);
   ok("a backed-off casino comes back only when its rest ends", pb.length === 1 && !pb[0].ready && pb[0].back && daysBetween(D("2026-09-01"), pb[0].t) === 90);
   ok("once that rest is over it is offered as a first visit back", nextUp(bk, D("2026-12-05"), () => 50)[0].ready && nextUp(bk, D("2026-12-05"), () => 50)[0].back);
+  const wl = [cas("w", { n: 1, last: "2026-11-01", dates: ["2026-11-01"] }, { watchOn: "2026-11-01" })].map((c) => ({ c, ...restOf(c, R) })), pw = nextUp(wl, today, () => 50);
+  ok("a watch-listed casino is offered when its rest ends, marked as such", pw.length === 1 && !pw[0].ready && pw[0].watch && !pw[0].back && daysBetween(D("2026-11-01"), pw[0].t) === 60);
 }
 
 // ---- reading a scouting report's game lines

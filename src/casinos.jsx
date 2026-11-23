@@ -2,10 +2,10 @@
 // Lives in its own file (with casino-map.js and casino-data.js) so work here doesn't collide with app.jsx.
 // Shared controls come from app.jsx; they are only touched inside components, never while this file loads.
 import { useState, useMemo, useEffect, useRef, memo } from "react";
-import { Sheet, Seg, ChipRow, ConfirmLink, More, Fold, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav } from "./app.jsx";
+import { Sheet, Seg, ChipRow, ConfirmLink, More, Fold, Info, Toggle, rulesShort, dasOn, dblRule, maxHandsOf, SESS_KEY, casinoKey, dateShort, localDay, sgnMoney, fmtH, useNav } from "./app.jsx";
 import { unpack, albersUsa, azimuthal, regionMap, countryMap, fitBox, regionAt } from "./casino-map.js";
 import { GEO_US, GEO_CA, GEO_WORLD, CASINO_ROWS, CASINO_INTEL } from "./casino-data.js";
-import { TableScoreCard, useCasinoScores, scoreTone, milesBetween } from "./planner.jsx";
+import { TableScoreCard, useCasinoScores, scoreTone, milesBetween, watchOf, listedFor } from "./planner.jsx";
 
 export const CAS_KEY = "bj-casinos-v1"; // your marks and your own casinos — backed up and synced
 const CAS_UI_KEY = "bj-casinos-ui"; // which country you were looking at — this device only
@@ -66,7 +66,7 @@ function linkSessions(sessions, all) {
   return { by, loose: loose.sort((a, b) => b.n - a.n) };
 }
 const statusOf = (c) => ((c.mark && c.mark.status === "backed") || (c.sess && c.sess.backed) ? "backed" : (c.mark && c.mark.status === "been") || (c.sess && c.sess.n) ? "been" : "none");
-const hasNotes = (m) => !!(m && (m.heat || (m.games && m.games.length) || (m.notes && m.notes.trim())));
+const hasNotes = (m) => !!(m && (m.heat || m.watchOn || (m.games && m.games.length) || (m.notes && m.notes.trim())));
 const HEATS = [[1, "Low"], [2, "Medium"], [3, "High"]];
 const gameLine = (g) => [g.rules ? rulesShort(g.rules) : null, g.min || g.max ? `$${g.min || "?"}–${g.max ? "$" + g.max : "?"}` : null, g.tables ? `${g.tables} table${+g.tables === 1 ? "" : "s"}` : null].filter(Boolean).join(" · ");
 const mapsUrl = (c) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([c.name, c.city, c.st].filter(Boolean).join(", "));
@@ -119,6 +119,11 @@ const casCss = `
 @media (hover:hover){.crow:hover{background:rgba(var(--fg),.04)}}
 .ctag{font-size:10px;font-weight:600;border-radius:999px;padding:1px 7px;white-space:nowrap}
 .ctag.x{background:rgba(var(--neg),.18);color:var(--neg-l)}.ctag.b{background:rgba(var(--acc),.15);color:var(--brass)}.ctag.n{background:rgba(var(--fg),.07);color:var(--ivory-d)}
+/* on their watch list (22 Nov): an orange of its own, between "been" and "backed off" */
+.cdot.w{background:var(--watch);border-color:var(--watch)}
+.ctag.w{background:color-mix(in srgb,var(--watch) 17%,transparent);color:var(--watch)}
+.cpin.w{fill:var(--watch);stroke:var(--bg);stroke-width:1.6}
+.cpin.wr{fill:none;stroke:var(--watch);stroke-opacity:.55;stroke-width:1.2}
 .bj select.in.csel{padding-right:30px;font-size:14px;height:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237D8985' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
 .cbox{border-radius:14px;padding:12px 14px;background:rgba(var(--fg),.035);border:1px solid rgba(var(--fg),.06)}
 .cback{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--brass);margin-bottom:12px}
@@ -139,14 +144,15 @@ const MapBase = memo(function MapBase({ map, focus }) {
   );
 });
 const MapPins = memo(function MapPins({ pins, sel, me }) {
-  const others = [], been = [], backed = [];
-  pins.forEach((p) => (p.kind === "backed" ? backed : p.kind === "been" ? been : others).push(p));
+  const others = [], been = [], watch = [], backed = [];
+  pins.forEach((p) => (p.kind === "backed" ? backed : p.kind === "watch" ? watch : p.kind === "been" ? been : others).push(p));
   const at = (p) => `translate(${p.x.toFixed(2)},${p.y.toFixed(2)})`;
   const selP = sel && pins.find((p) => p.id === sel);
   return (
     <>
       {others.map((p) => <g key={p.id} transform={at(p)}><circle className="cpin o" r="1.9" /></g>)}
       {been.map((p) => <g key={p.id} transform={at(p)}><circle className="cpin b" r="5" /></g>)}
+      {watch.map((p) => <g key={p.id} transform={at(p)}><circle className="cpin wr" r="8.5" /><circle className="cpin w" r="5.5" /></g>)}
       {backed.map((p) => <g key={p.id} transform={at(p)}><circle className="cpin pulse" r="13" /><circle className="cpin halo" r="10.5" /><circle className="cpin x" r="5.5" /></g>)}
       {selP && <g transform={at(selP)}><circle className="cpin sel" r="9.5" /></g>}
       {me && <g transform={at(me)}><circle className="cpin meh" r="11" /><circle className="cpin me" r="4.6" /></g>}
@@ -320,11 +326,12 @@ function CasinoRow({ c, place, onOpen, score, dist }) {
   const st = statusOf(c), m = c.mark || {}, g = (m.games || [])[0];
   const it = c.intel, quick = !g && it ? [it.tablesN ? `${it.tablesN} tables` : null, it.min ? `from $${it.min}` : null].filter(Boolean) : [];
   const sub = [place, g && g.rules ? rulesShort(g.rules) : null, ...quick, m.heat ? `${HEATS[m.heat - 1][1].toLowerCase()} heat` : null].filter(Boolean).join(" · ");
+  const w = st !== "backed" && !!watchOf(c);
   return (
     <button className="crow" onClick={() => onOpen(c)}>
-      <span className={"cdot" + (st === "backed" ? " x" : st === "been" ? " b" : "")} aria-hidden="true" />
+      <span className={"cdot" + (st === "backed" ? " x" : w ? " w" : st === "been" ? " b" : "")} aria-hidden="true" />
       <span className="min-w-0"><span className="text-sm font-semibold cname" style={{ color: "var(--ivory)" }}>{c.name}</span><span className="block text-[11px] truncate" style={{ color: "var(--muted)" }}>{sub}</span></span>
-      <span className="flex items-center gap-2">{dist && <span className="mono text-xs whitespace-nowrap" style={{ color: "var(--ivory-d)" }}>{dist}</span>}{score && <span className="text-right leading-none" title={`Table score ${score.score}: the best game here against your usual game (50)`}><span className="block mono text-[13px] font-semibold" style={{ color: scoreTone(score.score) }}>{score.score}</span><span className="block lab mt-0.5" style={{ fontSize: 10 }}>score</span></span>}{dist ? null : st === "backed" ? <span className="ctag x">backed off</span> : st === "been" ? <span className="ctag b">been</span> : c.intel ? <span className={"ctag n" + (score ? " ph-hide" : "")}>report</span> : null}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)" }}><path d="M9 6l6 6-6 6" /></svg></span>
+      <span className="flex items-center gap-2">{dist && <span className="mono text-xs whitespace-nowrap" style={{ color: "var(--ivory-d)" }}>{dist}</span>}{score && <span className="text-right leading-none" title={`Table score ${score.score}: the best game here against your usual game (50)`}><span className="block mono text-[13px] font-semibold" style={{ color: scoreTone(score.score) }}>{score.score}</span><span className="block lab mt-0.5" style={{ fontSize: 10 }}>score</span></span>}{dist ? null : st === "backed" ? <span className="ctag x">backed off</span> : w ? <span className="ctag w">watch list</span> : st === "been" ? <span className="ctag b">been</span> : c.intel ? <span className={"ctag n" + (score ? " ph-hide" : "")}>report</span> : null}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ color: "var(--muted)" }}><path d="M9 6l6 6-6 6" /></svg></span>
     </button>
   );
 }
@@ -410,7 +417,7 @@ function IntelBlock({ intel, onCopy, copied }) {
 }
 function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onMove, onUseRules, onLog }) {
   const m0 = c.mark || {};
-  const [d, setD] = useState(() => ({ status: m0.status || "none", backedOn: m0.backedOn || "", heat: m0.heat || 0, games: (m0.games || []).map((g) => ({ ...g })), notes: m0.notes || "", name: c.name, city: c.city || "" }));
+  const [d, setD] = useState(() => ({ status: m0.status || "none", backedOn: m0.backedOn || "", watch: !!m0.watchOn, watchOn: m0.watchOn || "", heat: m0.heat || 0, games: (m0.games || []).map((g) => ({ ...g })), notes: m0.notes || "", name: c.name, city: c.city || "" }));
   const [edit, setEdit] = useState(null); // id of the game being edited
   const [usedId, setUsedId] = useState(null), [copied, setCopied] = useState(false);
   const dirty = useRef(false), dr = useRef(d); dr.current = d;
@@ -421,7 +428,7 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
     const v = dr.current;
     if (dirty.current && (!c.custom || v.name.trim())) {
       const games = v.games.map((g) => { const o = { id: g.id, rules: g.rules }; if ((g.label || "").trim()) o.label = g.label.trim(); ["min", "max", "tables"].forEach((k) => { if (g[k] !== "" && g[k] != null && +g[k] > 0) o[k] = +g[k]; }); if ((g.note || "").trim()) o.note = g.note.trim(); return o; });
-      onSave({ status: v.status === "none" ? null : v.status, backedOn: v.status === "backed" ? v.backedOn || localDay() : null, heat: v.heat || null, games: games.length ? games : null, notes: v.notes.trim() || null, ...(c.custom ? { name: v.name.trim(), city: v.city.trim() } : {}) });
+      onSave({ status: v.status === "none" ? null : v.status, backedOn: v.status === "backed" ? v.backedOn || localDay() : null, watchOn: v.watch ? v.watchOn || localDay() : null, heat: v.heat || null, games: games.length ? games : null, notes: v.notes.trim() || null, ...(c.custom ? { name: v.name.trim(), city: v.city.trim() } : {}) });
     }
     onClose();
   };
@@ -461,6 +468,16 @@ function CasinoSheet({ c, place, intel, appRules, onSave, onClose, onRemove, onM
           <Seg value={shown} options={sess && sess.n ? [["been", "Been here"], ["backed", "Backed off"]] : [["none", "Not yet"], ["been", "Been here"], ["backed", "Backed off"]]} onChange={(v) => set({ status: v, backedOn: v === "backed" ? d.backedOn || localDay() : d.backedOn })} style={{ marginBottom: shown === "backed" ? 8 : 16 }} />
           {shown === "backed" && <label className="grid items-center gap-3 mb-4 rise" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,190px)" }}><span className="text-sm" style={{ color: "var(--ivory-d)" }}>When</span><input className="in" type="date" value={d.backedOn || localDay()} max={localDay()} onChange={(e) => set({ backedOn: e.target.value })} /></label>}
         </>}
+      {/* On their watch list (Nick, 22 Nov, after Rivers Pittsburgh put him on theirs). It is the casino's own note on
+          you, not a ban, and nothing makes it run out, so it stays until you turn it off; the Plan rests the casino
+          longer after every visit while it is on. */}
+      <div className="mb-4">
+        <Toggle label="On their watch list" sub={d.watch ? `Since ${dateShort(d.watchOn || localDay())} · ${listedFor(d.watchOn || localDay())}` : "Turn on if they've put you on their list"} on={d.watch} onChange={(v) => set({ watch: v, watchOn: v ? d.watchOn || localDay() : d.watchOn, ...(v && d.status === "none" ? { status: "been" } : {}) })} />
+        <Fold open={d.watch}>
+          <label className="grid items-center gap-3 pt-2" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,190px)" }}><span className="text-sm" style={{ color: "var(--ivory-d)" }}>Since</span><input className="in" type="date" value={d.watchOn || localDay()} max={localDay()} onChange={(e) => set({ watchOn: e.target.value })} /></label>
+          <Info label="Does it go away?">A watch list is the casino's own note on you: on your players card and in its surveillance files, and often shared with its sister casinos. It isn't a ban, but nothing makes it run out and they won't tell you when you're off it, so it stays on here until you turn it off. While it's on, the Plan rests this casino longer after every visit. If they ever tell you you're trespassed, don't go back: you can be arrested for it.</Info>
+        </Fold>
+      </div>
       <span className="eyebrow block mb-1.5">Heat</span>
       <div className="chipseg mb-1" role="group" aria-label="Heat" style={{ gridTemplateColumns: "repeat(3, minmax(0,1fr))" }}>{HEATS.map(([v, l]) => <button key={v} type="button" className={d.heat === v ? "on" : ""} aria-pressed={d.heat === v} onClick={() => set({ heat: d.heat === v ? 0 : v })} style={{ height: 36 }}>{l}</button>)}</div>
       <p className="text-[11px] mb-4" style={{ color: "var(--muted)" }}>How closely they watch counters. Tap again to clear.</p>
@@ -613,14 +630,14 @@ export default function CasinosPage({ rules, onUseRules, go }) {
   const everything = useMemo(() => (data ? buildAll(data.marks, sessions) : null), [data, sessions]);
   const here = useMemo(() => (everything ? everything.all.filter((c) => c.cc === cc) : []), [everything, cc]);
   const visible = useMemo(() => here.filter((c) => showHidden || !(c.mark && c.mark.hidden)), [here, showHidden]);
-  const counts = useMemo(() => { const o = { all: visible.length, been: 0, backed: 0, intel: 0 }; visible.forEach((c) => { const s = statusOf(c); if (s !== "none") o.been++; if (s === "backed") o.backed++; if (c.intel) o.intel++; }); return o; }, [visible]);
+  const counts = useMemo(() => { const o = { all: visible.length, been: 0, backed: 0, watch: 0, intel: 0 }; visible.forEach((c) => { const s = statusOf(c); if (s !== "none") o.been++; if (s === "backed") o.backed++; if (watchOf(c)) o.watch++; if (c.intel) o.intel++; }); return o; }, [visible]);
   const hiddenN = here.length - here.filter((c) => !(c.mark && c.mark.hidden)).length;
   const pins = useMemo(() => {
     const out = [];
     visible.forEach((c) => {
-      const s = statusOf(c); if ((filter === "been" && s === "none") || (filter === "backed" && s !== "backed") || (filter === "intel" && !c.intel)) return;
+      const s = statusOf(c); if ((filter === "been" && s === "none") || (filter === "backed" && s !== "backed") || (filter === "watch" && !watchOf(c)) || (filter === "intel" && !c.intel)) return;
       if (!isFinite(c.lat + c.lon)) return; const p = map.proj.fwd(c.lon, c.lat, cc === "USA" ? c.st || undefined : undefined); if (!p) return;
-      out.push({ id: c.id, x: p[0], y: p[1], kind: s === "backed" ? "backed" : s === "been" ? "been" : "other", name: c.name });
+      out.push({ id: c.id, x: p[0], y: p[1], kind: s === "backed" ? "backed" : watchOf(c) ? "watch" : s === "been" ? "been" : "other", name: c.name });
     });
     return out;
   }, [visible, filter, map, cc]);
@@ -631,7 +648,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
   const words = tokens(q), searching = q.trim().length > 0;
   const list = useMemo(() => {
     const rank = { backed: 0, been: 1, none: 2 }, sort = (L) => L.slice().sort((a, b) => rank[statusOf(a)] - rank[statusOf(b)] || a.name.localeCompare(b.name));
-    const byFilter = (c) => { const s = statusOf(c); return filter === "all" || (filter === "intel" ? !!c.intel : filter === "been" ? s !== "none" : s === "backed"); };
+    const byFilter = (c) => { const s = statusOf(c); return filter === "all" || (filter === "intel" ? !!c.intel : filter === "watch" ? !!watchOf(c) : filter === "been" ? s !== "none" : s === "backed"); };
     if (searching) { const raw = q.trim().toLowerCase(); return sort(visible.filter((c) => { const hay = (c.name + " " + c.city + " " + c.st + " " + (map.names[c.st] || "")).toLowerCase(); if (hay.includes(raw)) return true; const t = tokens(hay); return words.length > 0 && words.every((x) => t.some((y) => y.startsWith(x))); })); }
     // near me: every casino in this country by distance, whatever its status
     if (filter === "near") return where.pos ? visible.filter((c) => isFinite(c.lat + c.lon)).map((c) => [milesBetween(where.pos, c), c]).sort((a, b) => a[0] - b[0]).slice(0, 80).map((x) => x[1]) : [];
@@ -641,7 +658,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
   }, [visible, q, focus, filter, map, where.pos]); // eslint-disable-line
   const me = useMemo(() => { if (!near || !where.pos) return null; let st; try { st = cc === "USA" && map.geo ? regionAt(map.geo, where.pos.lon, where.pos.lat) || undefined : undefined; } catch (_) {} const p = map.proj.fwd(where.pos.lon, where.pos.lat, st); return p ? { x: p[0], y: p[1] } : null; }, [near, where.pos, map, cc]);
   useEffect(() => { setMore(false); }, [q, focus, filter, cc]);
-  const title = searching ? `${list.length} match${list.length === 1 ? "" : "es"}` : near ? "Near you" : focus ? `${map.names[focus] || focus}${filter === "backed" ? " · backed off" : filter === "been" ? " · been" : filter === "intel" ? " · reports" : ""}` : filter === "backed" ? "Backed off" : filter === "been" ? "Where you've been" : filter === "intel" ? "Scouting reports" : "Your casinos";
+  const title = searching ? `${list.length} match${list.length === 1 ? "" : "es"}` : near ? "Near you" : focus ? `${map.names[focus] || focus}${filter === "backed" ? " · backed off" : filter === "watch" ? " · watch list" : filter === "been" ? " · been" : filter === "intel" ? " · reports" : ""}` : filter === "backed" ? "Backed off" : filter === "watch" ? "Watch list" : filter === "been" ? "Where you've been" : filter === "intel" ? "Scouting reports" : "Your casinos";
   const regionCounts = useMemo(() => { const o = {}; visible.forEach((c) => { if (c.st) o[c.st] = (o[c.st] || 0) + 1; }); return o; }, [visible]);
 
   const toMap = () => { try { const el = mapCard.current; if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start", behavior: reduceMotion() ? "auto" : "smooth" }); } catch (_) {} };
@@ -678,7 +695,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
             onRegion={(id) => { setFocus(id); if (id) { setQ(""); if (near) setFilter("all"); } }} onPins={(L) => { if (L.length === 1) setOpen(L[0].id); else setPick(L.map((p) => p.id)); }}
             onPlace={placed} onCancelPlace={() => { const was = placing; setPlacing(null); if (was && was !== "add") setOpen(was); }} />
           <div className="px-4 py-3">
-            <ChipRow small value={filter} onChange={pickFilter} options={[["all", "All"], ["near", <span key="n" className="flex items-center gap-1.5"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 3 3 10.5l7.5 3 3 7.5z" /></svg>Near me</span>], ["been", <span key="b" className="flex items-center gap-1.5"><span className="cdot b" />Been {counts.been}</span>], ["backed", <span key="x" className="flex items-center gap-1.5"><span className="cdot x" style={{ boxShadow: "none" }} />Backed off {counts.backed}</span>], ...(counts.intel ? [["intel", "Reports"]] : [])]} />
+            <ChipRow small value={filter} onChange={pickFilter} options={[["all", "All"], ["near", <span key="n" className="flex items-center gap-1.5"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 3 3 10.5l7.5 3 3 7.5z" /></svg>Near me</span>], ["been", <span key="b" className="flex items-center gap-1.5"><span className="cdot b" />Been {counts.been}</span>], ["backed", <span key="x" className="flex items-center gap-1.5"><span className="cdot x" style={{ boxShadow: "none" }} />Backed off {counts.backed}</span>], ...(counts.watch || filter === "watch" ? [["watch", <span key="w" className="flex items-center gap-1.5"><span className="cdot w" />Watch list {counts.watch}</span>]] : []), ...(counts.intel ? [["intel", "Reports"]] : [])]} />
           </div>
         </section>
       </div><div className="dcol o2">
@@ -706,7 +723,7 @@ export default function CasinosPage({ rules, onUseRules, go }) {
             </div>
           ) : !list.length && (emptyAll
             ? <div className="text-center py-6"><div className="text-sm font-semibold">{counts.all ? "Mark where you've played" : `No casinos listed for ${cname} yet`}</div><p className="text-xs mt-1" style={{ color: "var(--ivory-d)" }}>{counts.all ? `${map.hasRegions ? (cc === "USA" ? "Tap a state on the map" : "Tap a province on the map") : "Tap a pin on the map"} or search by name. Casinos you've been to, been backed off from or written notes on collect here.` : "Add the ones you play with “+ Add casino”, then tap the map where each one is."}</p></div>
-            : <p className="text-sm text-center py-6" style={{ color: "var(--muted)" }}>{searching ? `Nothing in ${cname} matches “${q.trim()}”.` : focus ? (filter === "all" ? `No casinos with blackjack tables listed in ${map.names[focus] || focus}.` : filter === "intel" ? `No scouting reports for ${map.names[focus] || focus} yet.` : `None in ${map.names[focus] || focus} yet.`) : filter === "backed" ? "You haven't been backed off anywhere. Long may it last." : filter === "intel" ? "No scouting reports here yet." : "Nowhere marked yet."}</p>)}
+            : <p className="text-sm text-center py-6" style={{ color: "var(--muted)" }}>{searching ? `Nothing in ${cname} matches “${q.trim()}”.` : focus ? (filter === "all" ? `No casinos with blackjack tables listed in ${map.names[focus] || focus}.` : filter === "intel" ? `No scouting reports for ${map.names[focus] || focus} yet.` : `None in ${map.names[focus] || focus} yet.`) : filter === "backed" ? "You haven't been backed off anywhere. Long may it last." : filter === "watch" ? "You're on no casino's watch list." : filter === "intel" ? "No scouting reports here yet." : "Nowhere marked yet."}</p>)}
           {(searching || focus) && !near && !list.length && <div className="text-center -mt-2 mb-1"><button className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => startAdd(searching ? q.trim() : "")}>+ Add {searching ? `“${q.trim()}”` : "a casino here"}</button></div>}
           {hiddenN > 0 && !searching && <div className="text-center mt-2"><button className="text-xs underline underline-offset-2 lnk" style={{ color: "var(--muted)" }} onClick={() => setShowHidden(!showHidden)}>{showHidden ? "Stop showing hidden casinos" : `${hiddenN} hidden — show`}</button></div>}
         </section>

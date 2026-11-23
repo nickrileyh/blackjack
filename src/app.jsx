@@ -1512,19 +1512,19 @@ html.tshrink.tsdo .topbar .tbtitle{animation:tbtin linear both;animation-timelin
    held frame; the fill (solid: it hides the real icons under the glass) is a shade lighter than the bar, as the resting
    highlight is, and the bevel is drawn again on top of the copy. */
 .navglide{overflow:hidden}
-.navglide>.lensrow{position:absolute;left:0;top:0;height:100%;width:calc(var(--n) * 100%);display:flex;font-style:normal;transform-origin:0 0;transform:translateX(calc(var(--i) * -100% / var(--n)));opacity:0;pointer-events:none;will-change:transform;transition:opacity .22s var(--ez-soft)}
+.navglide .lensrow{position:absolute;left:0;top:0;height:100%;width:calc(var(--n) * 100%);display:flex;font-style:normal;transform-origin:0 0;transform:translateX(calc(var(--i) * -100% / var(--n)));opacity:0;pointer-events:none;will-change:transform;transition:opacity .22s var(--ez-soft)}
 .navglide::before,.navglide::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .22s var(--ez-soft)}
 .navglide::before{background:linear-gradient(180deg,rgba(var(--fg),.15),rgba(var(--fg),.05)),rgb(var(--bgrgb))}
 .navglide::after{z-index:1;box-shadow:inset 0 0 0 var(--hair) rgba(255,255,255,.16),inset 0 var(--bev) 0 rgba(255,255,255,.55),inset 2px 2px 2px -1.5px rgba(255,255,255,.55),inset -2px -2px 2px -1.5px rgba(255,255,255,.3),inset 0 6px 9px -6px rgba(255,255,255,.22),inset 0 -7px 9px -7px rgba(0,0,0,.4)}
 :root[data-theme="light"] .navglide::before{background:linear-gradient(180deg,#fff,#f4f6f9)}
 :root[data-theme="light"] .navglide::after{box-shadow:inset 0 var(--bev) 0 #fff,inset 0 5px 7px -5px rgba(255,255,255,.9),inset 0 -6px 8px -6px rgba(var(--fg),.16),inset 0 0 0 var(--hair) rgba(var(--fg),.08)}
-.navcap.lensing .navglide>.lensrow,.navcap.lensing .navglide::before,.navcap.lensing .navglide::after{opacity:1;transition:opacity .1s var(--ez-soft)}
+.navcap.lensing .navglide .lensrow,.navcap.lensing .navglide::before,.navcap.lensing .navglide::after{opacity:1;transition:opacity .1s var(--ez-soft)}
 /* over the icons while it is a lens; back under them once the copy has faded out */
 .navglide{transition:opacity .3s var(--ez-soft),scale .52s var(--spring),filter .2s var(--ez),z-index 0s linear .24s}
 .navcap.lensing .navglide{z-index:2;filter:none;transition:opacity .3s var(--ez-soft),scale .52s var(--spring),filter .2s var(--ez),z-index 0s}
 .touchlight>i{transition:opacity .16s var(--ez-soft)}
 .touchlight.lens>i{opacity:0}
-@media (prefers-reduced-motion:reduce){.navglide>.lensrow,.navglide::before,.navglide::after{display:none}}
+@media (prefers-reduced-motion:reduce){.navglide .lensrow,.navglide::before,.navglide::after{display:none}}
 /* ---- end of liquid glass VII ---- */
 /* ---- Liquid glass VIII: the page drawn into the bar's edge (22 Nov, afternoon) ---- */
 /* The page, drawn into the bar's top edge: the refraction Safari can't do with a filter (see useBend). The band is the ring
@@ -1558,6 +1558,34 @@ html.tshrink.tsdo .topbar .tbtitle{animation:tbtin linear both;animation-timelin
 @media (min-width:1024px){.ng.bend{display:none}}
 @media (prefers-reduced-transparency:reduce){.ng.bend{display:none}}
 /* ---- end of liquid glass VIII ---- */
+/* ---- Liquid glass IX: a lens with a rim, an edge that never shows an old page (22 Nov, evening) ---- */
+/* not glass: the watch list's own colour (22 Nov), an orange apart from the accent and from the back-off red. Small
+   type in it reads at 7:1 or more on a dark card and 5:1 on a light one. */
+:root{--watch:#F28C46}
+:root[data-theme="light"]{--watch:#A65A0E}
+/* The lens has a rim (Nick, 22 Nov evening: "check the glass effect for bugs or weirdness and improve upon it").
+   Half way between two tabs the lens magnified the empty gap between them and hid the icons on either side under its
+   edge: an empty dark disc. Now its middle (.lclip.core) magnifies as before, and its two rims (.rl, .rr: the outer
+   28% of each side) hold copies of the bar squeezed about the rim's inner edge, so the glass shows everything under it
+   with no gap, and what lies just outside it is drawn bent into its edge, as on an iPhone and as the bar's top edge
+   draws the page (VIII). Glider keeps all three in line (lensCss, data-side). At the rim's inner edge the copies show
+   the same point of the bar, so the short blend there is seamless. */
+.navglide>.lclip{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+.navglide>.lclip.core{-webkit-mask-image:linear-gradient(90deg,transparent 12.5%,#000 15.5%,#000 84.5%,transparent 87.5%);mask-image:linear-gradient(90deg,transparent 12.5%,#000 15.5%,#000 84.5%,transparent 87.5%)}
+.navglide>.lclip.rl{-webkit-mask-image:linear-gradient(90deg,#000 12.5%,transparent 15.5%);mask-image:linear-gradient(90deg,#000 12.5%,transparent 15.5%)}
+.navglide>.lclip.rr{-webkit-mask-image:linear-gradient(90deg,transparent 84.5%,#000 87.5%);mask-image:linear-gradient(90deg,transparent 84.5%,#000 87.5%)}
+/* The bar's edge (VIII) never shows an old page. When the page grows or shrinks under a copy (a fold opening, an answer
+   on Train, a list showing all), the copy no longer lies on what it shows, so it fades out at once and comes back with
+   the next copy; a text that changes in place (a number) leaves it. */
+.ng.bend.stale{opacity:0;transition:opacity .14s var(--ez-soft)}
+/* nothing in the copy plays an animation, so a dealt card would lie straight: it rests at its own small tilt, as the
+   deal leaves the real one */
+.bendroll .dealt{transform:rotate(var(--r1,0deg))}
+/* An iPhone lets the page bounce past its top and bottom, where a scroll timeline stops: this layer carries the copy
+   the rest of the way (useBend sets its transform only while the page is past an end). */
+.bendbounce{position:absolute;inset:0}
+@media (prefers-reduced-motion:reduce){.ng.bend.stale{transition:none}}
+/* ---- end of liquid glass IX ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -2369,12 +2397,23 @@ const GLIDE_B = Array.from({ length: GLIDE_N * 4 + 1 }, (_, k) => { const u = Ma
 // times about the glass's centre, in every flight and every held frame, so what passes under the glass is really bent.
 // It is the one way a web page can refract in Safari: Safari can't bend the page behind glass (backdrop-filter: url()),
 // but this copy is the page's own. t: the glass's [x, scaleX, scaleY] (dropShow); w, H: its size.
-const lensCss = (t, w, H, M) => { const ax = M / t[1], ay = M / t[2], cx = t[0] + w / 2; return `translate(${(w / 2 - ax * cx).toFixed(2)}px, ${((H / 2) * (1 - ay)).toFixed(2)}px) scale(${ax.toFixed(4)}, ${ay.toFixed(4)})`; };
+// side (Liquid glass IX): 0 is the lens's middle, magnified M times about its centre. -1 and +1 are its left and right
+// rims, past LENS_RIM of its half-width: there what lies further out is squeezed in, LENS_SQUEEZE times at full
+// magnification, about the rim's inner edge, so the two meet without a gap (at that edge both show the same point of the
+// bar) and what is just outside the glass is drawn bent into it. On screen a copy maps the bar's X to A·X + B; in the
+// glass's own (unscaled) frame that is the translate and scale returned.
+const LENS_RIM = 0.72, LENS_SQUEEZE = 3;
+const lensCss = (t, w, H, M, side = 0) => {
+  const ay = M / t[2], cx = t[0] + w / 2; let A = M, B = cx - M * cx;
+  if (side) { const xi = LENS_RIM * t[1] * w / 2, c = 1 + (LENS_SQUEEZE - 1) * Math.max(0, Math.min(1, (M - 1) / 0.25)); A = 1 / c; B = cx + side * xi - A * (cx + side * xi / M); }
+  return `translate(${((B - cx) / t[1] + w / 2).toFixed(2)}px, ${((H / 2) * (1 - ay)).toFixed(2)}px) scale(${(A / t[1]).toFixed(4)}, ${ay.toFixed(4)})`;
+};
 function Glider({ cls, at, style, ms = 480, gap = 0, lift = 0, ctl, children }) {
   const el = useRef(null), prev = useRef(at), run = useRef(null), held = useRef(null), fl = useRef(null), aimed = useRef(null);
   // the lens: its copies, their running animations, and the magnification while held or at the end of a kept flight
   const lruns = useRef([]), heldM = useRef(1), keptM = useRef(1);
-  const rows = () => { const n = el.current; return n ? Array.from(n.children).filter((c) => c.classList.contains("lensrow")) : []; };
+  const rows = () => { const n = el.current; return n ? Array.from(n.querySelectorAll(".lensrow")) : []; };
+  const sideOf = (r) => +(r.dataset && r.dataset.side) || 0;   // the middle (0) or a rim (-1, +1): see lensCss
   const magNow = () => {
     if (held.current) return heldM.current;
     const r = run.current, f = fl.current;
@@ -2418,7 +2457,7 @@ function Glider({ cls, at, style, ms = 480, gap = 0, lift = 0, ctl, children }) 
     const opts = { duration: ms, easing: "linear", fill: G > 1 ? "forwards" : "none" }, R = rows();
     const Ms = vs.map((v, k) => { const u = Math.min(1, k / GLIDE_N / 0.45); return M0 + (M1 - M0) * (1 - (1 - u) ** 3); });
     try { run.current = n.animate(frames, opts); fl.current = { at: states, T: ms, keep: G > 1, Ms }; } catch (_) {}
-    if (R.length) { const H = n.offsetHeight; try { lruns.current = R.map((r) => r.animate(vs.map((v, k) => ({ transform: lensCss(v, w, H, Ms[k]), offset: k / GLIDE_N })), opts)); } catch (_) { lruns.current = []; } }
+    if (R.length) { const H = n.offsetHeight; try { lruns.current = R.map((r) => r.animate(vs.map((v, k) => ({ transform: lensCss(v, w, H, Ms[k], sideOf(r)), offset: k / GLIDE_N })), opts)); } catch (_) { lruns.current = []; } }
     keptM.current = G > 1 ? M1 : 1;
     // begun on this frame's clock: left to itself an animation waits a frame to start, which showed the glass twice in the same place at every hand-over
     try { const t = document.timeline.currentTime; if (t != null) [run.current, ...lruns.current].forEach((a) => { if (a) a.startTime = t; }); } catch (_) {}
@@ -2437,7 +2476,7 @@ function Glider({ cls, at, style, ms = 480, gap = 0, lift = 0, ctl, children }) 
     hold: (s, M = 1) => {
       const n = el.current; if (!n) return; const b = box(), g = ((s.G - 1) * DROP_GX * b.w) / 2; stop(); held.current = { ...s }; heldM.current = M;
       const v = dropShow(s, b.w, b.lo - g, b.hi + g); n.style.transform = dropCss(v);
-      const R = rows(); if (R.length) { const t = lensCss(v, b.w, n.offsetHeight, M); R.forEach((r) => { r.style.transform = t; }); }
+      const R = rows(); if (R.length) { const H = n.offsetHeight; R.forEach((r) => { r.style.transform = lensCss(v, b.w, H, M, sideOf(r)); }); }
     },
     drop: (to) => { aimed.current = to !== prev.current ? to : null; fly(to, prev.current, 1, 1); },
     mag: magNow,
@@ -6171,11 +6210,11 @@ function useBend(capRef) {
     const mq = (q) => { try { return window.matchMedia(q); } catch (_) { return null; } };
     const narrowQ = mq("(max-width: 1023px)"), clearQ = mq("(prefers-reduced-transparency: reduce)");
     const want = () => (!narrowQ || narrowQ.matches) && !(clearQ && clearQ.matches);
-    const band = document.createElement("i"), wrap = document.createElement("i"), roll = document.createElement("i");
-    band.className = "ng bend off"; band.setAttribute("aria-hidden", "true"); wrap.className = "bendwrap"; roll.className = "bendroll"; roll.inert = true;
-    wrap.appendChild(roll); band.appendChild(wrap); host.insertBefore(band, host.querySelector(".ng.skin"));
+    const band = document.createElement("i"), wrap = document.createElement("i"), bounce = document.createElement("i"), roll = document.createElement("i");
+    band.className = "ng bend off"; band.setAttribute("aria-hidden", "true"); wrap.className = "bendwrap"; bounce.className = "bendbounce"; roll.className = "bendroll"; roll.inert = true;
+    bounce.appendChild(roll); wrap.appendChild(bounce); band.appendChild(wrap); host.insertBefore(band, host.querySelector(".ng.skin"));
     const shellEl = () => document.querySelector(".shell:not(.bendclone)"), se = () => document.scrollingElement || document.documentElement;
-    let geo = null, t = 0, raf = 0, rafP = 0, lastScroll = -1e9, lastInput = -1e9, madeAt = -1e9, made = false;
+    let geo = null, t = 0, raf = 0, rafP = 0, lastScroll = -1e9, lastInput = -1e9, madeAt = -1e9, made = false, madeH = -1, madeW = -1, bo = 0;
     const draw = () => { raf = 0; if (!geo) return; roll.style.transform = `translate(${geo.ox.toFixed(2)}px, ${(geo.ty0 - geo.k * (se().scrollTop || 0)).toFixed(2)}px) scale(1, ${geo.k.toFixed(4)})`; };
     // where the copy sits: the page's own position, seen from the capsule as laid out (unscaled), squeezed about the line --bwb below its top
     const place = () => {
@@ -6184,7 +6223,7 @@ function useBend(capRef) {
       const cs = getComputedStyle(cap), wb = parseFloat(cs.getPropertyValue("--bwb")) || 10, d = parseFloat(cs.getPropertyValue("--bd")) || 14;
       const top = nr.top + cap.offsetTop, left = nr.left + cap.offsetLeft, k = wb / (wb + d);
       const ox = sr.left - left, ty0 = wb + k * (sr.top + S - top - wb);
-      geo = { ox, ty0, k };
+      geo = { ox, ty0, k, max };
       const st = roll.style; st.setProperty("--bx", ox.toFixed(2) + "px"); st.setProperty("--by0", ty0.toFixed(2) + "px"); st.setProperty("--by1", (ty0 - k * max).toFixed(2) + "px"); st.setProperty("--bk", k.toFixed(4));
       if (!SCROLL_TL) draw();
     };
@@ -6208,7 +6247,8 @@ function useBend(capRef) {
         if (p === "line-height" && /px$/.test(v)) v = String(+(parseFloat(v) / (parseFloat(ps.fontSize) || 16)).toFixed(4));
         roll.style.setProperty(p, v);
       }
-      roll.replaceChildren(cl); made = true; madeAt = now; place();
+      roll.replaceChildren(cl); made = true; madeAt = now; madeH = sh.offsetHeight; madeW = sh.offsetWidth; place();
+      band.classList.remove("stale");
       if (band.classList.contains("off")) requestAnimationFrame(() => requestAnimationFrame(() => band.classList.remove("off")));
     };
     function later(ms) { clearTimeout(t); t = setTimeout(make, ms); }
@@ -6226,10 +6266,21 @@ function useBend(capRef) {
       if (real) later(Math.max(450, 2500 - (performance.now() - madeAt)));
     });
     const sh0 = shellEl(); if (sh0) mo.observe(sh0, { subtree: true, childList: true, characterData: true, attributes: true });
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(placeSoon) : null; if (ro) { if (sh0) ro.observe(sh0); ro.observe(cap); }
-    const onScroll = () => { lastScroll = performance.now(); if (!SCROLL_TL && made && !raf) raf = requestAnimationFrame(draw); };
+    // the page grew or shrank (a fold, an answer, a list showing all): the copy no longer lies on what it shows, so it
+    // fades out until the next one, made once the page has settled (a size that keeps changing keeps putting it off)
+    const stale = () => { if (made) band.classList.add("stale"); later(450); };
+    const onSize = () => { placeSoon(); const sh = shellEl(); if (made && sh && (Math.abs(sh.offsetHeight - madeH) >= 1 || Math.abs(sh.offsetWidth - madeW) >= 1)) stale(); };
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(onSize) : null; if (ro) { if (sh0) ro.observe(sh0); ro.observe(cap); }
+    // An iPhone lets the page bounce past its ends, where the scroll timeline stops: the bounce layer carries the copy on.
+    const onScroll = () => {
+      lastScroll = performance.now();
+      if (!SCROLL_TL) { if (made && !raf) raf = requestAnimationFrame(draw); return; }
+      if (!geo) return;
+      const y = window.scrollY || 0, o = y < 0 ? y : y > geo.max ? y - geo.max : 0;
+      if (o || bo) { bo = o ? -geo.k * o : 0; bounce.style.transform = bo ? `translateY(${bo.toFixed(2)}px)` : ""; }
+    };
     const onInput = () => { lastInput = performance.now(); };
-    const onResize = () => { placeSoon(); later(320); };
+    const onResize = () => { placeSoon(); if (made) band.classList.add("stale"); later(320); };
     const onMedia = () => { if (want()) later(300); else make(); };
     window.addEventListener("scroll", onScroll, { passive: true }); window.addEventListener("resize", onResize);
     ["pointerdown", "keydown", "touchstart"].forEach((e) => window.addEventListener(e, onInput, { passive: true, capture: true }));
@@ -6279,9 +6330,9 @@ function TabBar({ navTab, go }) {
     const local = (cx) => { const r = tr.getBoundingClientRect(), k = r.width / (tr.offsetWidth || 1) || 1; return (cx - r.left) / k; };   // the capsule is larger while pressed and smaller while shrunk
     const tabAt = (cx) => Math.max(0, Math.min(N - 1, Math.floor(local(cx) / step())));
     // the real buttons, and their copies in the lens (Glider keeps those lined up and magnified)
-    const btns = () => tr.querySelectorAll(":scope > .navbtn"), copies = () => tr.querySelectorAll(".lensrow > .navbtn");
-    const mags = (x, st) => { const near = Math.round(x / st); [btns(), copies()].forEach((l) => l.forEach((b, j) => b.classList.toggle("under", j === near))); };
-    const clear = () => [btns(), copies()].forEach((l) => l.forEach((b) => b.classList.remove("under")));
+    const btns = () => tr.querySelectorAll(":scope > .navbtn"), lists = () => [Array.from(btns()), ...Array.from(tr.querySelectorAll(".lensrow"), (r) => Array.from(r.children))];
+    const mags = (x, st) => { const near = Math.round(x / st); lists().forEach((l) => l.forEach((b, j) => b.classList.toggle("under", j === near))); };
+    const clear = () => lists().forEach((l) => l.forEach((b) => b.classList.remove("under")));
     // the lens magnifies what is under it this much while a finger is on the bar; it is shown only then (.lensing)
     const LENS_M = 1.25, lensOn = (v) => { c.classList.toggle("lensing", v); const t = document.querySelector(".touchlight"); if (t) t.classList.toggle("lens", v); };   // the lens is the answer to the touch: the light spot under the finger stands back
     // While the finger carries it the lens is the same drop with the finger for a target: the edge in front keeps up
@@ -6352,8 +6403,8 @@ function TabBar({ navTab, go }) {
         <span className="nglass" aria-hidden="true"><i className="ng rim" /><i className="ng deep" /><i className="ng skin" /></span>
         <div ref={track} className="navtrack">
           <Glider cls={"navglide" + (at < 0 ? " off" : "")} at={lastAt.current} ms={640} lift={0.1} ctl={lens}>
-            {/* the lens's copy of the bar: shown, magnified and lined up only while a finger is on it */}
-            <span className="lensrow" aria-hidden="true">{PHONE_TABS.map(([k, l], j) => <span key={k} className={"navbtn" + (j === at ? " on" : "")}><span className="navicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">{k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]}</svg></span><span>{l}</span></span>)}</span>
+            {/* the lens's copies of the bar, shown and lined up only while a finger is on it: its middle magnifies, its rim draws what is just outside it bent in (Liquid glass IX) */}
+            {[["core", 0], ["rl", -1], ["rr", 1]].map(([part, side]) => <span key={part} className={"lclip " + part} aria-hidden="true"><span className="lensrow" data-side={side}>{PHONE_TABS.map(([k, l], j) => <span key={k} className={"navbtn" + (j === at ? " on" : "")}><span className="navicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">{k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]}</svg></span><span>{l}</span></span>)}</span></span>)}
           </Glider>
           {PHONE_TABS.map(([k, l], j) => { const on = j === at, icon = k === "more" ? MORE_ICON : (NAV_ITEMS.find((x) => x[0] === (k === "trainhub" ? "train" : k)) || [])[2]; return (
             <button key={k} onClick={() => go(k)} className={"navbtn" + (on ? " on" : "")} aria-current={on ? "page" : undefined}>
