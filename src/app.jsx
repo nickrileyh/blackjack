@@ -1600,6 +1600,31 @@ html.tsdo.scrolled .pillrail .rulespill:active{transform:scale(1.05)}
 }
 @keyframes railup{to{transform:translateY(-37px) scale(.86)}}
 /* ---- end of polish ---- */
+
+/* ---- The readout pill grows (23 Nov): Bet spread on a phone, once scrolled, shows $/hr and risk whole ---- */
+/* The face on show sizes the pill; the other waits outside the flow against the pill's right edge, where it was, so
+   neither face moves when the width changes. The glass is a layer of its own (.rpg) so it can spring to the new width
+   (the effect beside twoPill in App) without stretching the words; the button itself carries no glass, and no filter
+   either (a filter on it would cut the layer's blur off from the page), so the press brightens the layer. */
+@media (max-width:1023px){
+.hdock .rulespill.two{display:flex;position:relative;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;max-width:calc(100vw - 160px)}
+.hdock .rulespill.two>.rpg{position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;transform-origin:100% 50%;background:linear-gradient(180deg,rgba(var(--fg),.12),rgba(var(--fg),.04)),rgba(var(--bgrgb),.3);-webkit-backdrop-filter:blur(14px) brightness(1.18);backdrop-filter:blur(14px) brightness(1.18);box-shadow:var(--gl-body),0 10px 24px -12px rgba(0,0,0,.65),0 2px 6px -2px rgba(0,0,0,.3);transition:filter .2s var(--ez)}
+:root[data-theme="light"] .hdock .rulespill.two>.rpg{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.46));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--gl-body),0 0 0 var(--hair) rgba(var(--fg),.1),0 10px 22px -12px rgba(var(--fg),.4)}
+.hdock .rulespill.two,.hdock .rulespill.two:active{filter:none}
+.hdock .rulespill.two:active>.rpg{filter:brightness(1.22)}
+.hdock .rulespill.two>.rp-b{position:absolute;top:0;bottom:0;right:0;padding-right:inherit;display:flex;align-items:center;overflow:visible}
+html.scrolled .hdock .rulespill.two>.rp-a{position:absolute;top:0;bottom:0;right:0;padding-right:inherit}
+html.scrolled .hdock .rulespill.two>.rp-b{position:relative;padding-right:0;display:block;overflow:hidden}
+html.scrolled .hdock.two .hdockin{width:auto}
+/* the face going out leaves quickly and the one coming in follows a beat later, once the glass has mostly grown */
+.hdock .rulespill.two>.rp-a,html.scrolled .hdock .rulespill.two>.rp-b{transition:opacity .3s var(--ez-soft) .05s,translate .46s var(--ez)}
+.hdock .rulespill.two>.rp-b,html.scrolled .hdock .rulespill.two>.rp-a{transition:opacity .12s var(--ez-soft),translate .46s var(--ez)}
+.shell[data-page="calc"] .topbar>div>span:first-child{max-width:calc(100% - var(--dwb,var(--dw,170px)) - 14px)}
+}
+@media (hover:hover) and (max-width:1023px){.hdock .rulespill.two:hover{filter:none}.hdock .rulespill.two:hover>.rpg{filter:brightness(var(--hov))}.hdock .rulespill.two:active>.rpg{filter:brightness(1.22)}}
+@media (prefers-reduced-transparency:reduce){.hdock .rulespill.two>.rpg{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgb(var(--bgrgb))}}
+@media (prefers-reduced-motion:reduce){.hdock .rulespill.two>.rp-a,.hdock .rulespill.two>.rp-b,.hdock .rulespill.two>.rpg{transition:none!important}}
+/* ---- end of the readout pill ---- */
 `;
 
 function SeatPicker({ seats, onChange, twoHands }) {
@@ -3348,6 +3373,10 @@ function useTimer(active) {
   return () => Math.round(performance.now() - (startRef.current ?? performance.now()));
 }
 const noMotion = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+// A new page opens at its top, so it is not "scrolled" (the top's pieces and Bet spread's pill go by html.scrolled). It is
+// cleared at the tap and again as the page opens, before anything on it is measured: left to the scroll event, the new
+// page drew its first frame as if scrolled (Bet spread's pill opened wide, showing both its faces at once).
+const unscroll = () => { try { document.documentElement.classList.remove("scrolled"); } catch (_) {} };
 // ---- Folds: whatever opens or closes under a link moves the page below it smoothly instead of in one frame ----
 // A height that changes is something that travels, so it runs on the sliding curve (--ez-slide): off promptly, never a
 // jump in the first frame, the same long glide to rest. Both read heights with offsetHeight (layout, not transforms),
@@ -6448,7 +6477,7 @@ function TopBar({ title, children, onBack }) {
       h1 = document.querySelector(".shell:not(.bendclone)>header h1");
       const t = bar.current && bar.current.querySelector(".tbtitle"); if (!h1 || !t) return;
       // the small title gets smaller rather than end in "…" (the big one shrinks onto it, so both must show it whole)
-      const fitKey = t.textContent + "|" + window.innerWidth;
+      const fitKey = t.textContent + "|" + window.innerWidth + "|" + (t.parentNode ? getComputedStyle(t.parentNode).maxWidth : "");
       if (t.dataset.fit !== fitKey) { t.dataset.fit = fitKey; t.style.fontSize = ""; if (t.scrollWidth > t.clientWidth + 0.5) { const f0 = parseFloat(getComputedStyle(t).fontSize) || 17; t.style.fontSize = Math.max(13, Math.floor((f0 * t.clientWidth / t.scrollWidth) * 2) / 2) + "px"; } }
       let x = 0, y = 0; for (let n = h1; n; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }   // where it is laid out, ignoring the shrink itself
       const r = t.getBoundingClientRect(), fl = parseFloat(getComputedStyle(h1).fontSize) || 32, fc = parseFloat(getComputedStyle(t).fontSize) || 17;
@@ -7144,7 +7173,7 @@ function BetSpreadCalculator() {
   useLayoutEffect(() => { placeDock(); const h = hdrRef.current; if (!h || typeof ResizeObserver === "undefined") return; const ro = new ResizeObserver(placeDock); ro.observe(h); const c = h.querySelector(".hctl"); if (c) ro.observe(c); return () => ro.disconnect(); }, []); // eslint-disable-line
   useLayoutEffect(() => {
     if (tabSeen.current === tab) return;
-    tabSeen.current = tab; markEnter(1500);
+    tabSeen.current = tab; markEnter(1500); unscroll();
     // a page opens at its top: the dock glides back down to its place there rather than jumping to it
     const d = dockRef.current && dockRef.current.firstChild, y0 = d ? d.getBoundingClientRect().top : 0;
     // on a computer the rules pill rides with the scroll (see "Polish" in the css): it glides back down to the title too
@@ -7270,6 +7299,51 @@ function BetSpreadCalculator() {
   // (TrainHub, MoreHub in src/phone.jsx); the pages behind them carry a link back to their menu. The sidebar on a
   // computer lists every page, so the two menus are never shown there.
   const narrow = useNarrow();
+  // Bet spread on a phone: once the page is scrolled the pill reads $/hr and risk, and it grows to show them whole (Nick,
+  // 23 Nov: it kept the rules' width and cut the risk off, "$29/hr · 32.…"). The face on show sizes the pill (the CSS
+  // block "The readout pill grows"); its glass (.rpg) springs to each new width from the right edge, which stays beside
+  // the gear. The moving edge is the drop's front edge (Liquid glass V): it reaches, goes a hair past and settles, a
+  // touch thinner while it moves. A change caught half way starts from where the glass is and how fast it is going.
+  const twoPill = narrow && tab === "calc";
+  useLayoutEffect(() => {
+    if (!twoPill) return;
+    const pill = dockRef.current && dockRef.current.querySelector(".rulespill.two"), sh = shellRef.current;
+    if (!pill || typeof ResizeObserver === "undefined") return;
+    const g = pill.querySelector(".rpg"), b = pill.querySelector(".rp-b"), root = document.documentElement;
+    const st = { w: pill.offsetWidth, run: null, at: null, ms: 0 };
+    // the dock's width while the readout shows, so the small title at the top leaves room for it
+    const note = () => {
+      const cs = getComputedStyle(pill), gear = pill.nextElementSibling, mx = parseFloat(cs.maxWidth) || 1e4;
+      const pw = root.classList.contains("scrolled") ? pill.offsetWidth : Math.min(mx, (b ? b.offsetWidth : 0) + (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.borderLeftWidth) || 0) + (parseFloat(cs.borderRightWidth) || 0));
+      const v = Math.ceil(pw + 8 + (gear ? gear.offsetWidth : 34)) + "px";
+      if (sh && sh.style.getPropertyValue("--dwb") !== v) { sh.style.setProperty("--dwb", v); try { window.dispatchEvent(new Event("bj-title")); } catch (_) {} }
+    };
+    const grow = () => {
+      const w = pill.offsetWidth; note();
+      if (Math.abs(w - st.w) < 0.5) return;
+      let x = st.w, v = 0;   // the glass's width as drawn now, and how fast it is changing
+      if (st.run && st.at) {
+        const p = Math.max(0, Math.min(1, (Number(st.run.currentTime) || 0) / st.ms)), i = p * (st.at.length - 1), i0 = Math.floor(i), i1 = Math.min(st.at.length - 1, i0 + 1), f = i - i0;
+        x = st.at[i0].x + (st.at[i1].x - st.at[i0].x) * f; v = st.at[i0].v + (st.at[i1].v - st.at[i0].v) * f;
+      }
+      if (st.run) st.run.cancel();
+      st.run = null; st.at = null; st.w = w;
+      if (!g || !g.animate || noMotion() || !(x > 0)) return;
+      const om = DROP_FRONT, ze = zetaFor(2.5 / Math.max(24, Math.hypot(w - x, v / om))), ms = 620, h = ms / 1000 / GLIDE_N / 4, at = [], kf = [];
+      for (let k = 0; k <= GLIDE_N; k++) {
+        if (k) for (let j = 0; j < 4; j++) { v += (-om * om * (x - w) - 2 * ze * om * v) * h; x += v * h; if (k > GLIDE_N * 0.84) { x += (w - x) * 0.12; v *= 0.88; } }
+        at.push({ x, v });
+        kf.push({ transform: k === GLIDE_N ? "none" : `scale(${(x / w).toFixed(4)}, ${(1 - 0.05 * Math.tanh(Math.abs(v) / 900)).toFixed(4)})` });
+      }
+      const run = g.animate(kf, { duration: ms, easing: "linear" });
+      try { run.startTime = document.timeline.currentTime; } catch (_) {}
+      st.run = run; st.at = at; st.ms = ms;
+      run.onfinish = () => { if (st.run === run) { st.run = null; st.at = null; } };
+    };
+    const ro = new ResizeObserver(grow); ro.observe(pill); if (b) ro.observe(b);
+    note();
+    return () => { ro.disconnect(); if (st.run) st.run.cancel(); if (sh) sh.style.removeProperty("--dwb"); };
+  }, [twoPill]); // eslint-disable-line
   const wide = useWide();
   // rounds an hour for any spread, the way this page works it out for the one in the table (for the saved spreads)
   const rphOf = useCallback((b, sp) => (hphAuto ? autoRph(roundFreqs(b, sp, cal), b, sp, cal) : Math.max(1, Number(handsPerHour) || 1)), [hphAuto, handsPerHour, cal]);
@@ -7309,7 +7383,7 @@ function BetSpreadCalculator() {
   };
   const fadeGhost = () => { const g = ghost.current; pageAt.current = performance.now(); if (!g) return; g.el.classList.add("go"); clearTimeout(g.t); g.t = setTimeout(dropGhost, 340); };
   fadeGhostRef.current = fadeGhost;
-  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; if (o?.pre) _logPre = o.pre; if (o?.near) openCasinoNear(); if (t === "settings" && navTab !== "settings") cameFrom.current = navTab; const same = t === tab; if (!same) makeGhost(); setNavTab(t); if (same) setTab(t); else startTransition(() => setTab(t)); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } if (same) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) {} } };
+  const go = (t, o) => { if (o?.drill) _lastDrill = o.drill; if (o?.trainMode) _trainMode = o.trainMode; if (o?.trainView) _trainView = o.trainView; if (o?.log) _openLog = true; if (o?.where) _logWhere = o.where; if (o?.pre) _logPre = o.pre; if (o?.near) openCasinoNear(); if (t === "settings" && navTab !== "settings") cameFrom.current = navTab; const same = t === tab; if (!same) { makeGhost(); unscroll(); } setNavTab(t); if (same) setTab(t); else startTransition(() => setTab(t)); if (same && o) { if (o.log) _openLog = false; try { window.dispatchEvent(new CustomEvent("bj-nav", { detail: o })); } catch (_) {} } if (same) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) {} } };
   const rorTone = r.ror < 0.02 ? "var(--brass)" : r.ror < 0.1 ? "var(--ivory)" : "var(--rose)";
   const [cmd, setCmd] = useState(false);
   const [keysOpen, setKeysOpen] = useState(false); // the keyboard shortcuts list ("?")
@@ -7396,11 +7470,12 @@ function BetSpreadCalculator() {
       {keysOpen && <ShortcutsSheet onClose={() => setKeysOpen(false)} mac={isMac} />}
       <main ref={shellRef} className="shell max-w-2xl mx-auto px-4" data-page={tab === "count" || tab === "trainhub" ? "train" : tab} style={{ opacity: rulesLoaded ? 1 : 0, transition: "opacity .25s var(--ez)", paddingTop: "calc(env(safe-area-inset-top) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom) + 110px)" }}>
         {/* header */}
-        <div ref={dockRef} className={"hdock" + (pageTitle.length > 9 && !hasBack ? " tight" : "")}><div className="hdockin">
-          <button onClick={() => setSetupOpen(true)} className={"rulespill" + (narrow && tab === "calc" ? " two" : "")} aria-label={`${rulesShort(rules)}. Game rules: ${rulesLabel(rules)}. Change`}>
+        <div ref={dockRef} className={"hdock" + (pageTitle.length > 9 && !hasBack ? " tight" : "") + (twoPill ? " two" : "")}><div className="hdockin">
+          <button onClick={() => setSetupOpen(true)} className={"rulespill" + (twoPill ? " two" : "")} aria-label={`${rulesShort(rules)}. Game rules: ${rulesLabel(rules)}. Change`}>
+            {twoPill && <span className="rpg" aria-hidden="true" />}
             <span className="rp-a"><span className="mono">{rulesShort(rules)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></span>
             {/* Bet spread: once the page is scrolled the pill reads what the spread earns and risks */}
-            {narrow && tab === "calc" && <span className="rp-b mono" aria-hidden="true"><span style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span> · <span style={{ color: rorTone }}>{pct(r.ror, 1)}</span> risk</span>}
+            {twoPill && <span className="rp-b mono" aria-hidden="true"><span style={{ color: r.evHour >= 0 ? "var(--brass)" : "var(--rose)" }}>{money(r.evHour)}/hr</span> · <span style={{ color: rorTone }}>{pct(r.ror, 1)}</span> risk</span>}
           </button>
           {gear}
         </div></div>
