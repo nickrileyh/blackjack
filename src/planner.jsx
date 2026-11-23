@@ -238,8 +238,9 @@ const dayOf = (d) => { const [y, m, dd] = String(d).split("-").map(Number); retu
 const startOfDay = (t) => { const x = new Date(t); x.setHours(0, 0, 0, 0); return x.getTime(); };
 export const addDays = (t, n) => { const x = new Date(t); x.setDate(x.getDate() + Math.round(n)); return x.getTime(); };
 export const daysBetween = (a, b) => Math.round((startOfDay(b) - startOfDay(a)) / DAY);
-const fmtDay = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-const fmtWeekday = (t) => new Date(t).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+// a date never splits across two lines (no-break spaces)
+const fmtDay = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" }).replace(/ /g, "\u00a0");
+const fmtWeekday = (t) => new Date(t).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }).replace(/ /g, "\u00a0");
 const ago = (days) => (days <= 0 ? "today" : days === 1 ? "yesterday" : days < 60 ? `${days} days ago` : `${Math.round(days / 30)} months ago`);
 const oneIn = (p) => (p < 0.005 ? "Almost never" : p > 0.5 ? `About ${Math.round(p * 10)} times in 10` : `About 1 time in ${Math.max(2, Math.round(1 / p))}`);
 // Rest after a visit, from two numbers you can change on the Plan page: `base` (days after an ordinary visit) and `backed`
@@ -984,7 +985,7 @@ function BankrollNow({ gr, mine, bankroll, prefs, go }) {
   const base = cur ? cur.need : 0, way = next ? Math.max(0, Math.min(1, (bankroll - base) / Math.max(1, next.need - base))) : 0;
   return (
     <section className="card p-5 mb-4">
-      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Your bankroll</div><button className="text-[11px] font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => go("calc")}>Change spread ›</button></div>
+      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Your bankroll</div><button className="text-xs font-semibold lnk" style={{ color: "var(--brass)" }} onClick={() => go("calc")}>Change spread ›</button></div>
       {!(bankroll > 0) ? <p className="text-sm mt-2" style={{ color: "var(--ivory-d)" }}>Set your bankroll on the Bet spread page first.</p> : <>
         <div className="pghead" style={{ marginTop: 10 }}>
           <div><div className="pgbig" style={{ color: "var(--ivory)" }}>{money(bankroll)}</div><div className="pgsub">{cur ? `Covers $${cur.m} tables, playing every hand at ${rk(risk)} risk` : ladder ? `Not enough for $${ladder.lv[0].m} tables yet, playing every hand at ${rk(risk)} risk` : ladBusy ? "Working out the tables…" : "No table wins playing every hand"}</div></div>

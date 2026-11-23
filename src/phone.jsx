@@ -147,7 +147,7 @@ export function TripCard({ go, bankroll }) {
   if (t) return <section className="card p-5 mb-4 focuscard"><TimerBody t={t} go={go} /></section>;
   return (
     <section className="card p-5 mb-4">
-      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Casino trip</div><button className="text-[11px] font-semibold lnk hlink" style={{ color: "var(--brass)" }} onClick={() => go("plan")}>Plan ›</button></div>
+      <div className="flex items-baseline justify-between gap-3"><div className="eyebrow">Casino trip</div><button className="text-xs font-semibold lnk hlink" style={{ color: "var(--brass)" }} onClick={() => go("plan")}>Plan ›</button></div>
       {next.first ? (
         <button className="cardbtn w-full text-left flex items-center justify-between gap-3 mt-2" onClick={() => go("plan")}>
           <span className="min-w-0"><span className="block text-[11.5px]" style={{ color: "var(--muted)" }}>Next up · {next.when}{next.last ? ` · last visit ${next.last}` : ""}</span><span className="block text-[19px] font-semibold truncate mt-0.5" style={{ color: "var(--ivory)", letterSpacing: "-.01em" }}>{next.first.c.name}</span>{next.back ? <span className="block text-[11px]" style={{ color: "var(--neg-l)" }}>first visit since the back-off, keep it short</span> : next.watch && <span className="block text-[11px]" style={{ color: "var(--watch)" }}>you're on their watch list, keep it short</span>}</span>
@@ -199,7 +199,7 @@ export function WeekCard({ sessions, go }) {
     <section className="card p-5 mb-4 weekcard">
       <div className="flex items-baseline justify-between gap-3">
         <div className="eyebrow">This week</div>
-        <button className="text-[11px] font-semibold lnk hlink" style={{ color: "var(--brass)" }} onClick={() => { openPlanSettings(); go("plan"); }} aria-label={`Weekly goal ${goal ? hrs(goal) : ""}: change it on Plan`}>{goal ? `Goal ${hrs(goal)}` : "Goal"} ›</button>
+        <button className="text-xs font-semibold lnk hlink" style={{ color: "var(--brass)" }} onClick={() => { openPlanSettings(); go("plan"); }} aria-label={`Weekly goal ${goal ? hrs(goal) : ""}: change it on Plan`}>{goal ? `Goal ${hrs(goal)}` : "Goal"} ›</button>
       </div>
       <button className="cardbtn whole w-full text-left mt-2" onClick={() => go("sessions")}>
         <div className="flex items-end justify-between gap-3">
